@@ -466,7 +466,7 @@
             <div class="tabs-container" style="margin-top: 30px;">
                 <ul class="nav nav-tabs">
                     <li class="nav-item active"><a class="nav-link" data-toggle="tab" href="#Products"
-                                                   aria-expanded="false" style="color: black;">Products / Services</a></li>
+                                                   aria-expanded="false" style="color: black;">Materials / Services</a></li>
                     <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#Questions"
                                             aria-expanded="false" style="color: black;">Questions</a></li>
                     <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#Uploads"
@@ -480,7 +480,7 @@
                             <div class="ibox-title d-flex justify-content-end">
                                 <div class="ibox-tools d-flex gap-2">
                                     <button type="button" class="btn btn-light btn-sm" id="addProductsItemRowsBtn"><i
-                                            data-lucide="plus"></i> Add Products / Services</button>
+                                            data-lucide="plus"></i> Add Materials / Services</button>
                                     <button type="button" class="btn btn-secondary btn-sm"
                                             id="saveProductsItemRowsBtn"><i data-lucide="check"></i> Save</button>
                                     <button type="button" class="btn btn-danger btn-sm labControlBtn"
@@ -580,12 +580,12 @@
                                                                                  class="form-control" disabled /></div>
                 </div>
             </div>
-            <h4 style="margin-bottom:10px;">Products / Services - Review</h4>
+            <h4 style="margin-bottom:10px;">Materials / Services - Review</h4>
             <div class="table-responsive" style="margin-bottom:20px;">
                 <table class="table table-bordered">
                     <thead>
                     <tr>
-                        <th>Product Name</th>
+                        <th>Material Name</th>
                         <th style="width:160px;">Decision</th>
                         <th>Comments</th>
                     </tr>
@@ -612,6 +612,34 @@
             <div class="modal-footer"><button type="button" class="btn btn-default" data-bs-dismiss="modal">No,
                 Cancel</button><button type="button" class="btn btn-secondary" id="approvalModelSaveBtn">Yes,
                 Submit</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- E-Signature Modal -->
+<div class="modal inmodal fade" id="vqPasswordConfirmModal" tabindex="-1" role="dialog" aria-hidden="true"
+    style="display: none;">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Confirm Password</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="vqPasswordConfirmInput">Enter your password to continue</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="vqPasswordConfirmInput" autocomplete="current-password">
+                        <button type="button" class="btn btn-default" id="vqPasswordConfirmToggle" tabindex="-1" title="Show password">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                    <div id="vqPasswordConfirmError" class="text-danger small mt-1" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-sm" id="vqPasswordConfirmCancel">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="vqPasswordConfirmSubmit">Confirm</button>
+            </div>
         </div>
     </div>
 </div>
@@ -672,6 +700,13 @@
     </div>
 </div>
 
+<!-- Mandatory field styles -->
+<style>
+    .req { color: red; margin-left: 2px; font-weight: bold; }
+    .manu-field-err { color: #e74c3c; font-size: 11px; margin-top: 2px; display: none; }
+    .manu-input-err { border-color: #e74c3c !important; }
+</style>
+
 <!-- newManuQuali.html starts -->
 <div class="row animated fadeInRight aasaanPanel" id="newManuQualificationPanel" style="display: none;">
     <div class="col-lg-12">
@@ -690,15 +725,11 @@
                     <div class="row">
                         <div class="col-sm-6">
                             <div class="form-group"><label>Type of Manufacturing</label>
-                                <div class="dropdown">
-                                  <select class="form-control newManuType" id="newManuType" required>
+                                <select class="form-control newManuType" id="newManuType" name="newManuType" required>
                                     <option value="">--none--</option>
                                     <option value="newManu">New Manufacturer</option>
                                     <option value="existManu">Existing Manufacturer</option>
                                 </select>
-
-                                </div>
-                                <input type="hidden" class="newManuType" id="newManuType" value="">
                             </div>
                         </div>
                         <div class="col-sm-6">
@@ -733,53 +764,81 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Manufacturer Code for Existing Manufacturer -->
+                    <div class="row manu-type-existing">
+                        <!-- <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Manufacturer Code</label>
+                                <input type="text" id="existManuCode" placeholder="e.g. MFR-001"
+                                       class="form-control" />
+                            </div>
+                        </div> -->
+                    </div>
                     <div class="row manu-type-new">
                         <div class="col-sm-6">
                             <div class="form-group"><label>Name</label><input type="text" name="name"
                                                                               class="form-control newRecordInput"></div>
                         </div>
                         <div class="col-sm-6">
-                            <div class="form-group"><label>Type</label>
-                                <div class="dropdown">
-                                    <button
-                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
-                                            type="button" id="vendorTypeBtn" style="text-align: left;" aria-haspopup="true"
-                                            aria-expanded="false">--none--</button>
-                                    <div class="dropdown-menu w-100" aria-labelledby="vendorTypeBtn">
-                                        <a class="dropdown-item active" href="#" data-value="">--none--</a>
-                                        <a class="dropdown-item" href="#" data-value="RM">Raw Materials</a>
-                                        <a class="dropdown-item" href="#" data-value="PM">Packing Materials</a>
-                                        <a class="dropdown-item" href="#" data-value="Products">Products</a>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="vendorType" class="newRecordInput" id="vendorTypeHidden"
-                                       value="">
+                            <div class="form-group">
+                                <label>Manufacturer Code</label>
+                                <input type="text" name="number" id="newManuCode"
+                                       class="form-control newRecordInput" placeholder="e.g. MFR-001">
                             </div>
                         </div>
                     </div>
                     <div class="row manu-type-new">
                         <div class="col-sm-6">
-                            <div class="form-group"><label>Phone</label><input type="text" name="phone"
-                                                                               class="form-control newRecordInput"></div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group"><label>Email</label><input type="text" name="email"
-                                                                               class="form-control newRecordInput"></div>
-                        </div>
-                    </div>
-                    <div class="row manu-type-new">
-                        <div class="col-sm-6">
-                            <div class="form-group"><label>Address Line 1</label><input type="text" name="billingStreet"
-                                                                                        class="form-control newRecordInput"></div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group"><label>Address Line 2</label><input type="text"
-                                                                                        name="billingStreet2" class="form-control newRecordInput"></div>
+                            <div class="form-group"><label>Type</label>
+                                <select class="form-control newRecordInput" name="vendorType" id="vendorTypeHidden">
+                                    <option value="">--none--</option>
+                                    <option value="RM">Raw Materials</option>
+                                    <option value="PM">Packing Materials</option>
+                                    <option value="Products">Products</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="row manu-type-new">
                         <div class="col-sm-6">
-                            <div class="form-group"><label>Country</label>
+                            <div class="form-group">
+                                <label>Phone <span class="req">*</span></label>
+                                <input type="text" name="phone" id="newManuPhone"
+                                       class="form-control newRecordInput" placeholder="10–15 digits">
+                                <span class="manu-field-err" id="phoneErr">Please enter a valid phone number (10–15 digits, numbers only).</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Email <span class="req">*</span></label>
+                                <input type="text" name="email" id="newManuEmail"
+                                       class="form-control newRecordInput" placeholder="e.g. name@example.com">
+                                <span class="manu-field-err" id="emailErr">Please enter a valid email address.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row manu-type-new">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Address Line 1 <span class="req">*</span></label>
+                                <input type="text" name="billingStreet" id="newManuAddr1"
+                                       class="form-control newRecordInput">
+                                <span class="manu-field-err" id="addr1Err">Address Line 1 is required.</span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Address Line 2 <span class="req">*</span></label>
+                                <input type="text" name="billingStreet2" id="newManuAddr2"
+                                       class="form-control newRecordInput">
+                                <span class="manu-field-err" id="addr2Err">Address Line 2 is required.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row manu-type-new">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Country <span class="req">*</span></label>
                                 <div class="dropdown" id="countryDropdown">
                                     <button
                                             class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
@@ -795,10 +854,12 @@
                                     </div>
                                     <input type="hidden" name="billingCountry" class="newRecordInput" id="countryInput">
                                 </div>
+                                <span class="manu-field-err" id="countryErr">Please select a country.</span>
                             </div>
                         </div>
                         <div class="col-sm-6">
-                            <div class="form-group"><label>State</label>
+                            <div class="form-group">
+                                <label>State <span class="req">*</span></label>
                                 <div class="dropdown" id="stateDropdown">
                                     <button
                                             class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
@@ -814,27 +875,37 @@
                                     </div>
                                     <input type="hidden" name="billingState" class="newRecordInput" id="stateInput">
                                 </div>
+                                <span class="manu-field-err" id="stateErr">Please select a state.</span>
                             </div>
                         </div>
                     </div>
                     <div class="row manu-type-new">
                         <div class="col-sm-6">
-                            <div class="form-group"><label>City</label><input type="text" name="billingCity"
-                                                                              class="form-control newRecordInput" id="cityInput"></div>
+                            <div class="form-group">
+                                <label>City <span class="req">*</span></label>
+                                <input type="text" name="billingCity" id="cityInput"
+                                       class="form-control newRecordInput">
+                                <span class="manu-field-err" id="cityErr">City is required.</span>
+                            </div>
                         </div>
                         <div class="col-sm-6">
-                            <div class="form-group"><label>Postal Code</label>
+                            <div class="form-group">
+                                <label>Postal Code <span class="req">*</span></label>
                                 <input type="text" name="billingPostalCode" id="postalCodeVendor"
                                        class="form-control newRecordInput" placeholder="e.g. 380001 or 10001">
                                 <small id="postalCodeStatus" style="display:none; font-size:12px;"></small>
+                                <span class="manu-field-err" id="postalErr">Please enter a valid postal code (numbers only).</span>
                             </div>
                         </div>
                     </div>
                     <div class="row manu-type-new">
                         <div class="col-sm-6">
-                            <div class="form-group"><label>GST</label>
-                                <input type="text" class="form-control newRecordInput" name="gst">
+                            <div class="form-group">
+                                <label>GST <span class="req">*</span></label>
+                                <input type="text" class="form-control newRecordInput" name="gst" id="newManuGst"
+                                       placeholder="Alphanumeric">
                                 <input type="hidden" class="newRecordInput" name="type" value="Manufacturer">
+                                <span class="manu-field-err" id="gstErr">GST must be alphanumeric and cannot be empty.</span>
                             </div>
                         </div>
                     </div>
@@ -912,7 +983,7 @@
     }
 
     function resetNewManufacturerQualificationForm() {
-        $(".newManuType").val(""); $("#newManuTypeBtn").text("--none--");
+        $(".newManuType").val("").trigger("change");
         $("#newManuTypeBtn ~ .dropdown-menu .dropdown-item").removeClass("active").first().addClass("active");
         $(".newManuQuali[name='startDate']").val(JSUTIL.getDate(new Date()));
         toggleManufacturerTypeSections("");
@@ -978,7 +1049,11 @@
             innerHtml += '<tr><td><a href="javascript:void(0);" class="selectManuQualificationBtn" name="' + (val.id || "") + '">' + (val.number || "") + '</a></td><td>' + contactName.trim() + '</td><td>' + vendorName + '</td><td>' + JSUTIL.getDate(val.startDate) + '</td><td>' + statusBadge + '</td></tr>';
         });
         $('#allManuQualificationTableBody').html(innerHtml);
+        // new DataTable('#allManuQualificationTable', { order: [[0, 'desc']] });
         new DataTable('#allManuQualificationTable', { order: [[0, 'desc']] });
+        setTimeout(function () {
+            $('#allManuQualificationTable').closest('.dataTables_wrapper').find('input[type="search"]').attr('autocomplete', 'off').val('').trigger('input');
+        }, 0);
         renderLucideIcons();
     }
 
@@ -1195,6 +1270,7 @@
                         $(".recordApprovalBtn").hide(); $(".printVqBtn").show();
                         $(".recordApprovRejectBtn,.recordReviewSaveBtn").hide();
                         $('a[href="#Questions"]').closest("li").show();
+                          $("#qauVendorName").val(getAccountDisplayName(val2.vendor));
                         $("#qauStartDate").val(JSUTIL.getDate(val2.startDate));
                         _loadQauData(val2);
                     } else if (val2.processStatus === "Cancelled") {
@@ -1310,7 +1386,7 @@
 <tr data-item-id="${itemId}" data-product-id="${item.product.id}">
     <td>${productName}</td>
     <td>
-        <select name="ProductApprovalStatus" class="form-control select2"
+        <select name="ProductApprovalStatus" class="form-control"
             ${isLocked || isApproved ? "disabled" : ""}>
             <option value="Approve" ${isApproved ? "selected" : ""}>Approve</option>
             ${!isApproved ? `<option value="On Hold" ${approvalStatus === "On Hold" ? "selected" : ""}>On Hold</option>` : ""}
@@ -1318,17 +1394,15 @@
     </td>
     <td>
         <textarea name="ProductComments" class="form-control" rows="2"
-            ${isLocked ? "readonly" : ""}>${responseText}</textarea>
+            ${isLocked || isApproved ? "readonly" : ""}>${responseText}</textarea>
     </td>
 </tr>
 `);
 
 
-            // $tbody.append('<tr data-item-id="' + itemId + '" data-product-id = "'+item.product.id+'"><td>' + productName + '</td><td><select name="ProductApprovalStatus" class="form-control select2" ' + disabledAttr + '><option value="Approve"' + (approvalStatus === "Approve" ? " selected" : "") + '>Approve</option><option value="On Hold"' + (approvalStatus === "On Hold" ? " selected" : "") + '>On Hold</option></select></td><td><textarea name="ProductComments" class="form-control" rows="2" placeholder="Comments..." ' + readonlyAttr + '>' + responseText + '</textarea></td></tr>');
+            // $tbody.append('<tr data-item-id="' + itemId + '" data-product-id = "'+item.product.id+'"><td>' + productName + '</td><td><select name="ProductApprovalStatus" class="form-control" ' + disabledAttr + '><option value="Approve"' + (approvalStatus === "Approve" ? " selected" : "") + '>Approve</option><option value="On Hold"' + (approvalStatus === "On Hold" ? " selected" : "") + '>On Hold</option></select></td><td><textarea name="ProductComments" class="form-control" rows="2" placeholder="Comments..." ' + readonlyAttr + '>' + responseText + '</textarea></td></tr>');
         });
-        if ($.fn && typeof $.fn.select2 === "function") {
-            $(".select2").select2();
-        }
+        // select2 not available in this context — using native select
     }
 
     function callbackAfterQauQesAnswerRes(responseData) {
@@ -1374,45 +1448,57 @@
     // ═══════════════════════════════════════════════════════════════
 
     $(".recordReviewSaveBtn").on("click", function () {
-        let items = [];
-        $("#qauProductsTable tr").each(function () {
-            const itemId = $(this).attr("data-item-id"); if (!itemId) return;
-            items.push({ id: itemId, approvalStatus: $(this).find('select[name="ProductApprovalStatus"]').val(), response: $(this).find('textarea[name="ProductComments"]').val(),product:{id:$(this).attr('data-product-id')} });
-        });
-        if (items.length === 0) { console.warn("No products to update"); return; }
-
-        var allApproved = items.every(function (item) { return item.approvalStatus === "Approve"; });
-        var anyApproved = items.some(function (item) { return item.approvalStatus === "Approve"; });
-        var newProcessStatus = allApproved ? "QA Approved" : "QA Review";
-        console.log('items ',items)
-        // PATCH #6: PUT each item individually (not POST to /list)
-        var itemPromises = items.map(function (item) {
-            return new Promise(function (resolve, reject) {
-                JSUTIL.callAJAXPut("/api/vendor-qualification-items/" + item.id,
-                    JSON.stringify({ approvalStatus: item.approvalStatus, response: item.response,type:"Product",qualification:{id:currentVendorQualificationId},product:{id: item.product.id }}),
-                    resolve, reject);
+        // Open password confirm modal — on success perform the QA review save
+        requirePasswordThen(function () {
+            let items = [];
+            $("#qauProductsTable tr").each(function () {
+                const itemId = $(this).attr("data-item-id"); if (!itemId) return;
+                items.push({ id: itemId, approvalStatus: $(this).find('select[name="ProductApprovalStatus"]').val(), response: $(this).find('textarea[name="ProductComments"]').val(),product:{id:$(this).attr('data-product-id')} });
             });
-        });
-        console.log('all itempromises',itemPromises)
-        Promise.all(itemPromises).then(function () {
-            // PATCH #7: PUT the VQ status (not POST)
-            JSUTIL.callAJAXPut("/api/vendor-qualification/" + currentRecord.id,
-                JSON.stringify({ processStatus: newProcessStatus }),
-                function () {
-                    var historyObj = { name: "Record updated in Review - status set to " + newProcessStatus, startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: currentRecord.id };
-                    JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function (res) {
-                        const vendorId = getAccountId(currentRecord && currentRecord.vendor);
-                        const currentVendorStatus = (currentRecord && currentRecord.vendor && (currentRecord.vendor.accountStatus || currentRecord.vendor.AccountStatus) || "").toLowerCase();
-                        if (anyApproved && vendorId) {
-                            // PATCH #10: PUT for account update (not POST)
-                            JSUTIL.callAJAXPut(JSUTIL.getUrl("/api/account/" + vendorId), JSON.stringify({ accountStatus: "Approved" }), function () { location.reload(); });
-                        } else { location.reload(); }
-                    });
+            if (items.length === 0) { console.warn("No products to update"); return; }
+
+            var allApproved = items.every(function (item) { return item.approvalStatus === "Approve"; });
+            var anyApproved = items.some(function (item) { return item.approvalStatus === "Approve"; });
+            var newProcessStatus = allApproved ? "QA Approved" : "QA Review";
+            console.log('items ',items)
+            // PATCH #6: PUT each item individually (not POST to /list)
+            var itemPromises = items.map(function (item) {
+                return new Promise(function (resolve, reject) {
+                    JSUTIL.callAJAXPut("/api/vendor-qualification-items/" + item.id,
+                        JSON.stringify({ approvalStatus: item.approvalStatus, response: item.response,type:"Product",qualification:{id:currentVendorQualificationId},product:{id: item.product.id }}),
+                        resolve, reject);
                 });
-        }).catch(function (error) { console.error("Error saving review items:", error); JSUTIL.buildErrorModal("Error saving review decisions: " + error); });
+            });
+            console.log('all itempromises',itemPromises)
+            Promise.all(itemPromises).then(function () {
+                // PATCH #7: PUT the VQ status (not POST)
+                JSUTIL.callAJAXPut("/api/vendor-qualification/" + currentRecord.id,
+                    JSON.stringify({ processStatus: newProcessStatus }),
+                    function () {
+                        var historyObj = { name: "Record updated in Review - status set to " + newProcessStatus, startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: currentRecord.id };
+                        JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function (res) {
+                            const vendorId = getAccountId(currentRecord && currentRecord.vendor);
+                            const currentVendorStatus = (currentRecord && currentRecord.vendor && (currentRecord.vendor.accountStatus || currentRecord.vendor.AccountStatus) || "").toLowerCase();
+                            if (anyApproved) {
+                                // PATCH #10: PUT for account update (not POST)
+                                JSUTIL.callAJAXPut(JSUTIL.getUrl("/api/account/" + vendorId), JSON.stringify({ accountStatus: "Approved" }), function () { location.reload(); });
+                            } else { location.reload(); }
+                        });
+                    });
+            }).catch(function (error) { console.error("Error saving review items:", error); JSUTIL.buildErrorModal("Error saving review decisions: " + error); });
+        });
     });
 
-    $(".recordApprovalBtn").on("click", function () { var el = document.getElementById("qauapprovalModel"); if (el) { new bootstrap.Modal(el).show(); } });
+    $(".recordApprovalBtn").on("click", function () {
+        // Open Confirm Password modal
+        requirePasswordThen(function () {
+            JSUTIL.callAJAXPut(
+                JSUTIL.getUrl("/api/vendor-qualification/" + currentVendorQualificationId),
+                JSON.stringify({ processStatus: "QA Review" }),
+                completeImcheckCallback
+            );
+        });
+    });
     $("#deleteVendorQualificationBtn").on("click", function () { var el = document.getElementById("vendorCancelModel"); if (el) { new bootstrap.Modal(el).show(); } });
 
     function completeImcheckCallback(res) {
@@ -1644,11 +1730,13 @@
             .then(function (responses) { callbackAfterAddProduct(responses); })
             .catch(function (error) {
                 $saveBtn.prop("disabled", false);
+                showManuNotification('Error saving products. Please try again.', 'error');
                 JSUTIL.buildErrorModal("Error saving products: " + error);
             });
     });
 
     function callbackAfterAddProduct(response) {
+        showManuNotification('Products saved successfully.', 'success');
         var historyObj = { name: "Product List updated", startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: currentRecord.id };
         JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function () { location.reload(); });
     }
@@ -1661,13 +1749,11 @@
         var innerHtml = '<option value="">--none--</option>';
         $.each(response, function (i, val) { innerHtml += '<option value="' + val.id + '"' + (val.id == selectedContactId ? ' selected' : '') + '>' + val.firstName + " " + val.lastName + '</option>'; });
         var $contactSelect = $("#newContactSearch");
-        var hasSelect2 = $.fn && typeof $.fn.select2 === "function";
+        var hasSelect2 = false; // select2 not available in this context
         if ($contactSelect.length > 0) {
-            if (hasSelect2 && $contactSelect.hasClass("select2-hidden-accessible")) { $contactSelect.select2("destroy"); }
             $contactSelect.html(innerHtml);
         }
-        else { $contactSelect = $("<select/>", { class: "select2 form-control editVendorQualificationInput", name: "Contact.Id", id: "newContactSearch", required: true }).html(innerHtml); $("#contactDataNew").empty().append($contactSelect); }
-        if (hasSelect2) { $contactSelect.select2(); }
+        else { $contactSelect = $("<select/>", { class: "form-control editVendorQualificationInput", name: "Contact.Id", id: "newContactSearch", required: true }).html(innerHtml); $("#contactDataNew").empty().append($contactSelect); }
         if (selectedContactId) { $contactSelect.val(selectedContactId).trigger('change'); }
         $contactSelect.on("change", function () { $("#contactId").val($(this).val() ? Number($(this).val()) : ""); });
     }
@@ -1676,10 +1762,7 @@
         var innerHtml = '<option value="">--none--</option>';
         $.each(response, function (i, val) { innerHtml += '<option value="' + val.id + '">' + val.firstName + " " + val.lastName + '</option>'; });
         var $contactSelect = $("#newContactSearch");
-        var hasSelect2 = $.fn && typeof $.fn.select2 === "function";
-        if (hasSelect2 && $contactSelect.hasClass("select2-hidden-accessible")) { $contactSelect.select2("destroy"); }
         $contactSelect.html(innerHtml).prop("disabled", false);
-        if (hasSelect2) { $contactSelect.select2(); }
     }
 
     function vendorQualificationSave() {
@@ -1878,6 +1961,7 @@
         bindLocationEvents();
         toggleManufacturerTypeSections($('.newManuType').val());
         $(document).off('change.newManuType', '.newManuType').on('change.newManuType', '.newManuType', function () { toggleManufacturerTypeSections($(this).val()); });
+        // select2 not available in this context — using native select
 
         $('#newManuName, #vendorId').off('change.newManuContacts').on('change.newManuContacts', function () {
             var vendorId = $('#vendorId').val();
@@ -1899,6 +1983,15 @@
         $(document).off('click.saveNewManu', '.saveNewManu').on('click.saveNewManu', '.saveNewManu', function () {
             console.log('[saveNewManu] click. type =', JSON.stringify($('.newManuType').val()));
             if (!$('.newManuType').val()) { JSUTIL.buildErrorModal('Please Select type of manufacturer'); return; }
+
+            // Validate mandatory fields only for new manufacturer
+            if ($('.newManuType').val() === 'newManu') {
+                if (!validateNewManuFields()) {
+                    showManuNotification('Please fill in all mandatory fields correctly.', 'error');
+                    return;
+                }
+            }
+
             getNextVendorQualificationNumber(function (nextNumber) {
                 console.log('[saveNewManu] got nextNumber =', nextNumber, ' type now =', JSON.stringify($('.newManuType').val()));
                 if ($('.newManuType').val() === 'newManu') {
@@ -1930,7 +2023,23 @@
                         });
                     });
                 } else if ($('.newManuType').val() === 'existManu') {
-                    console.log('[saveNewManu] taking existManu branch');
+                    // console.log('[saveNewManu] taking existManu branch');
+                    // var selectedVendorId = Number($('#vendorId').val());
+                    // if (!selectedVendorId || selectedVendorId <= 0) { JSUTIL.buildErrorModal("Please select an existing manufacturer."); return; }
+                    // var obj = { number: nextNumber, vendor: { id: selectedVendorId }, startDate: convertToISO($('.newManuQuali[name="startDate"]').val()), processStatus: 'Initiation' };
+                    // var contactId = Number($('#ManuContactId').val() || $('#invoiceContactSearch').val() || 0);
+                    // if (contactId > 0) { obj['contact'] = { id: contactId }; }
+                    // // Save Manufacturer Code for existing manufacturer if entered
+                    // var existManuCode = ($('#existManuCode').val() || '').trim();
+                    // if (existManuCode) {
+                    //     JSUTIL.callAJAXPut('/api/account/' + selectedVendorId, JSON.stringify({ number: existManuCode }), function () {
+                    //         console.log('[saveNewManu] manufacturer code saved for existing vendor');
+                    //     });
+                    // }
+                    // JSUTIL.callAJAXPost('/api/vendor-qualification/create_with_sequence', JSON.stringify(obj), function (res) {
+                    //     JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify({ name: "Vendor Qualification Record Created", startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: res.id }), function () { location.reload(); });
+                    // });
+                     console.log('[saveNewManu] taking existManu branch');
                     var selectedVendorId = Number($('#vendorId').val());
                     if (!selectedVendorId || selectedVendorId <= 0) { JSUTIL.buildErrorModal("Please select an existing manufacturer."); return; }
                     var obj = { number: nextNumber, vendor: { id: selectedVendorId }, startDate: convertToISO($('.newManuQuali[name="startDate"]').val()), processStatus: 'Initiation' };
@@ -1986,13 +2095,209 @@
     window.manufacturing = window.manufacturing || {}; window.manufacturing.updateContactDropdown = updateContactDropdown;
 
     // Dropdown toggle handlers
-    $(document).on('click', '#newManuTypeBtn, #vendorTypeBtn, #contactIdBtnNew, #countryBtn, #stateBtn', function (e) {
+    $(document).on('click', '#contactIdBtnNew, #countryBtn, #stateBtn', function (e) {
         e.stopPropagation(); var $menu = $(this).next('.dropdown-menu'); $('.dropdown-menu').not($menu).hide(); $menu.toggle(); $(this).attr('aria-expanded', $menu.is(':visible') ? 'true' : 'false');
     });
-    $(document).on('click.customDropdown', function (e) { if (!$(e.target).closest('.dropdown').length) { $('.dropdown-menu').hide(); $('#newManuTypeBtn, #vendorTypeBtn, #contactIdBtnNew, #countryBtn, #stateBtn').attr('aria-expanded', 'false'); } });
+    $(document).on('click.customDropdown', function (e) { if (!$(e.target).closest('.dropdown').length) { $('.dropdown-menu').hide(); $('#contactIdBtnNew, #countryBtn, #stateBtn').attr('aria-expanded', 'false'); } });
 
-    $(document).on('click', '#newManuTypeBtn ~ .dropdown-menu .dropdown-item', function (e) { e.preventDefault(); e.stopPropagation(); var value = $(this).data('value') || ''; $('#newManuTypeBtn').text($(this).text().trim()); $('#newManuType').val(value).trigger('change'); $(this).siblings().removeClass('active'); $(this).addClass('active'); $(this).closest('.dropdown-menu').hide(); toggleManufacturerTypeSections(value); });
     $(document).on('click', '#vendorTypeBtn ~ .dropdown-menu .dropdown-item', function (e) { e.preventDefault(); e.stopPropagation(); var value = $(this).data('value') || ''; $('#vendorTypeBtn').text($(this).text().trim()); $('#vendorTypeHidden').val(value); $(this).siblings().removeClass('active'); $(this).addClass('active'); $(this).closest('.dropdown-menu').hide(); });
     $(document).on("click", "#contactIdDropdownMenuNew .dropdown-item", function (e) { e.preventDefault(); e.stopPropagation(); var id = $(this).data("id") || ""; $("#contactIdBtnNew").text($(this).text().trim() || "--none--"); $("#ManuContactId").val(id ? Number(id) : ""); $(this).siblings().removeClass("active"); $(this).addClass("active"); $(this).closest(".dropdown-menu").hide(); });
+    // ═══════════════════════════════════════════════════════════════
+    // Toast notification (reference: access-control.html)
+    // ═══════════════════════════════════════════════════════════════
+    if (typeof window.showManuNotification !== "function") {
+        window.showManuNotification = function (message, type) {
+            try {
+                var containerId = "manuToastContainer";
+                var container = document.getElementById(containerId);
+                if (!container) {
+                    container = document.createElement("div");
+                    container.id = containerId;
+                    container.style.position = "fixed";
+                    container.style.top = "1rem";
+                    container.style.right = "1rem";
+                    container.style.zIndex = "9999";
+                    container.style.display = "flex";
+                    container.style.flexDirection = "column";
+                    container.style.gap = "0.5rem";
+                    document.body.appendChild(container);
+                }
+                var toast = document.createElement("div");
+                var tone = (type || "info").toLowerCase();
+                var colors = {
+                    success: { bg: "#ecfdf5", fg: "#166534", bd: "#86efac" },
+                    warning: { bg: "#fffbeb", fg: "#92400e", bd: "#fde68a" },
+                    error:   { bg: "#fef2f2", fg: "#991b1b", bd: "#fecaca" },
+                    info:    { bg: "#eff6ff", fg: "#1e3a8a", bd: "#bfdbfe" }
+                };
+                var c = colors[tone] || colors.info;
+                toast.style.background = c.bg;
+                toast.style.color = c.fg;
+                toast.style.border = "1px solid " + c.bd;
+                toast.style.borderRadius = "8px";
+                toast.style.padding = "0.55rem 0.85rem";
+                toast.style.fontSize = "0.8125rem";
+                toast.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)";
+                toast.style.maxWidth = "320px";
+                toast.style.wordBreak = "break-word";
+                toast.textContent = String(message || "");
+                container.appendChild(toast);
+                setTimeout(function () {
+                    toast.style.opacity = "0";
+                    toast.style.transition = "opacity .25s ease";
+                    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 260);
+                }, 2800);
+            } catch (e) { console.log(type ? "[" + type + "]" : "[info]", message); }
+        };
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Validation for new manufacturer mandatory fields
+    // ═══════════════════════════════════════════════════════════════
+    function validateNewManuFields() {
+        var valid = true;
+
+        function check(inputId, errId, testFn) {
+            var $el = $(inputId);
+            var val = ($el.val() || "").trim();
+            if (!testFn(val)) {
+                $el.addClass("manu-input-err");
+                $(errId).show();
+                valid = false;
+            } else {
+                $el.removeClass("manu-input-err");
+                $(errId).hide();
+            }
+        }
+
+        // Phone: 10–15 digits only
+        check("#newManuPhone", "#phoneErr", function (v) { return /^\d{10,15}$/.test(v); });
+        // Email: valid format
+        check("#newManuEmail", "#emailErr", function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); });
+        // Address Line 1
+        check("#newManuAddr1", "#addr1Err", function (v) { return v.length > 0; });
+        // Address Line 2
+        check("#newManuAddr2", "#addr2Err", function (v) { return v.length > 0; });
+        // Country (hidden input)
+        var country = ($("#countryInput").val() || "").trim();
+        if (!country) { $("#countryErr").show(); valid = false; } else { $("#countryErr").hide(); }
+        // State (hidden input)
+        var state = ($("#stateInput").val() || "").trim();
+        if (!state) { $("#stateErr").show(); valid = false; } else { $("#stateErr").hide(); }
+        // City
+        check("#cityInput", "#cityErr", function (v) { return v.length > 0; });
+        // Postal Code: numbers only
+        check("#postalCodeVendor", "#postalErr", function (v) { return /^\d+$/.test(v); });
+        // GST: alphanumeric, non-empty
+        check("#newManuGst", "#gstErr", function (v) { return /^[a-zA-Z0-9]+$/.test(v); });
+
+        return valid;
+    }
+    // ═══════════════════════════════════════════════════════════════
+    // Password Confirm Modal (reference: productRequest.html)
+    // ═══════════════════════════════════════════════════════════════
+    var vqPasswordConfirmPendingAction = null;
+    var vqPasswordConfirmModalInstance = null;
+
+    function getVqPasswordConfirmModal() {
+        if (!vqPasswordConfirmModalInstance) {
+            vqPasswordConfirmModalInstance = new bootstrap.Modal($('#vqPasswordConfirmModal')[0]);
+        }
+        return vqPasswordConfirmModalInstance;
+    }
+
+    function showVqPasswordConfirmError(msg) {
+        $('#vqPasswordConfirmError').text(msg || '').toggle(!!msg);
+    }
+
+    function resolveFoxUsername() {
+        var src = (typeof FOX !== 'undefined' && FOX) ? FOX : (window.FOX || null);
+        if (!src) return '';
+        return src.employeeUsername || src.employeeUserName || src.username || src.userName
+            || src.employeeEmail || src.email || src.employeeName || src.employeeId || src.userId || '';
+    }
+
+    function requirePasswordThen(action) {
+        vqPasswordConfirmPendingAction = action;
+        $('#vqPasswordConfirmInput').val('').attr('type', 'password');
+        $('#vqPasswordConfirmToggle i').removeClass('fa-eye-slash').addClass('fa-eye');
+        showVqPasswordConfirmError('');
+        $('#vqPasswordConfirmSubmit').prop('disabled', false);
+        getVqPasswordConfirmModal().show();
+        setTimeout(function () { $('#vqPasswordConfirmInput').trigger('focus'); }, 200);
+    }
+
+    $(document).on('click', '#vqPasswordConfirmToggle', function () {
+        var $inp = $('#vqPasswordConfirmInput');
+        var $icon = $(this).find('i');
+        if ($inp.attr('type') === 'password') {
+            $inp.attr('type', 'text');
+            $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            $inp.attr('type', 'password');
+            $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+        $inp.trigger('focus');
+    });
+
+    $(document).on('keydown', '#vqPasswordConfirmInput', function (e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            $('#vqPasswordConfirmSubmit').trigger('click');
+        }
+    });
+
+    $(document).on('click', '#vqPasswordConfirmCancel', function () {
+        getVqPasswordConfirmModal().hide();
+    });
+
+    $(document).on('click', '#vqPasswordConfirmSubmit', function () {
+        var password = String($('#vqPasswordConfirmInput').val() || '').trim();
+        if (!password) {
+            showVqPasswordConfirmError('Password is required.');
+            return;
+        }
+        var uname = String(resolveFoxUsername() || '').trim();
+        if (!uname) {
+            showVqPasswordConfirmError('Cannot verify user: username not available.');
+            return;
+        }
+        var $btn = $(this);
+        $btn.prop('disabled', true);
+        showVqPasswordConfirmError('');
+        // Use /api/auth/login — returns user object on success, falsy/error on failure
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/auth/login'),
+            JSON.stringify({ username: uname, password: password }),
+            function (response) {
+                $btn.prop('disabled', false);
+                if (!response) {
+                    showVqPasswordConfirmError('Invalid password, please try again.');
+                    return;
+                }
+                var action = vqPasswordConfirmPendingAction;
+                vqPasswordConfirmPendingAction = null;
+                getVqPasswordConfirmModal().hide();
+                if (typeof action === 'function') action();
+            },
+            function () {
+                $btn.prop('disabled', false);
+                showVqPasswordConfirmError('Invalid password, please try again.');
+            }
+        );
+    });
+
+    $('#vqPasswordConfirmModal').on('hidden.bs.modal', function () {
+        vqPasswordConfirmPendingAction = null;
+        showVqPasswordConfirmError('');
+    });
+    // When Decision dropdown changes, toggle Comments readonly accordingly
+    $(document).on("change", "#qauProductsTable select[name='ProductApprovalStatus']", function () {
+        var $textarea = $(this).closest("tr").find("textarea[name='ProductComments']");
+        if ($(this).val() === "Approve") {
+            $textarea.prop("readonly", true);
+        } else {
+            $textarea.prop("readonly", false);
+        }
+    });
 
 </script>

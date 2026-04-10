@@ -1615,9 +1615,94 @@
         cameraModalConfirmHandler = null;
     });
 
+    // function initializeDateFieldPickers(selectorOrScope) {
+    //     if (!($.fn && typeof $.fn.daterangepicker === "function")) {
+    //         // console.warn("daterangepicker plugin not found. Date fields will remain plain text inputs.");
+    //         return;
+    //     }
+
+    //     var $inputs;
+    //     if (!selectorOrScope) {
+    //         $inputs = $(".datepicker, .datepickerCompliance, .datepickerCompliance2");
+    //     } else if (typeof selectorOrScope === "string") {
+    //         $inputs = $(selectorOrScope);
+    //     } else {
+    //         var $scope = $(selectorOrScope);
+    //         if ($scope.is("input")) {
+    //             $inputs = $scope;
+    //         } else {
+    //             $inputs = $scope.find(".datepicker, .datepickerCompliance, .datepickerCompliance2");
+    //         }
+    //     }
+
+    //     $inputs.each(function () {
+    //         var $dateField = $(this);
+    //         if (!$dateField.length) {
+    //             return;
+    //         }
+
+    //         var existingValue = ($dateField.val() || "").trim();
+    //         var parsedValue = null;
+    //         if (existingValue && typeof moment === "function") {
+    //             parsedValue = moment(existingValue, ["DD/MM/YYYY", "YYYY-MM-DD", "MM/DD/YYYY"], true);
+    //             if (!parsedValue.isValid()) {
+    //                 parsedValue = null;
+    //             }
+    //         }
+
+    //         $dateField.off(".invoiceDatepicker");
+    //         if ($dateField.data("daterangepicker")) {
+    //             $dateField.data("daterangepicker").remove();
+    //         }
+
+    //         var maxYear = new Date().getFullYear();
+    //         if (typeof moment === "function") {
+    //             maxYear = parseInt(moment().format("YYYY"), 10);
+    //         }
+
+    //         var pickerOptions = {
+    //             singleDatePicker: true,
+    //             showDropdowns: true,
+    //             autoUpdateInput: false,
+    //             minYear: 1901,
+    //             maxYear: maxYear,
+    //             locale: {
+    //                 format: "DD/MM/YYYY",
+    //                 cancelLabel: "Clear"
+    //             },
+    //             opens: "right"
+    //         };
+
+    //         var $modalParent = $dateField.closest(".modal");
+    //         if ($modalParent.length) {
+    //             pickerOptions.parentEl = "#" + $modalParent.attr("id");
+    //         }
+
+    //         $dateField.daterangepicker(pickerOptions);
+
+    //         $dateField.on("apply.daterangepicker.invoiceDatepicker", function (ev, picker) {
+    //             $(this).val(picker.startDate.format("DD/MM/YYYY"));
+    //         });
+
+    //         $dateField.on("cancel.daterangepicker.invoiceDatepicker", function () {
+    //             $(this).val("");
+    //         });
+
+    //         if (parsedValue) {
+    //             var pickerObj = $dateField.data("daterangepicker");
+    //             if (pickerObj) {
+    //                 pickerObj.setStartDate(parsedValue);
+    //                 pickerObj.setEndDate(parsedValue);
+    //             }
+    //             $dateField.val(parsedValue.format("DD/MM/YYYY"));
+    //         } else if (!existingValue) {
+    //             $dateField.val("");
+    //         }
+    //     });
+    // }
+
     function initializeDateFieldPickers(selectorOrScope) {
-        if (!($.fn && typeof $.fn.daterangepicker === "function")) {
-            // console.warn("daterangepicker plugin not found. Date fields will remain plain text inputs.");
+        if (typeof flatpickr === "undefined") {
             return;
         }
 
@@ -1636,71 +1721,44 @@
         }
 
         $inputs.each(function () {
-            var $dateField = $(this);
-            if (!$dateField.length) {
-                return;
+            var el = this;
+            var existingValue = ($(el).val() || "").trim();
+
+            // Destroy existing flatpickr instance if any
+            if (el._flatpickr) {
+                el._flatpickr.destroy();
             }
 
-            var existingValue = ($dateField.val() || "").trim();
-            var parsedValue = null;
-            if (existingValue && typeof moment === "function") {
-                parsedValue = moment(existingValue, ["DD/MM/YYYY", "YYYY-MM-DD", "MM/DD/YYYY"], true);
-                if (!parsedValue.isValid()) {
-                    parsedValue = null;
+            var fpOptions = {
+                dateFormat: "d/m/Y",
+                allowInput: true,
+                onReady: function (selectedDates, dateStr, instance) {
+                    // Restore pre-existing value after init
+                    if (existingValue && !dateStr) {
+                        // Try to parse DD/MM/YYYY manually
+                        var parts = existingValue.split('/');
+                        if (parts.length === 3) {
+                            var parsed = new Date(parts[2], parts[1] - 1, parts[0]);
+                            if (!isNaN(parsed)) {
+                                instance.setDate(parsed, false);
+                            }
+                        }
+                    }
                 }
-            }
-
-            $dateField.off(".invoiceDatepicker");
-            if ($dateField.data("daterangepicker")) {
-                $dateField.data("daterangepicker").remove();
-            }
-
-            var maxYear = new Date().getFullYear();
-            if (typeof moment === "function") {
-                maxYear = parseInt(moment().format("YYYY"), 10);
-            }
-
-            var pickerOptions = {
-                singleDatePicker: true,
-                showDropdowns: true,
-                autoUpdateInput: false,
-                minYear: 1901,
-                maxYear: maxYear,
-                locale: {
-                    format: "DD/MM/YYYY",
-                    cancelLabel: "Clear"
-                },
-                opens: "right"
             };
 
-            var $modalParent = $dateField.closest(".modal");
-            if ($modalParent.length) {
-                pickerOptions.parentEl = "#" + $modalParent.attr("id");
+            // datepickerCompliance: only allow dates from today onwards
+            if ($(el).hasClass("datepickerCompliance")) {
+                fpOptions.minDate = "today";
+            }
+            // datepickerCompliance2: only allow dates up to today
+            if ($(el).hasClass("datepickerCompliance2")) {
+                fpOptions.maxDate = "today";
             }
 
-            $dateField.daterangepicker(pickerOptions);
-
-            $dateField.on("apply.daterangepicker.invoiceDatepicker", function (ev, picker) {
-                $(this).val(picker.startDate.format("DD/MM/YYYY"));
-            });
-
-            $dateField.on("cancel.daterangepicker.invoiceDatepicker", function () {
-                $(this).val("");
-            });
-
-            if (parsedValue) {
-                var pickerObj = $dateField.data("daterangepicker");
-                if (pickerObj) {
-                    pickerObj.setStartDate(parsedValue);
-                    pickerObj.setEndDate(parsedValue);
-                }
-                $dateField.val(parsedValue.format("DD/MM/YYYY"));
-            } else if (!existingValue) {
-                $dateField.val("");
-            }
+            flatpickr(el, fpOptions);
         });
     }
-
     function safeReinitializeInputTypes() {
         if (!(window.JSUTIL && typeof JSUTIL.reinitializeInputTypes === "function")) {
             return;

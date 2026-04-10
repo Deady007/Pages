@@ -77,18 +77,18 @@
                     <div class="row g-3">
                         <div class="col-sm-6">
                             <div class="form-group mb-3">
-                                <label>Name</label>
+                                <label>Name <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control newDepartmentInput" name="name" required>
                             </div>
                             <div class="form-group mb-3">
-                                <label>Start Date</label>
-                                <input type="text" class="form-control newDepartmentInput" name="startDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly>
+                                <label>Start Date <span style="color:red;">*</span></label>
+                                <input type="text" class="form-control newDepartmentInput datepicker" name="startDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly>
                             </div>
                         </div>
                         <div class="col-sm-6">
 
                             <div class="form-group mb-3">
-                                <label>Code</label>
+                              <label>Code <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control newDepartmentInput" name="code">
                             </div>
                         </div>
@@ -125,18 +125,18 @@
                     <div class="row g-3">
                         <div class="col-sm-6">
                             <div class="form-group mb-3">
-                                <label>Name</label>
+                                <label>Name <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control editDepartmentInput" name="name" required readonly>
                             </div>
                             <div class="form-group mb-3">
-                                <label>Code</label>
+                                <label>Code <span style="color:red;">*</span></label>
                                 <input type="text" class="form-control editDepartmentInput" name="code" readonly>
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group mb-3">
-                                <label>Start Date</label>
-                                <input type="text" class="form-control editDepartmentInput" name="startDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly>
+                                <label>Start Date <span style="color:red;">*</span></label>
+                                <input type="text" class="form-control editDepartmentInput datepicker" name="startDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly>
                             </div>
                         </div>
                        
@@ -336,9 +336,25 @@ async function loadDepartments() {
 async function createDepartmentData() {
     var payload = buildFormPayload('newDepartmentInput');
     if (!payload.name) {
-        showError('Name is required.');
-        return;
-    }
+    showError('Name is required.');
+    return;
+}
+if (!payload.code) {
+    showError('Code is required.');
+    return;
+}
+if (!payload.startDate) {
+    showError('Start Date is required.');
+    return;
+}
+var dupName = departmentRecords.find(function(rec) {
+    return rec.name && rec.name.trim().toLowerCase() === payload.name.trim().toLowerCase();
+});
+if (dupName) {
+    showError('A department with the name "' + payload.name + '" already exists.');
+    return;
+}
+
 
     try {
         await requestJson('/api/departments', 'POST', toApiPayload(payload));
@@ -359,10 +375,26 @@ async function updateDepartmentData() {
     }
 
     var payload = buildFormPayload('editDepartmentInput');
-    if (!payload.name) {
-        showError('Name is required.');
-        return;
-    }
+   if (!payload.name) {
+    showError('Name is required.');
+    return;
+}
+if (!payload.code) {
+    showError('Code is required.');
+    return;
+}
+if (!payload.startDate) {
+    showError('Start Date is required.');
+    return;
+}
+var dupName = departmentRecords.find(function(rec) {
+    return rec.name && rec.name.trim().toLowerCase() === payload.name.trim().toLowerCase()
+           && String(rec.id) !== String(currentDepartmentId);
+});
+if (dupName) {
+    showError('A department with the name "' + payload.name + '" already exists.');
+    return;
+}
 
     try {
         await requestJson('/api/departments/' + currentDepartmentId, 'PUT', toApiPayload(payload));
@@ -404,23 +436,26 @@ $(document).ready(function () {
     $('.newDepartmentBtn').on('click', function () {
         setView('new');
         var $newDate = $('.newDepartmentInput[name="startDate"]');
-        if ($newDate.data('daterangepicker')) {
-            $newDate.data('daterangepicker').remove();
-        }
+        // if ($newDate.data('daterangepicker')) {
+        //     $newDate.data('daterangepicker').remove();
+        // }
+            flatpickr(".datepicker", {
+            dateFormat: "d/m/Y"
+        });
         $newDate.val('');
-        $newDate.daterangepicker({
-            singleDatePicker: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            minYear: 1901, maxYear: parseInt(moment().format('YYYY'), 10),
-            locale: { cancelLabel: 'Clear' }
-        });
-        $newDate.on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('DD/MM/YYYY'));
-        });
-        $newDate.off('cancel.daterangepicker').on('cancel.daterangepicker', function() {
-            $(this).val('');
-        });
+        // $newDate.daterangepicker({
+        //     singleDatePicker: true,
+        //     showDropdowns: true,
+        //     autoUpdateInput: false,
+        //     minYear: 1901, maxYear: parseInt(moment().format('YYYY'), 10),
+        //     locale: { cancelLabel: 'Clear' }
+        // });
+        // $newDate.on('apply.daterangepicker', function(ev, picker) {
+        //     $(this).val(picker.startDate.format('DD/MM/YYYY'));
+        // });
+        // $newDate.off('cancel.daterangepicker').on('cancel.daterangepicker', function() {
+        //     $(this).val('');
+        // });
     });
 
     $('.showAllDepartmentOnCancel').on('click', function () {
@@ -446,24 +481,27 @@ $(document).ready(function () {
         var $startDate = $('.editDepartmentInput[name="startDate"]');
         var displayVal = $startDate.val();
         
-        if ($startDate.data('daterangepicker')) {
-            $startDate.data('daterangepicker').remove();
-        }
+        // if ($startDate.data('daterangepicker')) {
+        //     $startDate.data('daterangepicker').remove();
+        // }
         
-        $startDate.daterangepicker(Object.assign({
-            singleDatePicker: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            minYear: 1901, maxYear: parseInt(moment().format('YYYY'), 10),
-            locale: { cancelLabel: 'Cancel' }
-        }, displayVal ? { startDate: moment(displayVal, 'DD/MM/YYYY') } : {}));
+        // $startDate.daterangepicker(Object.assign({
+        //     singleDatePicker: true,
+        //     showDropdowns: true,
+        //     autoUpdateInput: false,
+        //     minYear: 1901, maxYear: parseInt(moment().format('YYYY'), 10),
+        //     locale: { cancelLabel: 'Cancel' }
+        // }, displayVal ? { startDate: moment(displayVal, 'DD/MM/YYYY') } : {}));
         
-        $startDate.on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('DD/MM/YYYY'));
-        });
+        // $startDate.on('apply.daterangepicker', function(ev, picker) {
+        //     $(this).val(picker.startDate.format('DD/MM/YYYY'));
+        // });
         
-        $startDate.off('cancel.daterangepicker').on('cancel.daterangepicker', function() {
-            $(this).val('');
+        // $startDate.off('cancel.daterangepicker').on('cancel.daterangepicker', function() {
+        //     $(this).val('');
+        // });
+            flatpickr(".datepicker", {
+            dateFormat: "d/m/Y"
         });
     });
 
@@ -488,9 +526,12 @@ $(document).ready(function () {
 
         var $startDate = $('.editDepartmentInput[name="startDate"]');
 
-        if ($startDate.data('daterangepicker')) {
-            $startDate.data('daterangepicker').remove();
-        }
+        // if ($startDate.data('daterangepicker')) {
+        //     $startDate.data('daterangepicker').remove();
+        // }
+            flatpickr(".datepicker", {
+            dateFormat: "d/m/Y"
+        });
 
         $startDate.val(displayVal);
         

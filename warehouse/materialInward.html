@@ -791,7 +791,7 @@
                 </div>
             </div>
 
-            <div class="row g-3">
+            <div class="row g-3 imported">
                 <div class="col-sm-4">
                     <div class="form-group mb-3">
                         <label>Bill From</label>
@@ -815,7 +815,7 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row imported">
                 <div class="col-sm-4">
                     <div class="form-group mb-3">
                         <label>Ship From</label>
@@ -839,7 +839,7 @@
                 </div>
             </div>
 
-            <div class="row g-3">
+            <div class="row g-3 imported">
                 <div class="col-sm-4">
                     <div class="form-group mb-3">
                         <label>Ship To</label>
@@ -868,7 +868,7 @@
             <div class="row form-group">
                 <div class="col-sm-6">
                     <label for="">Select Tax Type</label>
-                    <div class="dropdown">
+                    <!-- <div class="dropdown">
                         <button
                             class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
                             type="button" id="taxTypeSelectBtn" aria-haspopup="true" aria-expanded="false">
@@ -880,11 +880,17 @@
                             <a class="dropdown-item" href="#" data-value="SGST-CGST">SGST-CGST</a>
                         </div>
                     </div>
-                    <input type="hidden" id="taxTypeSelect" value="">
+                    <input type="hidden" id="taxTypeSelect" value=""> -->
+                    <select class="form-control" id="taxTypeSelect">
+                        <option value="">--Select Tax Type--</option>
+                        <option value="IGST">IGST</option>
+                        <option value="CGST">CGST</option>
+                        <option value="SGST">SGST</option>
+                    </select>
                 </div>
                 <div class="col-sm-9">
                     <label for="productSelect">Products</label>
-                    <div class="dropdown">
+                    <!-- <div class="dropdown">
                         <button
                             class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
                             type="button" id="productSelectBtn" aria-haspopup="true" aria-expanded="false" disabled>
@@ -894,11 +900,11 @@
                             <a class="dropdown-item active" href="#" data-value="">-- Select Product --</a>
                         </div>
                     </div>
-                    <input type="hidden" id="productSelect" value="">
+                    <input type="hidden" id="productSelect" value=""> -->
+                    <select  id="productSelect" class="productDropdownMenu form-control"><option value="">--None--</option></select>
                 </div>
                 <div class="col-sm-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-secondary w-100" id="addProductBtn" style="margin-top: 23px;"
-                        onclick="handleAddProduct()">
+                    <button type="button" class="btn btn-secondary w-100" id="addProductBtn" style="margin-top: 23px;">
                         <i data-lucide="plus"></i> Add</button>
                 </div>
             </div>
@@ -946,8 +952,8 @@
             <div class="text-right" style="margin-top: 16px;">
                 <button type="button" class="btn btn-default" id="productReceiptCancelBtn"><i data-lucide="x"></i>
                     Cancel</button>
-                <button type="button" class="btn btn-secondary" id="productReceiptSaveBtn"
-                    onclick="handleSaveProductReceipt()"><i data-lucide="check"></i>
+                <button type="button" class="btn btn-secondary" id="productReceiptSaveBtn">
+                    <i data-lucide="check"></i>
                     Save</button>
             </div>
 
@@ -1540,7 +1546,51 @@
 
 
     <!-- editInwardPanel2.html  End -->
+
+
+    <!-- esignDocument.html     Start -->
+    <div class="modal inmodal fade" id="esignModal" tabindex="-1" role="dialog" aria-hidden="true"
+        style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">E-Signature</h4>
+                    <small class="font-bold">Approve a request by reviewing all related information.</small>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="eSignReportPasswordFieldRow">
+                        <div class="alert alert-danger" id="pageErrorPanel5" style="display: none;"></div>
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Username</label><i style="margin-left:5px;" data-lucide='user'></i>
+                                <input type="text" class="form-control" id="eSignUserName" readonly />
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label><i style="margin-left:5px;" data-lucide='lock'></i>
+                                <input type="password" class="form-control" id="eSignReportPasswordField" />
+                            </div>
+                        </div>
+                        <h5 class="font-bold" style="text-align: center;"> I understand that electronic signatures are
+                            the
+                            same as handwritten signatures.</h5>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" id="completeVerificationBtn"> Sign In to Approve
+                        Signing</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- esignDocument.html     End -->
+
 </div>
+
+
 
 <script>
     //  allInwardPanel.js   Start
@@ -1642,20 +1692,21 @@
 
     // Toggle tax fields (selector + table columns) for gate entry types
     function toggleTaxFieldsForEntry(entryType) {
-        var isLocalMaterial = entryType === 'localMaterial';
+        var isLocalMaterial = entryType === 'localMaterial' || entryType === "contractmanufacturing";
         var $taxFieldContainer = $('#taxTypeSelect').closest('.col-sm-6');
-
-        if (isLocalMaterial) {
+        console.log('abcd',isLocalMaterial)
+        if (isLocalMaterial) {  
             // Hide selector and all tax-related columns
             $('#taxTypeSelect').val('');
             setDropdownValue('#taxTypeSelectBtn', '#taxTypeDropdownMenu', '', '-- Select Tax Type --');
             $taxFieldContainer.hide();
-            $('.igst-col, .sgst-col, .cgst-col').hide();
+            $('.igst-col, .sgst-col, .cgst-col,.imported').hide();
             $('#receiptTable tbody tr').each(function () {
                 $(this).find('td.igst-col, td.sgst-col, td.cgst-col').hide();
             });
         } else {
             $taxFieldContainer.show();
+            $('.imported').show()
             updateTaxColumns();
         }
     }
@@ -1746,10 +1797,11 @@
             });
 
             // Populate the custom dropdown (not a <select>)
-            clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
-            $('#productSelectBtn span').first().text('-- Select Product --');
-
+            // clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+            // $('#productSelectBtn span').first().text('-- Select Product --');
+                $('.productDropdownMenu').empty()
             currentProducts.forEach(item => {
+                console.log('appending items',item)
                 var received = typeof item.quantityReceived !== 'undefined' ? item.quantityReceived : '';
                 var containers = typeof item.numberOfContainers !== 'undefined' ? item.numberOfContainers : '';
                 var suffixParts = [];
@@ -1757,7 +1809,8 @@
                 if (containers !== '') suffixParts.push(`Containers:${containers}`);
                 var suffix = suffixParts.length ? ` (${suffixParts.join(' | ')})` : '';
                 var label = item.name + ' - ' + (item.number || '') + suffix;
-                appendDropdownOption($('#productDropdownMenu'), item.id, label);
+                // appendDropdownOption($('#productDropdownMenu'), item.id, label);
+                $('.productDropdownMenu').append(`<option value="${item.id}">${label}</option>`)
             });
 
             // Enable the dropdown now that options are available
@@ -2463,6 +2516,8 @@
     $(document).ready(function () {
         loadStagingLocations();
         loadGateEntriesDropdown();
+        $('#addProductBtn').on('click', handleAddProduct);
+        $('#productReceiptSaveBtn').on('click', handleSaveProductReceipt);
     });
 
     // Listen for gate entry selection
@@ -2675,10 +2730,11 @@
             });
 
             // Populate dropdown
-            clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
-            $('#productSelectBtn span').first().text('-- Select Product --');
+            // clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+            $('#productSelectDropdown').empty()
+            // $('#productSelectBtn span').first().text('-- Select Product --');
             products.forEach(product => {
-                appendDropdownOption($('#productDropdownMenu'), product.id, `${product.name} - ${product.number}`);
+                $('#productSelectDropdown').append(`<option value="${product.id}">${product.name} - ${product.number}</option>`);
             });
             $('#productSelectBtn').prop('disabled', false);
 
@@ -2690,7 +2746,7 @@
         $('#purchaseOrderSelect').val('');
         $('#purchaseOrderSelectBtn span').first().text('-- None --');
         $('#purchaseOrderSelectBtn').prop('disabled', false);
-        clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+        // clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
         $('#productSelectBtn span').first().text('-- Select Product --');
         $('#productSelectBtn').prop('disabled', true);
         $('#receiptTable tbody').empty();
@@ -3089,7 +3145,7 @@
                 fetchPoDetails(currentRecordId);
                 return;
             }
-            clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+            // clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
             $('#productSelectBtn span').first().text('-- Select Product --');
             console.log('on change po select')
 
@@ -3168,7 +3224,7 @@
                                     $("#pageErrorPanel1").text("All items from this PO have been fully received!");
                                     $("#pageErrorPanel1").show().delay(5000).hide(0);
                                     $('#purchaseOrderSelect').val('');
-                                    clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+                                    // clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
                                     $('#productSelectBtn span').first().text('-- Select Product --');
                                     $('#productSelectBtn').prop('disabled', true);
                                     $('#receiptTable tbody').empty();
@@ -3272,7 +3328,8 @@
         });
 
         function searchManufacturers(query, $input) {
-            var searchUrl = JSUTIL.getUrl('/search/generic?searchParam=' + encodeURIComponent(query) + '&dataObject=Account&field=Name');
+            console.log('input',$input.val())
+            var searchUrl = JSUTIL.getUrl('/api/accounts/search?type=Manufacturer&search='+$input.val());
 
             JSUTIL.callAJAXGet(searchUrl, function (results) {
                 console.log('Manufacturer search results:', results);
@@ -3399,7 +3456,7 @@
             receiptDate: new Date().toISOString().split("T")[0],
             remarks: $('#receiptNotes').val(),
             processStatus: "New",
-
+            createdBy:{id:FOX.employeeId},
             // New Fields from GateEntry
             challanNumber: $('#challanNumber').val(),
             challanDate: toIsoDateOrEmpty($('#challanDate').val()) || null,
@@ -3541,7 +3598,13 @@ if (containerType === 'Others') {
                         lotPromises.push(createProductLotForRow(row, prNumber, createdItem.id));
                     });
                     Promise.all(lotPromises).then(function () {
-                        location.reload();
+                        // Update gate entry if present
+                        var gateEntryId = $('#gateEntryId').val();
+                        if (gateEntryId) {
+                            updateGateEntryAfterReceipt(gateEntryId, prId);
+                        } else {
+                            location.reload();
+                        }
                     }).catch(function (err) {
                         JSUTIL.buildErrorModal("Failed to create product lot: " + err);
                     });
@@ -3656,7 +3719,13 @@ if (containerType === 'Others') {
                                 lotPromises.push(createProductLotForRow(row, prNumber, createdItem.id));
                             });
                             Promise.all(lotPromises).then(function () {
-                                location.reload();
+                                // Update gate entry if present
+                                var gateEntryId = $('#gateEntryId').val();
+                                if (gateEntryId) {
+                                    updateGateEntryAfterReceipt(gateEntryId, prId);
+                                } else {
+                                    location.reload();
+                                }
                             }).catch(function (err) {
                                 JSUTIL.buildErrorModal("Failed to create product lot: " + err);
                             });
@@ -4070,7 +4139,7 @@ if (containerType === 'Others') {
         <body>
             <div class="report-container">
                 <div class="header-section clearfix">
-                    <div class="company-logo">Suleshvari</div>
+                    <div class="company-logo"><img src="/assets/images/logo1.png" alt="logo" style="width:100px; height:auto; object-fit:contain; border-radius:50%; flex-shrink:0;"></div>
                     <div class="company-info">
                         <div class="company-name">Suleshvari Laboratories Limited</div>
                         <div>PLOT NO. 4/22,4/23,4/18,4/32. G.I.D.C. ESTATE, - ANKLESHWAR</div>
@@ -6752,8 +6821,19 @@ $(document).on('change', '.containerTypeInput', function () {
     }
 
     $('#sendToGrnBtn').on('click', function () {
+         var myModal = new bootstrap.Modal(document.getElementById('esignModal'));
+    myModal.show();
+        //  $('#esignModal').modal('show')
+            $('#eSignUserName').val(FOX.employeeUsername)
+
+
+
+        
+    });
+    function newStatus(){
         var receiptUpdateData = {
-            processStatus: 'GIM Review'
+            processStatus: 'GIM Review',
+            createdBy:{id:FOX.employeeId}
         }
         var revurl = JSUTIL.getUrl('/api/product-receipts/' + currentRecordId)
         JSUTIL.callAJAXPut(revurl, JSON.stringify(receiptUpdateData), function (receiptRes) {
@@ -6768,7 +6848,96 @@ $(document).on('change', '.containerTypeInput', function () {
                 location.reload();
             });
         });
-    });
+    }
+      $('#completeVerificationBtn').on('click', function () {
+            var password = $('#eSignReportPasswordField').val();
+            JSUTIL.callAJAXPost('/api/auth/validate', JSON.stringify({
+                'username': FOX.employeeUsername,
+                'password': password
+            }), callbackAfterVerification);
+        });
+function callbackAfterVerification(response) {
+    var currentProcessStatus = currentReceiptData.processStatus
+        console.log(response, 'after checking', currentProcessStatus);
+        if (response.valid === false) {
+            $('#pageErrorPanel5').text('Invalid password, please try again');
+            $('#pageErrorPanel5').show();
+            return;
+        } else if (response.valid == true) {
+            if (currentProcessStatus == 'Site Head Approval') {
+                siteHeadApproval()
+            }
+            else if (currentProcessStatus == 'QA Approval') {
+                closure()
+            }
+            else if (currentProcessStatus == 'HOD Review' || currentProcessStatus == 'Site Co-ordinator Review' || currentProcessStatus == 'Awaiting Approval' || currentProcessStatus == 'GIM Review') {
+                hodApprove()
+            }
+            else if (currentProcessStatus == 'QA Review') {
+                qaApprove()
+            }
+            else if (currentProcessStatus == 'Final QA Approval') {
+                qauApprove()
+            }
+            else if (currentProcessStatus == 'QAU Head Review') {
+                qauheadApprove()
+            }
+            else if (currentProcessStatus == 'Site Tech Team Approval' || currentProcessStatus == 'CFT Approval') {
+                cftComments()
+            }
+            else if (currentProcessStatus == 'Originator Review') {
+                originatorReview()
+            }
+            else if (currentProcessStatus == 'New' || currentProcessStatus == 'Initiation' || currentProcessStatus == 'Logging') {
+                newStatus()
+            }
+            else if (currentProcessStatus == 'Implementation') {
+                implementation()
+            }
+            else if (currentProcessStatus == 'Investigation') {
+                investigation()
+            }
+            else if (currentProcessStatus == 'Root Cause Summary & CAPA Plan') {
+                rcscapaplan()
+            }
+            else if (currentProcessStatus == 'Plant Head Review' || currentProcessStatus == 'Site Head Review') {
+                plantheadreview()
+            }
+            else if (currentProcessStatus == 'Management Review') {
+                managementreview()
+            }
+            else if (currentProcessStatus == 'Final Review') {
+                finalreview()
+            }
+            else if (currentProcessStatus == 'QA Manager Review' || currentProcessStatus == 'Management Review') {
+                qamana_manage()
+            }
+            else if (currentProcessStatus == 'Root Cause Analysis') {
+                rcsinv()
+            }
+            else if (currentProcessStatus == 'QC Review') {
+                qcReview()
+            }
+            else if (currentProcessStatus == 'Repeat Testing' || currentProcessStatus == 'Repeat Testing QC Returned') {
+                repeatTesting()
+            }
+            else if (currentProcessStatus == 'Repeat Testing QC Review' || (currentProcessStatus == 'QC Head Returned' && currentRecord.repeatTesting == 'Yes')) {
+                repeatTestingQC()
+            }
+            else if (currentProcessStatus == 'QC Head Review') {
+                qcHeadReview()
+            }
+            else if (currentProcessStatus == 'QA Closure') {
+                qaClosure()
+            }
+
+        }
+        else {
+            $('#pageErrorPanel5').text('Invalid password, please try again');
+            $('#pageErrorPanel5').show().delay(4000).hide(0);
+        }
+    }
+
 
     $('#closeBtn').on('click', function () {
         if (!currentProductsDetails || currentProductsDetails.length === 0) {
@@ -7386,7 +7555,7 @@ $(document).on('change', '.containerTypeInput', function () {
                 var labelHtml = `
                 <div class="quarantine-label">
                     <div class="company-header">
-                        <div class="company-logo">Suleshvari</div>
+                        <div class="company-logo"><img src="/assets/images/logo1.png" alt="logo" style="width:100px; height:auto; object-fit:contain; border-radius:50%; flex-shrink:0;"></div>
                         <div class="header-title">
                             <div class="quarantine-title">"QUARANTINED MATERIAL"</div>
                             <div class="stores-subtitle">( STORES )</div>
@@ -7738,7 +7907,7 @@ $(document).on('change', '.containerTypeInput', function () {
                 var labelHtml = `
                 <div class="accept-label">
                     <div class="accept-header">
-                        <div class="company-logo">Suleshvari</div>
+                        <div class="company-logo"><img src="/assets/images/logo1.png" alt="logo" style="width:100px; height:auto; object-fit:contain; border-radius:50%; flex-shrink:0;"></div>
                         <div class="approved-status">APPROVED</div>
                     </div>
                     
@@ -8076,8 +8245,6 @@ $(document).on('change', '.containerTypeInput', function () {
 
     //  editInwardPanel2.js   End
 
-
-    // Top-level function so onclick="handleAddProduct()" works regardless of Bootstrap event capture
     function handleAddProduct() {
         var selectedId = $('#productSelect').val();
         $('#purchaseOrderSelect').prop('disabled', true);
@@ -8269,15 +8436,91 @@ $(document).on('change', '.containerTypeInput', function () {
                 saveProductReceipt(vendor, currentRecordId, selectedGateEntryId, isContractedManufacturing);
             });
         }
+
+        // Gate entry validations
+        if (selectedGateEntryId) {
+            validateGateEntryBeforeReceipt(selectedGateEntryId, function() {
+                // Proceed with save after validation
+                if (isContractedManufacturing) {
+                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/gate-entry/' + selectedGateEntryId), function (gateEntry) {
+                        if (gateEntry && gateEntry.vendor) {
+                            saveProductReceipt(gateEntry.vendor, null, selectedGateEntryId, isContractedManufacturing);
+                        } else if (selectedGateEntryVendor) {
+                            saveProductReceipt(selectedGateEntryVendor, null, selectedGateEntryId, isContractedManufacturing);
+                        } else {
+                            JSUTIL.buildErrorModal('Vendor not found for this gate entry.');
+                        }
+                    });
+                } else {
+                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/purchase/orders'), function (res) {
+                        res = (res || []).filter(function (po) { return po.orderStatus === 'Approved'; });
+                        var curr_po = res.filter(function (po) { return po.id == currentRecordId; });
+                        var vendor = curr_po && curr_po.length > 0 ? curr_po[0].vendor : null;
+                        if (!vendor && selectedGateEntryVendor) vendor = selectedGateEntryVendor;
+                        if (!vendor) { JSUTIL.buildErrorModal('Vendor not found for this receipt. Please check Gate Entry or PO.'); return; }
+                        saveProductReceipt(vendor, currentRecordId, selectedGateEntryId, isContractedManufacturing);
+                    });
+                }
+            });
+            return; // Wait for validation
+        }
     }
 
-    function updateGateEntryBeforeReceiptCreate() {
-        const gateEntryId =
-            $('#productReceiptModal').data('selectedGateEntryId') ||
-            $('#gateEntryId').val();
+    function updateGateEntryAfterReceipt(gateEntryId, prId) {
+        JSUTIL.callAJAXGet('/api/gate-entry/' + gateEntryId, function (gateEntry) {
+            try {
+                const remarksObj = typeof gateEntry.remarks === 'object' ? gateEntry.remarks : JSON.parse(gateEntry.remarks || '{}');
+                const gateEntryItems = Array.isArray(remarksObj.gateEntryItems) ? remarksObj.gateEntryItems : [];
 
+                // Get receipt items to update gimReceived
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-receipt-items'), function (allItems) {
+                    const receiptItems = (allItems || []).filter(item => item.productReceipt && item.productReceipt.id == prId);
+
+                    // Build totals from receipt items
+                    const receiptTotals = {};
+                    receiptItems.forEach(item => {
+                        const productId = String(item.product?.id || '');
+                        const manufacturerId = String(item.manufacturer?.id || '');
+                        const key = productId + '__' + manufacturerId;
+                        receiptTotals[key] = (receiptTotals[key] || 0) + (item.quantityReceived || 0);
+                    });
+
+                    // Update gimReceived
+                    gateEntryItems.forEach(item => {
+                        const productId = String(item.product?.id || '');
+                        const manufacturerId = String(item.manufacturer?.id || '');
+                        const key = productId + '__' + manufacturerId;
+                        item.gimReceived = (item.gimReceived || 0) + (receiptTotals[key] || 0);
+                    });
+
+                    const payload = {
+                        ...gateEntry,
+                        remarks: JSON.stringify({
+                            ...remarksObj,
+                            gateEntryItems: gateEntryItems
+                        }),
+                        processStatus: 'Accepted'
+                    };
+
+                    JSUTIL.callAJAXPut('/api/gate-entry/' + gateEntryId, JSON.stringify(payload), function () {
+                        location.reload();
+                    }, function (err) {
+                        console.error('Failed to update gate entry', err);
+                        JSUTIL.buildErrorModal('Failed to update Gate Entry.');
+                        location.reload(); // Still reload even if update fails?
+                    });
+                });
+            } catch (e) {
+                console.error('Failed to update gate entry', e);
+                JSUTIL.buildErrorModal('Failed to update Gate Entry.');
+                location.reload();
+            }
+        });
+    }
+
+    function validateGateEntryBeforeReceipt(gateEntryId, onSuccess) {
         if (!gateEntryId) {
-            handleSaveProductReceipt();
+            onSuccess();
             return;
         }
 
@@ -8357,6 +8600,7 @@ $(document).on('change', '.containerTypeInput', function () {
                 const receiptTotals = buildReceiptTotalsFromTable();
                 const validationErrors = [];
 
+                // Check for missing products and one-to-one
                 gateEntryItems.forEach(function (item) {
                     const productId = String(item?.product?.id || '');
                     const manufacturerId = String(item?.manufacturer?.id || '');
@@ -8366,75 +8610,50 @@ $(document).on('change', '.containerTypeInput', function () {
                     const currentReceiptQty = safeNum(receiptTotals[key]);  // qty entered in this new receipt
                     const gateQtyReceived = safeNum(item.quantityReceived); // gate entry qty
 
-                    const maxAllowed = gateQtyReceived * 1.05;
-                    const minAllowed = gateQtyReceived * 0.95;
-                    const totalAfterThisReceipt = alreadyReceived + currentReceiptQty;
-
-                    if (totalAfterThisReceipt > maxAllowed) {
+                    // Check if already has receipt (one-to-one)
+                    if (alreadyReceived > 0) {
                         validationErrors.push(
                             (item.productName || item.product?.name || ('Product ID ' + productId)) +
-                            ' exceeds allowed limit. ' +
-                            'Gate Qty: ' + gateQtyReceived +
-                            ', Already GIM: ' + alreadyReceived +
-                            ', Current: ' + currentReceiptQty +
-                            ', Max Allowed: ' + maxAllowed.toFixed(2)
+                            ' already has a receipt. One gate entry can only have one product receipt.'
                         );
                     }
 
-                    // update temporary final value only if needed for payload
-                    item.gimReceived = totalAfterThisReceipt;
+                    // Check if product is missing in receipt
+                    if (typeof receiptTotals[key] === 'undefined') {
+                        validationErrors.push(
+                            (item.productName || item.product?.name || ('Product ID ' + productId)) +
+                            ' is missing from the receipt. All products from gate entry must be included.'
+                        );
+                    }
 
-                    // optional flag if you want later status logic
-                    item._withinTolerance = totalAfterThisReceipt >= minAllowed && totalAfterThisReceipt <= maxAllowed;
+                    const maxAllowed = gateQtyReceived * 1.05;
+                    const minAllowed = gateQtyReceived * 0.95;
+                    const totalAfterThisReceipt = alreadyReceived + currentReceiptQty;
+                        console.log('total received',totalAfterThisReceipt,alreadyReceived,currentReceiptQty)
+                    if (totalAfterThisReceipt < minAllowed || totalAfterThisReceipt > maxAllowed) {
+                        validationErrors.push(
+                            (item.productName || item.product?.name || ('Product ID ' + productId)) +
+                            ' quantity not within 5% tolerance. ' +
+                            'Gate Qty: ' + gateQtyReceived +
+                            ', Current: ' + currentReceiptQty +
+                            ', Allowed: ' + minAllowed.toFixed(2) + ' - ' + maxAllowed.toFixed(2)
+                        );
+                    }
+
+                    // update gimReceived
+                    item.gimReceived = totalAfterThisReceipt;
                 });
 
                 if (validationErrors.length > 0) {
                     JSUTIL.buildErrorModal(validationErrors.join('<br><br>'));
                     return;
                 }
-                gateEntryItems.forEach(function (item) {
-                    const productId = String(item?.product?.id || '');
-                    const manufacturerId = String(item?.manufacturer?.id || '');
-                    const key = productId + '__' + manufacturerId;
 
-                    item.gimReceived = safeNum(receiptTotals[key] || 0);
-                });
-
-                const allAccepted = gateEntryItems.length > 0 && gateEntryItems.every(function (item) {
-                    const expected = safeNum(item.quantityReceived);
-                    const received = safeNum(item.gimReceived);
-
-                    const min = expected * 0.95;
-                    const max = expected * 1.05;
-
-                    return received >= min && received <= max;
-                });
-
-                const payload = {
-                    ...gateEntry,
-                    remarks: JSON.stringify({
-                        ...remarksObj,
-                        gateEntryItems: gateEntryItems
-                    }),
-                    processStatus: allAccepted ? 'Accepted' : 'Pending'
-                };
-
-                console.log('payload', payload);
-
-JSUTIL.callAJAXPut(
-                    '/api/gate-entry/' + gateEntryId,
-                    JSON.stringify(payload),
-                    function () {
-                        handleSaveProductReceipt();
-                    },
-                    function (err) {
-                        console.error('Failed to update gate entry', err);
-                        JSUTIL.buildErrorModal('Failed to update Gate Entry.');
-                    }
-                );
+                // Validation passed, proceed
+                onSuccess();
             } catch (e) {
-                console.error('Failed to process gate entry update', e);
-                JSUTIL.buildErrorModal('Failed to process Gate Entry.');
+                console.error('Failed to process gate entry validation', e);
+                JSUTIL.buildErrorModal('Failed to validate Gate Entry.');
             }
         });
     }
