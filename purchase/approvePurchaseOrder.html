@@ -122,7 +122,7 @@
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
                 <div class="ibox-title" style="display: flex; align-items: center; justify-content: space-between;">
-                    <h5>QA Approval - Purchase Order <small>Purchase </small></h5>
+                    <h5>Business Head Review - Purchase Order <small>Purchase </small></h5>
                     <div class="ibox-tools" style="margin-left: auto; text-align: right;" id="pageButtons">
                         <!-- <button type="button" class="btn btn-sm btn-secondary newPOBtn" style="display: none;"><i
                                 data-lucide="plus"></i> New PO</button> -->
@@ -221,9 +221,9 @@
                     <div class="stepnumber">2</div>
                     <p>Review</p>
                 </button>
-                <button class="step-button step-qa-approval active" data-step="2">
+                <button class="step-button step-bh-review active" data-step="2">
                     <div class="stepnumber">3</div>
-                    <p>Approval</p>
+                    <p>Business Head Review</p>
                 </button>
             </div>
         </div>
@@ -642,7 +642,7 @@
 
             var innerHtml = '';
             $.each(recordList, function (i, val) {
-                if(val.orderStatus !== "QA Review") return; 
+                if(val.orderStatus !== "Bussiness Head Review") return; 
                 innerHtml += '<tr>' +
                     '<td class="itemNum"><a href="javascript:void(0);" class="selectPOBtn" id="' + val.id + '">' + val.number + '</a></td>' +
                     '<td>' + JSUTIL.getDate(val.orderDate) + '</td>' +
@@ -674,7 +674,7 @@
     var orderObj = {};
     var orderItemList = [];
     var recordList = [];
-    var dataflag = true;   // true = hide approveRejectBtn; set to false when order is QA Review
+    var dataflag = true;   // true = hide approveRejectBtn; set to false when order is Bussiness Head Review
     quoteId = '';
     var gst;
 
@@ -1080,53 +1080,6 @@ $(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
     $(document).on('change', '.lnItemInputVal1', function () {
         calculateTotals1();
     });
-    // $('#approveBtn').on('click', function () {
-    //     console.log('Approve clicked. Updating products and order status...');
-    //     var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
-    //     if (modalInstance) modalInstance.hide();
-
-    //     // Prepare product updates for upsert_multiple
-    //     var productUpdates = [];
-
-    //     $.each(orderItemList, function (index, item) {
-    //         var currentQtyOnOrder = Number(item.product.quantityOnOrder) || 0;
-    //         var orderQuantity = Number(item.quantity) || 0;
-    //         var newQtyOnOrder = currentQtyOnOrder + orderQuantity;
-
-    //         // Add product update to array
-    //         productUpdates.push({
-    //             id: item.product.id,
-    //             quantityOnOrder: newQtyOnOrder
-    //         });
-    //     });
-
-    //     // First, update all products using upsert_multiple
-    //     // var productUrl = JSUTIL.getUrl('/data/Product/upsert_multiple');
-    //     var productUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/items');
-    //     JSUTIL.callAJAXPost(productUrl, JSON.stringify(productUpdates), function (productResponse) {
-    //         console.log('Products updated:', productResponse);
-
-    //         // OLD: After products are updated, approve the PO via old endpoint
-    //         // var obj = { orderStatus: 'Approved' };
-    //         // var postUrl = JSUTIL.getUrl('/data/PurchaseOrder/update/' + currentRecordId);
-    //         // JSUTIL.callAJAXPost(postUrl, JSON.stringify(obj), submitForApprovalCallback);
-
-    //         // NEW: PATCH /api/purchase/orders/{id}/status
-    //         fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
-    //             method: 'PATCH',
-    //             headers: { 'Content-Type': 'text/plain' },
-    //             body: 'Approved'
-    //         })
-    //         .then(function (res) {
-    //             if (!res.ok) throw new Error('Status update failed: ' + res.status);
-    //             submitForApprovalCallback(res);
-    //         })
-    //         .catch(function (err) {
-    //             console.error('Approve PATCH failed:', err);
-    //             JSUTIL.stopSpinner();
-    //         });
-    //     });
-    // });
     $('#approveBtn').off('click').on('click', async function () {
     // Hide modal first (BS5)
     var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
@@ -1243,11 +1196,11 @@ $(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
         orderObj = response.order || response.orderObj;
         customeremail = orderObj.vendor ? orderObj.vendor.email : '';
 
-        // Set dataflag: false = show approveRejectBtn (order is "QA Review"), true = hide it
-        dataflag = (orderObj.orderStatus === 'QA Review') ? false : true;
+        // Set dataflag: false = show approveRejectBtn (order is "Bussiness Head Review"), true = hide it
+        dataflag = (orderObj.orderStatus === 'Bussiness Head Review') ? false : true;
 
         // NEW: read from orderObj directly
-        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "QA Review" || orderObj.orderStatus === "Approved") {
+        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "Bussiness Head Review" || orderObj.orderStatus === "Approved") {
             $('.approvedBtn').hide();
             $('.orderEditBtn').hide();
             $('.orderCancelBtn').hide();

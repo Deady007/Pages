@@ -32,6 +32,10 @@
         color: #337AB7!important;
         text-decoration: none;
     }
+    #editProductForm select.editInput:disabled {
+        background-color: #fff !important;
+        opacity: 1 !important;
+    }
  </style>
 <div class="qa-white-panel">
 <div class="row animated fadeInRight aasaanPanel" id="ProductList">
@@ -489,46 +493,40 @@
           <div class="row g-3">
             <div class="col-sm-6">
               <div class="form-group mb-3">
-                <label>Material Name</label> <input type="text" class="form-control editInput" name="Name" readonly
-                  required="">
+                <label>Material Name</label>
+                <input type="text" class="form-control editInput" name="Name" readonly required="">
               </div>
               <div class="form-group mb-3">
-                                <label for="">Product Code</label>
-                                <input type="text" name="Number" class="form-control editInput" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label for="">Version</label>
-                                <input type="text" class="form-control editInput" name="Version" readonly>
-                            </div>
-              <div class="form-group mb-3">
-                <label>Description</label> <input type="text" class="form-control editInput" name="Description" readonly
-                  required="">
+                <label>Product Code</label>
+                <input type="text" name="Number" class="form-control editInput" readonly>
               </div>
               <div class="form-group mb-3">
-                <label>Category</label> <select class="form-control select2 editInput" name="Category" disabled>
-                </select>
+                <label>Version</label>
+                <input type="text" class="form-control editInput" name="Version" readonly>
               </div>
               <div class="form-group mb-3">
-                <label>Unit Price</label> <input type="number" class="form-control editInput" name="UnitPrice" readonly>
+                <label>Description</label>
+                <input type="text" class="form-control editInput" name="Description" readonly required="">
               </div>
               <div class="form-group mb-3">
-                <label>Quantity Available</label>
-                <p class="form-control-static" id="currentAvailability"></p>
+                <label>Unit Price</label>
+                <input type="number" class="form-control editInput" name="UnitPrice" readonly>
               </div>
             </div>
             <div class="col-sm-6">
-              <div class="form-group mb-3" >
-                <label>HSN Code</label> <input type="text" class="form-control editInput" name="Hsn" readonly>
+              <div class="form-group mb-3">
+                <label>HSN Code</label>
+                <input type="text" class="form-control editInput" name="Hsn" readonly>
               </div>
               <div class="form-group mb-3">
-                <label>UOM</label> <select class="form-control select2 editInput" name="Uom" disabled>
+                <label>UOM</label>
+                <select class="form-control select2 editInput" name="Uom" disabled>
                 </select>
               </div>
               <div class="form-group mb-3">
-                <label>Type</label> <select class="form-control select2 editInput" name="Type" disabled>
-                  <option value="">
-                    --none--
-                  </option>
+                <label>Type</label>
+                <select class="form-control select2 editInput" name="Type" disabled>
+                  <option value="">--none--</option>
                   <option value="Raw Material">Raw Material</option>
                   <option value="Packaging Material">Packaging Material</option>
                   <option value="Finished Goods">Finished Goods</option>
@@ -537,28 +535,44 @@
                 </select>
               </div>
               <div class="form-group mb-3">
-                <label>Is KSM ?</label>
-                <select class="form-control select2 editInput" name="isKsm" disabled>
-                  <option value="">--none--</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </div>
-              <div class="form-group mb-3">
                 <label>Restock/Minimum Quantity</label>
                 <input type="number" class="form-control editInput" name="RestockQuantity" readonly>
               </div>
               <div class="form-group mb-3">
-                <label>Storage Location</label>
-                <p type="text" class="form-control-static " id="storageLocation"></p>
+                <label>Quantity Available</label>
+                <input type="text" class="form-control editInput" id="currentAvailability" readonly>
               </div>
-            </div><input type="hidden" name="id" id="productId">
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <div class="form-group mb-3">
+                <label>Category</label>
+                <input type="hidden" class="editInput" name="Category" id="editCategoryHiddenInput" value="">
+                <div class="form-check mt-1">
+                  <input type="checkbox" class="form-check-input" id="editBlendingMaterialCheckbox" disabled>
+                  <label class="form-check-label" for="editBlendingMaterialCheckbox">Blending Material</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <div class="form-group mb-3">
+                <label>Is KSM ?</label>
+                <input type="hidden" class="editInput" name="isKsm" id="isKsmHiddenInput" value="No">
+                <div class="form-check mt-1">
+                  <input type="checkbox" class="form-check-input" id="isKsmCheckbox" disabled>
+                  <label class="form-check-label" for="isKsmCheckbox">KSM Material</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" name="id" id="productId">
 
           </div>
 
         </form>
         <hr>
-        <div class="row g-3">
+        <div class="row g-3 px-3">
           <div class="col-sm-6">
             <div class="form-group mb-3">
               <label>Record Created</label>
@@ -612,7 +626,7 @@
 
           <div id="productLabelTab" class="tab-pane show active">
             <div class="panel-body">
-              <div class="ibox-tools" style="display: flex; justify-content: flex-end; align-items: center;">
+              <div class="ibox-tools px-3" style="display: flex; justify-content: flex-end; align-items: center;">
                 <button type="button" class="btn btn-default btn-sm labControlBtn" id="addScheduleBtn"
                   style="margin-right: 5px;" disabled><i data-lucide="plus"></i>Add Label
                 </button>
@@ -625,7 +639,7 @@
                   disabled><i data-lucide="trash"></i> Delete
                   Label </button>
               </div>
-              <div class="table-responsive" style="margin-top: 20px;">
+              <div class="table-responsive px-3" style="margin-top: 20px;">
                 <table class="table table-bordered table-hover">
                   <thead>
                     <tr>
@@ -1381,7 +1395,9 @@ function populateEditProductForm(product) {
 
     $('.editInput[name="Name"]').val(product.name);
     $('.editInput[name="Description"]').val(product.description);
-    $('.editInput[name="Category"]').val(product.category).trigger('change');
+    var isBlending = (product.category || '') === 'Blending Material';
+    $('#editBlendingMaterialCheckbox').prop('checked', isBlending);
+    $('#editCategoryHiddenInput').val(isBlending ? 'Blending Material' : '');
     $('.editInput[name="UnitPrice"]').val(product.unitPrice);
     $('.editInput[name="Number"]').val(product.number);
     $('.editInput[name="Uom"]').val(product.uom).trigger('change');
@@ -1389,12 +1405,16 @@ function populateEditProductForm(product) {
     $('.editInput[name="RestockQuantity"]').val(product.restockQuantity);
     $('.editInput[name="Hsn"]').val(product.hsn);
     $('.editInput[name="Version"]').val(product.version);
-    $('.editInput[name="isKsm"]').val(product.isKsm || '').trigger('change');
+    // Set Is KSM checkbox based on truthy values
+    var ksmVal = String(product.isKsm || '').trim().toLowerCase();
+    var isKsmChecked = (ksmVal === 'yes' || ksmVal === 'true' || ksmVal === ':true' || ksmVal === '"true"' || ksmVal === '1');
+    $('#isKsmCheckbox').prop('checked', isKsmChecked);
+    $('#isKsmHiddenInput').val(isKsmChecked ? 'Yes' : 'No');
     $('#productId').val(product.id);
 
     $('#productName').text(product.name);
     $('#productType').text(product.type);
-    $('#currentAvailability').text((product.quantityOnHand) - (product.quantityReserved));
+    $('#currentAvailability').val((product.quantityOnHand) - (product.quantityReserved));
 
     $('#recordCreated').text(JSUTIL.getDateTime(product.createdDate));
     $('#recordUpdated').text(JSUTIL.getDateTime(product.modifiedDate));
@@ -1764,11 +1784,23 @@ $(document).ready(function () {
         multipartFile = e.target.files[0];
     });
 
+    // Sync Is KSM checkbox with hidden input
+    $('#isKsmCheckbox').on('change', function () {
+        $('#isKsmHiddenInput').val($(this).is(':checked') ? 'Yes' : 'No');
+    });
+
+    // Sync Blending Material checkbox with hidden input
+    $('#editBlendingMaterialCheckbox').on('change', function () {
+        $('#editCategoryHiddenInput').val($(this).is(':checked') ? 'Blending Material' : '');
+    });
+
     $('#editBtn').on('click', function () {
         $('.editInput').prop('readonly', false);
         $('.editInput').prop('disabled', false);
         $('#fileInput').prop('disabled', false);
-        $('.editInput[name="StorageLocation.id"]').prop('readonly', true)
+        $('#currentAvailability').prop('readonly', true);
+        $('#isKsmCheckbox').prop('disabled', false);
+        $('#editBlendingMaterialCheckbox').prop('disabled', false);
         $('#saveBtn').show();
         $(this).hide();
 
@@ -1796,6 +1828,8 @@ $(document).ready(function () {
 
         $('.editInput').prop('readonly', true);
         $('.editInput').prop('disabled', true);
+        $('#isKsmCheckbox').prop('disabled', true);
+        $('#editBlendingMaterialCheckbox').prop('disabled', true);
         $('#editBtn').show();
         $(this).hide();
 
@@ -2264,6 +2298,10 @@ function afterDelete(response) {
 
 function resetForm() {
     $('.editInput').val('').prop('readonly', true).prop('disabled', true);
+    $('#isKsmCheckbox').prop('checked', false).prop('disabled', true);
+    $('#isKsmHiddenInput').val('No');
+    $('#editBlendingMaterialCheckbox').prop('checked', false).prop('disabled', true);
+    $('#editCategoryHiddenInput').val('');
     $('#editBtn').show();
     $('#saveBtn').hide();
     $('#errorPanel').hide();

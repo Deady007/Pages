@@ -1117,11 +1117,55 @@
         $(this).addClass("active");
         $(target).addClass("active show");
     });
+    var _currentVendorType = '';
+
+    function loadCurrentVendorType(callback) {
+        // Try from vendor object on the record first
+        var vendor = currentRecord && currentRecord.vendor;
+        var vType = '';
+        if (vendor) {
+            vType = vendor.vendorType || vendor.VendorType || vendor.vendor_type || '';
+        }
+        if (vType) {
+            _currentVendorType = vType;
+            if (typeof callback === 'function') callback();
+            return;
+        }
+        // Fallback: fetch from Account API
+        var vendorId = vendor && (vendor.id || vendor.Id);
+        if (vendorId) {
+            JSUTIL.callAJAXGet('/api/account/' + vendorId, function (res) {
+                _currentVendorType = (res && (res.vendorType || res.VendorType || res.vendor_type)) || '';
+                if (typeof callback === 'function') callback();
+            });
+        } else {
+            _currentVendorType = '';
+            if (typeof callback === 'function') callback();
+        }
+    }
+
+    function getVendorTypeAllowedTypes() {
+        var vType = _currentVendorType || '';
+        var typeMap = {
+            'RM': ['raw material'],
+            'PM': ['packaging material'],
+            'Products': ['general material']
+        };
+        return typeMap[vType] || [];
+    }
+
     function initVQProductTypeahead($row) {
+        loadCurrentVendorType(function () {
         loadVQProducts(function (results) {
             var $nameInput = $row.find(".vq-product-search-name");
             var $codeInput = $row.find(".vq-product-search-code");
             var $idField = $row.find(".vq-product-id");
+
+            // Filter products based on manufacturer vendorType
+            var allowedTypes = getVendorTypeAllowedTypes();
+            var typeFilteredResults = allowedTypes.length ? results.filter(function (item) {
+                return allowedTypes.indexOf((item.type || '').toLowerCase()) !== -1;
+            }) : results;
 
             function bindAutocomplete($input) {
                 if (!$input.length) return;
@@ -1130,7 +1174,7 @@
                     var q = String($input.val() || "").toLowerCase().trim();
                     $input.data("vq-$ul") && $input.data("vq-$ul").remove();
                     if (!q) return;
-                    var filtered = results.filter(function (item) { return item.search.indexOf(q) !== -1; }).slice(0, 10);
+                    var filtered = typeFilteredResults.filter(function (item) { return item.search.indexOf(q) !== -1; }).slice(0, 10);
                     if (!filtered.length) return;
 
                     var $ul = $("<ul/>").css({ position: "absolute", top: $input.offset().top + $input.outerHeight(), left: $input.offset().left, width: $input.outerWidth(), background: "#fff", border: "1px solid #dee2e6", listStyle: "none", padding: 0, margin: 0, maxHeight: "220px", overflowY: "auto", zIndex: 9999, boxShadow: "0 4px 12px rgba(0,0,0,0.12)", borderRadius: "0 0 6px 6px" });
@@ -1164,6 +1208,7 @@
             bindAutocomplete($nameInput);
             bindAutocomplete($codeInput);
         });
+        });
     }
 
     function activateStep(stepIndex) {
@@ -1189,7 +1234,7 @@
             $("#VendorQualificationContainer").empty(); $("#VendorPortalContainer").empty();
             $("#qauProductsTable").empty(); $("#qauQuestionsContainer").empty(); $("#qauDocumentsTable").empty(); $("#qauHistoryTable").empty();
             $("#editManuQualificationPanel").hide(); $("#allManuQualificationPanel").show();
-            activateStep(0); currentVendorQualificationId = "";
+            activateStep(0); currentVendorQualificationId = ""; _currentVendorType = '';
         });
 
         $("#editVendorName").on("change", function () {
@@ -1239,6 +1284,7 @@
             $.each(recordList, function (j, val2) {
                 if (String(currentId) === String(val2.id)) {
                     currentRecord = val2;
+                    loadCurrentVendorType();
                     window.currentVendorAccountStatus = val2.vendor && (val2.vendor.accountStatus || val2.vendor.AccountStatus) ? (val2.vendor.accountStatus || val2.vendor.AccountStatus) : "";
                     $("#hiddenVendorQualificationId").val(val2.id);
                     $('.editVendorQualificationInput[name="vendor.id"]').val(getAccountId(val2.vendor));

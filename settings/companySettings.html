@@ -1,0 +1,191 @@
+<div class="row">
+  <div class="col-lg-12">
+    <div class="ibox float-e-margins">
+      <div class="ibox-title">
+        <h5>Company Settings</h5>
+        <div class="ibox-tools">
+          <button type="button" class="btn btn-primary btn-sm" id="addSettingBtn">
+            <i data-lucide="plus"></i> Add Setting
+          </button>
+        </div>
+      </div>
+      <div class="ibox-content">
+        <div class="table-responsive">
+          <table class="table table-hover dataTables" id="settingsTable">
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Value</th>
+                <th>Description</th>
+                <th style="width:120px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="settingsTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="settingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="settingModalTitle">Add Setting</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Key</label>
+          <input type="text" class="form-control" id="settingKey" placeholder="e.g. document_request">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Value (Folder Path)</label>
+          <input type="text" class="form-control" id="settingValue" placeholder="e.g. DMS/DocumentRequest">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <input type="text" class="form-control" id="settingDescription" placeholder="e.g. Upload folder for Document Requests">
+        </div>
+        <div class="mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="createFolderCheck" checked>
+            <label class="form-check-label" for="createFolderCheck">
+              Create folder on disk if it doesn't exist
+            </label>
+          </div>
+        </div>
+        <div class="text-muted small" id="storageLocationInfo"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveSettingBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var settingsList = [];
+  var editingKey = null;
+  var storageBaseDir = '';
+
+  function loadSettings() {
+    JSUTIL.callAJAXGet('/api/company-settings', function (res) {
+      settingsList = res || [];
+      renderTable();
+    });
+  }
+
+  function loadStorageLocation() {
+    JSUTIL.callAJAXGet('/api/files/location', function (res) {
+      storageBaseDir = (res && res.data) || '';
+      $('#storageLocationInfo').text(storageBaseDir ? 'Base storage: ' + storageBaseDir : '');
+    });
+  }
+
+  function renderTable() {
+    var html = '';
+    (settingsList || []).forEach(function (s) {
+      html += '<tr>'
+        + '<td><strong>' + escapeHtml(s.key || '') + '</strong></td>'
+        + '<td><code>' + escapeHtml(s.value || '') + '</code></td>'
+        + '<td>' + escapeHtml(s.description || '') + '</td>'
+        + '<td>'
+        + '<button class="btn btn-sm btn-outline-primary edit-setting-btn" data-key="' + escapeHtml(s.key) + '">'
+        + '<i data-lucide="pencil"></i></button> '
+        + '<button class="btn btn-sm btn-outline-danger delete-setting-btn" data-key="' + escapeHtml(s.key) + '">'
+        + '<i data-lucide="trash-2"></i></button>'
+        + '</td>'
+        + '</tr>';
+    });
+    if (!html) {
+      html = '<tr><td colspan="4" class="text-center text-muted">No settings configured.</td></tr>';
+    }
+    $('#settingsTableBody').html(html);
+    if (window.lucide) lucide.createIcons();
+    JSUTIL.reinitializeDataTable();
+  }
+
+  function escapeHtml(text) {
+    return $('<span>').text(text || '').html();
+  }
+
+  function openModal(setting) {
+    editingKey = setting ? setting.key : null;
+    $('#settingModalTitle').text(editingKey ? 'Edit Setting' : 'Add Setting');
+    $('#settingKey').val(setting ? setting.key : '').prop('disabled', !!editingKey);
+    $('#settingValue').val(setting ? setting.value : '');
+    $('#settingDescription').val(setting ? setting.description : '');
+    $('#createFolderCheck').prop('checked', true);
+    new bootstrap.Modal($('#settingModal')[0]).show();
+  }
+
+  function saveSetting() {
+    var key = (editingKey || $('#settingKey').val() || '').trim();
+    var value = ($('#settingValue').val() || '').trim();
+    var description = ($('#settingDescription').val() || '').trim();
+
+    if (!key) {
+      alert('Key is required.');
+      return;
+    }
+    if (!value) {
+      alert('Value is required.');
+      return;
+    }
+
+    var payload = JSON.stringify({ key: key, value: value, description: description });
+
+    JSUTIL.callAJAXPut('/api/company-settings/' + encodeURIComponent(key), payload, function () {
+      // Create folder on disk if checked
+      if ($('#createFolderCheck').is(':checked')) {
+        JSUTIL.callAJAXPost('/api/files/create-folder?folder=' + encodeURIComponent(value), '', function () {
+          console.log('Folder created: ' + value);
+        });
+      }
+      bootstrap.Modal.getInstance($('#settingModal')[0]).hide();
+      // Reload global companySettingMap
+      JSUTIL.callAJAXGet('/api/company-settings/map', function (map) {
+        window.companySettingMap = map || {};
+        window.FOX = window.FOX || {};
+        window.FOX.companySettings = window.companySettingMap;
+      });
+      loadSettings();
+    });
+  }
+
+  function deleteSetting(key) {
+    if (!confirm('Delete setting "' + key + '"?')) return;
+    $.ajax({
+      url: '/api/company-settings/' + encodeURIComponent(key),
+      type: 'DELETE',
+      success: function () {
+        loadSettings();
+      }
+    });
+  }
+
+  // Event handlers
+  $('#addSettingBtn').on('click', function () { openModal(null); });
+  $('#saveSettingBtn').on('click', saveSetting);
+
+  $(document).on('click', '.edit-setting-btn', function () {
+    var key = $(this).data('key');
+    var setting = settingsList.find(function (s) { return s.key === key; });
+    if (setting) openModal(setting);
+  });
+
+  $(document).on('click', '.delete-setting-btn', function () {
+    deleteSetting($(this).data('key'));
+  });
+
+  // Init
+  loadSettings();
+  loadStorageLocation();
+})();
+</script>

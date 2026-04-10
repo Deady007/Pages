@@ -44,6 +44,24 @@
     }
 
     .isKsm-hidden { display: none !important; }
+
+    #statusFilterGroup {
+        margin-bottom: 25px;
+    }
+    #statusFilterGroup .filter-btn-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    #statusFilterGroup .status-filter {
+        border-radius: 20px;
+        min-width: 120px;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #statusFilterGroup .status-filter.active {
+        box-shadow: 0 3px 8px rgba(38,115,207,0.35);
+    }
 </style>
 <div class="qa-white-panel">
     <div class="row" id="allRecordPanel">
@@ -59,6 +77,15 @@
                     </div>
                 </div>
                 <div class="ibox-content">
+                    <div class="m-b-sm" id="statusFilterGroup">
+                        <div class="filter-btn-wrapper">
+                            <button type="button" class="btn btn-purple status-filter active" data-filter="ALL">All</button>
+                            <button type="button" class="btn btn-default status-filter" data-filter="New">New</button>
+                            <button type="button" class="btn btn-default status-filter" data-filter="In Review">In Review</button>
+                            <button type="button" class="btn btn-default status-filter" data-filter="Accepted">Accepted</button>
+                            <button type="button" class="btn btn-default status-filter" data-filter="Rejected">Rejected</button>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table id="allMaterialRequestPanelTable" class="table table-bordered table-hover dataTables">
                             <thead>
@@ -380,33 +407,6 @@
         </div>
     </div>
 
-    <div class="modal inmodal fade" id="passwordConfirmModal" tabindex="-1" role="dialog" aria-hidden="true"
-        style="display: none;">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Confirm Password</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="passwordConfirmInput">Enter your password to continue</label>
-                        <div class="input-group">
-                            <input type="password" class="form-control" id="passwordConfirmInput" autocomplete="current-password">
-                            <button type="button" class="btn btn-default" id="passwordConfirmToggle" tabindex="-1" title="Show password">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                        <div id="passwordConfirmError" class="text-danger small mt-1" style="display:none;"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="passwordConfirmSubmit">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!--editMaterialRequestPanel.html end-->
 
 
@@ -644,12 +644,12 @@
                         recordList = [];
                         window.recordList = [];
                     }
-                    renderMaterialRequestTable(recordList);
+                    renderMaterialRequestTable(filterRecordsByStatus(selectedStatusFilter));
                 },
                 function () {
                     console.error('Failed to load material request records from ' + MATERIAL_REQUEST_API_BASE);
                     recordList = [];
-                    renderMaterialRequestTable(recordList);
+                    renderMaterialRequestTable(filterRecordsByStatus(selectedStatusFilter));
                 }
             );
         }
@@ -711,6 +711,29 @@
             initProductRequestDataTable();
         }
 
+        var selectedStatusFilter = 'ALL';
+
+        function filterRecordsByStatus(filterValue) {
+            if (!Array.isArray(recordList)) return [];
+            if (filterValue === 'ALL') return recordList;
+            return recordList.filter(function (record) {
+                return (record.processStatus || '').toLowerCase() === (filterValue || '').toLowerCase();
+            });
+        }
+
+        function applyStatusFilter(filterValue) {
+            selectedStatusFilter = filterValue;
+            var filtered = filterRecordsByStatus(filterValue);
+            renderMaterialRequestTable(filtered);
+        }
+
+        $(document).on('click', '.status-filter', function () {
+            var filterValue = $(this).data('filter');
+            $('.status-filter').removeClass('btn-primary active').addClass('btn-default');
+            $(this).addClass('btn-primary active').removeClass('btn-default');
+            applyStatusFilter(filterValue);
+        });
+
         $(document).ready(function () {
             $(window).off('load.productRequestDT').on('load.productRequestDT', function () {
                 initProductRequestDataTable();
@@ -718,7 +741,7 @@
 
             // Delay first render so DataTable lib is ready on hard refresh
             setTimeout(function () {
-                renderMaterialRequestTable(recordList);
+                renderMaterialRequestTable(filterRecordsByStatus(selectedStatusFilter));
                 refreshMaterialRequestList();
             }, 300);
         });
@@ -1001,7 +1024,7 @@
                     return;
                 }
                 $btn.prop('disabled', true);
-                editDocumentPayload.isKsm = $('#editIsKsmCheckbox').is(':checked');
+                editDocumentPayload.isKsm = $('#editIsKsmCheckbox').is(':checked') ? 'Yes' : 'No';
                 editDocumentPayload.category = $('#editBlendingMaterialCheckbox').is(':checked') ? 'Blending Material' : '';
                 if (editDocumentPayload.number) {
                     editDocumentPayload.number = String(editDocumentPayload.number).toUpperCase();
@@ -1016,91 +1039,8 @@
                     JSUTIL.callAJAXPut(postUrl, JSON.stringify(editDocumentPayload), callbackSuccessDocumentUpdate);
                 });
             });
-            var passwordConfirmPendingAction = null;
-            var passwordConfirmModalInstance = null;
-            function getPasswordConfirmModal() {
-                if (!passwordConfirmModalInstance) {
-                    passwordConfirmModalInstance = new bootstrap.Modal($('#passwordConfirmModal')[0]);
-                }
-                return passwordConfirmModalInstance;
-            }
-            function showPasswordConfirmError(msg) {
-                $('#passwordConfirmError').text(msg || '').toggle(!!msg);
-            }
-            function resolveFoxUsername() {
-                var src = (typeof FOX !== 'undefined' && FOX) ? FOX : (window.FOX || null);
-                if (!src) return '';
-                return src.employeeUsername || src.employeeUserName || src.username || src.userName
-                    || src.employeeEmail || src.email || src.employeeName || src.employeeId || src.userId || '';
-            }
-            function requirePasswordThen(action) {
-                passwordConfirmPendingAction = action;
-                $('#passwordConfirmInput').val('').attr('type', 'password');
-                $('#passwordConfirmToggle i').removeClass('fa-eye-slash').addClass('fa-eye');
-                showPasswordConfirmError('');
-                $('#passwordConfirmSubmit').prop('disabled', false);
-                getPasswordConfirmModal().show();
-                setTimeout(function () { $('#passwordConfirmInput').trigger('focus'); }, 200);
-            }
-            $('#passwordConfirmToggle').on('click', function () {
-                var $inp = $('#passwordConfirmInput');
-                var $icon = $(this).find('i');
-                if ($inp.attr('type') === 'password') {
-                    $inp.attr('type', 'text');
-                    $icon.removeClass('bi-eye').addClass('bi-eye-slash');
-                } else {
-                    $inp.attr('type', 'password');
-                    $icon.removeClass('bi-eye-slash').addClass('bi-eye');
-                }
-                $inp.trigger('focus');
-            });
-            $('#passwordConfirmInput').on('keydown', function (e) {
-                if (e.which === 13) {
-                    e.preventDefault();
-                    $('#passwordConfirmSubmit').trigger('click');
-                }
-            });
-            $('#passwordConfirmSubmit').on('click', function () {
-                var password = String($('#passwordConfirmInput').val() || '').trim();
-                if (!password) {
-                    showPasswordConfirmError('Password is required.');
-                    return;
-                }
-                var uname = String(resolveFoxUsername() || '').trim();
-                if (!uname) {
-                    showPasswordConfirmError('Cannot verify user: username not available.');
-                    return;
-                }
-                var $btn = $(this);
-                $btn.prop('disabled', true);
-                showPasswordConfirmError('');
-                JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/auth/login'),
-                    JSON.stringify({ username: uname, password: password }),
-                    function (response) {
-                        $btn.prop('disabled', false);
-                        if (!response) {
-                            showPasswordConfirmError('Invalid password, please try again.');
-                            return;
-                        }
-                        var action = passwordConfirmPendingAction;
-                        passwordConfirmPendingAction = null;
-                        getPasswordConfirmModal().hide();
-                        if (typeof action === 'function') action();
-                    },
-                    function () {
-                        $btn.prop('disabled', false);
-                        showPasswordConfirmError('Invalid password, please try again.');
-                    }
-                );
-            });
-            $('#passwordConfirmModal').on('hidden.bs.modal', function () {
-                passwordConfirmPendingAction = null;
-                $('#passwordConfirmInput').val('').attr('type', 'password');
-                $('#passwordConfirmToggle i').removeClass('fa-eye-slash').addClass('fa-eye');
-                showPasswordConfirmError('');
-            });
             $('.sendApproval').on('click', function () {
-                requirePasswordThen(function () {
+                JSUTIL.buildAuthenticationModal(function () {
                     const dataToSend = {
                         processStatus: 'In Review'
                     };
@@ -1109,7 +1049,7 @@
                 });
             });
             $('.acceptBtn').on('click', function () {
-                requirePasswordThen(function () {
+                JSUTIL.buildAuthenticationModal(function () {
                 // First, update the ProductVersion status to Accepted
                 const statusUpdateData = {
                     processStatus: 'Accepted'
@@ -1168,7 +1108,7 @@
                 modal.show();
             });
             $('.rejectBtn').on('click', function () {
-                requirePasswordThen(function () {
+                JSUTIL.buildAuthenticationModal(function () {
                     const dataToSend = {
                         processStatus: 'Rejected'
                     };
@@ -1178,7 +1118,7 @@
             });
 
             $('#resultApproveBtn').on('click', function () {
-                requirePasswordThen(function () {
+                JSUTIL.buildAuthenticationModal(function () {
                 // First, update the ProductVersion status to Accepted
                 const statusUpdateData = {
                     processStatus: 'Accepted'
@@ -1233,7 +1173,7 @@
                 });
             });
             $('#resultRejectBtn').on('click', function () {
-                requirePasswordThen(function () {
+                JSUTIL.buildAuthenticationModal(function () {
                     const dataToSend = {
                         processStatus: 'Rejected'
                     };
@@ -1724,7 +1664,7 @@
             if (Array.isArray(response)) {
                 recordList = response.map(normalizeMaterialRecord);
                 window.recordList = recordList;
-                renderMaterialRequestTable(recordList);
+                renderMaterialRequestTable(filterRecordsByStatus(selectedStatusFilter));
                 $('#newRecordPanel').hide();
                 $('#allRecordPanel').show();
                 return;
@@ -1756,7 +1696,7 @@
                 alert('Please fill the required field(s): ' + _missing.join(', '));
                 return;
             }
-            categoryPayload.isKsm = $('#isKsmCheckbox').is(':checked');
+            categoryPayload.isKsm = $('#isKsmCheckbox').is(':checked') ? 'Yes' : 'No';
             categoryPayload.category = $('#blendingMaterialCheckbox').is(':checked') ? 'Blending Material' : '';
             if (categoryPayload.number) {
                 categoryPayload.number = String(categoryPayload.number).toUpperCase();
