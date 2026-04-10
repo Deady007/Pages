@@ -1,0 +1,541 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- hostApproval.html start -->
+<style>
+    #allHostApprovalTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #allHostApprovalTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    .selectVisitorBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-inside { background: #fef3c7; color: #92400e; }
+    .status-entry-approved { background: #d1fae5; color: #065f46; }
+    .status-exit-requested { background: #fee2e2; color: #991b1b; }
+    .status-exit-approved { background: #dbeafe; color: #1e40af; }
+    .status-exited { background: #f3f4f6; color: #6b7280; }
+
+    .visitor-detail-card {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+    }
+    .visitor-detail-card .detail-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        margin-bottom: 2px;
+    }
+    .visitor-detail-card .detail-value {
+        font-size: 14px;
+        color: #111827;
+    }
+</style>
+
+<!--allHostApprovalPanel.html start-->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allHostApprovalPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Host Approval <small>Visitor Management</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm" id="refreshHostListBtn"><i data-lucide="refresh-cw"></i>Refresh</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label>Filter by Status</label>
+                                <select class="form-control" id="statusFilter">
+                                    <option value="">All Pending</option>
+                                    <option value="Inside">Awaiting Entry Approval</option>
+                                    <option value="Entry Approved">Entry Approved</option>
+                                    <option value="Exit Requested">Awaiting Exit Approval</option>
+                                    <option value="Exit Approved">Exit Approved</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <table id="allHostApprovalTable" class="table table-hover table-bordered dataTables">
+                        <thead>
+                        <th>Visitor #</th>
+                        <th>Visitor Name</th>
+                        <th>Company</th>
+                        <th>Purpose</th>
+                        <th>Entry Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        </thead>
+                        <tbody id="hostApprovalTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--allHostApprovalPanel.html end-->
+
+
+
+
+    <!--viewVisitorDetailPanel.html start-->
+    <div class="row animated fadeInRight aasaanPanel" id="viewVisitorDetailPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="visitorDetailTitle"></span> <small>Visitor Details</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box backToListBtn"><i data-lucide="x"></i>Close</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <!-- Visitor Info Card -->
+                    <div class="visitor-detail-card">
+                        <div class="row g-3">
+                            <div class="col-sm-4">
+                                <div class="detail-label">Visitor Number</div>
+                                <div class="detail-value" id="vd_number"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">Full Name</div>
+                                <div class="detail-value" id="vd_name"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">Company</div>
+                                <div class="detail-value" id="vd_company"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">Phone</div>
+                                <div class="detail-value" id="vd_phone"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">Email</div>
+                                <div class="detail-value" id="vd_email"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">ID Type / Number</div>
+                                <div class="detail-value" id="vd_idInfo"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">Visit Type</div>
+                                <div class="detail-value" id="vd_type"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">Purpose</div>
+                                <div class="detail-value" id="vd_purpose"></div>
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="detail-label">Current Status</div>
+                                <div class="detail-value" id="vd_status"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Card -->
+                    <div class="visitor-detail-card">
+                        <h6 style="font-weight: 600; margin-bottom: 12px;">Visit Timeline</h6>
+                        <div class="row g-3">
+                            <div class="col-sm-3">
+                                <div class="detail-label">Entry Time</div>
+                                <div class="detail-value" id="vd_entryTime"></div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="detail-label">Entry Approved</div>
+                                <div class="detail-value" id="vd_entryApprovedTime"></div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="detail-label">Exit Approved</div>
+                                <div class="detail-value" id="vd_exitApprovedTime"></div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="detail-label">Exit Time</div>
+                                <div class="detail-value" id="vd_exitTime"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div id="approvalActionsSection">
+                        <div class="visitor-detail-card" id="entryApprovalCard" style="display: none;">
+                            <h6 style="font-weight: 600; margin-bottom: 12px;">Entry Approval</h6>
+                            <p>This visitor is waiting for your approval to enter the premises.</p>
+                            <div class="form-group mb-3">
+                                <label>Remarks (optional)</label>
+                                <textarea class="form-control" id="entryApprovalRemarks" rows="2" placeholder="Any notes for security..."></textarea>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" id="approveEntryBtn"><i data-lucide="check"></i>Approve Entry</button>
+                            <button type="button" class="btn btn-default btn-sm" id="rejectEntryBtn"><i data-lucide="x"></i>Reject Entry</button>
+                        </div>
+
+                        <div class="visitor-detail-card" id="exitApprovalCard" style="display: none;">
+                            <h6 style="font-weight: 600; margin-bottom: 12px;">Exit Approval</h6>
+                            <p>This visitor is requesting exit from the premises.</p>
+                            <div class="form-group mb-3">
+                                <label>Remarks (optional)</label>
+                                <textarea class="form-control" id="exitApprovalRemarks" rows="2" placeholder="Any notes for security..."></textarea>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" id="approveExitBtn"><i data-lucide="check"></i>Approve Exit</button>
+                        </div>
+
+                        <div class="visitor-detail-card" id="noActionCard" style="display: none;">
+                            <p style="color: #6b7280; margin: 0;">No pending actions for this visitor.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--viewVisitorDetailPanel.html end-->
+
+
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // ================================================================
+    // State
+    // ================================================================
+    var recordList = [];
+    var currentVisitorId = '';
+    var currentVisitorData = null;
+
+    // ================================================================
+    // Common helpers
+    // ================================================================
+    function showError(message) {
+        if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') {
+            JSUTIL.buildErrorModal(message);
+        } else {
+            alert(message);
+        }
+    }
+
+    function getCsrfHeaders() {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = {};
+        if (token && header) {
+            headers[header] = token;
+        }
+        return headers;
+    }
+
+    function requestJson(url, method, payload) {
+        var options = {
+            method: method || 'GET',
+            headers: Object.assign({}, getCsrfHeaders())
+        };
+        if (payload !== undefined) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(payload);
+        }
+        return fetch(url, options).then(async function (response) {
+            if (!response.ok) {
+                var text = await response.text();
+                throw new Error(text || ('HTTP ' + response.status));
+            }
+            var textBody = await response.text();
+            if (!textBody) return null;
+            try {
+                return JSON.parse(textBody);
+            } catch (e) {
+                return textBody;
+            }
+        });
+    }
+
+    function convertUTCtoIST(utcTimestamp) {
+        if (!utcTimestamp || utcTimestamp === '') return '-';
+        var timestamp = utcTimestamp;
+        if (timestamp.indexOf('Z') === -1 && timestamp.indexOf('+') === -1) {
+            timestamp = timestamp + 'Z';
+        }
+        var utcDate = new Date(timestamp);
+        var istOffset = 5.5 * 60 * 60 * 1000;
+        var istTime = new Date(utcDate.getTime() + istOffset);
+        function pad(s) { return (s < 10) ? '0' + s : s; }
+        return istTime.getUTCFullYear() + '-' + pad(istTime.getUTCMonth() + 1) + '-' + pad(istTime.getUTCDate()) + ' ' + pad(istTime.getUTCHours()) + ':' + pad(istTime.getUTCMinutes());
+    }
+
+    function getStatusBadge(status) {
+        var cls = 'status-inside';
+        if (status === 'Entry Approved') cls = 'status-entry-approved';
+        else if (status === 'Exit Requested') cls = 'status-exit-requested';
+        else if (status === 'Exit Approved') cls = 'status-exit-approved';
+        else if (status === 'Exited') cls = 'status-exited';
+        else if (status === 'Rejected') cls = 'status-exit-requested';
+        return '<span class="status-badge ' + cls + '">' + (status || '-') + '</span>';
+    }
+
+    // ================================================================
+    // View management
+    // ================================================================
+    function setView(viewName) {
+        $('#allHostApprovalPanel').hide();
+        $('#viewVisitorDetailPanel').hide();
+        if (viewName === 'all') $('#allHostApprovalPanel').show();
+        if (viewName === 'detail') $('#viewVisitorDetailPanel').show();
+        lucide.createIcons();
+    }
+
+    // ================================================================
+    // Render host approval table
+    // ================================================================
+    function renderHostApprovalTable() {
+        if ($.fn && $.fn.DataTable) {
+            if ($.fn.DataTable.isDataTable('#allHostApprovalTable')) {
+                $('#allHostApprovalTable').DataTable().clear().destroy();
+            }
+        }
+
+        var filterStatus = $('#statusFilter').val();
+        var innerHtml = '';
+
+        $.each(recordList, function(i, val) {
+            // Skip fully exited unless explicitly filtered
+            if (!filterStatus && val.processStatus === 'Exited') return;
+            if (filterStatus && val.processStatus !== filterStatus) return;
+
+            var visitorName = ((val.firstName || '') + ' ' + (val.lastName || '')).trim() || '-';
+            var actionButtons = '';
+
+            if (val.processStatus === 'Inside') {
+                actionButtons += '<button type="button" class="btn btn-secondary btn-sm inlineApproveEntryBtn" data-id="' + val.id + '" style="margin-right: 3px; padding: 4px 8px; font-size: 12px;"><i data-lucide="check"></i>Approve</button>';
+                actionButtons += '<button type="button" class="btn btn-default btn-sm inlineRejectEntryBtn" data-id="' + val.id + '" style="padding: 4px 8px; font-size: 12px;"><i data-lucide="x"></i>Reject</button>';
+            } else if (val.processStatus === 'Exit Requested') {
+                actionButtons += '<button type="button" class="btn btn-secondary btn-sm inlineApproveExitBtn" data-id="' + val.id + '" style="padding: 4px 8px; font-size: 12px;"><i data-lucide="check"></i>Approve Exit</button>';
+            }
+
+            innerHtml += '<tr>' +
+                '<td><a href="javascript:void(0);" class="selectVisitorBtn" data-id="' + val.id + '">' + (val.number || '-') + '</a></td>' +
+                '<td>' + visitorName + '</td>' +
+                '<td>' + (val.company || '-') + '</td>' +
+                '<td>' + (val.purpose || '-') + '</td>' +
+                '<td>' + convertUTCtoIST(val.entryTime) + '</td>' +
+                '<td>' + getStatusBadge(val.processStatus) + '</td>' +
+                '<td>' + actionButtons + '</td>' +
+                '</tr>';
+        });
+
+        $('#hostApprovalTableBody').html(innerHtml);
+
+        if ($.fn && $.fn.DataTable) {
+            $('#allHostApprovalTable').DataTable({ order: [[4, 'desc']], pageLength: 25 });
+        }
+        lucide.createIcons();
+    }
+
+    // ================================================================
+    // Load visitors assigned to current host
+    // ================================================================
+    async function loadHostVisitors() {
+        try {
+            var apiResponse = await requestJson('/api/visitor', 'GET');
+            var allVisitors = Array.isArray(apiResponse) ? apiResponse : [];
+
+            // Filter to only visitors assigned to current employee as host
+            var currentEmployeeId = (typeof employeeId !== 'undefined') ? Number(employeeId) : null;
+            if (currentEmployeeId) {
+                recordList = allVisitors.filter(function(v) {
+                    return v.host && Number(v.host.id) === currentEmployeeId;
+                });
+            } else {
+                // Fallback: show all if employeeId not available
+                recordList = allVisitors;
+            }
+        } catch (apiErr) {
+            console.error(apiErr);
+            recordList = [];
+        }
+        renderHostApprovalTable();
+        setView('all');
+    }
+
+    // ================================================================
+    // Populate visitor detail panel
+    // ================================================================
+    function populateVisitorDetail(visitor) {
+        currentVisitorData = visitor;
+        currentVisitorId = visitor.id;
+
+        $('#visitorDetailTitle').text(visitor.number || '');
+        $('#vd_number').text(visitor.number || '-');
+        $('#vd_name').text(((visitor.firstName || '') + ' ' + (visitor.lastName || '')).trim() || '-');
+        $('#vd_company').text(visitor.company || '-');
+        $('#vd_phone').text(visitor.phone || '-');
+        $('#vd_email').text(visitor.email || '-');
+        $('#vd_idInfo').text((visitor.idType || '-') + ' / ' + (visitor.idNumber || '-'));
+        $('#vd_type').text(visitor.type || '-');
+        $('#vd_purpose').text(visitor.purpose || '-');
+        $('#vd_status').html(getStatusBadge(visitor.processStatus));
+
+        // Timeline
+        $('#vd_entryTime').text(convertUTCtoIST(visitor.entryTime));
+        $('#vd_entryApprovedTime').text(visitor.processStatus === 'Inside' ? 'Pending' : (visitor.processStatus === 'Rejected' ? 'Rejected' : convertUTCtoIST(visitor.entryApprovedTime) || 'Done'));
+        $('#vd_exitApprovedTime').text(visitor.processStatus === 'Exit Approved' || visitor.processStatus === 'Exited' ? 'Done' : '-');
+        $('#vd_exitTime').text(convertUTCtoIST(visitor.exitTime));
+
+        // Show/hide action cards based on status
+        $('#entryApprovalCard').hide();
+        $('#exitApprovalCard').hide();
+        $('#noActionCard').hide();
+        $('#entryApprovalRemarks').val('');
+        $('#exitApprovalRemarks').val('');
+
+        if (visitor.processStatus === 'Inside') {
+            $('#entryApprovalCard').show();
+        } else if (visitor.processStatus === 'Exit Requested') {
+            $('#exitApprovalCard').show();
+        } else {
+            $('#noActionCard').show();
+        }
+    }
+
+    // ================================================================
+    // Approval actions
+    // ================================================================
+    async function approveEntry(visitorId) {
+        try {
+            await requestJson('/api/visitor/' + visitorId, 'PUT', {
+                processStatus: 'Entry Approved'
+            });
+            await loadHostVisitors();
+        } catch (err) {
+            console.error(err);
+            showError('Unable to approve entry.');
+        }
+    }
+
+    async function rejectEntry(visitorId) {
+        try {
+            await requestJson('/api/visitor/' + visitorId, 'PUT', {
+                processStatus: 'Rejected'
+            });
+            await loadHostVisitors();
+        } catch (err) {
+            console.error(err);
+            showError('Unable to reject entry.');
+        }
+    }
+
+    async function approveExit(visitorId) {
+        try {
+            await requestJson('/api/visitor/' + visitorId, 'PUT', {
+                processStatus: 'Exit Approved'
+            });
+            await loadHostVisitors();
+        } catch (err) {
+            console.error(err);
+            showError('Unable to approve exit.');
+        }
+    }
+
+    // ================================================================
+    // Document ready
+    // ================================================================
+    $(document).ready(function() {
+        loadHostVisitors();
+
+        // Refresh button
+        $('#refreshHostListBtn').on('click', function() {
+            loadHostVisitors();
+        });
+
+        // Status filter change
+        $('#statusFilter').on('change', function() {
+            renderHostApprovalTable();
+        });
+
+        // Click visitor number to view details
+        $('#hostApprovalTableBody').on('click', '.selectVisitorBtn', function() {
+            var id = String($(this).data('id'));
+            requestJson('/api/visitor/' + id, 'GET')
+                .then(function(visitor) {
+                    if (visitor) {
+                        populateVisitorDetail(visitor);
+                        setView('detail');
+                    }
+                })
+                .catch(function(err) {
+                    console.error(err);
+                    // Fallback to list data
+                    var match = recordList.find(function(item) { return String(item.id) === id; });
+                    if (match) {
+                        populateVisitorDetail(match);
+                        setView('detail');
+                    }
+                });
+        });
+
+        // Inline approve entry from table
+        $('#hostApprovalTableBody').on('click', '.inlineApproveEntryBtn', function() {
+            var id = String($(this).data('id'));
+            approveEntry(id);
+        });
+
+        // Inline reject entry from table
+        $('#hostApprovalTableBody').on('click', '.inlineRejectEntryBtn', function() {
+            var id = String($(this).data('id'));
+            rejectEntry(id);
+        });
+
+        // Inline approve exit from table
+        $('#hostApprovalTableBody').on('click', '.inlineApproveExitBtn', function() {
+            var id = String($(this).data('id'));
+            approveExit(id);
+        });
+
+        // Detail panel: approve entry
+        $('#approveEntryBtn').on('click', function() {
+            if (!currentVisitorId) return;
+            approveEntry(currentVisitorId).then(function() {
+                setView('all');
+            });
+        });
+
+        // Detail panel: reject entry
+        $('#rejectEntryBtn').on('click', function() {
+            if (!currentVisitorId) return;
+            rejectEntry(currentVisitorId).then(function() {
+                setView('all');
+            });
+        });
+
+        // Detail panel: approve exit
+        $('#approveExitBtn').on('click', function() {
+            if (!currentVisitorId) return;
+            approveExit(currentVisitorId).then(function() {
+                setView('all');
+            });
+        });
+
+        // Back to list
+        $('.backToListBtn').on('click', function() {
+            setView('all');
+        });
+    });
+</script>

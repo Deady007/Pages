@@ -1,0 +1,1431 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- tests.html start -->
+<style>
+    #allTestsPanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #allTestsPanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-soft-info {
+        color: #0ea5e9;
+        background-color: rgba(14, 165, 233, 0.14);
+        border: 1px solid rgba(14, 165, 233, 0.28);
+    }
+    .btn-soft-info:hover,
+    .btn-soft-info:focus {
+        color: #0284c7;
+        background-color: rgba(14, 165, 233, 0.22);
+        border-color: rgba(14, 165, 233, 0.4);
+    }
+    .btn-soft-warning {
+        color: #d97706;
+        background-color: rgba(245, 158, 11, 0.16);
+        border: 1px solid rgba(245, 158, 11, 0.32);
+    }
+    .btn-soft-warning:hover,
+    .btn-soft-warning:focus {
+        color: #b45309;
+        background-color: rgba(245, 158, 11, 0.24);
+        border-color: rgba(245, 158, 11, 0.45);
+    }
+    /* .editParameterSelect {
+        transition: all 0.15s ease-in-out;
+    }
+    .editParameterSelect:hover,
+    .editParameterSelect:focus {
+        color: #b45309 !important;
+        background: #fde7c0 !important;
+        background-color: #fde7c0 !important;
+        border-color: #f59e0b !important;
+        box-shadow: none !important;
+    } */
+    .btn-icon .lucide {
+        margin-right: 0;
+        padding: 0;
+        width: 16px;
+        height: 16px;
+        stroke-width: 2.2;
+    }
+    .selectTestBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+    .tabs-container .nav-tabs > li.active > a,
+    .tabs-container .nav-tabs > li.active > a:hover,
+    .tabs-container .nav-tabs > li.active > a:focus {
+        color: #337AB7 !important;
+    }
+    #testTabNav > li > a {
+        color: #555555;
+        font-weight: 500;
+    }
+    #testTabNav > li > a:hover,
+    #testTabNav > li > a:focus {
+        color: #333333;
+        background-color: transparent;
+    }
+    #testTabNav > li.active > a,
+    #testTabNav > li.active > a:hover,
+    #testTabNav > li.active > a:focus {
+        color: #333333 !important;
+        font-weight: 600;
+    }
+    [data-bs-theme="dark"] #testTabNav > li > a,
+    body.skin-dark #testTabNav > li > a,
+    body.dark-mode #testTabNav > li > a {
+        color: #a0aabb !important;
+    }
+    [data-bs-theme="dark"] #testTabNav > li > a:hover,
+    [data-bs-theme="dark"] #testTabNav > li > a:focus,
+    body.skin-dark #testTabNav > li > a:hover,
+    body.skin-dark #testTabNav > li > a:focus,
+    body.dark-mode #testTabNav > li > a:hover,
+    body.dark-mode #testTabNav > li > a:focus {
+        color: #e0e0e0 !important;
+        background-color: transparent;
+    }
+    [data-bs-theme="dark"] #testTabNav > li.active > a,
+    [data-bs-theme="dark"] #testTabNav > li.active > a:hover,
+    [data-bs-theme="dark"] #testTabNav > li.active > a:focus,
+    body.skin-dark #testTabNav > li.active > a,
+    body.skin-dark #testTabNav > li.active > a:hover,
+    body.skin-dark #testTabNav > li.active > a:focus,
+    body.dark-mode #testTabNav > li.active > a,
+    body.dark-mode #testTabNav > li.active > a:hover,
+    body.dark-mode #testTabNav > li.active > a:focus {
+        color: #ffffff !important;
+    }
+    #allTestParameterDataTable th:first-child,
+    #allTestParameterDataTable td:first-child {
+        width: 1%;
+        white-space: nowrap;
+    }
+    #allTestParameterDataTable th:nth-child(2),
+    #allTestParameterDataTable td:nth-child(2) {
+        width: 50%;
+    }
+    #allTestParameterDataTable th:nth-child(3),
+    #allTestParameterDataTable td:nth-child(3) {
+        width: 12%;
+    }
+    #allTestParameterDataTable th:nth-child(4),
+    #allTestParameterDataTable td:nth-child(4) {
+        width: 28%;
+    }
+    #allTestParameterDataTable th:nth-child(5),
+    #allTestParameterDataTable td:nth-child(5) {
+        width: 10%;
+    }
+</style>
+<div class="qa-white-panel">
+
+
+    <!--allTestAndParametersPanel.html start-->
+    <div class="row animated fadeInRight aasaanPanel" id="allTestAndParametersPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Tests <small>Laboratory</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary newTestBtn"><i data-lucide="plus"></i>New Test</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <table id="allTestsPanelTable" class="table table-hover table-bordered dataTables">
+                        <thead>
+                        <th>Service</th>
+                        <th>Specification</th>
+                        </thead>
+                        <tbody class="dataTableRecordList" id="allTestsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--allTestAndParametersPanel.html end-->
+
+
+
+
+    <!--newTestPanel.html start-->
+    <div class="row animated fadeInRight aasaanPanel" id="newTestPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small>Laboratory Test</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showAllTestAndParametersOnCancel"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="newTestSaveBtn"><i data-lucide="check"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="testObj" id="newTestCreateForm">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control newTestInput" name="name" placeholder="Enter Name" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Specification</label>
+                                    <input type="text" class="form-control newTestInput" name="description" placeholder="Enter Specification">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--newTestPanel.html end-->
+
+
+
+
+    <!--editTestPanel.html start-->
+    <div class="row animated fadeInRight aasaanPanel" id="editTestPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editTestTitle"></span> <small>Test Detail</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showAllTestAndParametersOnCancel"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-default btn-sm" id="deleteTestBtn"><i data-lucide="trash"></i>Delete</button>
+                        <button type="button" class="btn btn-secondary btn-sm testEditBtn"><i data-lucide="pencil"></i>Edit</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="editTestSaveBtn"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-default btn-sm" id="testCloneBtn"><i data-lucide="copy"></i>Clone</button>
+                        <!-- <button type="button" class="btn btn-default btn-sm" id="serviceTestMethodsBtn"><i data-lucide="flask-conical"></i>Test Methods</button> -->
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="testObj" id="editTestUpdateForm">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control editTestInput" name="name" placeholder="Enter Name" disabled required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Specification</label>
+                                    <input type="text" class="form-control editTestInput" name="description" placeholder="Enter Specification" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="tabs-container">
+                        <ul class="nav nav-tabs" id="testTabNav">
+                            <li class="nav-item active"><a class="nav-link active" data-toggle="tab" href="#parameter" aria-expanded="true">Parameters</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="parameter" class="tab-pane active">
+                                <div class="panel-body">
+                                    <div class="row" style="padding-bottom: 10px;">
+                                        <div class="col-sm-12">
+                                            <div class="ibox-tools" style="display: flex; justify-content: flex-end; align-items: center;">
+                                                <button type="button" class="btn btn-default btn-sm labControlBtn" id="newParameterBtn" style="margin-top: 10px;"><i data-lucide="plus"></i>Add Parameter</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" id="allTestParameterDataTable">
+                                            <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Name</th>
+                                                <th>Unit</th>
+                                                <th>Specification</th>
+                                                <!-- <th>Test Method</th> -->
+                                                <th>Readings</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="allTestParameterTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Test Method Modal -->
+    <div class="modal fade" id="serviceTestMethodModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Test Method</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <small class="font-bold d-block mb-3">Define a test method for the selected Service</small>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                </tr>
+                                </thead>
+                                <tbody id="serviceTestMethodTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-sm-5">
+                            <div class="form-group mb-3">
+                                <label>Name</label>
+                                <input type="text" class="form-control serviceTestMethodInput" name="Name" placeholder="Enter Name">
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="form-group mb-3">
+                                <label>Description</label>
+                                <input type="text" class="form-control serviceTestMethodInput" name="Description" placeholder="Enter Description">
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <button type="button" class="btn btn-secondary btn-sm" id="saveServiceTestMethodBtn" style="margin-top: 24px;"><i data-lucide="check"></i>Save</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parameter Test Method Modal -->
+    <div class="modal fade" id="testMethodModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Test Method</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <small class="font-bold d-block mb-3">Define a test method for the selected Parameter</small>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                </tr>
+                                </thead>
+                                <tbody id="parameterTestMethodTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row g-3">
+                        <div class="col-sm-5">
+                            <div class="form-group mb-3">
+                                <label>Name</label>
+                                <input type="text" class="form-control testMethodInput" name="Name" placeholder="Enter Name">
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="form-group mb-3">
+                                <label>Description</label>
+                                <input type="text" class="form-control testMethodInput" name="Description" placeholder="Enter Description">
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <button type="button" class="btn btn-secondary btn-sm" id="saveParameterTestMethodBtn" style="margin-top: 24px;"><i data-lucide="check"></i>Save</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--editTestPanel.html end-->
+
+
+
+
+    <!--newTestParameterPanel.html start-->
+    <div class="row animated fadeInRight aasaanPanel" id="newTestParameterPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Parameter <small>New</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showTestOnCancel"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="createParameterBtn"><i data-lucide="check"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="parameterObj" id="newParameterForm">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control newParameterInput" name="Name" placeholder="Enter Name" required>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Specification</label>
+                                    <input type="text" class="form-control newParameterInput" name="Specification" placeholder="Enter Specification">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Permissible Limit (min.)</label>
+                                    <input type="text" class="form-control newParameterInput" name="MinLimit" placeholder="Enter Permissible Limit (min.)">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Unit</label>
+                                    <select class="select2 form-control newParameterInput" name="Unit" id="newUnitList">
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Default Values</label>
+                                    <input type="text" class="form-control newParameterInput" name="DefaultValues" placeholder="Enter Default Values">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Equipments To Be Used</label>
+                                    <select class="select2 form-control newParameterInput" name="Equipments" multiple>
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Variable / Symbol</label>
+                                    <input type="text" class="form-control newParameterInput" name="Number" placeholder="Enter Variable / Symbol">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Permissible Limit (max.)</label>
+                                    <input type="text" class="form-control newParameterInput" name="MaxLimit" placeholder="Enter Permissible Limit (max.)">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Number Of Readings (Per Sample)</label>
+                                    <input type="number" class="form-control newParameterInput" name="NumberOfReadings" placeholder="Enter Number Of Readings">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Digits After Decimal</label>
+                                    <input type="number" class="form-control newParameterInput" name="NumberOfDecimals" placeholder="Enter Digits After Decimal">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Is Test Result</label>
+                                    <div class="form-check" style="margin-top: 8px;">
+                                        <input type="checkbox" class="form-check-input newParameterInput" name="Type">
+                                        <label class="form-check-label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <div class="form-group mb-3">
+                                    <label>Formula</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control newParameterInput" name="Formula" placeholder="Enter Formula">
+                                        <button tabindex="-1" class="btn btn-default" id="newParameter_addVariable" type="button">Add Variable</button>
+                                        <button tabindex="-1" class="btn btn-default" id="newParameter_calculate" type="button">Calculate</button>
+                                    </div>
+                                    <span class="help-block m-b-none text-danger" style="display: none;" id="newParameterFormulaError">Invalid Formula</span>
+                                    <span class="help-block m-b-none text-success" style="display: none;" id="newParameterItemSuccess">Your formula is valid!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--newTestParameterPanel.html end-->
+
+
+
+
+    <!--editTestParameterPanel.html start-->
+    <div class="row animated fadeInRight aasaanPanel" id="editTestParameterPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Update <small>Parameter</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showTestOnCancel"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-default btn-sm" id="deleteParameterBtn"><i data-lucide="trash"></i>Delete</button>
+                        <button type="button" class="btn btn-secondary btn-sm parameterEditBtn"><i data-lucide="pencil"></i>Edit</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="editParameterSaveBtn"><i data-lucide="check"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="parameterObj" id="editParameterForm">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control editParameterInput" name="Name" placeholder="Enter Name" required readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Specification</label>
+                                    <input type="text" class="form-control editParameterInput" name="Specification" placeholder="Enter Specification" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Permissible Limit (min.)</label>
+                                    <input type="number" class="form-control editParameterInput" name="MinLimit" placeholder="Enter Permissible Limit (min.)" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Unit</label>
+                                    <select class="select2 form-control editParameterInput" name="Unit" id="editUnitList" disabled>
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Default Values</label>
+                                    <input type="text" class="form-control editParameterInput" name="DefaultValues" placeholder="Enter Default Values" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Variable / Symbol</label>
+                                    <input type="text" class="form-control editParameterInput" name="Number" placeholder="Enter Variable / Symbol" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Permissible Limit (max.)</label>
+                                    <input type="number" class="form-control editParameterInput" name="MaxLimit" placeholder="Enter Permissible Limit (max.)" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Number Of Readings (Per Sample)</label>
+                                    <input type="number" class="form-control editParameterInput" name="NumberOfReadings" placeholder="Enter Number Of Readings" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Digits After Decimal</label>
+                                    <input type="number" class="form-control editParameterInput" name="NumberOfDecimals" placeholder="Enter Digits After Decimal" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Is Test Result</label>
+                                    <div class="form-check" style="margin-top: 8px;">
+                                        <input type="checkbox" class="form-check-input editParameterInput" name="Type" disabled>
+                                        <label class="form-check-label"></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <div class="form-group mb-3">
+                                    <label>Formula</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control editParameterInput" name="Formula" placeholder="Enter Formula" readonly>
+                                        <button tabindex="-1" class="btn btn-default" id="editParameter_addVariable" type="button">Add Variable</button>
+                                        <button tabindex="-1" class="btn btn-default" id="editParameter_calculate" type="button">Calculate</button>
+                                    </div>
+                                    <span class="help-block m-b-none text-danger" style="display: none;" id="editParameterFormulaError">Invalid Formula</span>
+                                    <span class="help-block m-b-none text-success" style="display: none;" id="editParameterItemSuccess">Your formula is valid!</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="editParameterId" name="Id"/>
+                            <input type="hidden" class="editParameterInput" name="Service.Id"/>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formula Variable Modal -->
+    <div class="modal fade" id="formulaVariableModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Formula Variable</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <small class="font-bold d-block mb-3">Add a variable to be evaluated as part of the formula</small>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <table class="table table-hover">
+                                <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Name</th>
+                                </tr>
+                                </thead>
+                                <tbody id="formulaVariableTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--editTestParameterPanel.html end-->
+
+
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="standard-modal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this record?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-default" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clone Confirmation Modal -->
+<div class="modal fade" id="clone-modal" tabindex="-1" role="dialog" aria-labelledby="cloneModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cloneModalLabel">Clone Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to create an exact clone of this Test?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="confirmCloneBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // ================================================================
+    // State
+    // ================================================================
+    var recordList = [];
+    var currentTestId = '';
+    var currentParameterId = '';
+    var currentTestMethodId = '';
+    var currentParameterName = '';
+    var currentParameterUcTypeBList = [];
+    var currentParameterList = [];
+    var uomList = [{"name":"kg", "description":"Kilogram"}, {"name":"gm", "description":"Gram"}, {"name":"lt", "description":"Liter"}, {"name":"ml", "description":"Mililiter"}];
+    var parameterDeleteArray = [];
+    var elementToDelete = $('#sampleDiv');
+    var btnClicked = '';
+    var deleteCallback = null;
+
+
+    // ================================================================
+    // Common helpers (matching departments.html pattern)
+    // ================================================================
+    function showError(message) {
+        if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') {
+            JSUTIL.buildErrorModal(message);
+        } else {
+            alert(message);
+        }
+    }
+
+    function getCsrfHeaders() {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = {};
+        if (token && header) {
+            headers[header] = token;
+        }
+        return headers;
+    }
+
+    function requestJson(url, method, payload) {
+        var options = {
+            method: method || 'GET',
+            headers: Object.assign({}, getCsrfHeaders())
+        };
+        if (payload !== undefined) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(payload);
+        }
+        return fetch(url, options).then(async function (response) {
+            if (!response.ok) {
+                var text = await response.text();
+                throw new Error(text || ('HTTP ' + response.status));
+            }
+            var textBody = await response.text();
+            if (!textBody) return null;
+            try {
+                return JSON.parse(textBody);
+            } catch (e) {
+            if (e && e.message) {
+                errorMessage = e.message;
+            }
+                return textBody;
+            }
+        });
+    }
+
+    function normalizeRecord(record) {
+        return {
+            id: record.id || record.Id,
+            name: record.name || record.Name || '',
+            description: record.description || record.Description || '',
+            numberOfReadings: record.numberOfReadings || record.NumberOfReadings || ''
+        };
+    }
+
+    function buildFormPayload(prefixClass) {
+        var payload = {};
+        $('.' + prefixClass).each(function () {
+            var name = $(this).attr('name');
+            if (!name) return;
+            var key = name.charAt(0).toLowerCase() + name.slice(1);
+            if ($(this).is(':checkbox')) {
+                payload[key] = $(this).is(':checked') ? 'on' : '';
+            } else {
+                payload[key] = ($(this).val() || '').toString().trim();
+            }
+        });
+        return payload;
+    }
+
+    function populateUnitOptions(selectSelector, selectedValue) {
+        var innerHtml = '<option value="">--none--</option>';
+        if (Array.isArray(uomList)) {
+            $.each(uomList, function (i, val) {
+                innerHtml += '<option value="' + val.name + '">' + val.name + ' (' + val.description + ')' + '</option>';
+            });
+        }
+        $(selectSelector).html(innerHtml);
+        $(selectSelector).val(selectedValue || '').trigger('change');
+    }
+
+
+    // ================================================================
+    // View management
+    // ================================================================
+    function setView(viewName) {
+        $('#allTestAndParametersPanel').hide();
+        $('#newTestPanel').hide();
+        $('#editTestPanel').hide();
+        $('#newTestParameterPanel').hide();
+        $('#editTestParameterPanel').hide();
+        if (viewName === 'all') $('#allTestAndParametersPanel').show();
+        if (viewName === 'newTest') $('#newTestPanel').show();
+        if (viewName === 'editTest') $('#editTestPanel').show();
+        if (viewName === 'newParam') $('#newTestParameterPanel').show();
+        if (viewName === 'editParam') $('#editTestParameterPanel').show();
+        lucide.createIcons();
+    }
+
+
+    // ================================================================
+    // Render tests table
+    // ================================================================
+    function renderTestsTable() {
+        if ($.fn && $.fn.DataTable) {
+            if ($.fn.DataTable.isDataTable('#allTestsPanelTable')) {
+                var dtInstance = $('#allTestsPanelTable').DataTable();
+                dtInstance.clear();
+                dtInstance.destroy();
+            }
+        }
+
+        var innerHtml = '';
+        $.each(recordList, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td class="itemNum"><a href="javascript:void(0);" class="selectTestBtn" data-id="' + val.id + '">' + val.name + '</a></td>' +
+                '<td>' + (val.description || '') + '</td>' +
+                '</tr>';
+        });
+        $('#allTestsTable').html(innerHtml);
+
+        if ($.fn && $.fn.DataTable) {
+            $('#allTestsPanelTable').DataTable({ order: [], pageLength: 25 });
+        }
+    }
+
+
+    // ================================================================
+    // Load all tests from API
+    // ================================================================
+    async function loadTests() {
+        try {
+            var apiResponse = await requestJson('/api/lab-services', 'GET');
+            recordList = (Array.isArray(apiResponse) ? apiResponse : []).map(normalizeRecord);
+        } catch (apiErr) {
+            console.error(apiErr);
+            recordList = [];
+        }
+        renderTestsTable();
+        setView('all');
+    }
+
+
+    // ================================================================
+    // Load parameters for a specific test
+    // ================================================================
+    async function loadParameters(serviceId) {
+        try {
+            var apiResponse = await requestJson('/api/lab-services/' + serviceId + '/parameters', 'GET');
+            currentParameterList = Array.isArray(apiResponse) ? apiResponse : [];
+        } catch (apiErr) {
+            console.error(apiErr);
+            currentParameterList = [];
+        }
+        renderParameterTable();
+    }
+
+    function renderParameterTable() {
+        $("#allTestParameterTable").empty();
+        var innerHtml = '';
+        $.each(currentParameterList, function (i, val) {
+            var pNumber = '';
+            if (val.number) { pNumber += '(' + val.number + ')'; }
+            innerHtml += '<tr>' +
+                '<td>' +
+                '<button type="button" class="btn btn-soft-danger btn-icon deleteParameterSelect" name="' + val.id + '"><i data-lucide="trash"></i></button> ' +
+                '<button type="button" class="btn btn-soft-warning btn-icon editParameterSelect" name="' + val.id + '"><i data-lucide="pencil"></i></button>' +
+                '</td>' +
+                '<td>' + val.name + ' ' + pNumber + '</td>' +
+                '<td>' + (val.unit || '') + '</td>' +
+                '<td>' + (val.specification || '') + '</td>' +
+                // '<td>' + (val.samplingMethod || '') + '</td>' +
+                '<td>' + Number(val.numberOfReadings || 0) + '</td>' +
+                '</tr>';
+        });
+        $("#allTestParameterTable").append(innerHtml);
+        lucide.createIcons();
+    }
+
+
+    // ================================================================
+    // CRUD: Create test
+    // ================================================================
+    async function createTestData() {
+        var payload = buildFormPayload('newTestInput');
+        if (!payload.name) {
+            showError('Name is required.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/lab-services', 'POST', payload);
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to create test.');
+            return;
+        }
+
+        $('#newTestCreateForm')[0].reset();
+        await loadTests();
+    }
+
+
+    // ================================================================
+    // CRUD: Update test
+    // ================================================================
+    async function updateTestData() {
+        if (!currentTestId) {
+            showError('Test id is missing.');
+            return;
+        }
+
+        var payload = buildFormPayload('editTestInput');
+        if (!payload.name) {
+            showError('Name is required.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/lab-services/' + currentTestId, 'PUT', payload);
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to update test.');
+            return;
+        }
+
+        $('.testEditBtn').show();
+        $('#editTestSaveBtn').hide();
+        $('.editTestInput').prop('readonly', true).prop('disabled', true);
+        await loadTests();
+    }
+
+
+    // ================================================================
+    // CRUD: Delete test
+    // ================================================================
+    async function deleteTestData() {
+        if (!currentTestId) {
+            showError('Test id is missing.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/lab-services/' + currentTestId, 'DELETE');
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to delete test.');
+            return;
+        }
+
+        currentTestId = '';
+        await loadTests();
+    }
+
+
+    // ================================================================
+    // CRUD: Clone test
+    // ================================================================
+    async function cloneTestData() {
+        if (!currentTestId) {
+            showError('Test id is missing.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/lab-services/' + currentTestId + '/clone', 'POST');
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to clone test.');
+            return;
+        }
+
+        await loadTests();
+    }
+
+
+    // ================================================================
+    // CRUD: Create parameter
+    // ================================================================
+    async function createParameterData() {
+        if (!currentTestId) {
+            showError('Parent test id is missing.');
+            return;
+        }
+
+        var payload = buildFormPayload('newParameterInput');
+        payload.unit = ($('#newUnitList').val() || '').toString().trim();
+        if (!payload.name) {
+            showError('Name is required.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/lab-services/' + currentTestId + '/parameters', 'POST', payload);
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to create parameter.');
+            return;
+        }
+
+        $('#newParameterForm')[0].reset();
+        await loadParameters(currentTestId);
+        setView('editTest');
+    }
+
+
+    // ================================================================
+    // CRUD: Update parameter
+    // ================================================================
+    async function updateParameterData() {
+        if (!currentTestId || !currentParameterId) {
+            showError('Parameter id is missing.');
+            return;
+        }
+
+        var payload = buildFormPayload('editParameterInput');
+        payload.unit = ($('#editUnitList').val() || '').toString().trim();
+        if (!payload.name) {
+            showError('Name is required.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/lab-services/' + currentTestId + '/parameters/' + currentParameterId, 'PUT', payload);
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to update parameter.');
+            return;
+        }
+
+        $('.parameterEditBtn').show();
+        $('#editParameterSaveBtn').hide();
+        $('.editParameterInput').prop('readonly', true).prop('disabled', true);
+        await loadParameters(currentTestId);
+        setView('editTest');
+    }
+
+
+    // ================================================================
+    // CRUD: Delete parameter
+    // ================================================================
+    async function deleteParameterData() {
+        if (!currentTestId || !currentParameterId) {
+            showError('Parameter id is missing.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/lab-services/' + currentTestId + '/parameters/' + currentParameterId, 'DELETE');
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to delete parameter.');
+            return;
+        }
+
+        currentParameterId = '';
+        if (btnClicked === 'deleteParameterSelect' && elementToDelete.length) {
+            elementToDelete.remove();
+        } else {
+            await loadParameters(currentTestId);
+        }
+    }
+
+
+    // ================================================================
+    // Document ready: bind all event handlers
+    // ================================================================
+    $(document).ready(function () {
+        // $(".select2").select2();
+        console.log('Document ready - tests');
+        populateUnitOptions('#newUnitList', '');
+        populateUnitOptions('#editUnitList', '');
+        $('#editTestSaveBtn').hide();
+        $('#editParameterSaveBtn').hide();
+
+        // Load data and show allTestAndParametersPanel on load
+        loadTests();
+
+
+        // ---------- All Tests Panel ----------
+        $('.newTestBtn').on('click', function () {
+            setView('newTest');
+        });
+
+        $('.showAllTestAndParametersOnCancel').on('click', function () {
+            $('#editTestSaveBtn').hide();
+            $('.testEditBtn').show();
+            $('.editTestInput').prop('readonly', true).prop('disabled', true);
+            setView('all');
+        });
+
+        $('#allTestsTable').on('click', '.selectTestBtn', function () {
+            var id = String($(this).data('id'));
+            var match = recordList.find(function (item) {
+                return String(item.id) === id;
+            });
+            if (!match) return;
+
+            currentTestId = id;
+            $('#editTestTitle').text(match.name);
+            $('.editTestInput[name="name"]').val(match.name);
+            $('.editTestInput[name="description"]').val(match.description);
+            $('.editTestInput[name="numberOfReadings"]').val(match.numberOfReadings);
+
+            loadParameters(currentTestId);
+            setView('editTest');
+        });
+
+
+        // ---------- New Test Panel ----------
+        $('#newTestSaveBtn').on('click', function () {
+            createTestData();
+        });
+
+
+        // ---------- Edit Test Panel ----------
+        $('.testEditBtn').on('click', function () {
+            $(this).hide();
+            $('#editTestSaveBtn').show();
+            $('.editTestInput').prop('readonly', false).prop('disabled', false);
+        });
+
+        $('#editTestSaveBtn').on('click', function () {
+            updateTestData();
+        });
+
+        $('#deleteTestBtn').on('click', function () {
+            deleteCallback = deleteTestData;
+            var modal = new bootstrap.Modal(document.getElementById('standard-modal'));
+            modal.show();
+        });
+
+        $('#testCloneBtn').on('click', function () {
+            var modal = new bootstrap.Modal(document.getElementById('clone-modal'));
+            modal.show();
+        });
+
+        $('#confirmCloneBtn').on('click', function () {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('clone-modal'));
+            if (modal) modal.hide();
+            cloneTestData();
+        });
+
+        $('#serviceTestMethodsBtn').on('click', function () {
+            var getUrl = JSUTIL.getUrl('/lb/services/service_testmethods?id=' + currentTestId);
+            JSUTIL.callAJAXGet(getUrl, getServiceTestMethodCallback);
+        });
+
+        $('#saveServiceTestMethodBtn').on('click', function () {
+            var tmObj = {};
+            tmObj['name'] = $('.serviceTestMethodInput[name="Name"]').val();
+            tmObj['description'] = $('.serviceTestMethodInput[name="Description"]').val();
+            if (tmObj['name']) {
+                var postUrl = JSUTIL.getUrl('/lb/services/create_service_testmethod?serviceId=' + currentTestId);
+                JSUTIL.callAJAXPost(postUrl, JSON.stringify(tmObj), afterSaveServiceTestMethodHandle, null);
+            }
+        });
+
+        $('#saveParameterTestMethodBtn').on('click', function () {
+            var tmObj = {};
+            tmObj['name'] = $('.testMethodInput[name="Name"]').val();
+            tmObj['description'] = $('.testMethodInput[name="Description"]').val();
+            if (tmObj['name']) {
+                var postUrl = JSUTIL.getUrl('/lb/services/create_parameter_testmethod?parameterId=' + currentParameterId);
+                JSUTIL.callAJAXPost(postUrl, JSON.stringify(tmObj), afterSaveTestMethodHandle, null);
+            }
+        });
+
+
+        // ---------- Parameter navigation ----------
+        $('#newParameterBtn').on('click', function () {
+            populateUnitOptions('#newUnitList', '');
+            setView('newParam');
+        });
+
+        $('.showTestOnCancel').on('click', function () {
+            setView('editTest');
+            $('.parameterEditBtn').show();
+            $('#editParameterSaveBtn').hide();
+            $('.editParameterInput').prop('readonly', true).prop('disabled', true);
+            $('.editParameterInput[name="Equipments"]').val('');
+            $('.editParameterInput[name="Analysts"]').val('');
+            try {
+                $('.editParameterInput[name="Division"]').val('').trigger('change');
+                $('.editParameterInput[name="SubDivision"]').val('').trigger('change');
+                $('.editParameterInput[name="Unit"]').val('').trigger('change');
+            } catch (e) { /* select2 may not be initialized */ }
+        });
+
+
+        // ---------- New Parameter Panel ----------
+        $('#createParameterBtn').on('click', function () {
+            createParameterData();
+        });
+
+
+        // ---------- Edit Parameter Panel ----------
+        $('.parameterEditBtn').on('click', function () {
+            $(this).hide();
+            $('#editParameterSaveBtn').show();
+            $('.editParameterInput').prop('readonly', false).prop('disabled', false);
+        });
+
+        $('#editParameterSaveBtn').on('click', function () {
+            updateParameterData();
+        });
+
+        $('#deleteParameterBtn').on('click', function () {
+            deleteCallback = deleteParameterData;
+            var modal = new bootstrap.Modal(document.getElementById('standard-modal'));
+            modal.show();
+        });
+
+
+        // ---------- Parameter table inline actions ----------
+        $('#allTestParameterTable').on('click', '.deleteParameterSelect', function () {
+            elementToDelete = $(this).closest('tr');
+            currentParameterId = $(this).attr('name');
+            btnClicked = 'deleteParameterSelect';
+            deleteCallback = deleteParameterData;
+            var modal = new bootstrap.Modal(document.getElementById('standard-modal'));
+            modal.show();
+        });
+
+        $('#allTestParameterTable').on('click', '.editParameterSelect', function () {
+            currentParameterId = $(this).attr('name');
+            $.each(currentParameterList, function (i, val) {
+                if (String(currentParameterId) === String(val.id)) {
+                    currentParameterName = val.name;
+                    $('.editParameterInput[name="Name"]').val(val.name);
+                    $('.editParameterInput[name="Number"]').val(val.number);
+                    $('.editParameterInput[name="Specification"]').val(val.specification);
+                    $('.editParameterInput[name="Description"]').val(val.description);
+                    $('.editParameterInput[name="SamplingMethod"]').val(val.samplingMethod);
+                    $('.editParameterInput[name="NumberOfDecimals"]').val(val.numberOfDecimals);
+                    $('.editParameterInput[name="NumberOfReadings"]').val(val.numberOfReadings);
+                    $('.editParameterInput[name="MinLimit"]').val(val.minLimit);
+                    $('.editParameterInput[name="MaxLimit"]').val(val.maxLimit);
+                    $('.editParameterInput[name="Service.Id"]').val(currentTestId);
+                    $('.editParameterInput[name="Formula"]').val(val.formula);
+                    $('.editParameterInput[name="DefaultValues"]').val(val.defaultValues);
+                    if (val.type === 'on') {
+                        $('.editParameterInput[name="Type"]').prop('checked', true);
+                    } else {
+                        $('.editParameterInput[name="Type"]').prop('checked', false);
+                    }
+                    populateUnitOptions('#editUnitList', val.unit || '');
+                    $('#editParameterId').val(val.id);
+                    return false;
+                }
+            });
+            setView('editParam');
+        });
+
+        $('#allTestParameterTable').on('click', '.measureOfUncertainityBtn', function () {
+            currentParameterId = $(this).attr('name');
+            var getUrl = JSUTIL.getUrl('/lb/services/parameter_uncertainity?id=' + currentParameterId);
+            JSUTIL.callAJAXGet(getUrl, getParameterUcCallback);
+        });
+
+        $('#allTestParameterTable').on('click', '.parameterTestMethodsBtn', function () {
+            currentParameterId = $(this).attr('name');
+            var getUrl = JSUTIL.getUrl('/lb/services/parameter_testmethods?id=' + currentParameterId);
+            JSUTIL.callAJAXGet(getUrl, getTestMethodCallback);
+        });
+
+
+        // ---------- Formula variable modals ----------
+        $('#newParameter_addVariable').on('click', function () {
+            showFormulaVariableModal('.newParameterInput[name="Formula"]');
+        });
+
+        $('#editParameter_addVariable').on('click', function () {
+            showFormulaVariableModal('.editParameterInput[name="Formula"]');
+        });
+
+        $('#newParameter_calculate').on('click', function () {
+            validateFormula('.newParameterInput[name="Formula"]', '#newParameterFormulaError', '#newParameterItemSuccess');
+        });
+
+        $('#editParameter_calculate').on('click', function () {
+            validateFormula('.editParameterInput[name="Formula"]', '#editParameterFormulaError', '#editParameterItemSuccess');
+        });
+
+
+        // ---------- Unified delete confirmation ----------
+        $('#confirmDeleteBtn').on('click', function () {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('standard-modal'));
+            if (modal) modal.hide();
+            if (typeof deleteCallback === 'function') {
+                deleteCallback();
+            }
+        });
+    });
+
+
+    // ================================================================
+    // Formula helpers
+    // ================================================================
+    function showFormulaVariableModal(formulaSelector) {
+        $('#formulaVariableTable').empty();
+        var innerHtml = '';
+        $.each(currentParameterList, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td class="itemNum"><a class="selectFormulaVariableBtn" href="javascript:void(0)">' + val.number + '</a></td>' +
+                '<td>' + val.name + '</td>' +
+                '</tr>';
+        });
+        $('#formulaVariableTable').append(innerHtml);
+        var modal = new bootstrap.Modal(document.getElementById('formulaVariableModal'));
+        modal.show();
+
+        $('<div>').promise().done(function () {
+            $('.selectFormulaVariableBtn').off('click').on('click', function () {
+                var varName = $(this).text();
+                var currentFormula = $(formulaSelector).val();
+                currentFormula += '{' + varName + '}';
+                $(formulaSelector).val(currentFormula);
+            });
+        });
+    }
+
+    function validateFormula(formulaSelector, errorSelector, successSelector) {
+        var formulaText = ($(formulaSelector).val() || "").trim();
+        var evaluator = window.math && (typeof window.math.evaluate === "function" ? window.math.evaluate : typeof window.math.eval === "function" ? window.math.eval : null);
+        var errorMessage = "Invalid Formula";
+        var formulaItems = [], regEx = /{([^}]+)}/g, text = '';
+        while (text = regEx.exec(formulaText)) {
+            formulaItems.push(text[1]);
+        }
+        $.each(formulaItems, function (i, val) {
+            formulaText = formulaText.replaceAll('{' + val + '}', 1);
+        });
+        try {
+            if (!formulaText) {
+                throw new Error("Formula is empty");
+            }
+            if (!evaluator) {
+                throw new Error("Formula engine is not available");
+            }
+            evaluator(formulaText);
+            $(errorSelector).hide().text("Invalid Formula");
+            $(formulaSelector).parent().removeClass('has-error');
+            $(successSelector).show();
+        } catch (e) {
+            if (e && e.message) {
+                errorMessage = e.message;
+            }
+            $(successSelector).hide();
+            $(formulaSelector).parent().addClass('has-error');
+            $(errorSelector).text(errorMessage).show();
+        }
+    }
+
+
+    // ================================================================
+    // Test method callbacks (retained for JSUTIL-based endpoints)
+    // ================================================================
+    function getServiceTestMethodCallback(response) {
+        var innerHtml = '';
+        $("#serviceTestMethodTable").empty();
+        $.each(response, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td><a class="btn btn-sm btn-outline-danger deleteLabTestMethod" id="' + val.id + '"><i data-lucide="trash"></i></a></td>' +
+                '<td class="itemNum">' + val.name + '</td>' +
+                '<td>' + val.type + '</td>' +
+                '</tr>';
+        });
+        $("#serviceTestMethodTable").append(innerHtml);
+        lucide.createIcons();
+        var modal = new bootstrap.Modal(document.getElementById('serviceTestMethodModal'));
+        modal.show();
+        $('.deleteLabTestMethod').on('click', function () {
+            var currentId = $(this).attr('id');
+            var getUrl = JSUTIL.getUrl('/lb/services/delete_parameter_testmethod?id=' + currentId);
+            JSUTIL.callAJAXGet(getUrl, afterSaveServiceTestMethodHandle);
+        });
+    }
+
+    function afterSaveServiceTestMethodHandle(response) {
+        var getUrl = JSUTIL.getUrl('/lb/services/service_testmethods?id=' + currentTestId);
+        JSUTIL.callAJAXGet(getUrl, getServiceTestMethodCallback);
+        $('.serviceTestMethodInput[name="Name"]').val('');
+        $('.serviceTestMethodInput[name="Description"]').val('');
+    }
+
+    function getTestMethodCallback(response) {
+        var innerHtml = '';
+        $("#parameterTestMethodTable").empty();
+        $.each(response, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td>' +
+                '<a class="btn btn-sm btn-outline-danger deleteLabTestMethod" style="margin-right: 7px;" id="' + val.id + '"><i data-lucide="trash"></i></a>' +
+                '<a class="btn btn-sm btn-outline-secondary openLabTestMethod" id="' + val.id + '"><i data-lucide="file"></i></a>' +
+                '</td>' +
+                '<td class="itemNum">' + val.name + '</td>' +
+                '<td>' + val.type + '</td>' +
+                '</tr>';
+        });
+        $("#parameterTestMethodTable").append(innerHtml);
+        lucide.createIcons();
+        var modal = new bootstrap.Modal(document.getElementById('testMethodModal'));
+        modal.show();
+        $('.deleteLabTestMethod').on('click', function () {
+            var currentId = $(this).attr('id');
+            var getUrl = JSUTIL.getUrl('/lb/services/delete_parameter_testmethod?id=' + currentId);
+            JSUTIL.callAJAXGet(getUrl, afterSaveTestMethodHandle);
+        });
+        $('.openLabTestMethod').on('click', function () {
+            $('.summernote').summernote({
+                minHeight: 800,
+                code: ''
+            });
+            currentTestMethodId = $(this).attr('id');
+            var getUrl = JSUTIL.getUrl('/lb/services/test_method_content?id=' + currentTestMethodId);
+            JSUTIL.callAJAXGet(getUrl, afterGetTestMethodHandle);
+        });
+    }
+
+    function afterSaveTestMethodHandle() {
+        var getUrl = JSUTIL.getUrl('/lb/services/parameter_testmethods?id=' + currentParameterId);
+        JSUTIL.callAJAXGet(getUrl, getTestMethodCallback);
+        $('.testMethodInput[name="Name"]').val('');
+        $('.testMethodInput[name="Description"]').val('');
+    }
+
+    function afterGetTestMethodHandle(response) {
+        if (response) {
+            $('#testProcedureSummernote').summernote('code', response);
+        }
+        $('#testProcedurePanel').show();
+        $('#editTestPanel').hide();
+        var modal = bootstrap.Modal.getInstance(document.getElementById('testMethodModal'));
+        if (modal) modal.hide();
+    }
+
+    function getParameterUcCallback(objList) {
+        $("#uncertainityTable").empty();
+        var innerHtml = '';
+        if (objList) {
+            $.each(objList, function (i, val) {
+                var itemName = '';
+                if (val.uncertainity.equipment) { itemName = val.uncertainity.equipment.name; }
+                else if (val.uncertainity.product) { itemName = val.uncertainity.product.name; }
+                else { itemName = 'Type-A'; }
+                innerHtml += '<tr>' +
+                    '<td><button type="button" class="btn btn-outline-danger btn-sm deleteUncertainitySelect" name="' + val.id + '"><i data-lucide="trash"></i></button></td>' +
+                    '<td>' + JSUTIL.getDate(val.uncertainity.performedDate) + '</td>' +
+                    '<td>' + itemName + '</td>' +
+                    '<td>' + val.uncertainity.measuredValue + ' ' + val.uncertainity.measuredUnit + '</td>' +
+                    '<td>' + val.uncertainity.absoluteError + '</td>' +
+                    '<td>' + val.uncertainity.relativeUncertainity + '</td>' +
+                    '</tr>';
+            });
+            $("#uncertainityTable").append(innerHtml);
+            lucide.createIcons();
+            $('#typeAUncertainityPanel').hide();
+            $('#newUncertainityPanel').hide();
+            $('#editTestPanel').hide();
+            $("#uncertainityPanel").show();
+        }
+        $('.deleteUncertainitySelect').on('click', function () {
+            elementToDelete = $(this).closest('tr');
+            var uncertainityRecId = $(this).attr('name');
+            deleteCallback = function () {
+                if (uncertainityRecId) {
+                    var postUrl = JSUTIL.getUrl('/lb/services/delete_uncertainity?id=' + uncertainityRecId);
+                    JSUTIL.callAJAXGet(postUrl, function () { elementToDelete.remove(); });
+                }
+            };
+            var modal = new bootstrap.Modal(document.getElementById('standard-modal'));
+            modal.show();
+        });
+    }
+</script>

@@ -1,0 +1,1269 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+
+<!-- visitorEntry.html start -->
+<style>
+    #allVisitorEntryTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allVisitorEntryTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .selectRecordBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-inside {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-entry-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-exit-requested {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status-exit-approved {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-exited {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .status-rejected {
+        background: #fecaca;
+        color: #991b1b;
+    }
+
+    /* ── Employee search suggestion dropdown ── */
+    .employee-suggestions {
+        position: absolute;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 2000;
+        border-radius: 6px;
+        background: #ffffff;
+        border: 1px solid #dde1e7;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .employee-suggestions li {
+        padding: 9px 14px;
+        cursor: pointer;
+        font-size: 13px;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.12s;
+    }
+
+    .employee-suggestions li:last-child {
+        border-bottom: none;
+    }
+
+    .employee-suggestions li:hover {
+        background: #f0f4ff;
+        color: #1a56db;
+    }
+
+    /* ── Dark mode ── */
+    [data-bs-theme="dark"] .employee-suggestions,
+    body.skin-dark .employee-suggestions,
+    body.dark-mode .employee-suggestions {
+        background: #1e2330;
+        border-color: #3a3f4e;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    [data-bs-theme="dark"] .employee-suggestions li,
+    body.skin-dark .employee-suggestions li,
+    body.dark-mode .employee-suggestions li {
+        color: #c9d1d9;
+        border-bottom-color: #2d3244;
+        background: transparent;
+    }
+
+    [data-bs-theme="dark"] .employee-suggestions li:hover,
+    body.skin-dark .employee-suggestions li:hover,
+    body.dark-mode .employee-suggestions li:hover {
+        background: #2d3a5e;
+        color: #93c5fd;
+    }
+</style>
+
+<div class="qa-white-panel">
+
+    <!-- allVisitorEntry.html Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="allRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Visitors Entry <small>Security</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary newRecordBtn">
+                            <i data-lucide="plus"></i>New Visitor Entry
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <table id="allVisitorEntryTable" class="table table-bordered table-hover dataTables">
+                        <thead>
+                            <th>Number</th>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Contact Person</th>
+                            <th>Entry</th>
+                            <th>Exit</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </thead>
+                        <tbody id="allCustomerTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- allVisitorEntry.html End -->
+
+
+
+
+    <!-- editVisitorEntry.html Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRecordTitle"></span></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
+                                data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-default btn-sm recordEditBtn"><i
+                                data-lucide="pencil"></i>Edit</button>
+                        <button type="button" class="btn btn-secondary btn-sm vendorSaveAndUpdateBtn"><i
+                                data-lucide="check"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="editVendorObj">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>First Name</label>
+                                    <input type="text" name="firstName" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Last Name</label>
+                                    <input type="text" name="lastName" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Company</label>
+                                    <input type="text" name="company" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Phone</label>
+                                    <input type="text" name="phone" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>E-Mail</label>
+                                    <input type="text" name="email" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>ID Type</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="editIdTypeBtn" style="text-align: left;"
+                                            data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                                            --none--
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="editIdTypeBtn">
+                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            <a class="dropdown-item" href="#" data-value="Aadhar">Aadhar</a>
+                                            <a class="dropdown-item" href="#" data-value="PAN">PAN</a>
+                                            <a class="dropdown-item" href="#" data-value="License">License</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="idType" class="editRecordInput" value="">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>ID Number</label>
+                                    <input type="text" name="idNumber" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Type</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="editTypeBtn" style="text-align: left;"
+                                            data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                                            --none--
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="editTypeBtn">
+                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            <a class="dropdown-item" href="#" data-value="Business">Business</a>
+                                            <a class="dropdown-item" href="#" data-value="Vendor">Vendor</a>
+                                            <a class="dropdown-item" href="#" data-value="Auditor">Auditor</a>
+                                            <a class="dropdown-item" href="#" data-value="Interview">Interview</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="type" class="editRecordInput" value="">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Contact Person</label>
+                                    <input type="text"
+                                        class="typeahead_3 form-control selectSearchInputAutoComplete editRecordInput"
+                                        placeholder="Search employee" autocomplete="off" readonly>
+                                    <input type="hidden" name="host.id"
+                                        class="selectSearchInputAutoCompleteId editRecordInput"
+                                        aria-description="search/employee">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Purpose</label>
+                                    <input type="text" class="form-control editRecordInput" name="purpose" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- editVisitorEntry.html End -->
+
+
+
+
+    <!-- newVisitorEntry.html Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small>Visitor Entry</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i
+                                data-lucide="x"></i>Cancel</button>
+                        <button type="button" class="btn btn-secondary btn-sm newVendorSaveBtn"><i
+                                data-lucide="check"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="vendorObj" id="newVendorForm">
+                        <div class="row g-3">
+                            <!-- Visitor Status Selection -->
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Visitor Status</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="visitorStatusBtn" style="text-align: left;"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            New Visitor
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="visitorStatusBtn">
+                                            <a class="dropdown-item active" href="#" data-value="new">New Visitor</a>
+                                            <a class="dropdown-item" href="#" data-value="returning">Old Visitor</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="visitorStatus" name="visitorStatus" value="new">
+                                </div>
+                            </div>
+
+                            <!-- Phone Search for Returning Visitors -->
+                            <div class="col-sm-6 returning-visitor-section" style="display: none;">
+                                <div class="form-group mb-3">
+                                    <label>Search by Phone Number</label>
+                                    <input type="text" id="searchPhone" class="form-control"
+                                        placeholder="Enter phone number to search" autocomplete="off">
+                                    <div id="searchPhoneResults" class="list-group"
+                                        style="display:none; max-height:200px; overflow-y:auto; margin-top:5px;"></div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="extFileId" name="extFileId" class="newRecordInput">
+
+                            <!-- New Visitor Fields -->
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>First Name</label>
+                                    <input type="text" name="firstName" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>Last Name</label>
+                                    <input type="text" name="lastName" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>Company</label>
+                                    <input type="text" name="company" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>Phone</label>
+                                    <input type="text" name="phone" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>E-Mail</label>
+                                    <input type="text" name="email" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>ID Type</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="idTypeBtn" style="text-align: left;"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            --none--
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="idTypeBtn">
+                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            <a class="dropdown-item" href="#" data-value="Aadhar">Aadhar</a>
+                                            <a class="dropdown-item" href="#" data-value="PAN">PAN</a>
+                                            <a class="dropdown-item" href="#" data-value="License">License</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="idType" name="idType" class="newRecordInput" value="">
+                                </div>
+                            </div>
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>ID Number</label>
+                                    <input type="text" name="idNumber" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6 new-visitor-section">
+                                <div class="form-group mb-3">
+                                    <label>Type</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="typeBtn" style="text-align: left;"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            --none--
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="typeBtn">
+                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            <a class="dropdown-item" href="#" data-value="Business">Business</a>
+                                            <a class="dropdown-item" href="#" data-value="Vendor">Vendor</a>
+                                            <a class="dropdown-item" href="#" data-value="Auditor">Auditor</a>
+                                            <a class="dropdown-item" href="#" data-value="Interview">Interview</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="type" name="type" class="newRecordInput" value="">
+                                </div>
+                            </div>
+
+                            <!-- Common Fields -->
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Contact Person</label>
+                                    <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete"
+                                        placeholder="Search employee" autocomplete="off">
+                                    <input type="hidden" name="host.id"
+                                        class="selectSearchInputAutoCompleteId newRecordInput"
+                                        aria-description="search/employee">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Purpose</label>
+                                    <input type="text" class="form-control newRecordInput" name="purpose">
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="entryTime" class="newRecordInput">
+                            <input type="hidden" name="processStatus" class="newRecordInput" value="Inside">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- newVisitorEntry.html End -->
+
+
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // ================================================================
+    // State
+    // ================================================================
+    var visitorRecords = [];
+    var currentRecordId = null;
+    var currentVisitorData = null;
+    var videoStream = null;
+    var capturedImageBlob = null;
+    var cameraModalInstance = null;
+
+    // ================================================================
+    // Common helpers
+    // ================================================================
+    function showError(message) {
+        if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') {
+            JSUTIL.buildErrorModal(message);
+        } else {
+            alert(message);
+        }
+    }
+
+    function getCsrfHeaders() {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = {};
+        if (token && header) {
+            headers[header] = token;
+        }
+        return headers;
+    }
+
+    function requestJson(url, method, payload) {
+        var options = {
+            method: method || 'GET',
+            headers: Object.assign({}, getCsrfHeaders())
+        };
+        if (payload !== undefined) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(payload);
+        }
+        return fetch(url, options).then(async function (response) {
+            if (!response.ok) {
+                var text = await response.text();
+                throw new Error(text || ('HTTP ' + response.status));
+            }
+            var textBody = await response.text();
+            if (!textBody) return null;
+            try {
+                return JSON.parse(textBody);
+            } catch (e) {
+                return textBody;
+            }
+        });
+    }
+
+    function convertUTCtoIST(utcTimestamp) {
+        if (!utcTimestamp || utcTimestamp === '') return '-';
+        var timestamp = utcTimestamp;
+        if (timestamp.indexOf('Z') === -1 && timestamp.indexOf('+') === -1) {
+            timestamp = timestamp + 'Z';
+        }
+        var utcDate = new Date(timestamp);
+        var istOffset = 5.5 * 60 * 60 * 1000;
+        var istTime = new Date(utcDate.getTime() + istOffset);
+        function pad(s) { return (s < 10) ? '0' + s : s; }
+        return istTime.getUTCFullYear() + '-' + pad(istTime.getUTCMonth() + 1) + '-' + pad(istTime.getUTCDate()) + ' ' + pad(istTime.getUTCHours()) + ':' + pad(istTime.getUTCMinutes());
+    }
+
+    function getStatusBadge(status) {
+        var cls = 'status-inside';
+        if (status === 'Entry Approved') cls = 'status-entry-approved';
+        else if (status === 'Exit Requested') cls = 'status-exit-requested';
+        else if (status === 'Exit Approved') cls = 'status-exit-approved';
+        else if (status === 'Exited') cls = 'status-exited';
+        else if (status === 'Rejected') cls = 'status-rejected';
+        return '<span class="status-badge ' + cls + '">' + (status || '-') + '</span>';
+    }
+
+    // ================================================================
+    // View management
+    // ================================================================
+    function setView(viewName) {
+        $('#allRecordPanel').hide();
+        $('#editRecordPanel').hide();
+        $('#newRecordPanel').hide();
+        if (viewName === 'all') { $('#allRecordPanel').show(); $('.newRecordBtn').show(); }
+        if (viewName === 'edit') { $('#editRecordPanel').show(); $('.newRecordBtn').hide(); }
+        if (viewName === 'new') { $('#newRecordPanel').show(); }
+        lucide.createIcons();
+    }
+
+    // ================================================================
+    // Load visitors from API
+    // ================================================================
+    function loadVisitors() {
+        JSUTIL.callAJAXGet('/api/visitor', function (response) {
+            visitorRecords = Array.isArray(response) ? response : [];
+            renderVisitorTable(visitorRecords);
+            setView('all');
+        });
+    }
+
+    // ================================================================
+    // Render visitor table
+    // ================================================================
+    function renderVisitorTable(records) {
+        if ($.fn.DataTable.isDataTable('#allVisitorEntryTable')) {
+            $('#allVisitorEntryTable').DataTable().destroy();
+        }
+
+        var innerHtml = '';
+        $.each(records, function (i, val) {
+            var hostName = '-';
+            if (val.host && val.host.name) {
+                hostName = val.host.name;
+            } else if (val.host && val.host.firstName) {
+                hostName = val.host.firstName + ' ' + (val.host.lastName || '');
+            }
+
+            var actionButtons = '';
+
+            // Status: Inside (waiting for host entry approval) - only photo
+            if (val.processStatus === 'Inside') {
+                actionButtons += '<button type="button" class="btn btn-secondary btn-sm uploadPhotoBtn" data-visitor-id="' + val.id + '" data-ext-file-id="' + (val.extFileId || '') + '" data-visitor-number="' + val.number + '" data-visitor-index="' + i + '" style="margin-right: 3px; padding: 4px 4px; font-size: 12px;"><i data-lucide="camera"></i>Photo</button>';
+                actionButtons += '<button type="button" class="btn btn-secondary btn-sm printBtn" data-visitor-id="' + val.id + '" data-ext-file-id="' + (val.extFileId || '') + '" data-visitor-number="' + val.number + '" data-visitor-index="' + i + '" style="display:none; margin-right: 3px; padding: 4px 4px; font-size: 12px;"><i data-lucide="printer"></i>Print</button>';
+            }
+
+            // Status: Entry Approved (host approved entry) - photo + request exit
+            if (val.processStatus === 'Entry Approved') {
+                actionButtons += '<button type="button" class="btn btn-secondary btn-sm uploadPhotoBtn" data-visitor-id="' + val.id + '" data-ext-file-id="' + (val.extFileId || '') + '" data-visitor-number="' + val.number + '" data-visitor-index="' + i + '" style="margin-right: 3px; padding: 4px 4px; font-size: 12px;"><i data-lucide="camera"></i>Photo</button>';
+                actionButtons += '<button type="button" class="btn btn-secondary btn-sm printBtn" data-visitor-id="' + val.id + '" data-ext-file-id="' + (val.extFileId || '') + '" data-visitor-number="' + val.number + '" data-visitor-index="' + i + '" style="display:none; margin-right: 3px; padding: 4px 4px; font-size: 12px;"><i data-lucide="printer"></i>Print</button>';
+                actionButtons += '<button type="button" class="btn btn-warning btn-sm requestExitBtn" data-visitor-id="' + val.id + '" style="margin-right: 3px; padding: 4px 4px; font-size: 12px;"><i data-lucide="log-out"></i>Request Exit</button>';
+            }
+
+            // Status: Exit Approved (host approved exit) - security completes exit
+            if (val.processStatus === 'Exit Approved') {
+                actionButtons += '<button type="button" class="btn btn-secondary btn-sm completeExitBtn" data-visitor-id="' + val.id + '" style="padding: 4px 4px; font-size: 12px;"><i data-lucide="check-check"></i>Complete Exit</button>';
+            }
+
+            innerHtml += '<tr>' +
+                '<td class="itemNum"><a href="javascript:void(0);" class="selectRecordBtn" data-id="' + val.id + '">' + (val.number || '-') + '</a></td>' +
+                '<td>' + (val.firstName || '') + ' ' + (val.lastName || '') + '</td>' +
+                '<td>' + (val.company || '-') + '</td>' +
+                '<td>' + hostName + '</td>' +
+                '<td>' + convertUTCtoIST(val.entryTime) + '</td>' +
+                '<td>' + convertUTCtoIST(val.exitTime) + '</td>' +
+                '<td>' + getStatusBadge(val.processStatus) + '</td>' +
+                '<td>' + actionButtons + '</td>' +
+                '</tr>';
+        });
+
+        $('#allCustomerTable').html(innerHtml);
+        $('#allVisitorEntryTable').DataTable({ order: [[0, 'desc']], pageLength: 25 });
+
+        // Bind action buttons
+        bindTableActions();
+        lucide.createIcons();
+    }
+
+    function bindTableActions() {
+        // Request Exit: Entry Approved -> Exit Requested
+        $('.requestExitBtn').off('click').on('click', function () {
+            var visitorId = $(this).data('visitor-id');
+            requestJson('/api/visitor/' + visitorId, 'PUT', {
+                processStatus: 'Exit Requested'
+            }).then(function () {
+                loadVisitors();
+            }).catch(function (err) {
+                console.error(err);
+                showError('Unable to request exit.');
+            });
+        });
+
+        // Complete Exit: Exit Approved -> Exited (with exitTime)
+        $('.completeExitBtn').off('click').on('click', function () {
+            var visitorId = $(this).data('visitor-id');
+            requestJson('/api/visitor/' + visitorId, 'PUT', {
+                exitTime: new Date().toISOString(),
+                processStatus: 'Exited'
+            }).then(function () {
+                loadVisitors();
+            }).catch(function (err) {
+                console.error(err);
+                showError('Unable to complete exit.');
+            });
+        });
+
+        // Check photo existence for upload/print toggle
+        $('.uploadPhotoBtn').each(function () {
+            var visitorId = $(this).data('visitor-id');
+            var extFileId = $(this).data('ext-file-id');
+
+            checkDocumentExists(visitorId, extFileId, function (hasPhoto, photoRefId) {
+                console.log("hasPhoto", hasPhoto, "for visitorId", visitorId);
+                var $liveBtn = $('.uploadPhotoBtn[data-visitor-id="' + visitorId + '"]');
+                var $liveRow = $liveBtn.closest('tr');
+                $liveRow.find('.printBtn').data('photo-reference-id', photoRefId);
+                if (hasPhoto) {
+                    $liveBtn.hide();
+                    $liveRow.find('.printBtn').show();
+                }
+            });
+        });
+    }
+
+    // ================================================================
+    // Employee search (Contact Person)
+    // ================================================================
+    var _employeeCache = null;
+    var _employeeCacheLoading = false;
+
+    function _normalizeEmployee(e) {
+        if (!e || typeof e !== 'object') return null;
+        var id = e.id != null ? e.id : e.Id;
+        var first = e.firstName != null ? e.firstName : e.FirstName;
+        var last = e.lastName != null ? e.lastName : e.LastName;
+        var name = e.name != null ? e.name : e.Name;
+        if (!name) name = [first, last].filter(Boolean).join(' ').trim();
+        var number = e.number != null ? e.number : e.Number;
+        var search = [name, number, id].filter(Boolean).join(' ').toLowerCase();
+        return { id: id, name: name || '', number: number || '', search: search };
+    }
+
+    function loadEmployeesForSearch(callback) {
+        if (_employeeCache) { if (typeof callback === 'function') callback(_employeeCache); return; }
+        if (_employeeCacheLoading) { setTimeout(function () { loadEmployeesForSearch(callback); }, 200); return; }
+        _employeeCacheLoading = true;
+        var url = (typeof JSUTIL !== 'undefined' && JSUTIL.getUrl) ? JSUTIL.getUrl('/api/employees') : '/api/employees';
+        JSUTIL.callAJAXGet(url, function (res) {
+            var data = Array.isArray(res) ? res : [];
+            _employeeCache = data.map(_normalizeEmployee).filter(Boolean);
+            _employeeCacheLoading = false;
+            if (typeof callback === 'function') callback(_employeeCache);
+        });
+    }
+
+    function showEmployeeSuggestions($input, list) {
+        $('.employee-suggestions').remove();
+        if (!$input || !$input.length || !list || !list.length) return;
+
+        var offset = $input.offset();
+        var $ul = $('<ul class="employee-suggestions"></ul>').css({
+            top:   offset.top + $input.outerHeight(),
+            left:  offset.left,
+            width: $input.outerWidth()
+        });
+
+        list.forEach(function (e) {
+            var label = e.name + (e.number ? ' (' + e.number + ')' : '');
+            $('<li></li>').text(label)
+                .data('employee', e)
+                .on('click', function () {
+                    var emp = $(this).data('employee');
+                    $input.val(emp.name);
+                    $input.closest('.form-group').find('.selectSearchInputAutoCompleteId[aria-description="search/employee"]').val(emp.id).trigger('change');
+                    $('.employee-suggestions').remove();
+                }).appendTo($ul);
+        });
+        $('body').append($ul);
+    }
+
+    $(document).on('input.employeeSearch focus.employeeSearch', '.selectSearchInputAutoComplete', function () {
+        var $input = $(this);
+        var $hidden = $input.closest('.form-group').find('.selectSearchInputAutoCompleteId[aria-description="search/employee"]');
+        if (!$hidden.length) return;
+        var q = ($input.val() || '').toLowerCase().trim();
+        loadEmployeesForSearch(function (employees) {
+            if (!$input.is(':focus')) return;
+            if (!q) { showEmployeeSuggestions($input, employees.slice(0, 10)); return; }
+            var filtered = employees.filter(function (e) { return e.search.indexOf(q) !== -1; }).slice(0, 10);
+            showEmployeeSuggestions($input, filtered);
+        });
+    });
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.employee-suggestions, .selectSearchInputAutoComplete').length) {
+            $('.employee-suggestions').remove();
+        }
+    });
+
+    // ================================================================
+    // All Record Panel: main ready
+    // ================================================================
+    $(document).ready(function () {
+        loadVisitors();
+
+        // Open new visitor form
+        $(document).on('click', '.newRecordBtn', function () {
+            resetForm();
+            setView('new');
+        });
+
+        // Select visitor for edit
+        $('#allCustomerTable').on('click', '.selectRecordBtn', function () {
+            var currentId = String($(this).data('id'));
+            currentRecordId = currentId;
+            $('.vendorSaveAndUpdateBtn').hide();
+
+            requestJson('/api/visitor/' + currentId, 'GET')
+                .then(function (visitor) {
+                    if (visitor) populateEditForm(visitor);
+                    setView('edit');
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    var match = visitorRecords.find(function (v) { return String(v.id) === currentId; });
+                    if (match) populateEditForm(match);
+                    setView('edit');
+                });
+        });
+
+        // Upload photo
+        $(document).on('click', '.uploadPhotoBtn', function () {
+            var visitorId = $(this).data('visitor-id');
+            var visitorNumber = $(this).data('visitor-number');
+            var visitorIndex = $(this).data('visitor-index');
+            currentVisitorData = visitorRecords[visitorIndex];
+            openCameraForCapture(visitorId, visitorNumber);
+        });
+
+        // Print visitor card
+        $(document).on('click', '.printBtn', function () {
+            var visitorId = $(this).data('visitor-id');
+            var visitorIndex = $(this).data('visitor-index');
+            var photoReferenceId = $(this).data('photo-reference-id') || visitorId || $(this).data('ext-file-id');
+            currentVisitorData = visitorRecords[visitorIndex];
+
+            var postDocUrl = JSUTIL.getUrl('/api/files?patientId=' + photoReferenceId);
+            JSUTIL.callAJAXGet(postDocUrl, function (objList) {
+                var exitPhotoDoc = null;
+                if (objList && objList.length > 0) {
+                    $.each(objList, function (i, val) {
+                        var nameStr = val.originalName || val.name || val.fileName || '';
+                        var descStr = val.description || '';
+                        if (descStr === 'visitor_photo' || nameStr.indexOf('visitor_exit_') !== -1) {
+                            exitPhotoDoc = val;
+                            return false;
+                        }
+                    });
+                }
+                if (exitPhotoDoc) {
+                    printVisitorCard(exitPhotoDoc.id, currentVisitorData);
+                } else {
+                    JSUTIL.buildErrorModal('No visitor photo found.');
+                }
+            });
+        });
+    });
+
+    // ================================================================
+    // Edit Visitor Panel
+    // ================================================================
+    $(document).ready(function () {
+        $('.recordEditBtn').on('click', function () {
+            $('.editRecordInput').prop('readonly', false).prop('disabled', false);
+            $('#editIdTypeBtn, #editTypeBtn').prop('disabled', false);
+            $('.recordEditBtn').hide();
+            $('.vendorSaveAndUpdateBtn').show();
+        });
+
+        $('.editRecordCancelBtn').on('click', function () {
+            $('.editRecordInput').prop('readonly', true).prop('disabled', true);
+            $('#editIdTypeBtn, #editTypeBtn').prop('disabled', true);
+            $('.recordEditBtn').show();
+            $('.vendorSaveAndUpdateBtn').hide();
+            setView('all');
+        });
+
+        $('.vendorSaveAndUpdateBtn').on('click', function () {
+            var payload = buildFormDataJSON('editRecordInput');
+            requestJson('/api/visitor/' + currentRecordId, 'PUT', payload)
+                .then(function () {
+                    $('.editRecordInput').prop('readonly', true).prop('disabled', true);
+                    $('.recordEditBtn').show();
+                    $('.vendorSaveAndUpdateBtn').hide();
+                    loadVisitors();
+                    setView('all');
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    showError('Unable to update visitor.');
+                });
+        });
+    });
+
+    // Edit panel dropdown handlers
+    $(document).on('click', '#editIdTypeBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#editIdTypeBtn').text($(this).text());
+        $('input[name="idType"].editRecordInput').val(value);
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+    });
+
+    $(document).on('click', '#editTypeBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#editTypeBtn').text($(this).text());
+        $('input[name="type"].editRecordInput').val(value);
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+    });
+
+    function populateEditForm(visitor) {
+        if (!visitor) return;
+        $('#editRecordTitle').text('Edit Visitor: ' + (visitor.firstName || '') + ' ' + (visitor.lastName || ''));
+        $('.editRecordInput[name="firstName"]').val(visitor.firstName || '');
+        $('.editRecordInput[name="lastName"]').val(visitor.lastName || '');
+        $('.editRecordInput[name="company"]').val(visitor.company || '');
+        $('.editRecordInput[name="phone"]').val(visitor.phone || '');
+        $('.editRecordInput[name="email"]').val(visitor.email || '');
+        $('.editRecordInput[name="idNumber"]').val(visitor.idNumber || '');
+        $('.editRecordInput[name="purpose"]').val(visitor.purpose || '');
+        $('.editRecordInput[name="idType"]').val(visitor.idType || '');
+        $('#editIdTypeBtn').text(visitor.idType || '--none--');
+        $('.editRecordInput[name="type"]').val(visitor.type || '');
+        $('#editTypeBtn').text(visitor.type || '--none--');
+        if (visitor.host) {
+            $('.editRecordInput[name="host.id"]').val(visitor.host.id || '');
+            var hostName = visitor.host.name || ((visitor.host.firstName || '') + ' ' + (visitor.host.lastName || ''));
+            $('.selectSearchInputAutoComplete').val(hostName);
+        }
+        $('.editRecordInput').prop('readonly', true).prop('disabled', true);
+        $('#editIdTypeBtn, #editTypeBtn').prop('disabled', true);
+        // Only allow editing if not exited
+        if (visitor.processStatus !== 'Exited' && visitor.processStatus !== 'Rejected' && visitor.processStatus !== 'Inside' && visitor.processStatus !== "Entry Approved") {
+            $('.recordEditBtn').show();
+        } else {
+            $('.recordEditBtn').hide();
+        }
+        $('.vendorSaveAndUpdateBtn').hide();
+    }
+
+    // ================================================================
+    // New Visitor Panel
+    // ================================================================
+    var phoneSearchTimeout = null;
+
+    $(document).ready(function () {
+        $(document).on('change', '#visitorStatus', function () {
+            var status = $(this).val();
+            clearPhoneSearchResults();
+            $('#visitorInfoAlert').remove();
+            $('#searchPhone').val('');
+            $('#extFileId').val('');
+            if (status === 'returning') {
+                $('.returning-visitor-section').show();
+                $('.new-visitor-section').hide();
+                $('.new-visitor-section .newRecordInput').val('');
+            } else {
+                $('.new-visitor-section').show();
+                $('.returning-visitor-section').hide();
+            }
+        });
+
+        $(document).on('input', '#searchPhone', function () {
+            var phone = $(this).val().trim();
+            $('#extFileId').val('');
+            $('#visitorInfoAlert').remove();
+            clearPhoneSearchResults();
+            if (phone.length >= 3) {
+                if (phoneSearchTimeout) clearTimeout(phoneSearchTimeout);
+                phoneSearchTimeout = setTimeout(function () { searchVisitorByPhone(phone); }, 250);
+            }
+        });
+
+        $(document).on('click', '.newVendorSaveBtn', function () {
+            var $btn = $(this);
+            if ($btn.prop('disabled')) return; 
+            $btn.prop('disabled', true);
+            var visitorStatus = $('#visitorStatus').val();
+            var previousId = $('#extFileId').val();
+            setEntryTime();
+            var payload = buildFormDataJSON('newRecordInput');
+
+            if (visitorStatus === 'returning') {
+                if (!previousId) { alert('Please search and select a visitor by phone number'); return; }
+                if (!payload.purpose) { alert('Please enter the purpose of visit'); return; }
+                payload.extFileId = Number(previousId);
+            } else {
+                if (!payload.firstName || !payload.phone) { alert('Please fill in required fields (First Name and Phone)'); return; }
+                delete payload.extFileId;
+            }
+            payload.number = generateNextVisitorNumber();
+            // JSUTIL.callAJAXPost('/api/visitor', JSON.stringify(payload), callbackNewVendor);
+             JSUTIL.callAJAXPost('/api/visitor', JSON.stringify(payload), function(response) {
+            callbackNewVendor(response);
+            $btn.prop('disabled', false); 
+    });
+        });
+
+        $(document).on('click', '.newRecordCancelBtn', function () {
+            resetForm();
+            setView('all');
+        });
+    });
+
+    // New panel dropdown handlers
+    $(document).on('click', '#visitorStatusBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var status = $(this).data('value');
+        $('#visitorStatusBtn').text($(this).text());
+        $('#visitorStatus').val(status);
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+
+        // Directly toggle sections — do not rely on trigger('change') for hidden inputs
+        clearPhoneSearchResults();
+        $('#visitorInfoAlert').remove();
+        $('#searchPhone').val('');
+        $('#extFileId').val('');
+
+        if (status === 'returning') {
+            $('.returning-visitor-section').show();
+            $('.new-visitor-section').hide();
+            $('.new-visitor-section .newRecordInput').val('');
+        } else {
+            $('.new-visitor-section').show();
+            $('.returning-visitor-section').hide();
+        }
+    });
+
+    $(document).on('click', '#idTypeBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        $('#idTypeBtn').text($(this).text());
+        $('#idType').val($(this).data('value'));
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+    });
+
+    $(document).on('click', '#typeBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        $('#typeBtn').text($(this).text());
+        $('#type').val($(this).data('value'));
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+    });
+
+    // Phone search for returning visitors
+    $(document).on('click', '.phone-search-item', function () {
+        var visitor = $(this).data('visitor');
+        if (visitor) {
+            populateVisitorData(visitor);
+            clearPhoneSearchResults();
+        }
+    });
+
+    function searchVisitorByPhone(phone) {
+        JSUTIL.callAJAXGet('/api/visitor/search?phone=' + encodeURIComponent(phone), function (response) {
+            var visitors = Array.isArray(response) ? response : [];
+            if (visitors.length === 1) {
+                populateVisitorData(visitors[0]);
+                clearPhoneSearchResults();
+            } else if (visitors.length > 1) {
+                renderPhoneSearchResults(visitors);
+            } else {
+                $('#extFileId').val('');
+                clearPhoneSearchResults();
+            }
+        });
+    }
+
+    function populateVisitorData(visitor) {
+        if (visitor.id) $('#extFileId').val(visitor.id);
+        $('input[name="firstName"]').val(visitor.firstName || '');
+        $('input[name="lastName"]').val(visitor.lastName || '');
+        $('input[name="company"]').val(visitor.company || '');
+        $('input[name="phone"]').val(visitor.phone || '');
+        $('input[name="email"]').val(visitor.email || '');
+        $('#idType').val(visitor.idType || '');
+        $('#idTypeBtn').text(visitor.idType || '--none--');
+        $('input[name="idNumber"]').val(visitor.idNumber || '');
+        $('#type').val(visitor.type || '');
+        $('#typeBtn').text(visitor.type || '--none--');
+
+        $('#visitorInfoAlert').remove();
+        var infoHtml = '<div class="alert alert-info" id="visitorInfoAlert"><strong>Visitor Found:</strong> ' +
+            (visitor.firstName || '') + ' ' + (visitor.lastName || '') +
+            (visitor.company ? ' - ' + visitor.company : '') + '</div>';
+        $('.returning-visitor-section').after(infoHtml);
+    }
+
+    function renderPhoneSearchResults(visitors) {
+        var $results = $('#searchPhoneResults');
+        $results.empty();
+        $.each(visitors, function (index, visitor) {
+            var label = [visitor.phone, [visitor.firstName, visitor.lastName].filter(Boolean).join(' '), visitor.company].filter(Boolean).join(' | ');
+            var $item = $('<button type="button" class="list-group-item list-group-item-action phone-search-item"></button>');
+            $item.text(label);
+            $item.data('visitor', visitor);
+            $results.append($item);
+        });
+        $results.show();
+    }
+
+    function clearPhoneSearchResults() { $('#searchPhoneResults').hide().empty(); }
+
+    function generateNextVisitorNumber() {
+        var maxNumber = 0;
+        visitorRecords.forEach(function (v) {
+            if (v.number) {
+                var num = parseInt(v.number.replace('VIS-', ''));
+                if (num > maxNumber) maxNumber = num;
+            }
+        });
+        return 'VIS-' + String(maxNumber + 1).padStart(4, '0');
+    }
+
+    function setEntryTime() {
+        $('input[name="entryTime"]').val(new Date().toISOString());
+    }
+
+    function resetForm() {
+        $('#newVendorForm')[0].reset();
+        $('#visitorStatus').val('new');
+        $('#visitorStatusBtn').text('New Visitor');
+        $('#visitorStatusBtn ~ .dropdown-menu .dropdown-item').removeClass('active');
+        $('#visitorStatusBtn ~ .dropdown-menu .dropdown-item[data-value="new"]').addClass('active');
+        $('#idType').val(''); $('#idTypeBtn').text('--none--');
+        $('#type').val(''); $('#typeBtn').text('--none--');
+        $('#extFileId').val('');
+        $('#visitorInfoAlert').remove();
+        clearPhoneSearchResults();
+        // Directly show/hide — no trigger('change') on hidden input
+        $('.new-visitor-section').show();
+        $('.returning-visitor-section').hide();
+        setEntryTime();
+    }
+
+    function callbackNewVendor(response) {
+        var createdId = response && (response.id || response.Id);
+        if (!createdId) return;
+        loadVisitors();
+        resetForm();
+        setView('all');
+    }
+
+    // ================================================================
+    // Camera / Photo / Print
+    // ================================================================
+    function checkDocumentExists(visitorId, extFileId, callback) {
+        var primaryId = visitorId;
+        var fallbackId = extFileId && extFileId !== visitorId ? extFileId : null;
+
+        function hasExitPhoto(referenceId, done) {
+            var postDocUrl = JSUTIL.getUrl('/api/files?patientId=' + referenceId);
+            JSUTIL.callAJAXGet(postDocUrl, function (objList) {
+                console.log('hasExitPhoto response for', referenceId, objList);
+                var hasExit = false;
+                if (objList && objList.length > 0) {
+                    $.each(objList, function (i, val) {
+                        var nameStr = val.name || val.fileName || val.originalName || val.originalFilename || '';
+                        var descStr = val.description || '';
+                        if (descStr === 'visitor_photo' || nameStr.indexOf('visitor_exit_') !== -1) {
+                            hasExit = true;
+                            return false;
+                        }
+                    });
+                }
+                done(hasExit);
+            });
+        }
+
+        hasExitPhoto(primaryId, function (hasPrimary) {
+            if (hasPrimary) { callback(true, primaryId); }
+            else if (fallbackId) {
+                hasExitPhoto(fallbackId, function (hasFallback) { callback(hasFallback, hasFallback ? fallbackId : primaryId); });
+            } else { callback(false, primaryId); }
+        });
+    }
+
+    function printVisitorCard(fileId, visitorData) {
+        var hostName = '-';
+        if (visitorData.host) {
+            hostName = visitorData.host.name || ((visitorData.host.firstName || '') + ' ' + (visitorData.host.lastName || ''));
+        }
+        var photoUrl = JSUTIL.getUrl('/api/files/download/' + fileId);
+        var printWindow = window.open('', '_blank');
+        var printContent = '<!DOCTYPE html><html><head><title>Visitor Card - ' + visitorData.number + '</title>' +
+            '<style>body { font-family: Arial, sans-serif; padding: 20px; } .visitor-card { border: 2px solid #333; padding: 20px; max-width: 800px; margin: 0 auto; } .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; } .photo-section { text-align: center; margin-bottom: 20px; } .photo-section img { max-width: 300px; border: 1px solid #ccc; } .detail-row { margin-bottom: 10px; padding: 5px; } .detail-label { font-weight: bold; display: inline-block; width: 150px; } .signature-row { display: flex; justify-content: space-between; margin-bottom: 80px; } .signature-box { width: 45%; border-top: 1px solid #333; padding-top: 5px; } @media print { .no-print { display: none; } }</style></head><body>' +
+            '<div class="visitor-card"><div class="header"><h2>VISITOR CARD</h2><h3>' + visitorData.number + '</h3></div>' +
+            '<div class="photo-section"><img src="' + photoUrl + '" alt="Visitor Photo"></div>' +
+            '<div class="details-section">' +
+            '<div class="detail-row"><span class="detail-label">Name:</span> ' + (visitorData.firstName || '') + ' ' + (visitorData.lastName || '') + '</div>' +
+            '<div class="detail-row"><span class="detail-label">Company:</span> ' + (visitorData.company || '') + '</div>' +
+            '<div class="detail-row"><span class="detail-label">Contact Person:</span> ' + hostName + '</div>' +
+            '<div class="detail-row"><span class="detail-label">Entry Time:</span> ' + convertUTCtoIST(visitorData.entryTime) + '</div>' +
+            '<div class="detail-row"><span class="detail-label">Purpose:</span> ' + (visitorData.purpose || '') + '</div></div>' +
+            '<div style="margin-top: 30px;"><div class="signature-row"><div>Visitor Signature: _________________</div><div>Guard Signature: _________________</div></div>' +
+            '<div class="signature-row"><div>Contact Person Signature: _________________</div><div>Test Leave: _________________</div></div></div></div>' +
+            '<div class="no-print" style="text-align: center; margin-top: 20px;"><button onclick="window.print()">Print</button> <button onclick="window.close()">Close</button></div></body></html>';
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+    }
+
+    function openCameraForCapture(visitorId, visitorNumber) {
+        console.log("visitorId: ", visitorId);
+        console.log("visitorNumber: ", visitorNumber);
+        currentRecordId = visitorId;
+        $('#cameraModal').remove();
+
+        var cameraModal = '<div class="modal fade" id="cameraModal" tabindex="-1" role="dialog" data-backdrop="static">' +
+            '<div class="modal-dialog modal-lg" role="document"><div class="modal-content">' +
+            '<div class="modal-header"><h5 class="modal-title">Capture Photo - ' + visitorNumber + '</h5></div>' +
+            '<div class="modal-body text-center">' +
+            '<div id="cameraView"><video id="cameraVideo" width="640" height="480" autoplay style="border: 2px solid #ddd;"></video>' +
+            '<div style="margin-top: 15px;"><button type="button" class="btn btn-secondary btn-sm" id="capturePhotoButton"><i data-lucide="camera"></i>Capture</button> ' +
+            '<button type="button" class="btn btn-default btn-sm" id="closeCameraButton"><i data-lucide="x"></i>Cancel</button></div></div>' +
+            '<div id="previewView" style="display:none;"><canvas id="photoCanvas" width="640" height="480" style="border: 2px solid #ddd;"></canvas>' +
+            '<div style="margin-top: 15px;"><button type="button" class="btn btn-secondary btn-sm" id="savePhotoButton"><i data-lucide="save"></i>Save</button> ' +
+            '<button type="button" class="btn btn-default btn-sm" id="retakePhotoButton"><i data-lucide="refresh-cw"></i>Retake</button> ' +
+            '<button type="button" class="btn btn-default btn-sm" id="cancelPhotoButton"><i data-lucide="x"></i>Cancel</button></div></div>' +
+            '</div></div></div></div>';
+
+        $('body').append(cameraModal);
+        lucide.createIcons();
+        cameraModalInstance = new bootstrap.Modal($('#cameraModal')[0]);
+        cameraModalInstance.show();
+        startCamera();
+
+        $(document).off('click', '#capturePhotoButton').on('click', '#capturePhotoButton', function () { capturePhoto(); });
+        $(document).off('click', '#savePhotoButton').on('click', '#savePhotoButton', function () { savePhotoToDatabase(); });
+        $(document).off('click', '#retakePhotoButton').on('click', '#retakePhotoButton', function () { $('#previewView').hide(); $('#cameraView').show(); startCamera(); });
+        $(document).off('click', '#closeCameraButton, #cancelPhotoButton').on('click', '#closeCameraButton, #cancelPhotoButton', function () { closeCameraModal(); });
+
+        $('#cameraModal').on('hidden.bs.modal', function () {
+            stopCamera();
+            $(document).off('click', '#capturePhotoButton #savePhotoButton #retakePhotoButton #closeCameraButton #cancelPhotoButton');
+            $(this).remove();
+        });
+    }
+
+    function closeCameraModal() {
+        stopCamera();
+        if (cameraModalInstance) { cameraModalInstance.hide(); }
+        setTimeout(function () { $('#cameraModal').remove(); $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('padding-right', ''); }, 300);
+    }
+
+    function startCamera() {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+                videoStream = stream;
+                var video = document.getElementById('cameraVideo');
+                video.srcObject = stream;
+                video.play();
+            }).catch(function (err) { console.error('Camera error:', err); });
+        }
+    }
+
+    function stopCamera() {
+        if (videoStream) { videoStream.getTracks().forEach(function (track) { track.stop(); }); videoStream = null; }
+    }
+
+    function capturePhoto() {
+        var video = document.getElementById('cameraVideo');
+        var canvas = document.getElementById('photoCanvas');
+        canvas.getContext('2d').drawImage(video, 0, 0, 640, 480);
+        stopCamera();
+        $('#cameraView').hide();
+        $('#previewView').show();
+        canvas.toBlob(function (blob) { capturedImageBlob = blob; }, 'image/jpeg', 0.95);
+    }
+
+    function savePhotoToDatabase() {
+        if (!capturedImageBlob) { console.error('No photo captured'); return; }
+        var fileName = 'visitor_exit_' + currentRecordId + '_' + new Date().getTime() + '.jpg';
+        var formData = new FormData();
+        console.log("capturedImageBlob: ", capturedImageBlob);
+        formData.append('file', capturedImageBlob, fileName);
+        formData.append('folder', 'Visitor');
+        formData.append('description', "visitor_photo");
+        formData.append('patientId', String(currentRecordId));
+        formData.append('uploadedAt', new Date().toISOString().slice(0, 19));
+        $.ajax({
+            url: JSUTIL.getUrl('/api/files/upload'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                console.log('Photo uploaded:', response);
+                closeCameraModal();
+                setTimeout(function () { loadVisitors(); }, 500);
+            },
+            error: function (err) {
+                console.error('Photo upload failed:', err);
+                JSUTIL.buildErrorModal('Photo upload failed.');
+            }
+        });
+    }
+
+    // ================================================================
+    // buildFormDataJSON (local copy)
+    // ================================================================
+    function buildFormDataJSON(className) {
+        var jsonPayload = {};
+        $('.' + className).each(function () {
+            var attrName = $(this).attr('name');
+            var attrValue = $(this).val();
+            if (attrValue) {
+                if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance')) {
+                    jsonPayload[attrName] = JSUTIL.toDatabaseDate(attrValue);
+                } else if ($(this).attr('type') === 'checkbox') {
+                    jsonPayload[attrName] = $(this).prop('checked');
+                } else if ($(this).attr('type') === 'number') {
+                    jsonPayload[attrName] = Number(attrValue);
+                } else if (attrName && attrName.indexOf('.') >= 0) {
+                    var parts = attrName.split('.');
+                    jsonPayload[parts[0]] = {};
+                    jsonPayload[parts[0]][parts[1]] = Number(attrValue);
+                } else {
+                    if (attrName === 'id') attrValue = Number(attrValue);
+                    jsonPayload[attrName] = attrValue;
+                }
+            } else if ($(this).attr('type') === 'checkbox') {
+                jsonPayload[attrName] = $(this).prop('checked');
+            }
+        });
+        return jsonPayload;
+    }
+</script>

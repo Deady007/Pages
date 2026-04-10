@@ -1,0 +1,2143 @@
+<!-- // editContactPanel.html -->
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    /* ── Consistent card surface across all panels ── */
+    .qa-white-panel .ibox {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        background: #ffffff;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+
+    /* ── Lucide icon sizing ── */
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    /* ── ibox-title flex layout ── */
+    .qa-white-panel .ibox-title {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .qa-white-panel .ibox-title h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .aasaanPanel a {
+        color: #337ab7 !important;
+    }
+
+    .qa-white-panel .ibox-title .ibox-tools {
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* ── ibox-content padding ── */
+    .qa-white-panel .ibox-content {
+        padding: 15px 20px;
+    }
+
+    #newCustomerForm .row,
+    #editCustomerForm .row,
+    #newContactForm .row,
+    #editContactForm .row,
+    #locationForm .row,
+    #editLocationForm .row {
+        margin-left: -8px;
+        margin-right: -8px;
+    }
+
+    #newCustomerForm .row>[class*="col-"],
+    #editCustomerForm .row>[class*="col-"],
+    #newContactForm .row>[class*="col-"],
+    #editContactForm .row>[class*="col-"],
+    #locationForm .row>[class*="col-"],
+    #editLocationForm .row>[class*="col-"] {
+        padding-left: 8px;
+        padding-right: 8px;
+        margin-bottom: 6px;
+    }
+
+    .qa-white-panel .ibox-content .form-group {
+        margin-bottom: 12px;
+    }
+
+    #editRecordPanel .editRecordCancelBtn,
+    #editRecordPanel .customerSaveAndUpdateBtn {
+        min-width: 90px;
+        justify-content: center;
+        font-weight: 600;
+        border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .qa-white-panel .ibox-title .ibox-tools {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+
+    #editRecordPanel .tabs-container .nav.nav-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        list-style: none;
+        padding-left: 0;
+        margin: 0 0 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    #editRecordPanel .tabs-container .nav.nav-tabs>li {
+        float: none;
+        margin-bottom: -1px;
+    }
+
+    #editRecordPanel .tabs-container .nav.nav-tabs>li>a {
+        display: block;
+        padding: 10px 14px;
+        border: 1px solid transparent;
+        border-radius: 6px 6px 0 0;
+        color: #000000 !important;
+        font-weight: 600;
+        line-height: 1.2;
+        text-decoration: none;
+        background: transparent;
+    }
+
+    #editRecordPanel .tabs-container .nav.nav-tabs>li>a:hover,
+    #editRecordPanel .tabs-container .nav.nav-tabs>li>a:focus {
+        color: #000000 !important;
+        background: #f9fafb;
+        border-color: #e5e7eb #e5e7eb #e5e7eb;
+        text-decoration: none;
+    }
+
+    #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a,
+    #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:hover,
+    #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:focus {
+        color: #000000 !important;
+        background: #ffffff;
+        border-color: #d1d5db #d1d5db #ffffff;
+    }
+
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .nav.nav-tabs,
+    body.skin-dark #editRecordPanel .tabs-container .nav.nav-tabs,
+    body.dark-mode #editRecordPanel .tabs-container .nav.nav-tabs {
+        border-bottom-color: #3f3f46;
+    }
+
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .nav.nav-tabs>li>a,
+    body.skin-dark #editRecordPanel .tabs-container .nav.nav-tabs>li>a,
+    body.dark-mode #editRecordPanel .tabs-container .nav.nav-tabs>li>a {
+        color: #d4d4d8 !important;
+        background: #2a2a2d;
+        border-color: #3f3f46;
+    }
+
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .nav.nav-tabs>li>a:hover,
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .nav.nav-tabs>li>a:focus,
+    body.skin-dark #editRecordPanel .tabs-container .nav.nav-tabs>li>a:hover,
+    body.skin-dark #editRecordPanel .tabs-container .nav.nav-tabs>li>a:focus,
+    body.dark-mode #editRecordPanel .tabs-container .nav.nav-tabs>li>a:hover,
+    body.dark-mode #editRecordPanel .tabs-container .nav.nav-tabs>li>a:focus {
+        color: #ffffff !important;
+        background: #333338;
+        border-color: #52525b;
+    }
+
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a,
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:hover,
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:focus,
+    body.skin-dark #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a,
+    body.skin-dark #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:hover,
+    body.skin-dark #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:focus,
+    body.dark-mode #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a,
+    body.dark-mode #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:hover,
+    body.dark-mode #editRecordPanel .tabs-container .nav.nav-tabs>li.active>a:focus {
+        color: #ffffff !important;
+        background: #1f1f23;
+        border-color: #52525b #52525b #1f1f23;
+    }
+
+    #editRecordPanel .tabs-container .tab-content>.tab-pane {
+        display: none;
+    }
+
+    #editRecordPanel .tabs-container .tab-content>.tab-pane.active,
+    #editRecordPanel .tabs-container .tab-content>.tab-pane.in {
+        display: block;
+    }
+
+    #editRecordPanel .tabs-container .tab-content {
+        border: 1px solid #e5e7eb;
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        padding: 15px;
+        background: #ffffff;
+    }
+
+    [data-bs-theme="dark"] #editRecordPanel .tabs-container .tab-content,
+    body.skin-dark #editRecordPanel .tabs-container .tab-content,
+    body.dark-mode #editRecordPanel .tabs-container .tab-content {
+        border-color: #3f3f46;
+        background: #2a2a2d;
+    }
+
+    #editRecordPanel .deleteTrSelect {
+        width: 34px;
+        height: 28px;
+        padding: 0;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #editRecordPanel .deleteTrSelect i {
+        margin: 0;
+        line-height: 1;
+    }
+
+    #editRecordPanel .deleteTrSelect svg {
+        width: 14px;
+        height: 14px;
+        stroke-width: 2.2;
+    }
+
+    #allRecordPanel .table-responsive,
+    #editRecordPanel .table-responsive {
+        overflow-x: auto;
+    }
+
+    #allRecordPanel table,
+    #editRecordPanel table {
+        width: 100% !important;
+    }
+</style>
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="editContactPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Edit Contact</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newContactCloseBtn2"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-secondaryry btn-sm recordEditBtn1"><i
+                                data-lucide="pencil"></i>
+                            Edit
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm recordSaveAndUpdateBtn1"
+                            style="display: none;"><i data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="contactObj" id="editContactForm">
+                        <div class="row" id="editContactRow">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>First Name</label>
+                                    <input type="text" class="form-control editContactInput" name="FirstName"
+                                        id="editfName" required readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Last Name</label>
+                                    <input type="text" class="form-control editContactInput" name="LastName"
+                                        id="editlName" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="text" class="form-control editContactInput" name="Email" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" class="form-control editContactInput" name="Phone"
+                                        id="editPhoneInput" maxlength="10" pattern="\d{10}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Designation</label>
+                                    <input type="text" class="form-control editContactInput" name="AddressLine1"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <input type="text" class="form-control editContactInput" name="AddressLine2"
+                                        readonly>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="editContactId" name="Id" />
+                            <input type="hidden" class="editContactInput" name="Account.Id" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- // newLocationPanel.html -->
+    <div class="row animated fadeInRight aasaanPanel" id="newLocationPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5 id="locationPanelTitle">New Location</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm" id="locationPanelCloseBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="saveLocationBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" id="locationForm">
+                        <input type="hidden" id="locationIdHidden" value="" />
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Location Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control editLocationInput" name="name"
+                                        id="locationNameInput">
+                                    <small id="locationNameError" class="text-danger" style="display:none;">Enter
+                                        Location Name</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" class="form-control editLocationInput" name="phone"
+                                        id="locationPhoneInput" maxlength="10">
+                                </div>
+                                <div class="form-group">
+                                    <label>Street 1</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingStreet1"
+                                        id="locationStreet1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Street 2</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingStreet2"
+                                        id="locationStreet2">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>City</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingCity"
+                                        id="locationCity">
+                                </div>
+                                <div class="form-group">
+                                    <label>State</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingState"
+                                        id="locationState">
+                                </div>
+                                <div class="form-group">
+                                    <label>Country</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingCountry"
+                                        id="locationCountry">
+                                </div>
+                                <div class="form-group">
+                                    <label>Postal Code</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingPostalCode"
+                                        id="locationPostalCode" maxlength="6">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- // editLocationPanel.html -->
+    <div class="row animated fadeInRight aasaanPanel" id="editLocationPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Edit Location</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm" id="editLocationCloseBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="updateLocationBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" id="editLocationForm">
+                        <input type="hidden" id="editLocationIdHidden" value="" />
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Location Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control editLocationInput" name="name">
+                                    <small id="editLocationNameError" class="text-danger" style="display:none;">Enter
+                                        Location Name</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" class="form-control editLocationInput" name="phone"
+                                        maxlength="10">
+                                </div>
+                                <div class="form-group">
+                                    <label>Street 1</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingStreet1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Street 2</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingStreet2">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>City</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingCity">
+                                </div>
+                                <div class="form-group">
+                                    <label>State</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingState">
+                                </div>
+                                <div class="form-group">
+                                    <label>Country</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingCountry">
+                                </div>
+                                <div class="form-group">
+                                    <label>Postal Code</label>
+                                    <input type="text" class="form-control editLocationInput" name="mailingPostalCode"
+                                        maxlength="6">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- // newContractPanel.html -->
+    <div class="row animated fadeInRight aasaanPanel" id="newContactPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New Contact</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newContactCloseBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="saveContactBtn"><i
+                                data-lucide="check"></i>
+                            Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="contactObj" id="newContactForm">
+                        <div class="row" id="newContactRow">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>First Name</label>
+                                    <input type="text" class="form-control" name="FirstName" id="fName" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Last Name</label>
+                                    <input type="text" class="form-control" name="LastName" id="lName" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" class="form-control" id="emailContactInput" name="Email">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" class="form-control" name="Phone" id="phoneInput" maxlength="10"
+                                        pattern="\d{10}">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Designation</label>
+                                    <input type="text" class="form-control" name="AddressLine1" id="addressLine1">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <input type="text" class="form-control" name="AddressLine2" id="addressLine2">
+                                </div>
+                            </div>
+                            <input type="hidden" id="createContact" name="Account.Id" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- //allRecordPanels.html -->
+    <div class="row animated fadeInRight aasaanPanel" id="allRecordPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Customers <small>Sales</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary newRecordBtn"><i
+                                data-lucide="plus"></i>New Customer</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="table-responsive">
+                        <table class="table  table-bordered table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Contact</th>
+                                    <th>Status</th>
+                                    <th>TAX ID / GST</th>
+                                    <th>Address</th>
+                                </tr>
+                            </thead>
+                            <tbody class="dataTableRecordList" id="allCustomerTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- //editRecordPanel.html -->
+    <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRecordTitle"></span></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
+                                data-lucide="x"></i> Cancel </button>
+                        <button type="button" class="btn btn-sm btn-primary " id="newContactBtn"><i
+                                data-lucide="plus"></i>Add Contact</button>
+                        <button type="button" class="btn btn-danger btn-sm recordDeleteBtn" id="deleteCustomerBtn"><i
+                                data-lucide="trash"></i> Delete </button>
+                        <button type="button" class="btn btn-default btn-sm recordEditBtn"><i data-lucide="pencil"></i>
+                            Edit
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm customerSaveAndUpdateBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="customerObj" action="/sales/customer/update_json" method="post"
+                        id="editCustomerForm">
+                        <div class="row" id="layoutRenderer_editForm">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" name="Name" class="form-control editRecordInput" readonly
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="text" name="Phone" class="form-control editRecordInput" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Address Line 1</label>
+                                    <input type="text" name="BillingStreet" class="form-control editRecordInput"
+                                        readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>City</label>
+                                    <input type="text" name="BillingCity" class="form-control editRecordInput" readonly>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Country</label>
+                                    <select class="select2 form-control editRecordInput" name="BillingCountry"
+                                        id="editCustomerCountry" disabled>
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>TAX ID / GST</label>
+                                    <input type="text" name="Gst" class="form-control editRecordInput" id="editGstInput"
+                                        readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="Email" class="form-control editRecordInput" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Address Line 2</label>
+                                    <input type="text" name="BillingStreet2" class="form-control editRecordInput"
+                                        readonly>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>State</label>
+                                    <input type="text" class="form-control editRecordInput" name="BillingState"
+                                        disabled>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Postal Code</label>
+                                    <input type="text" name="BillingPostalCode" class="form-control editRecordInput"
+                                        id="editPostalCodeInput">
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="Id" id="hiddenRecordId" />
+                    </form>
+                    <hr />
+                    <div class="tabs-container">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="false">Contacts</a>
+                            </li>
+                            <li class=""><a data-toggle="tab" href="#tab-5" aria-expanded="false">Locations</a></li>
+                            <li class="" id="editlicenseParmaterTab"><a id="editlicenseParmater" data-toggle="tab"
+                                    href="#tab-2" aria-expanded="true">Test Parameters</a></li>
+                            <li class=""><a data-toggle="tab" href="#tab-3" aria-expanded="true">Recent Invoices</a>
+                            </li>
+                            <!-- <li class=""><a data-toggle="tab" href="#tab-4" aria-expanded="true">Recent Payments</a>
+                            </li> -->
+                        </ul>
+                        <div class="tab-content">
+                            <div id="tab-1" class="tab-pane active">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered ">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>Phone</th>
+                                                    <th>Email</th>
+                                                    <!-- <th>Address</th> -->
+                                                </tr>
+                                            </thead>
+                                            <tbody id="contactTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="tab-5" class="tab-pane">
+                                <div class="panel-body">
+                                    <div class="row" style="padding-bottom: 10px;">
+                                        <div class="col-sm-6"></div>
+                                        <div class="col-sm-6" align="right">
+                                            <button type="button" class="btn btn-default btn-sm"
+                                                id="selectLocationsBtn"><i data-lucide="plus"></i> Add Location
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>Phone</th>
+                                                    <th>Address</th>
+                                                    <!-- <th>Address</th> -->
+                                                </tr>
+                                            </thead>
+                                            <tbody id="locationTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="tab-2" class="tab-pane">
+                                <div class="panel-body" id="licenseParmater">
+                                    <div class="row" style="padding-bottom: 10px;">
+                                        <div class="col-sm-6"></div>
+                                        <div class="col-sm-6" align="right">
+                                            <button type="button" class="btn btn-default btn-sm"
+                                                id="selectParametersBtn"><i class="fa fa-plus "></i> Add Parameters
+                                            </button>
+                                            <button type="button" class="btn btn-default btn-sm"
+                                                id="deleteParametersBtn"><i class="fa fa-trash"></i> Delete Parameters
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Parameter</th>
+                                                    <th>Test Method</th>
+                                                    <th>Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="parametersTable"></tbody>
+                                        </table>
+                                    </div>
+                                    <div class="row" style="padding-bottom: 10px;">
+                                        <div class="col-sm-12" align="right" id="requestTotal"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="tab-3" class="tab-pane ">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Invoice #</th>
+                                                    <th>Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="invoiceTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- <div id="tab-4" class="tab-pane ">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Payment #</th>
+                                                    <th>Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="paymentTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- //newRecordPanel.html -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New<small> Customer</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newRecordCloseBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-secondary btn-sm newRecordCreateBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="newCustomerObj" id="newCustomerForm">
+                        <div class="row" id="layoutRenderer_form">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" name="Name" class="form-control" id="nameInput">
+                                    <small id="nameInputError" class="text-danger" style="display: none;">Enter
+                                        Name</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" name="Phone" class="form-control" id="newPhone">
+                                </div>
+                                <div class="form-group">
+                                    <label>Address Line 1</label>
+                                    <input type="text" name="BillingStreet" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>City</label>
+                                    <input type="text" name="BillingCity" class="form-control" id="newCity">
+                                </div>
+                                <div class="form-group">
+                                    <label>Country</label>
+                                    <select class="select2 form-control" name="BillingCountry" id="countryCustomer"
+                                        required>
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>TAX ID / GST</label>
+                                    <input type="text" name="Gst" class="form-control" id="gstInput">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" name="Email" class="form-control" id="emailInput">
+                                    <small id="emailInputError" class="text-danger" style="display: none;">Enter
+                                        Email</small>
+                                </div>
+                                <div class="form-group">
+                                    <label>Address Line 2</label>
+                                    <input type="text" name="BillingStreet2" class="form-control">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>State</label>
+                                    <input type="text" class="form-control" name="BillingState">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Postal Code</label>
+                                    <input type="text" name="BillingPostalCode" class="form-control"
+                                        id="postalCodeInput">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+
+
+    //newRecordPanel.js
+
+    window.countryList1 = window.countryList1 || [
+        { name: "Afghanistan" },
+        { name: "Albania" },
+        { name: "Algeria" },
+        { name: "Andorra" },
+        { name: "Angola" },
+        { name: "Antigua and Barbuda" },
+        { name: "Argentina" },
+        { name: "Armenia" },
+        { name: "Australia" },
+        { name: "Austria" },
+        { name: "Azerbaijan" },
+        { name: "Bahamas" },
+        { name: "Bahrain" },
+        { name: "Bangladesh" },
+        { name: "Barbados" },
+        { name: "Belarus" },
+        { name: "Belgium" },
+        { name: "Belize" },
+        { name: "Benin" },
+        { name: "Bhutan" },
+        { name: "Bolivia" },
+        { name: "Bosnia and Herzegovina" },
+        { name: "Botswana" },
+        { name: "Brazil" },
+        { name: "Brunei" },
+        { name: "Bulgaria" },
+        { name: "Burkina Faso" },
+        { name: "Burundi" },
+        { name: "Cabo Verde" },
+        { name: "Cambodia" },
+        { name: "Cameroon" },
+        { name: "Canada" },
+        { name: "Central African Republic" },
+        { name: "Chad" },
+        { name: "Chile" },
+        { name: "China" },
+        { name: "Colombia" },
+        { name: "Comoros" },
+        { name: "Congo" },
+        { name: "Costa Rica" },
+        { name: "Croatia" },
+        { name: "Cuba" },
+        { name: "Cyprus" },
+        { name: "Czech Republic" },
+        { name: "Denmark" },
+        { name: "Djibouti" },
+        { name: "Dominica" },
+        { name: "Dominican Republic" },
+        { name: "Ecuador" },
+        { name: "Egypt" },
+        { name: "El Salvador" },
+        { name: "Equatorial Guinea" },
+        { name: "Eritrea" },
+        { name: "Estonia" },
+        { name: "Eswatini" },
+        { name: "Ethiopia" },
+        { name: "Fiji" },
+        { name: "Finland" },
+        { name: "France" },
+        { name: "Gabon" },
+        { name: "Gambia" },
+        { name: "Georgia" },
+        { name: "Germany" },
+        { name: "Ghana" },
+        { name: "Greece" },
+        { name: "Grenada" },
+        { name: "Guatemala" },
+        { name: "Guinea" },
+        { name: "Guinea-Bissau" },
+        { name: "Guyana" },
+        { name: "Haiti" },
+        { name: "Honduras" },
+        { name: "Hungary" },
+        { name: "Iceland" },
+        { name: "India" },
+        { name: "Indonesia" },
+        { name: "Iran" },
+        { name: "Iraq" },
+        { name: "Ireland" },
+        { name: "Israel" },
+        { name: "Italy" },
+        { name: "Jamaica" },
+        { name: "Japan" },
+        { name: "Jordan" },
+        { name: "Kazakhstan" },
+        { name: "Kenya" },
+        { name: "Kiribati" },
+        { name: "Kosovo" },
+        { name: "Kuwait" },
+        { name: "Kyrgyzstan" },
+        { name: "Laos" },
+        { name: "Latvia" },
+        { name: "Lebanon" },
+        { name: "Lesotho" },
+        { name: "Liberia" },
+        { name: "Libya" },
+        { name: "Liechtenstein" },
+        { name: "Lithuania" },
+        { name: "Luxembourg" },
+        { name: "Madagascar" },
+        { name: "Malawi" },
+        { name: "Malaysia" },
+        { name: "Maldives" },
+        { name: "Mali" },
+        { name: "Malta" },
+        { name: "Marshall Islands" },
+        { name: "Mauritania" },
+        { name: "Mauritius" },
+        { name: "Mexico" },
+        { name: "Micronesia" },
+        { name: "Moldova" },
+        { name: "Monaco" },
+        { name: "Mongolia" },
+        { name: "Montenegro" },
+        { name: "Morocco" },
+        { name: "Mozambique" },
+        { name: "Myanmar" },
+        { name: "Namibia" },
+        { name: "Nauru" },
+        { name: "Nepal" },
+        { name: "Netherlands" },
+        { name: "New Zealand" },
+        { name: "Nicaragua" },
+        { name: "Niger" },
+        { name: "Nigeria" },
+        { name: "North Korea" },
+        { name: "North Macedonia" },
+        { name: "Norway" },
+        { name: "Oman" },
+        { name: "Pakistan" },
+        { name: "Palau" },
+        { name: "Palestine" },
+        { name: "Panama" },
+        { name: "Papua New Guinea" },
+        { name: "Paraguay" },
+        { name: "Peru" },
+        { name: "Philippines" },
+        { name: "Poland" },
+        { name: "Portugal" },
+        { name: "Qatar" },
+        { name: "Romania" },
+        { name: "Russia" },
+        { name: "Rwanda" },
+        { name: "Saint Kitts and Nevis" },
+        { name: "Saint Lucia" },
+        { name: "Saint Vincent and the Grenadines" },
+        { name: "Samoa" },
+        { name: "San Marino" },
+        { name: "Sao Tome and Principe" },
+        { name: "Saudi Arabia" },
+        { name: "Senegal" },
+        { name: "Serbia" },
+        { name: "Seychelles" },
+        { name: "Sierra Leone" },
+        { name: "Singapore" },
+        { name: "Slovakia" },
+        { name: "Slovenia" },
+        { name: "Solomon Islands" },
+        { name: "Somalia" },
+        { name: "South Africa" },
+        { name: "South Korea" },
+        { name: "South Sudan" },
+        { name: "Spain" },
+        { name: "Sri Lanka" },
+        { name: "Sudan" },
+        { name: "Suriname" },
+        { name: "Sweden" },
+        { name: "Switzerland" },
+        { name: "Syria" },
+        { name: "Taiwan" },
+        { name: "Tajikistan" },
+        { name: "Tanzania" },
+        { name: "Thailand" },
+        { name: "Timor-Leste" },
+        { name: "Togo" },
+        { name: "Tonga" },
+        { name: "Trinidad and Tobago" },
+        { name: "Tunisia" },
+        { name: "Turkey" },
+        { name: "Turkmenistan" },
+        { name: "Tuvalu" },
+        { name: "Uganda" },
+        { name: "Ukraine" },
+        { name: "United Arab Emirates" },
+        { name: "United Kingdom" },
+        { name: "United States" },
+        { name: "Uruguay" },
+        { name: "Uzbekistan" },
+        { name: "Vanuatu" },
+        { name: "Vatican City" },
+        { name: "Venezuela" },
+        { name: "Vietnam" },
+        { name: "Yemen" },
+        { name: "Zambia" },
+        { name: "Zimbabwe" }
+    ];
+    var innerHtml = '';
+    var layoutFields;
+
+    function initSelect2Safely(selector) {
+        if ($.fn && typeof $.fn.select2 === 'function') {
+            $(selector).select2();
+        }
+    }
+
+    function setSelect2ValueSafely(selector, value) {
+        var $el = $(selector);
+        if ($.fn && typeof $.fn.select2 === 'function') {
+            $el.select2('val', value);
+        } else {
+            $el.val(value);
+        }
+    }
+
+    if (JSUTIL && typeof JSUTIL.callAJAXDelete !== 'function') {
+        JSUTIL.callAJAXDelete = function (callUrl, data, onSuccessCallback, onFailureCallback) {
+            if (JSUTIL.isFunction(data)) {
+                onFailureCallback = onSuccessCallback;
+                onSuccessCallback = data;
+                data = undefined;
+            }
+
+            JSUTIL.startSpinner();
+
+            var token = $("meta[name='_csrf']").attr("content");
+            var header = $("meta[name='_csrf_header']").attr("content");
+            var headers = {};
+            headers[header] = token;
+
+            var ajaxOptions = {
+                url: callUrl,
+                type: 'DELETE',
+                headers: headers
+            };
+
+            if (data !== undefined && data !== null) {
+                ajaxOptions.contentType = 'application/json';
+                ajaxOptions.data = data;
+            }
+
+            $.ajax(ajaxOptions)
+                .done(function (responseData, textStatus, jqXHR) {
+                    var callbackPayload = responseData;
+
+                    if (callbackPayload === undefined || callbackPayload === null || callbackPayload === '') {
+                        if (jqXHR && jqXHR.responseJSON !== undefined) {
+                            callbackPayload = jqXHR.responseJSON;
+                        } else if (jqXHR && jqXHR.responseText) {
+                            try {
+                                callbackPayload = JSON.parse(jqXHR.responseText);
+                            } catch (e) {
+                                callbackPayload = { msg: jqXHR.responseText };
+                            }
+                        } else {
+                            callbackPayload = { msg: 'Deleted successfully' };
+                        }
+                    }
+
+                    JSUTIL.stopSpinner();
+                    if (JSUTIL.isFunction(onSuccessCallback)) {
+                        onSuccessCallback(callbackPayload);
+                    }
+                })
+                .fail(function (jqXHR, textStatus, error) {
+                    if (jqXHR.status === 0) {
+                        location.reload();
+                    }
+                    console.debug(jqXHR.responseText);
+                    console.debug("Delete error: " + jqXHR);
+                    console.debug("Delete error: " + textStatus);
+                    console.debug("Delete error: " + error);
+                    JSUTIL.stopSpinner();
+                    if (JSUTIL.isFunction(onFailureCallback)) {
+                        onFailureCallback();
+                    }
+                });
+        };
+    }
+
+    $('#countryCustomer').empty();
+    innerHtml += '<option value = "">--none---</option>';
+    $.each(window.countryList1, function (i, val) {
+        innerHtml += '<option value = "' + val.name + '">' + val.name + '</option>';
+    });
+    $('#countryCustomer').append(innerHtml);
+    $('#editCustomerCountry').empty();
+    innerHtml += '<option value = "">--none---</option>';
+    $.each(window.countryList1, function (i, val) {
+        innerHtml += '<option value = "' + val.name + '">' + val.name + '</option>';
+    });
+    $('#editCustomerCountry').append(innerHtml);
+    $(document).ready(function () {
+
+        // Bind critical panel events first so they are available even if later optional code fails.
+        bindEditContactPanelEvents();
+        bindNewContactPanelEvents();
+        bindEditRecordPanelEvents();
+        loadCustomerList();
+
+
+
+        $('.newRecordBtn').on('click', function () {
+            $('#editRecordPanel').hide();
+            $('#allRecordPanel').hide();
+            $('#newContactPanel').hide();
+            $('#editContactPanel').hide();
+            $('#selectParameterPanel').hide();
+            console.log("new record");
+            $('#newRecordPanel').show();
+            resetForm();
+            var url = new URL(window.location.href);
+            if (url.searchParams.has('id')) {
+                url.searchParams.delete('id');
+                history.replaceState(null, '', url.pathname + url.search);
+            }
+        });
+
+        $('.newRecordCreateBtn').on('click', function () {
+            console.log("create record");
+            var customerName = $('#nameInput').val();
+            var isValid = true;
+
+            if (customerName === '') {
+                $('#nameInputError').show();
+                isValid = false;
+            } else {
+                $('#nameInputError').hide();
+            }
+
+            if (!isValid) return;
+
+            var customerPayload = {};
+            customerPayload.name = customerName;
+            customerPayload.email = $('#emailInput').val();
+            customerPayload.phone = $('#newPhone').val();
+            customerPayload.billingStreet = $('#newCustomerForm').find('input[name="BillingStreet"]').val();
+            customerPayload.billingCity = $('#newCity').val();
+            customerPayload.billingCountry = $('#countryCustomer').val();
+            customerPayload.gst = $("#gstInput").val();
+            customerPayload.billingStreet2 = $('#newCustomerForm').find('input[name="BillingStreet2"]').val();
+            customerPayload.billingState = $('#newCustomerForm').find('input[name="BillingState"]').val();
+            customerPayload.billingPostalCode = $('#postalCodeInput').val();
+
+            customerPayload.type = 'customer';
+
+            var postUrl = JSUTIL.getUrl('/api/account?type=customer');
+            JSUTIL.callAJAXPost(postUrl, JSON.stringify(customerPayload), callbackAfterNewRequest);
+        });
+
+        $('.newRecordCloseBtn').on('click', function () {
+            $(this).parent().parent().parent().find('.ibox-content').find('input').val('');
+            $(this).parent().parent().parent().find('.ibox-content').find('input[type=checkbox]').attr('checked', false);
+            $(this).parent().parent().parent().find('.ibox-content').find('select').val('');
+            $('#emailInputError').hide();
+            $('#nameInputError').hide();
+            $('#newRecordPanel').hide();
+            $('#allRecordPanel').show();
+        })
+        initSelect2Safely('.select2');
+
+
+
+        $('#gstInput').on('input', function () {
+            var value = $(this).val();
+
+            value = value.replace(/[^a-zA-Z0-9]/g, '');
+
+            if (value.length > 15) {
+                value = value.substring(0, 15);
+            }
+
+            $(this).val(value);
+        });
+
+        $('#newPhone').on('input', function () {
+            var phone = $(this).val();
+            phone = phone.replace(/\D/g, '');
+
+            phone = phone.substring(0, 10);
+
+            $(this).val(phone);
+        });
+
+        $('#newCity').on('keypress', function (e) {
+            var char = String.fromCharCode(e.which);
+
+            if (!/^[a-zA-Z\s]$/.test(char)) {
+                e.preventDefault();
+            }
+        });
+
+        $('#postalCodeInput').on('input', function () {
+            var postal = $(this).val();
+
+            postal = postal.replace(/[^a-zA-Z0-9]/g, '');
+
+            if (postal.length > 6) {
+                postal = postal.substring(0, 6);
+            }
+
+            $(this).val(postal);
+        });
+
+
+        var newCustomerFormEl = document.getElementById("newCustomerForm");
+        if (newCustomerFormEl) {
+            newCustomerFormEl.addEventListener("submit", function () {
+                let inputs = document.querySelectorAll(".form-control");
+                inputs.forEach(input => cleanText(input));
+            });
+        }
+
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function () {
+                cleanText(input);
+            });
+        });
+
+        $(document).on('change', '.newRequestFieldInput[name="Number"]', function () {
+            var $input = $(this);
+            var shortCode = $input.val();
+
+            $input.next('.shortcode-message').remove();
+
+            JSUTIL.callAJAXGet_noSpinner('/sales/customer/is_shortcode_unique?shortcode=' + encodeURIComponent(shortCode), function (response) {
+                checkShortcodeUniqueness(response, $input);
+            });
+        });
+
+    });
+    function cleanText(input) {
+        let currentValue = input.value;
+        let cleanedText = currentValue.replace(/\s+/g, ' ').trim();
+        input.value = cleanedText;
+    }
+    function callbackAfterNewRequest(response) {
+        console.log(response);
+        location.reload();
+        // const id = response.id || response.Id;
+        // const url = new URL(window.location);
+        // url.searchParams.set('id', id);
+
+        // window.location.href = url.toString();
+    }
+    function resetForm() {
+        $('#newCustomerForm')[0].reset();
+    }
+    function checkShortcodeUniqueness(isUnique, $input) {
+        console.log(isUnique)
+        $input.next('.shortcode-message').remove();
+
+        var $message = $('<div class="shortcode-message"></div>');
+
+        if (isUnique === true) {
+            $message.text('Shortcode is unique').css({
+                color: 'green',
+                fontSize: '1em',
+                marginTop: '4px'
+            });
+        } else {
+            $message.text('Shortcode is already taken').css({
+                color: 'red',
+                fontSize: '1em',
+                marginTop: '4px'
+            });
+            $('.newRecordCreateBtn').prop('disabled', true);
+
+        }
+        $input.after($message);
+    }
+
+
+    //editContactPanel.js
+    function bindEditContactPanelEvents() {
+        $('.recordSaveAndUpdateBtn1').on('click', function () {
+
+            var contactObj = {
+                firstName: $('#editfName').val(),
+                lastName: $('#editlName').val(),
+                email: $(".editContactInput[name='Email']").val(),
+                phone: $('#editPhoneInput').val(),
+                addressLine1: $(".editContactInput[name='AddressLine1']").val(),
+                addressLine2: $(".editContactInput[name='AddressLine2']").val(),
+            }
+
+            $(".recordSaveAndUpdateBtn1").hide();
+
+            // $('#editContactForm').attr('action', value = "/sales/customer/update_contact_json?parentId=" + currentContactId)
+            JSUTIL.callAJAXPut("/api/contacts/" + currentContactId, JSON.stringify(contactObj), callbackEditRequest);
+        });
+        $('.recordEditBtn1').on('click', function () {
+            $(this).hide();
+            $('.recordSaveAndUpdateBtn1').show();
+            $('.editContactInput').prop('readonly', false);
+        });
+        $('.newContactCloseBtn2').on('click', function () {
+            $(".recordSaveAndUpdateBtn1").hide();
+            $('#newContactPanel').hide();
+            $('#editContactPanel').hide();
+            $('#editRecordPanel').show();
+        });
+
+        $('#editPhoneInput').on('input', function () {
+            var phone = $(this).val();
+            phone = phone.replace(/\D/g, '');
+
+            if (phone.length === 10) {
+                phone.phone.substring(0, 10);
+            }
+
+            $(this).val(phone);
+        });
+
+        $('#editfName, #editlName').on('input', function () {
+            var value = $(this).val();
+            value = value.replace(/[^a-zA-Z\s]/g, '');
+
+            $(this).val(value);
+        });
+
+    }
+    function callbackEditRequest(response) {
+        console.log(response);
+        // loaction.reload();
+        // var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId + '/details');
+        // JSUTIL.callAJAXGet(postUrl, getDetailsCallback);
+        getContactDetails();
+        $('#editRecordPanel').show();
+        $('#editContactPanel').hide();
+    }
+
+    // function buildEditFieldsFromLayout1(contactFields) {
+    //     var innerHtml = LAYOUT.buildLayout(contactFields, 'form', 'editContactInput', 'editContactRow');
+    //     $('#editContactRow').append(innerHtml);
+    //     populateLayoutFields1(contactFields);
+    //     $(".select2").select2();
+    //     JSUTIL.reinitializeInputTypes();
+    // }
+    function populateLayoutFields1(contactFields) {
+        $.each(contactFields, function (i, field) {
+            let currentFieldVal = currentRequestData1[JSUTIL.lowerCaseFirstLetter(field.name)];
+            if (!field.type || (field.type.indexOf('Text') >= 0 || field.type.indexOf('Number') >= 0)) {
+                $('.editContactInput[name="' + field.name + '"]').val(currentFieldVal);
+            }
+            else if (field.type && field.type.indexOf('Date') >= 0 && field.type.indexOf('DateTime') < 0) {
+                $('.editContactInput[name="' + field.name + '"]').val(JSUTIL.getDate(currentFieldVal));
+            }
+            else if (field.type && field.type.indexOf('DateTime') >= 0) {
+                $('.editContactInput[name="' + field.name + '"]').val(JSUTIL.getDateTime(currentFieldVal));
+            }
+            else if (field.type && field.type.indexOf('Picklist') >= 0) {
+                setSelect2ValueSafely('.editContactInput[name="' + field.name + '"]', currentFieldVal);
+            }
+        });
+    }
+
+
+
+    // newContractPanel.js
+    function bindNewContactPanelEvents() {
+        $('#newContactBtn').on('click', function () {
+            $('#editRecordPanel').hide();
+            $('#newContactPanel').show();
+        });
+        $('.newContactCloseBtn').on('click', function () {
+            $('#newContactPanel').hide();
+            $('#editContactPanel').hide();
+            $('#editRecordPanel').show();
+        });
+        $('#saveContactBtn').on('click', function () {
+            // $('#newContactForm').attr('action', value = "/sales/customer/create_contact_json?parentId=+" + currentRecordId)
+
+            var obj1 = {
+                firstName: $('#fName').val(),
+                lastName: $('#lName').val(),
+                email: $('#emailContactInput').val(),
+                phone: $('#phoneInput').val(),
+                addressLine1: $("#addressLine1").val(),
+                addressLine2: $("#addressLine2").val(),
+                account: { id: currentRecordId }
+            }
+
+            JSUTIL.callAJAXPost('/api/contacts', JSON.stringify(obj1), callbackAfterEditRequest);
+        });
+
+        $('#phoneInput').on('input', function () {
+            var phone = $(this).val();
+            phone = phone.replace(/\D/g, '');
+
+            if (phone.length === 10) {
+                phone.phone.substring(0, 10);
+            }
+
+            $(this).val(phone);
+        });
+
+        $('#fName, #lName').on('input', function () {
+            var value = $(this).val();
+            value = value.replace(/[^a-zA-Z\s]/g, '');
+
+            $(this).val(value);
+        });
+
+    }
+    function callbackAfterEditRequest(response) {
+        console.log(response);
+        // location.reload();
+        // var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId + '/details');
+        // JSUTIL.callAJAXGet(postUrl, getDetailsCallback);
+        getContactDetails();
+        $('#editRecordPanel').show();
+        $('#newContactPanel').hide();
+    }
+
+
+    //allRecordPanels.js
+    var recordList = [];
+    function loadCustomerList() {
+        JSUTIL.callAJAXGet("/api/account?type=customer", function (response) {
+            console.log("Response:", response);
+            recordList = Array.isArray(response) ? response : [];
+            var innerHtml = '';
+
+            recordList.sort(function (a, b) {
+                return (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase());
+            });
+
+            $.each(recordList, function (i, val) {
+                innerHtml += '<tr>' +
+                    '<td class="itemNum"><a href = "javascript:void(0);" class="selectRecordBtn" id="' + val.id + '">' + val.name + '</a></td>' +
+                    '<td>' +
+                    '<i class="fa fa-phone" style="padding-right: 10px;"></i>' + (val.phone || '') + '<br>' +
+                    '<i class="fa fa-envelope" style="padding-right: 10px;"></i>' + (val.email || '') +
+                    '</td>' +
+                    '<td><span class="label label-primary">Active</span></td>' +
+                    '<td>' + (val.gst || '') + '</td>' +
+                    '<td>' + (val.billingStreet || '') + ' ' + (val.billingStreet2 || '') + ' ' + (val.billingCity || '') + ' ' + (val.billingState || '') + '</td>' +
+                    '</tr>';
+            });
+            $('#allCustomerTable').empty().append(innerHtml);
+            JSUTIL.reinitializeDataTable();
+            initializeCustomerPage();
+        });
+    }
+
+    function resetEditRecordTabs() {
+        var $tabsContainer = $('#editRecordPanel .tabs-container');
+        if (!$tabsContainer.length) return;
+
+        $tabsContainer.find('.nav-tabs li').removeClass('active');
+        $tabsContainer.find('.nav-tabs li:first').addClass('active');
+        $tabsContainer.find('.tab-content .tab-pane').removeClass('active in');
+        $tabsContainer.find('#tab-1').addClass('active in');
+    }
+
+    function populateEditRecordPanelFields(customer) {
+        if (!customer) {
+            return;
+        }
+
+        $('#editRecordTitle').text(customer.name || '');
+        $('.editRecordInput[name="Name"]').val(customer.name || '');
+        $('.editRecordInput[name="Phone"]').val(customer.phone || '');
+        $('.editRecordInput[name="BillingStreet"]').val(customer.billingStreet || '');
+        $('.editRecordInput[name="BillingCity"]').val(customer.billingCity || '');
+        $('.editRecordInput[name="Gst"]').val(customer.gst || '');
+        $('.editRecordInput[name="Email"]').val(customer.email || '');
+        $('.editRecordInput[name="BillingStreet2"]').val(customer.billingStreet2 || '');
+        $('.editRecordInput[name="BillingPostalCode"]').val(customer.billingPostalCode || '');
+        $('.editRecordInput[name="BillingState"]').val(customer.billingState || '');
+        setSelect2ValueSafely('.editRecordInput[name="BillingCountry"]', customer.billingCountry || '');
+    }
+
+
+
+    function initializeCustomerPage() {
+        var url = new URL(window.location.href);
+        var id = url.searchParams.get('id');
+
+        if (!id) {
+            return;
+        }
+
+        if (id) {
+            $('.customerSaveAndUpdateBtn').hide();
+            currentRecordId = id;
+
+            $.each(recordList, function (i, val) {
+                if (Number(val.id) === Number(currentRecordId)) {
+                    console.log(val);
+                    currentRequestData = val;
+                    populateEditRecordPanelFields(val);
+                    // buildEditFieldsFromLayout(layoutFields);
+                    return false;
+                }
+            });
+
+            $('#createContact').val(currentRecordId);
+            $('#hiddenRecordId').val(currentRecordId);
+            $("#contactTable").empty();
+            $("#parametersTable").empty();
+            $("#invoiceTable").empty();
+            $("#paymentTable").empty();
+            $('#allRecordPanel').hide();
+            $('#editRecordPanel').show();
+            resetEditRecordTabs();
+
+            // var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId + '/details');
+            // JSUTIL.callAJAXGet(postUrl, getDetailsCallback);
+            getContactDetails();
+
+            if (typeof isLabLicense !== 'undefined' && isLabLicense === "true") {
+                $('#licenseParmater').show();
+                $('#editlicenseParmaterTab').show();
+            } else {
+                $('#licenseParmater').hide();
+                $('#editlicenseParmaterTab').hide();
+                resetEditRecordTabs();
+            }
+        }
+    }
+
+
+    //editRecordPanel.js
+
+    var innerHtml = '';
+    var currentRecordId = '';
+    var currentContactId = '';
+    var currentLocationId;
+    var elementToDelete = '';
+    var currentRequestData;
+    var currentRequestData1;
+    var contactFields;
+    var currentContactList = [];
+    var currentLocationList = [];
+    // JSUTIL.callAJAXGet('/metadata/layout?dataObject=Contact', getContactLayout)
+
+    function bindEditRecordPanelEvents() {
+
+        $('#editRecordPanel .nav-tabs a[data-toggle="tab"]').off('click.customerTabs').on('click.customerTabs', function (e) {
+            e.preventDefault();
+
+            var $tabsContainer = $(this).closest('.tabs-container');
+            var targetSelector = $(this).attr('href');
+
+            $tabsContainer.find('.nav-tabs li').removeClass('active');
+            $(this).parent('li').addClass('active');
+
+            $tabsContainer.find('.tab-content .tab-pane').removeClass('active in');
+            $tabsContainer.find(targetSelector).addClass('active in');
+        });
+
+        $('#allRecordPanel').off('click.customerSelectRecord', '.selectRecordBtn').on('click.customerSelectRecord', '.selectRecordBtn', function (e) {
+            $('#allRecordPanel').hide();
+            $('#newRecordPanel').hide();
+            $('#editRecordPanel').show();
+            resetEditRecordTabs();
+            e.preventDefault();
+            setCustomerEditMode(false);
+            currentRecordId = String($(this).attr('id') || '');
+            if (!currentRecordId) return;
+
+            var currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('id', currentRecordId);
+            history.replaceState(null, '', currentUrl.pathname + currentUrl.search);
+            $('#createContact').val(currentRecordId);
+            $('#hiddenRecordId').val(currentRecordId);
+            $("#contactTable").empty();
+            $("#parametersTable").empty();
+            $("#invoiceTable").empty();
+            $("#paymentTable").empty();
+
+
+            // var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId + '/details');
+            // JSUTIL.callAJAXGet(postUrl, getDetailsCallback);
+            getContactDetails();
+
+            $.each(recordList, function (j, val2) {
+                if (Number(currentRecordId) === Number(val2.id)) {
+                    console.log(val2)
+                    currentRequestData = val2;
+                    populateEditRecordPanelFields(val2);
+                    // buildEditFieldsFromLayout(layoutFields)
+                    return false;
+                }
+            });
+            if (typeof isLabLicense !== 'undefined' && isLabLicense === "true") {
+                $('#licenseParmater').show();
+                $('#editlicenseParmaterTab').show();
+            }
+            else {
+                $('#licenseParmater').hide();
+                $('#editlicenseParmaterTab').hide();
+                resetEditRecordTabs();
+            }
+        });
+
+        $('#editGstInput').on('input', function () {
+            var gst = $(this).val();
+
+            gst = gst.replace(/[^a-zA-Z0-9]/g, '');
+
+            if (gst.length > 15) {
+                gst = gst.substring(0, 15);
+            }
+
+            $(this).val(gst);
+        });
+
+        $('#editPostalCodeInput').on('input', function () {
+            var postal = $(this).val();
+
+            postal = postal.replace(/[^a-zA-Z0-9]/g, '');
+
+            if (postal.length > 6) {
+                postal = postal.substring(0, 6);
+            }
+
+            $(this).val(postal);
+        });
+
+        $('.customerSaveAndUpdateBtn').on('click', function () {
+
+            const dataObj = {
+                name: $('.editRecordInput[name="Name"]').val(),
+                phone: $('.editRecordInput[name="Phone"]').val(),
+                billingCountry: $('.editRecordInput[name="BillingCountry"]').val(),
+                billingState: $('.editRecordInput[name="BillingState"]').val(),
+                billingStreet: $('.editRecordInput[name="BillingStreet"]').val(),
+                billingCity: $('.editRecordInput[name="BillingCity"]').val(),
+                gst: $('.editRecordInput[name="Gst"]').val(),
+                email: $('.editRecordInput[name="Email"]').val(),
+                billingStreet2: $('.editRecordInput[name="BillingStreet2"]').val(),
+                billingPostalCode: $('.editRecordInput[name="BillingPostalCode"]').val()
+            }
+
+            console.log("Data Object to Update:", dataObj);
+            JSUTIL.callAJAXPut('/api/account/' + currentRecordId, JSON.stringify(dataObj), callbackEditCustomerRequest);
+        });
+        function callbackEditCustomerRequest(response) {
+            console.log("Updated Response:", response);
+            location.reload();
+        }
+        $('#deleteCustomerBtn').on('click', function () {
+            deleteVendorCallback();
+
+
+            // MODALUTIL.deleteConfirmModal(deleteCustomerCallback);
+        });
+        function deleteCustomerCallback() {
+            var postUrl = JSUTIL.getUrl('/sales/customer/delete?id=' + currentRecordId);
+            JSUTIL.callAJAXGet(postUrl, callbackAfterDelete);
+        }
+        function callbackAfterDelete() {
+            var url = new URL(window.location.href);
+            if (url.searchParams.has('id')) {
+                url.searchParams.delete('id');
+                history.replaceState(null, '', url.pathname + url.search);
+            }
+            location.reload();
+        }
+        var editCustomerFormEl = document.getElementById("editCustomerForm");
+        if (editCustomerFormEl) {
+            editCustomerFormEl.addEventListener("submit", function () {
+                let inputs = document.querySelectorAll(".form-control");
+                inputs.forEach(input => cleanText(input));
+            });
+        }
+
+        document.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('blur', function () {
+                cleanText(input);
+            });
+        });
+
+        function cleanText(input) {
+            let currentValue = input.value;
+            let cleanedText = currentValue.replace(/\s+/g, ' ').trim();
+            input.value = cleanedText;
+        }
+
+
+        //Edit
+        function setCustomerEditMode(isEditMode) {
+            $('.recordEditBtn').toggle(!isEditMode);
+            $('.customerSaveAndUpdateBtn').toggle(isEditMode);
+
+            $('.editRecordInput').each(function () {
+                var $field = $(this);
+                if ($field.is('select')) {
+                    $field.prop('disabled', !isEditMode);
+                    if ($.fn && typeof $.fn.select2 === 'function') {
+                        $field.trigger('change.select2');
+                    }
+                } else {
+                    $field.prop('readonly', !isEditMode);
+                    $field.prop('disabled', false);
+                    $field.css('cursor', isEditMode ? '' : 'not-allowed');
+                }
+            });
+        }
+
+        $('.editRecordCancelBtn').off('click.customerEditMode').on('click.customerEditMode', function () {
+            var url = new URL(window.location.href);
+            if (url.searchParams.has('id')) {
+                url.searchParams.delete('id');
+                history.replaceState(null, '', url.pathname + url.search);
+            }
+
+            $('#allRecordPanel').show();
+            $('#newRecordPanel').hide();
+            $('#editRecordPanel').hide();
+            setCustomerEditMode(false);
+        });
+        $('.recordEditBtn').off('click.customerEditMode').on('click.customerEditMode', function () {
+            setCustomerEditMode(true);
+        });
+
+
+        $('#deleteParametersBtn').on('click', function () {
+            let jsObj = [];
+            $(".selectDeleteParameterChkbox:checked").each(function () {
+                let parameterId = $(this).attr("name");
+                jsObj.push(Number(parameterId));
+            });
+            console.log(jsObj);
+            JSUTIL.callAJAXPost('/sales/customer/delete_parameter', JSON.stringify(jsObj), callbackAfterDeleteParameters);
+        });
+
+
+
+
+    }
+
+
+    function deleteVendorCallback() {
+        var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId);
+        $.ajax({
+            url: postUrl,
+            type: 'DELETE',
+            dataType: 'json',
+            success: callbackAfterDelete,
+            error: function () {
+                JSUTIL.buildErrorModal('Failed to delete vendor.');
+            }
+        });
+    }
+
+
+    function callbackAfterDelete() {
+        location.reload();
+    }
+
+
+    // Fetches contacts and locations from their own separate APIs,
+    // then fetches the combined details (parameters, invoices, payments).
+    function getContactDetails() {
+        var contactsUrl = JSUTIL.getUrl('/api/contacts/account/' + currentRecordId);
+        var locationsUrl = JSUTIL.getUrl('/api/location/by-account/' + currentRecordId);
+        var detailsUrl = JSUTIL.getUrl('/api/account/' + currentRecordId + '/details');
+
+        // Fire all three requests in parallel; render each table as its data arrives.
+        JSUTIL.callAJAXGet(contactsUrl, function (contactsResponse) {
+            console.log('Contacts response', contactsResponse);
+            currentContactList = Array.isArray(contactsResponse) ? contactsResponse : [];
+            renderContactTable(currentContactList);
+        });
+
+        JSUTIL.callAJAXGet(locationsUrl, function (locationsResponse) {
+            console.log('Locations response', locationsResponse);
+            currentLocationList = Array.isArray(locationsResponse) ? locationsResponse : [];
+            renderLocationTable(currentLocationList);
+        });
+
+        JSUTIL.callAJAXGet(detailsUrl, function (detailsResponse) {
+            console.log('Details response', detailsResponse);
+            renderParametersTable(detailsResponse['parameters'] || []);
+            renderInvoicesTable(detailsResponse['invoices'] || []);
+            renderPaymentsTable(detailsResponse['payments'] || []);
+            toggleDeleteButton();
+        });
+    }
+
+    // ── Render helpers ────────────────────────────────────────────────────────
+
+    function renderContactTable(contactList) {
+        if ($.fn.DataTable.isDataTable('.dataTables1')) {
+            $('.dataTables1').DataTable().destroy();
+        }
+        var html = '';
+        $.each(contactList, function (i, val) {
+            html += '<tr>' +
+                '<td>' +
+                '<button type="button" class="btn btn-default deleteTrSelect deleteContactSelect" name="' + val.id + '"><i data-lucide="trash-2"></i></button>' +
+                '<button type="button" class="btn btn-warning deleteTrSelect editContactSelect" style="margin-left:5px;" name="' + val.id + '"><i data-lucide="pencil"></i></button>' +
+                '</td>' +
+                '<td>' + (val.firstName || '') + ' ' + (val.lastName || '') + '</td>' +
+                '<td>' + (val.phone || '') + '</td>' +
+                '<td>' + (val.email || '') + '</td>' +
+                '</tr>';
+        });
+        $("#contactTable").empty().append(html);
+        $('.dataTables1').DataTable({ "order": [], "pageLength": 25 });
+
+        // Re-bind contact row actions after table rebuild
+        $('#contactTable').off('click', '.deleteContactSelect').on('click', '.deleteContactSelect', function () {
+            elementToDelete = $(this).closest('tr');
+            currentContactId = $(this).attr('name');
+            JSUTIL.callAJAXDelete('/api/contacts/' + currentContactId, function (res) {
+                console.log('Delete Contact Response:', res);
+                getContactDetails();
+            });
+        });
+
+        $('#contactTable').off('click', '.editContactSelect').on('click', '.editContactSelect', function () {
+            $(".recordEditBtn1").show();
+            currentContactId = $(this).attr('name');
+            $.each(currentContactList, function (i, val) {
+                if (Number(currentContactId) === val.id) {
+                    currentRequestData1 = val;
+                    $('.editContactInput[name="FirstName"]').val(val.firstName);
+                    $('.editContactInput[name="LastName"]').val(val.lastName);
+                    $('.editContactInput[name="Phone"]').val(val.phone);
+                    $('.editContactInput[name="Email"]').val(val.email);
+                    $('.editContactInput[name="AddressLine1"]').val(val.addressLine1);
+                    $('.editContactInput[name="AddressLine2"]').val(val.addressLine2);
+                    $('.editContactInput[name="AddressLine3"]').val(val.addressLine3);
+                    $('.editContactInput[name="City"]').val(val.city);
+                    $('.editContactInput[name="State"]').val(val.state);
+                    $('.editContactInput[name="PostalCode"]').val(val.postalCode);
+                    $('.editContactInput[name="Account.Id"]').val(currentRecordId);
+                    $('#editContactId').val(val.id);
+                }
+            });
+            $('#editContactPanel').show();
+            $('#editRecordPanel').hide();
+        });
+
+        refreshLucideIcons();
+    }
+
+    function renderLocationTable(locationList) {
+        var html = '';
+        $.each(locationList, function (i, val) {
+            var address = [val.mailingStreet1, val.mailingStreet2, val.mailingCity,
+            val.mailingState, val.mailingCountry, val.mailingPostalCode]
+                .filter(function (p) { return p && p.trim() !== ''; })
+                .join(', ');
+            html += '<tr>' +
+                '<td>' +
+                '<button type="button" class="btn btn-default deleteTrSelect deleteLocationSelect" name="' + val.id + '"><i data-lucide="trash-2"></i></button>' +
+                '<button type="button" class="btn btn-warning deleteTrSelect editLocationSelect" style="margin-left:5px;" name="' + val.id + '"><i data-lucide="pencil"></i></button>' +
+                '</td>' +
+                '<td>' + (val.name || '') + '</td>' +
+                '<td>' + (val.phone || '') + '</td>' +
+                '<td>' + address + '</td>' +
+                '</tr>';
+        });
+        $("#locationTable").empty().append(html);
+
+        // Re-bind location row actions after table rebuild
+        $('#locationTable').off('click', '.deleteLocationSelect').on('click', '.deleteLocationSelect', function () {
+            elementToDelete = $(this).closest('tr');
+            currentLocationId = $(this).attr('name');
+            MODALUTIL.deleteConfirmModal(deleteLocationCallback);
+        });
+
+        $('#locationTable').off('click', '.editLocationSelect').on('click', '.editLocationSelect', function () {
+            currentLocationId = $(this).attr('name');
+            $.each(currentLocationList, function (i, val) {
+                if (String(val.id) === String(currentLocationId)) {
+                    $('#editLocationForm .editLocationInput[name="name"]').val(val.name || '');
+                    $('#editLocationForm .editLocationInput[name="phone"]').val(val.phone || '');
+                    $('#editLocationForm .editLocationInput[name="mailingStreet1"]').val(val.mailingStreet1 || '');
+                    $('#editLocationForm .editLocationInput[name="mailingStreet2"]').val(val.mailingStreet2 || '');
+                    $('#editLocationForm .editLocationInput[name="mailingCity"]').val(val.mailingCity || '');
+                    $('#editLocationForm .editLocationInput[name="mailingCountry"]').val(val.mailingCountry || '');
+                    $('#editLocationForm .editLocationInput[name="mailingState"]').val(val.mailingState || '');
+                    $('#editLocationForm .editLocationInput[name="mailingPostalCode"]').val(val.mailingPostalCode || '');
+                    $('#editLocationIdHidden').val(val.id);
+                    return false;
+                }
+            });
+            $('#editLocationNameError').hide();
+            $('#editLocationPanel').show();
+            $('#newLocationPanel').hide();
+            $('#editRecordPanel').hide();
+            refreshLucideIcons();
+        });
+
+        refreshLucideIcons();
+    }
+
+    function renderParametersTable(parameterList) {
+        var html = '';
+        $.each(parameterList, function (i, val) {
+            html += '<tr>' +
+                '<td><div class="checkbox" style="margin-top:0;margin-bottom:0;"><input class="selectDeleteParameterChkbox" type="checkbox" name="' + val.id + '"><label></label></div></td>' +
+                '<td>' + val.parameter.service.name + ' - ' + val.parameter.name + '</td>' +
+                '<td>' + val.parameter.samplingMethod + '</td>' +
+                '<td>' + val.price + '</td>' +
+                '</tr>';
+        });
+        $("#parametersTable").empty().append(html);
+        $('#deleteParametersBtn').prop('disabled', true);
+        $(document).off('change.paramChk', '.selectDeleteParameterChkbox').on('change.paramChk', '.selectDeleteParameterChkbox', function () {
+            toggleDeleteButton();
+        });
+    }
+
+    function renderInvoicesTable(invoiceList) {
+        var html = '';
+        $.each(invoiceList, function (i, val) {
+            html += '<tr>' +
+                '<td>' + JSUTIL.getDate(val.invoiceDate) + '</td>' +
+                '<td><a href="' + JSUTIL.getUrl('/app/sales_cloud/invoices?id=' + val.id) + '" target="_blank">' + val.number + '</a></td>' +
+                '<td>' + JSUTIL.toINRCurrency(val.totalAmount) + '</td>' +
+                '</tr>';
+        });
+        $("#invoiceTable").empty().append(html);
+    }
+
+    function renderPaymentsTable(paymentList) {
+        var html = '';
+        $.each(paymentList, function (i, val) {
+            html += '<tr>' +
+                '<td>' + JSUTIL.getDate(val.transactionDate) + '</td>' +
+                '<td>' + val.number + '</td>' +
+                '<td>' + JSUTIL.toINRCurrency(val.amount) + '</td>' +
+                '</tr>';
+        });
+        $("#paymentTable").empty().append(html);
+    }
+
+    function refreshLucideIcons() {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    // function getContactLayout(response) {
+    //     console.log(response);
+    //     contactFields = response;
+    //     var innerHtml = LAYOUT.buildLayout(response, 'form', 'newContactFieldInput', 'newContactRow');
+    //     $('#newContactRow').append(innerHtml);
+    //     $(".select2").select2();
+    //     JSUTIL.reinitializeInputTypes();
+    // }
+    // function buildEditFieldsFromLayout(layoutFields) {
+    //     var innerHtml = LAYOUT.buildLayout(layoutFields, 'form', 'editRecordInput', 'layoutRenderer_editForm');
+    //     $('#layoutRenderer_editForm').append(innerHtml);
+    //     populateLayoutFields(layoutFields);
+    //     $('.editRecordInput').attr('readonly', 'readonly');
+    //     $('.editRecordInput').attr('disabled', 'disabled');
+    //     $(".select2").select2();
+    //     JSUTIL.reinitializeInputTypes();
+    // }
+    function populateLayoutFields(layoutFields) {
+        $.each(layoutFields, function (i, field) {
+            let currentFieldVal = currentRequestData[JSUTIL.lowerCaseFirstLetter(field.name)];
+            if (!field.type || (field.type.indexOf('Text') >= 0 || field.type.indexOf('Number') >= 0)) {
+                $('.editRecordInput[name="' + field.name + '"]').val(currentFieldVal);
+            }
+            else if (field.type && field.type.indexOf('Date') >= 0 && field.type.indexOf('DateTime') < 0) {
+                $('.editRecordInput[name="' + field.name + '"]').val(JSUTIL.getDate(currentFieldVal));
+            }
+            else if (field.type && field.type.indexOf('DateTime') >= 0) {
+                $('.editRecordInput[name="' + field.name + '"]').val(JSUTIL.getDateTime(currentFieldVal));
+            }
+            else if (field.type && field.type.indexOf('Picklist') >= 0) {
+                setSelect2ValueSafely('.editRecordInput[name="' + field.name + '"]', currentFieldVal);
+            }
+        });
+    }
+
+    function deleteContactCallback() {
+        var postUrl = JSUTIL.getUrl('/sales/customer/delete_contact?id=' + currentContactId);
+        JSUTIL.callAJAXGet(postUrl, deleteContactCompleteCallback);
+    }
+    function deleteContactCompleteCallback() {
+        elementToDelete.remove();
+    }
+    function toggleDeleteButton() {
+        const anyChecked = $('.selectDeleteParameterChkbox:checked').length > 0;
+        $('#deleteParametersBtn').prop('disabled', !anyChecked);
+    }
+    function callbackAfterDeleteParameters(response) {
+        console.log(response);
+        location.reload();
+    }
+
+    // ── Location Panel Logic ───────────────────────────────────────────────────
+
+    function showNewLocationPanel() {
+        $('#locationForm')[0].reset();
+        $('#locationIdHidden').val('');
+        $('#locationNameError').hide();
+        $('#newLocationPanel').show();
+        $('#editRecordPanel').hide();
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    function hideLocationPanel() {
+        $('#newLocationPanel').hide();
+        $('#editLocationPanel').hide();
+        $('#editRecordPanel').show();
+    }
+
+    // Add Location button
+    $(document).off('click', '#selectLocationsBtn').on('click', '#selectLocationsBtn', function () {
+        showNewLocationPanel();
+    });
+
+    // Close buttons for both location panels
+    $(document).off('click', '#locationPanelCloseBtn').on('click', '#locationPanelCloseBtn', function () {
+        hideLocationPanel();
+    });
+    $(document).off('click', '#editLocationCloseBtn').on('click', '#editLocationCloseBtn', function () {
+        hideLocationPanel();
+    });
+
+    // Phone input — digits only, max 10
+    $(document).on('input', '#locationPhoneInput', function () {
+        var v = $(this).val().replace(/\D/g, '').substring(0, 10);
+        $(this).val(v);
+    });
+    $(document).on('input', '#editLocationForm .editLocationInput[name="phone"]', function () {
+        var v = $(this).val().replace(/\D/g, '').substring(0, 10);
+        $(this).val(v);
+    });
+
+    // Postal code — alphanumeric only, max 6
+    $(document).on('input', '#locationPostalCode', function () {
+        var v = $(this).val().replace(/[^a-zA-Z0-9]/g, '').substring(0, 6);
+        $(this).val(v);
+    });
+    $(document).on('input', '#editLocationForm .editLocationInput[name="mailingPostalCode"]', function () {
+        var v = $(this).val().replace(/[^a-zA-Z0-9]/g, '').substring(0, 6);
+        $(this).val(v);
+    });
+
+    // Save NEW location — POST /api/locations
+    $(document).off('click', '#saveLocationBtn').on('click', '#saveLocationBtn', function () {
+        var name = $('#locationNameInput').val().trim();
+        if (!name) {
+            $('#locationNameError').show();
+            return;
+        }
+        $('#locationNameError').hide();
+
+        var payload = {
+            name: name,
+            phone: $('#locationPhoneInput').val().trim(),
+            mailingStreet1: $('#locationStreet1').val().trim(),
+            mailingStreet2: $('#locationStreet2').val().trim(),
+            mailingCity: $('#locationCity').val().trim(),
+            mailingState: $('#locationState').val().trim(),
+            mailingCountry: $('#locationCountry').val().trim(),
+            mailingPostalCode: $('#locationPostalCode').val().trim(),
+            account: { id: currentRecordId }
+        };
+
+        JSUTIL.callAJAXPost('/api/location', JSON.stringify(payload), function (response) {
+            console.log('Location created:', response);
+            hideLocationPanel();
+            getContactDetails();
+        });
+    });
+
+    // Save UPDATED location — PUT /api/locations/{id}
+    $(document).off('click', '#updateLocationBtn').on('click', '#updateLocationBtn', function () {
+        var name = $('#editLocationForm .editLocationInput[name="name"]').val().trim();
+        if (!name) {
+            $('#editLocationNameError').show();
+            return;
+        }
+        $('#editLocationNameError').hide();
+
+        var payload = {
+            name: name,
+            phone: $('#editLocationForm .editLocationInput[name="phone"]').val().trim(),
+            mailingStreet1: $('#editLocationForm .editLocationInput[name="mailingStreet1"]').val().trim(),
+            mailingStreet2: $('#editLocationForm .editLocationInput[name="mailingStreet2"]').val().trim(),
+            mailingCity: $('#editLocationForm .editLocationInput[name="mailingCity"]').val().trim(),
+            mailingState: $('#editLocationForm .editLocationInput[name="mailingState"]').val().trim(),
+            mailingCountry: $('#editLocationForm .editLocationInput[name="mailingCountry"]').val().trim(),
+            mailingPostalCode: $('#editLocationForm .editLocationInput[name="mailingPostalCode"]').val().trim(),
+            account: { id: currentRecordId }
+        };
+
+        JSUTIL.callAJAXPut('/api/location/' + currentLocationId, JSON.stringify(payload), function (response) {
+            console.log('Location updated:', response);
+            hideLocationPanel();
+            getContactDetails();
+        });
+    });
+
+    // Delete location — DELETE /api/locations/{id}
+    function deleteLocationCallback() {
+        JSUTIL.callAJAXDelete('/api/location/' + currentLocationId, function (response) {
+            console.log('Location deleted:', response);
+            getContactDetails();
+        });
+    }
+
+
+</script>

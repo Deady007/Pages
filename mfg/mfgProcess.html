@@ -1,0 +1,427 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #allProcessTable thead th { border-bottom: 1px solid #eee !important; }
+    #allProcessTable tbody tr:last-child td { border-bottom: none !important; }
+    .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
+    .selectProcessBtn { color: #337AB7 !important; text-decoration: none; }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .status-not-started { background: #f3f4f6; color: #6b7280; }
+    .status-in-progress { background: #dbeafe; color: #1e40af; }
+    .status-completed { background: #d1fae5; color: #065f46; }
+    .status-on-hold { background: #fef3c7; color: #92400e; }
+    .status-cancelled { background: #fecaca; color: #991b1b; }
+    .step-status-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .step-pending { background: #f3f4f6; color: #6b7280; }
+    .step-in-progress { background: #dbeafe; color: #1e40af; }
+    .step-completed { background: #d1fae5; color: #065f46; }
+    .step-skipped { background: #fef3c7; color: #92400e; }
+    .step-rejected { background: #fecaca; color: #991b1b; }
+    .step-type-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+    .step-type-badge.production { background: #EEF2FF; color: #6366F1; }
+    .step-type-badge.quality_control { background: #ECFEFF; color: #0891B2; }
+    .step-type-badge.approval { background: #FDF4FF; color: #D946EF; }
+    .step-type-badge.final { background: #ECFDF5; color: #059669; }
+    .progress-track { background: #f3f4f6; border-radius: 4px; height: 8px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #2563EB, #60A5FA); border-radius: 4px; transition: width 0.5s; }
+    .step-detail-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin-bottom: 16px; }
+</style>
+
+<div class="qa-white-panel">
+
+<!--allProcessPanel start-->
+<div class="row animated fadeInRight aasaanPanel" id="allProcessPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Manufacturing Processes <small>Production</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-sm btn-secondary" id="newProcessBtn"><i data-lucide="plus"></i>New Process</button>
+                </div>
+            </div>
+            <div class="ibox-content m-b-sm border-bottom">
+                <table id="allProcessTable" class="table table-hover table-bordered dataTables">
+                    <thead>
+                        <th>Number</th>
+                        <th>Batch</th>
+                        <th>Template</th>
+                        <th>Progress</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                    </thead>
+                    <tbody id="processTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!--allProcessPanel end-->
+
+
+<!--newProcessPanel start-->
+<div class="row animated fadeInRight aasaanPanel" id="newProcessPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>New <small>Manufacturing Process</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm" id="cancelNewProcessBtn"><i data-lucide="x"></i>Cancel</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="createProcessBtn"><i data-lucide="check"></i>Create & Start</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="form-group mb-3">
+                            <label>Process Template</label>
+                            <select class="form-control" id="templateSelector">
+                                <option value="">-- Select Template --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group mb-3">
+                            <label>Batch Number</label>
+                            <input type="text" class="form-control newProcessInput" name="batchNumber" required>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group mb-3">
+                            <label>Process Name</label>
+                            <input type="text" class="form-control newProcessInput" name="name">
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group mb-3">
+                            <label>Remarks</label>
+                            <input type="text" class="form-control newProcessInput" name="remarks">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--newProcessPanel end-->
+
+
+<!--viewProcessPanel start-->
+<div class="row animated fadeInRight aasaanPanel" id="viewProcessPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="processTitle"></span> <small>Process Tracker</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm" id="backToProcessListBtn"><i data-lucide="x"></i>Close</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <!-- Process summary -->
+                <div class="step-detail-card">
+                    <div class="row g-3">
+                        <div class="col-sm-3"><div style="font-size:12px; color:#6b7280;">Batch</div><div style="font-weight:600;" id="proc_batch"></div></div>
+                        <div class="col-sm-3"><div style="font-size:12px; color:#6b7280;">Status</div><div id="proc_status"></div></div>
+                        <div class="col-sm-3"><div style="font-size:12px; color:#6b7280;">Progress</div><div id="proc_progress"></div></div>
+                        <div class="col-sm-3"><div style="font-size:12px; color:#6b7280;">Started</div><div id="proc_started"></div></div>
+                    </div>
+                    <div class="progress-track"><div class="progress-fill" id="proc_progressBar" style="width: 0%;"></div></div>
+                </div>
+
+                <!-- Steps list -->
+                <h6 style="font-weight: 700; margin-bottom: 12px;">Process Steps</h6>
+                <div id="processStepsContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--viewProcessPanel end-->
+
+
+<!--stepActionModal-->
+<div class="modal fade" id="stepActionModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stepActionTitle">Step Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label>Data / Results (JSON)</label>
+                    <textarea class="form-control" id="stepDataInput" rows="4" placeholder='{"field": "value"}'></textarea>
+                </div>
+                <div class="form-group mb-3">
+                    <label>Remarks</label>
+                    <textarea class="form-control" id="stepRemarksInput" rows="2"></textarea>
+                </div>
+                <input type="hidden" id="actionStepId" value="">
+                <input type="hidden" id="actionType" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="submitStepActionBtn">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+<script>
+lucide.createIcons();
+
+// ================================================================
+// State
+// ================================================================
+var recordList = [];
+var templateList = [];
+var currentProcessId = '';
+var currentProcessSteps = [];
+
+// ================================================================
+// Helpers
+// ================================================================
+function showError(msg) { if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') { JSUTIL.buildErrorModal(msg); } else { alert(msg); } }
+function getCsrfHeaders() { var t = $("meta[name='_csrf']").attr("content"); var h = $("meta[name='_csrf_header']").attr("content"); var hd = {}; if (t && h) { hd[h] = t; } return hd; }
+function requestJson(url, method, payload) {
+    var opts = { method: method || 'GET', headers: Object.assign({}, getCsrfHeaders()) };
+    if (payload !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(payload); }
+    return fetch(url, opts).then(async function(r) { if (!r.ok) { var t = await r.text(); throw new Error(t || ('HTTP ' + r.status)); } var tb = await r.text(); if (!tb) return null; try { return JSON.parse(tb); } catch(e) { return tb; } });
+}
+
+function getProcessStatusBadge(s) {
+    var cls = 'status-not-started';
+    if (s === 'In Progress') cls = 'status-in-progress';
+    else if (s === 'Completed') cls = 'status-completed';
+    else if (s === 'On Hold') cls = 'status-on-hold';
+    else if (s === 'Cancelled') cls = 'status-cancelled';
+    return '<span class="status-badge ' + cls + '">' + (s || 'Not Started') + '</span>';
+}
+function getStepStatusBadge(s) {
+    var cls = 'step-pending';
+    if (s === 'in-progress') cls = 'step-in-progress';
+    else if (s === 'completed') cls = 'step-completed';
+    else if (s === 'skipped') cls = 'step-skipped';
+    else if (s === 'rejected') cls = 'step-rejected';
+    return '<span class="step-status-badge ' + cls + '">' + (s || 'pending') + '</span>';
+}
+
+// ================================================================
+// View management
+// ================================================================
+function setView(v) {
+    $('#allProcessPanel, #newProcessPanel, #viewProcessPanel').hide();
+    if (v === 'all') $('#allProcessPanel').show();
+    if (v === 'new') $('#newProcessPanel').show();
+    if (v === 'view') $('#viewProcessPanel').show();
+    lucide.createIcons();
+}
+
+// ================================================================
+// Load processes
+// ================================================================
+async function loadProcesses() {
+    try { var res = await requestJson('/api/manufacturing-processes', 'GET'); recordList = Array.isArray(res) ? res : []; } catch(e) { console.error(e); recordList = []; }
+    renderProcessTable(); setView('all');
+}
+
+function renderProcessTable() {
+    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#allProcessTable')) { $('#allProcessTable').DataTable().destroy(); }
+    var html = '';
+    $.each(recordList, function(i, val) {
+        var tmplName = val.template ? val.template.name : '-';
+        var progress = (val.currentStepIndex || 0) + '/' + (val.totalSteps || 0);
+        var started = val.startedAt ? JSUTIL.getDate(val.startedAt) : '-';
+        html += '<tr>' +
+            '<td><a href="javascript:void(0);" class="selectProcessBtn" data-id="' + val.id + '">' + (val.number || val.batchNumber || '-') + '</a></td>' +
+            '<td>' + (val.batchNumber || '-') + '</td>' +
+            '<td>' + tmplName + '</td>' +
+            '<td>' + progress + '</td>' +
+            '<td>' + getProcessStatusBadge(val.processStatus) + '</td>' +
+            '<td>' + started + '</td></tr>';
+    });
+    $('#processTableBody').html(html);
+    $('#allProcessTable').DataTable({ order: [[0, 'desc']], pageLength: 25 });
+    lucide.createIcons();
+}
+
+// ================================================================
+// Load templates for selector
+// ================================================================
+async function loadTemplateSelector() {
+    try { var res = await requestJson('/api/manufacturing-templates', 'GET'); templateList = Array.isArray(res) ? res : []; } catch(e) { templateList = []; }
+    var sel = $('#templateSelector');
+    sel.empty().append('<option value="">-- Select Template --</option>');
+    $.each(templateList, function(i, t) {
+        sel.append('<option value="' + t.id + '">' + t.name + (t.version ? ' (v' + t.version + ')' : '') + '</option>');
+    });
+}
+
+// ================================================================
+// Load process steps
+// ================================================================
+async function loadProcessSteps(processId) {
+    try { var res = await requestJson('/api/manufacturing-processes/' + processId + '/steps', 'GET'); currentProcessSteps = Array.isArray(res) ? res : []; } catch(e) { currentProcessSteps = []; }
+    renderProcessSteps();
+}
+
+function renderProcessSteps() {
+    var container = $('#processStepsContainer');
+    container.empty();
+    if (currentProcessSteps.length === 0) { container.html('<p style="color:#6b7280; text-align:center; padding:20px;">No steps found.</p>'); return; }
+
+    $.each(currentProcessSteps, function(i, step) {
+        var actions = '';
+        if (step.status === 'in-progress') {
+            if (step.stepType === 'approval') {
+                actions = '<button class="btn btn-secondary btn-sm approveStepBtn" data-id="' + step.id + '" style="margin-right:4px; padding:4px 8px; font-size:12px;"><i data-lucide="check"></i>Approve</button>' +
+                    '<button class="btn btn-default btn-sm rejectStepBtn" data-id="' + step.id + '" style="margin-right:4px; padding:4px 8px; font-size:12px;"><i data-lucide="x"></i>Reject</button>';
+            } else {
+                actions = '<button class="btn btn-secondary btn-sm completeStepBtn" data-id="' + step.id + '" style="margin-right:4px; padding:4px 8px; font-size:12px;"><i data-lucide="check"></i>Complete</button>' +
+                    '<button class="btn btn-default btn-sm skipStepBtn" data-id="' + step.id + '" style="padding:4px 8px; font-size:12px;"><i data-lucide="skip-forward"></i>Skip</button>';
+            }
+        }
+
+        var html = '<div class="step-detail-card">' +
+            '<div class="d-flex justify-content-between align-items-center" style="margin-bottom:6px;">' +
+                '<div><span style="font-family:monospace; font-size:11px; color:#6b7280; margin-right:8px;">#' + (i + 1) + '</span>' +
+                '<span style="font-weight:600;">' + (step.name || '') + '</span> ' +
+                '<span class="step-type-badge ' + (step.stepType || '') + '">' + (step.stepType || '').replace('_', ' ') + '</span></div>' +
+                '<div>' + getStepStatusBadge(step.status) + '</div>' +
+            '</div>' +
+            (step.description ? '<div style="font-size:12px; color:#6b7280; margin-bottom:8px;">' + step.description + '</div>' : '') +
+            (actions ? '<div style="margin-top:8px;">' + actions + '</div>' : '') +
+            '</div>';
+        container.append(html);
+    });
+    lucide.createIcons();
+}
+
+// ================================================================
+// Populate process view
+// ================================================================
+function populateProcessView(process) {
+    currentProcessId = String(process.id);
+    $('#processTitle').text((process.number || process.batchNumber || '') + ' - ' + (process.name || ''));
+    $('#proc_batch').text(process.batchNumber || '-');
+    $('#proc_status').html(getProcessStatusBadge(process.processStatus));
+    var completed = (process.currentStepIndex || 0);
+    var total = (process.totalSteps || 1);
+    if (process.processStatus === 'Completed') completed = total;
+    var pct = Math.round((completed / total) * 100);
+    $('#proc_progress').text(completed + '/' + total + ' (' + pct + '%)');
+    $('#proc_progressBar').css('width', pct + '%');
+    $('#proc_started').text(process.startedAt ? JSUTIL.getDate(process.startedAt) : '-');
+}
+
+// ================================================================
+// Document ready
+// ================================================================
+$(document).ready(function() {
+    loadProcesses();
+    loadTemplateSelector();
+
+    // New process
+    $('#newProcessBtn').on('click', function() { $('.newProcessInput').val(''); setView('new'); });
+    $('#cancelNewProcessBtn').on('click', function() { setView('all'); });
+
+    // Create process from template
+    $('#createProcessBtn').on('click', function() {
+        var templateId = $('#templateSelector').val();
+        if (!templateId) { showError('Please select a template.'); return; }
+        var payload = {};
+        $('.newProcessInput').each(function() { var n = $(this).attr('name'); if (n) payload[n] = $(this).val(); });
+        if (!payload.batchNumber) { showError('Batch number is required.'); return; }
+
+        requestJson('/api/manufacturing-processes/from-template/' + templateId, 'POST', payload)
+            .then(function(created) {
+                if (created && created.id) {
+                    return requestJson('/api/manufacturing-processes/' + created.id + '/start', 'POST');
+                }
+            })
+            .then(function() { loadProcesses(); })
+            .catch(function(err) { console.error(err); showError('Unable to create process.'); });
+    });
+
+    // Select process
+    $('#processTableBody').on('click', '.selectProcessBtn', function() {
+        var id = String($(this).data('id'));
+        requestJson('/api/manufacturing-processes/' + id, 'GET').then(function(process) {
+            if (!process) return;
+            populateProcessView(process);
+            loadProcessSteps(id);
+            setView('view');
+        });
+    });
+
+    // Back to list
+    $('#backToProcessListBtn').on('click', function() { loadProcesses(); });
+
+    // Complete step
+    $('#processStepsContainer').on('click', '.completeStepBtn', function() {
+        var stepId = String($(this).data('id'));
+        $('#actionStepId').val(stepId); $('#actionType').val('complete');
+        $('#stepActionTitle').text('Complete Step'); $('#stepDataInput').val(''); $('#stepRemarksInput').val('');
+        var modal = new bootstrap.Modal(document.getElementById('stepActionModal')); modal.show();
+    });
+
+    // Skip step
+    $('#processStepsContainer').on('click', '.skipStepBtn', function() {
+        var stepId = String($(this).data('id'));
+        requestJson('/api/manufacturing-processes/' + currentProcessId + '/steps/' + stepId + '/skip', 'POST', { remarks: 'Skipped by operator' })
+            .then(function() {
+                requestJson('/api/manufacturing-processes/' + currentProcessId, 'GET').then(function(p) { populateProcessView(p); });
+                loadProcessSteps(currentProcessId);
+            });
+    });
+
+    // Approve step
+    $('#processStepsContainer').on('click', '.approveStepBtn', function() {
+        var stepId = String($(this).data('id'));
+        $('#actionStepId').val(stepId); $('#actionType').val('approve');
+        $('#stepActionTitle').text('Approve Step'); $('#stepDataInput').val(''); $('#stepRemarksInput').val('');
+        var modal = new bootstrap.Modal(document.getElementById('stepActionModal')); modal.show();
+    });
+
+    // Reject step
+    $('#processStepsContainer').on('click', '.rejectStepBtn', function() {
+        var stepId = String($(this).data('id'));
+        var approvalData = JSON.stringify({ decision: 'rejected', timestamp: new Date().toISOString() });
+        requestJson('/api/manufacturing-processes/' + currentProcessId + '/steps/' + stepId + '/approve', 'POST', { approvalData: approvalData, remarks: 'Rejected' })
+            .then(function() {
+                requestJson('/api/manufacturing-processes/' + currentProcessId, 'GET').then(function(p) { populateProcessView(p); });
+                loadProcessSteps(currentProcessId);
+            });
+    });
+
+    // Submit step action from modal
+    $('#submitStepActionBtn').on('click', function() {
+        var stepId = $('#actionStepId').val();
+        var actionType = $('#actionType').val();
+        var data = $('#stepDataInput').val();
+        var remarks = $('#stepRemarksInput').val();
+        var payload = { remarks: remarks };
+
+        if (actionType === 'complete') {
+            payload.data = data;
+            requestJson('/api/manufacturing-processes/' + currentProcessId + '/steps/' + stepId + '/complete', 'POST', payload)
+                .then(function() {
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('stepActionModal')); if (modal) modal.hide();
+                    requestJson('/api/manufacturing-processes/' + currentProcessId, 'GET').then(function(p) { populateProcessView(p); });
+                    loadProcessSteps(currentProcessId);
+                });
+        } else if (actionType === 'approve') {
+            payload.approvalData = JSON.stringify({ decision: 'approved', comments: remarks, timestamp: new Date().toISOString() });
+            requestJson('/api/manufacturing-processes/' + currentProcessId + '/steps/' + stepId + '/approve', 'POST', payload)
+                .then(function() {
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('stepActionModal')); if (modal) modal.hide();
+                    requestJson('/api/manufacturing-processes/' + currentProcessId, 'GET').then(function(p) { populateProcessView(p); });
+                    loadProcessSteps(currentProcessId);
+                });
+        }
+    });
+});
+</script>

@@ -1,0 +1,978 @@
+<!-- access-control.html start  -->
+
+<!-- Access Control Management Page (Admin Only) -->
+ <style>
+  /* ── Dark Mode ── */
+[data-bs-theme="dark"] #accessControlRoot {
+    background: var(--ins-secondary-bg) !important;
+    border-color: var(--ins-border-color) !important;
+}
+[data-bs-theme="dark"] .ac-section {
+    border-color: var(--ins-border-color) !important;
+}
+[data-bs-theme="dark"] .ac-section-header {
+    background: var(--ins-tertiary-bg, var(--ins-secondary-bg)) !important;
+    border-bottom-color: var(--ins-border-color) !important;
+}
+[data-bs-theme="dark"] .ac-section-title {
+    color: var(--ins-body-color) !important;
+}
+[data-bs-theme="dark"] .ac-thead th {
+    background: var(--ins-tertiary-bg, var(--ins-secondary-bg)) !important;
+    color: var(--ins-secondary-color) !important;
+    border-bottom-color: var(--ins-border-color) !important;
+}
+[data-bs-theme="dark"] #acUsersTable td,
+[data-bs-theme="dark"] #acUsersTable strong {
+    color: var(--ins-body-color) !important;
+}
+[data-bs-theme="dark"] .ac-btn {
+    background: var(--ins-secondary-bg) !important;
+    border-color: var(--ins-border-color) !important;
+    color: var(--ins-secondary-color) !important;
+}
+[data-bs-theme="dark"] .ac-btn:hover {
+    background: var(--ins-tertiary-bg, var(--ins-secondary-bg)) !important;
+}
+[data-bs-theme="dark"] .ac-btn.danger {
+    color: #f87171 !important;
+    border-color: #7f1d1d !important;
+}
+[data-bs-theme="dark"] .role-member {
+    background: var(--ins-tertiary-bg, var(--ins-secondary-bg)) !important;
+    border-color: var(--ins-border-color) !important;
+    color: var(--ins-body-color) !important;
+}
+[data-bs-theme="dark"] .page-name {
+    color: var(--ins-body-color) !important;
+}
+[data-bs-theme="dark"] #roleMembersContainer > div > div {
+    background: var(--ins-tertiary-bg, var(--ins-secondary-bg)) !important;
+    border-color: var(--ins-border-color) !important;
+}
+[data-bs-theme="dark"] #accessControlRoot .modal-content {
+    background: var(--ins-secondary-bg) !important;
+    border-color: var(--ins-border-color) !important;
+}
+[data-bs-theme="dark"] #accessControlRoot .modal-header {
+    border-bottom-color: var(--ins-border-color) !important;
+}
+[data-bs-theme="dark"] #accessControlRoot .modal-title,
+[data-bs-theme="dark"] .ac-label {
+    color: var(--ins-body-color) !important;
+}
+[data-bs-theme="dark"] #accessControlRoot .modal-footer {
+    border-top-color: var(--ins-border-color) !important;
+}
+ </style>
+
+<div id="accessControlRoot">
+
+
+<!-- USER MANAGEMENT -->
+<div class="ac-section mb-4">
+  <div class="ac-section-header">
+    <span class="ac-section-title"><i class="ti ti-user-cog"></i> User Management</span>
+    <button class="btn btn-primary btn-sm" onclick="openCreateUserModal()">
+      <i class="ti ti-user-plus"></i> Create User</button>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="ac-thead"><tr>
+        <th>Username</th><th>Display Name</th><th>Role</th><th>Status</th><th style="width:180px;">Actions</th>
+      </tr></thead>
+      <tbody id="acUsersTable"><tr><td colspan="5" class="text-center text-secondary py-4">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ROLES & MEMBERS -->
+<div class="ac-section mb-4">
+  <div class="ac-section-header">
+    <span class="ac-section-title"><i class="ti ti-users"></i> Roles &amp; Members</span>
+    <button class="btn btn-primary btn-sm" onclick="openCreateRoleModal()">
+      <i class="ti ti-plus"></i> Create Role</button>
+  </div>
+  <div class="p-3" id="roleMembersContainer"><p style="color:var(--ins-secondary-color); text-align:center; padding:1rem; margin:0;">Loading...</p></div>
+</div>
+
+<!-- PERMISSION MATRIX -->
+<div class="ac-section">
+  <div class="ac-section-header">
+    <span class="ac-section-title"><i class="ti ti-lock"></i> Page Access Matrix</span>
+    <span style="font-size:0.8rem; color:var(--ins-secondary-color);"><i class="ti ti-info-circle"></i> Changes save instantly.</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 ac-matrix" id="accessMatrixTable">
+      <thead class="ac-thead"><tr><th>Page</th></tr></thead>
+      <tbody><tr><td colspan="10" class="text-center text-secondary py-4">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CREATE USER MODAL -->
+<div id="acCreateUserModal" class="modal inmodal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title"><i class="ti ti-user-plus"></i> Create New User</h4>
+    </div>
+    <div class="modal-body ac-modal-body">
+      <div class="mb-3">
+        <label class="ac-label">Username <span class="text-danger">*</span></label>
+        <input type="text" id="newUserUsername" class="form-control form-control-sm" placeholder="min 3 chars" autocomplete="off">
+      </div>
+      <div class="mb-3">
+        <label class="ac-label">Display Name <span class="text-danger">*</span></label>
+        <input type="text" id="newUserDisplayName" class="form-control form-control-sm" placeholder="Full name">
+      </div>
+      <div class="mb-3">
+        <label class="ac-label">Password <span class="text-danger">*</span></label>
+        <input type="password" id="newUserPassword" class="form-control form-control-sm" placeholder="min 6 chars">
+      </div>
+      <div class="mb-3">
+        <label class="ac-label">Role <span class="text-danger">*</span></label>
+        <select id="newUserRole" class="form-select form-select-sm"></select>
+      </div>
+      <div id="createUserError" class="ac-error" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white btn-sm" onclick="closeModal('acCreateUserModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="createUser()"><i class="ti ti-check"></i> Create</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- CREATE ROLE MODAL -->
+<div id="acCreateRoleModal" class="modal inmodal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title"><i class="ti ti-shield-lock"></i> Create New Role</h4>
+    </div>
+    <div class="modal-body ac-modal-body">
+      <div class="mb-3">
+        <label class="ac-label">Role Name <span class="text-danger">*</span></label>
+        <input type="text" id="newRoleName" class="form-control form-control-sm" placeholder="e.g. PHARMACIST" style="text-transform:uppercase;">
+      </div>
+      <div class="mb-3">
+        <label class="ac-label">Copy Permissions From <span class="text-muted fw-normal">(optional)</span></label>
+        <select id="newRoleCopyFrom" class="form-select form-select-sm"><option value="">— Start with no access —</option></select>
+      </div>
+      <div id="createRoleError" class="ac-error" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white btn-sm" onclick="closeModal('acCreateRoleModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="createRole()"><i class="ti ti-check"></i> Create</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div id="acEditUserModal" class="modal inmodal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title"><i class="ti ti-edit"></i> Edit User</h4>
+    </div>
+    <div class="modal-body ac-modal-body">
+      <input type="hidden" id="editUserId">
+      <div class="mb-3">
+        <label class="ac-label">Username</label>
+        <input type="text" id="editUserUsername" class="form-control form-control-sm bg-light" disabled>
+      </div>
+      <div class="mb-3">
+        <label class="ac-label">Display Name</label>
+        <input type="text" id="editUserDisplayName" class="form-control form-control-sm">
+      </div>
+      <div class="mb-3">
+        <label class="ac-label">Role</label>
+        <select id="editUserRole" class="form-select form-select-sm"></select>
+      </div>
+      <div id="editUserError" class="ac-error" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white btn-sm" onclick="closeModal('acEditUserModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditUser()"><i class="ti ti-check"></i> Save</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- RESET PASSWORD MODAL -->
+<div id="acResetPwModal" class="modal inmodal fade" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title"><i class="ti ti-key"></i> Reset Password</h4>
+    </div>
+    <div class="modal-body ac-modal-body">
+      <input type="hidden" id="resetPwUserId">
+      <p class="text-secondary small mb-3">Reset password for <strong id="resetPwUsername" class="text-dark"></strong></p>
+      <div class="mb-3">
+        <label class="ac-label">New Password <span class="text-danger">*</span></label>
+        <input type="password" id="resetPwNewPassword" class="form-control form-control-sm" placeholder="min 6 chars">
+      </div>
+      <div id="resetPwError" class="ac-error" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-white btn-sm" onclick="closeModal('acResetPwModal')">Cancel</button>
+      <button class="btn btn-warning btn-sm" onclick="resetPassword()"><i class="ti ti-check"></i> Reset</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<div id="acSaveIndicator" style="display:none; position:fixed; bottom:1.5rem; right:1.5rem; background:#2563eb; color:#fff; padding:0.625rem 1.25rem; border-radius:8px; font-size:0.8125rem; font-weight:500; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:999;"><i class="ti ti-loader ti-spin"></i> Saving...</div>
+
+</div>
+
+<style>
+  /* ── Root ── */
+  #accessControlRoot { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; }
+
+  /* ── Section (replaces .card) ── */
+  .ac-section { border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; }
+  .ac-section-header { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1rem; background:#f8fafc; border-bottom:1px solid #e2e8f0; }
+  .ac-section-title { font-size:.875rem; font-weight:600; color:#1e293b; display:flex; align-items:center; gap:.4rem; }
+  .ac-section-title i { color:#2563eb; }
+  .ac-thead th { background:#f8fafc; font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#64748b; padding:.65rem 1rem; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+
+  /* ── Role badges ── */
+  .role-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .65rem; border-radius:20px; font-size:.72rem; font-weight:600; }
+  .role-badge.admin        { background:#fef2f2; color:#dc2626; }
+  .role-badge.doctor       { background:#eff6ff; color:#2563eb; }
+  .role-badge.nurse        { background:#f0fdf4; color:#16a34a; }
+  .role-badge.receptionist { background:#fefce8; color:#ca8a04; }
+  .role-badge.default      { background:#f1f5f9; color:#475569; }
+
+  /* ── Member chip ── */
+  .role-member { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .6rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; font-size:.78rem; margin:.2rem; color:#334155; }
+  .role-member i { font-size:.85rem; color:#64748b; }
+
+  /* ── Matrix ── */
+  .ac-matrix td, .ac-matrix th { text-align:center; vertical-align:middle; }
+  .ac-matrix th:first-child, .ac-matrix td:first-child { text-align:left; }
+  .ac-matrix input[type="checkbox"] { width:17px; height:17px; cursor:pointer; accent-color:#2563eb; }
+  .ac-matrix input[type="checkbox"]:disabled { opacity:.4; cursor:not-allowed; }
+  .page-name { display:flex; align-items:center; gap:.45rem; font-weight:500; font-size:.84rem; }
+  .page-name i { color:#64748b; font-size:1rem; }
+
+  /* ── Action buttons ── */
+  .ac-btn { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; border:1px solid #e2e8f0; background:#fff; color:#475569; font-size:.82rem; cursor:pointer; transition:background .12s, border-color .12s; }
+  .ac-btn:hover { background:#f1f5f9; border-color:#cbd5e1; }
+  .ac-btn.danger { color:#ef4444; border-color:#fecaca; }
+  .ac-btn.danger:hover { background:#fef2f2; }
+
+  /* ── Status badge ── */
+  .ac-status { display:inline-block; padding:.2rem .65rem; border-radius:20px; font-size:.72rem; font-weight:600; }
+  .ac-status.active   { background:#f0fdf4; color:#16a34a; }
+  .ac-status.disabled { background:#fef2f2; color:#dc2626; }
+
+  /* ── Modal polish (shared modal system) ── */
+  #accessControlRoot .modal-content { border-radius:12px; border:1px solid #e2e8f0; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+  #accessControlRoot .modal-header { padding:.9rem 1.25rem; border-bottom:1px solid #e2e8f0; }
+  #accessControlRoot .modal-title { margin:0; font-size:.9375rem; font-weight:600; display:flex; align-items:center; gap:.45rem; color:#1e293b; }
+  .ac-modal-body { padding:1.25rem; }
+  .ac-label { display:block; font-size:.8rem; font-weight:600; color:#334155; margin-bottom:.3rem; }
+  #accessControlRoot .modal-footer { padding:.75rem 1.25rem; border-top:1px solid #e2e8f0; gap:.5rem; }
+  .ac-error { background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:.45rem .75rem; border-radius:6px; font-size:.8rem; margin-top:.5rem; }
+</style>
+
+<script>
+/* Access Control Management Page - Users, Roles, Permissions (Admin only) */
+
+let acMatrix = {};
+let acRoles = [];
+let acPages = [];
+let acRolesInfo = {};
+let acUsers = [];
+
+if (typeof window.showNotification !== "function") {
+  window.showNotification = function(message, type) {
+    try {
+      const containerId = "acToastContainer";
+      let container = document.getElementById(containerId);
+      if (!container) {
+        container = document.createElement("div");
+        container.id = containerId;
+        container.style.position = "fixed";
+        container.style.top = "1rem";
+        container.style.right = "1rem";
+        container.style.zIndex = "1200";
+        container.style.display = "flex";
+        container.style.flexDirection = "column";
+        container.style.gap = "0.5rem";
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement("div");
+      const tone = (type || "info").toLowerCase();
+      const colors = {
+        success: { bg: "#ecfdf5", fg: "#166534", bd: "#86efac" },
+        warning: { bg: "#fffbeb", fg: "#92400e", bd: "#fde68a" },
+        error: { bg: "#fef2f2", fg: "#991b1b", bd: "#fecaca" },
+        info: { bg: "#eff6ff", fg: "#1e3a8a", bd: "#bfdbfe" }
+      };
+      const c = colors[tone] || colors.info;
+      toast.style.background = c.bg;
+      toast.style.color = c.fg;
+      toast.style.border = "1px solid " + c.bd;
+      toast.style.borderRadius = "8px";
+      toast.style.padding = "0.55rem 0.75rem";
+      toast.style.fontSize = "0.8125rem";
+      toast.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)";
+      toast.style.maxWidth = "320px";
+      toast.style.wordBreak = "break-word";
+      toast.textContent = String(message || "");
+      container.appendChild(toast);
+
+      setTimeout(function() {
+        toast.style.opacity = "0";
+        toast.style.transition = "opacity .25s ease";
+        setTimeout(function() {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 260);
+      }, 2800);
+    } catch (e) {
+      console.log(type ? "[" + type + "]" : "[info]", message);
+    }
+  };
+}
+
+const PAGE_ICONS = {
+  "access-control.html": "ti ti-shield-lock"
+};
+
+async function ensureCurrentUserContext() {
+  try {
+    if (typeof currentRole === "string" && currentRole.trim()) {
+      return {
+        role: currentRole.trim().toUpperCase(),
+        username: (typeof currentUser === "string" ? currentUser : "")
+      };
+    }
+    if (typeof window.currentRole === "string" && window.currentRole.trim()) {
+      return {
+        role: window.currentRole.trim().toUpperCase(),
+        username: window.currentUser || ""
+      };
+    }
+    const r = await fetch("/api/auth/status");
+    const d = await r.json();
+    if (d && d.authenticated) {
+      window.currentUser = d.displayName || d.username || "";
+      window.currentRole = (d.role || "user").toUpperCase();
+      return { role: window.currentRole, username: window.currentUser };
+    }
+  } catch (e) {
+    console.error("Failed to load auth status for access-control", e);
+  }
+  return { role: "", username: "" };
+}
+
+function pageLabel(page) {
+  if (!page) return "";
+  const raw = String(page).replace(/^\/pages\//, "").replace(/\.html$/i, "");
+  const name = raw.split("/").pop() || raw;
+  return name
+    .replace(/[_-]/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function pageIcon(page) {
+  if (PAGE_ICONS[page]) return PAGE_ICONS[page];
+  const key = String(page || "");
+  if (key.startsWith("security/")) return "ti ti-shield-check";
+  if (key.startsWith("warehouse/")) return "ti ti-warehouse";
+  if (key.startsWith("purchase/")) return "ti ti-shopping-cart";
+  if (key.startsWith("production/")) return "ti ti-settings";
+  if (key.startsWith("qualityAssurance/")) return "ti ti-clipboard-check";
+  if (key.startsWith("sales/")) return "ti ti-shopping-bag";
+  if (key.startsWith("dispatch/")) return "ti ti-truck";
+  if (key.startsWith("masterData/")) return "ti ti-database";
+  if (key.startsWith("Laboratory/")) return "ti ti-flask";
+  if (key.startsWith("labConfig/")) return "ti ti-flask";
+  if (key.startsWith("contacts/")) return "ti ti-address-book";
+  return "ti ti-file";
+}
+
+function getAccessControlRoot() {
+  return (
+    document.getElementById("accessControlRoot") ||
+    document.getElementById("page-content") ||
+    document.body
+  );
+}
+
+async function initializeAccessControl() {
+  const ctx = await ensureCurrentUserContext();
+  if (ctx.role !== "ADMIN") {
+    const root = getAccessControlRoot();
+   root.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;padding:4rem;text-align:center;"><i class="ti ti-shield-lock" style="font-size:3rem;color:#ef4444;margin-bottom:1rem;"></i><h2 style="color:var(--ins-body-color);">Admin Only</h2><p style="color:var(--ins-secondary-color);">This page is restricted to administrators.</p></div>';
+    return;
+  }
+  await loadAllAcData();
+  renderAll();
+}
+window["initializeAccess-control"] = initializeAccessControl;
+
+async function loadAllAcData() {
+  try { await loadAccessMatrix(); } catch(e) { console.error("loadAccessMatrix failed", e); }
+  try { await loadRolesInfo(); } catch(e) { console.error("loadRolesInfo failed", e); }
+  try { await loadUsers(); } catch(e) { console.error("loadUsers failed", e); }
+}
+
+async function fetchJsonNoCache(path) {
+  const r = await fetch(apiNoCacheUrl(path), { cache: "no-store" });
+  if (!r.ok) throw new Error(path + " returned " + r.status);
+  return r.json();
+}
+
+function mergeRoleListFromRolesInfo() {
+  const mergedRoles = new Set(acRoles);
+  for (const role of Object.keys(acRolesInfo || {})) mergedRoles.add(role);
+  acRoles = Array.from(mergedRoles).sort();
+}
+
+async function syncUsersSection(attempts = 8, waitMs = 350) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const users = await fetchJsonNoCache("/api/access/users");
+      const rolesInfoResp = await fetchJsonNoCache("/api/access/roles");
+
+      acUsers = Array.isArray(users) ? users : [];
+      acRolesInfo = rolesInfoResp.roles || {};
+      acPages = rolesInfoResp.allPages || acPages;
+      mergeRoleListFromRolesInfo();
+
+      renderUsersTable();
+      renderRoleMembers();
+      updateStats();
+      return true;
+    } catch (e) {
+      if (i === attempts - 1) {
+        console.error("syncUsersSection failed", e);
+        return false;
+      }
+      await delay(waitMs);
+    }
+  }
+  return false;
+}
+
+async function syncUsersSectionAfterCreate(createdUsername, attempts = 10, waitMs = 500) {
+  const target = String(createdUsername || "").toLowerCase();
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const users = await fetchJsonNoCache("/api/access/users");
+      const hasCreated = Array.isArray(users) && users.some((u) => String(u.username || "").toLowerCase() === target);
+      if (!hasCreated) {
+        await delay(waitMs);
+        continue;
+      }
+
+      const rolesInfoResp = await fetchJsonNoCache("/api/access/roles");
+      acUsers = users;
+      acRolesInfo = rolesInfoResp.roles || {};
+      acPages = rolesInfoResp.allPages || acPages;
+      mergeRoleListFromRolesInfo();
+
+      renderUsersTable();
+      renderRoleMembers();
+      updateStats();
+      return true;
+    } catch (e) {
+      if (i === attempts - 1) {
+        console.error("syncUsersSectionAfterCreate failed", e);
+        return false;
+      }
+      await delay(waitMs);
+    }
+  }
+  return false;
+}
+
+async function syncRolesSection(attempts = 8, waitMs = 350) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const accessResp = await fetchJsonNoCache("/api/access");
+      const rolesInfoResp = await fetchJsonNoCache("/api/access/roles");
+
+      acPages = accessResp.pages || rolesInfoResp.allPages || acPages;
+      acMatrix = accessResp.matrix || {};
+      acRolesInfo = rolesInfoResp.roles || {};
+      mergeRoleListFromRolesInfo();
+
+      renderRoleMembers();
+      renderMatrix();
+      updateStats();
+      return true;
+    } catch (e) {
+      if (i === attempts - 1) {
+        console.error("syncRolesSection failed", e);
+        return false;
+      }
+      await delay(waitMs);
+    }
+  }
+  return false;
+}
+
+function apiNoCacheUrl(path) {
+  const sep = path.includes("?") ? "&" : "?";
+  return path + sep + "_ts=" + Date.now() + "_r=" + Math.floor(Math.random() * 1000000);
+}
+
+async function loadAccessMatrix() {
+  try {
+    const r = await fetch(apiNoCacheUrl("/api/access"), { cache: "no-store" });
+    const d = await r.json();
+    acPages = d.pages || acPages;
+    acMatrix = d.matrix || {};
+  } catch(e) { console.error(e); }
+}
+async function loadRolesInfo() {
+  try {
+    const r = await fetch(apiNoCacheUrl("/api/access/roles"), { cache: "no-store" });
+    const d = await r.json();
+    acRolesInfo = d.roles || {};
+    acPages = d.allPages || acPages;
+
+    const mergedRoles = new Set(acRoles);
+    for (const role of Object.keys(acRolesInfo)) mergedRoles.add(role);
+    acRoles = Array.from(mergedRoles).sort();
+  } catch(e) { console.error(e); }
+}
+async function loadUsers() {
+  try { const r = await fetch(apiNoCacheUrl("/api/access/users"), { cache: "no-store" }); if (r.ok) acUsers = await r.json(); } catch(e) { console.error(e); }
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function refreshAllWithRetry(validateFn, attempts = 10, waitMs = 500) {
+  for (let i = 0; i < attempts; i++) {
+    await loadAllAcData();
+    if (!validateFn || validateFn()) return true;
+    await delay(waitMs);
+  }
+  return false;
+}
+
+function renderAll() { renderUsersTable(); renderRoleMembers(); renderMatrix(); updateStats(); }
+
+/* =======================================
+   USER TABLE
+   ======================================= */
+
+function renderUsersTable() {
+  const tbody = document.getElementById("acUsersTable");
+  if (!tbody) return;
+  if (acUsers.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:1.5rem;">No users</td></tr>'; return; }
+
+  tbody.innerHTML = acUsers.map(u => {
+    const cls = (u.role||'').toLowerCase();
+    const enabled = u.enabled !== false;
+    return `<tr style="${enabled ? '' : 'opacity:0.55;'}">
+     <td style="padding:.6rem 1rem;"><strong style="font-size:.85rem;color:var(--ins-body-color);">${esc(u.username)}</strong></td>
+      <td style="font-size:.85rem;">${esc(u.displayName)}</td>
+      <td><span class="role-badge ${cls}"><i class="${u.role==='ADMIN'?'ti ti-crown':'ti ti-user'}"></i> ${esc(u.role)}</span></td>
+      <td><span class="ac-status ${enabled?'active':'disabled'}">${enabled?'Active':'Disabled'}</span></td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="ac-btn" onclick="openEditUserModal(${u.id})" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="ac-btn" onclick="openResetPwModal(${u.id},'${esc(u.username)}')" title="Reset Password"><i class="ti ti-key"></i></button>
+          <button class="ac-btn" onclick="toggleUserEnabled(${u.id})" title="${enabled?'Disable':'Enable'}"><i class="${enabled?'ti ti-ban':'ti ti-check'}"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+/* =======================================
+   CREATE USER
+   ======================================= */
+
+function openCreateUserModal() {
+  document.getElementById("newUserUsername").value = "";
+  document.getElementById("newUserDisplayName").value = "";
+  document.getElementById("newUserPassword").value = "";
+  hideError("createUserError");
+  populateRoleSelect("newUserRole");
+  openModal("acCreateUserModal");
+}
+
+async function createUser() {
+  const username = document.getElementById("newUserUsername").value.trim();
+  const displayName = document.getElementById("newUserDisplayName").value.trim();
+  const password = document.getElementById("newUserPassword").value;
+  const role = document.getElementById("newUserRole").value;
+  if (!username||!displayName||!password||!role) { showError("createUserError","All fields are required"); return; }
+  if (username.length < 3) { showError("createUserError","Username must be at least 3 characters"); return; }
+  if (password.length < 6) { showError("createUserError","Password must be at least 6 characters"); return; }
+
+  try {
+    const res = await fetch("/api/access/users", { method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username,displayName,password,role}) });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      const tempId = Number(data.id || data.userId || Date.now());
+      const exists = acUsers.some((u) => String(u.username || "").toLowerCase() === username.toLowerCase());
+      if (!exists) {
+        acUsers.unshift({
+          id: tempId,
+          username,
+          displayName,
+          role,
+          enabled: true
+        });
+      }
+      if (!acRolesInfo[role]) acRolesInfo[role] = [];
+      if (!acRolesInfo[role].some((u) => String(u.username || "").toLowerCase() === username.toLowerCase())) {
+        acRolesInfo[role].push({ username, displayName });
+      }
+      closeModal("acCreateUserModal");
+      showNotification("User '" + username + "' created", "success");
+      renderUsersTable();
+      renderRoleMembers();
+      updateStats();
+
+      // Force one immediate API refresh after create, then poll if backend is still lagging.
+      await loadUsers();
+      const hasCreatedAfterImmediateRefresh = acUsers.some((u) => String(u.username || "").toLowerCase() === username.toLowerCase());
+      if (hasCreatedAfterImmediateRefresh) {
+        await loadRolesInfo();
+        renderUsersTable();
+        renderRoleMembers();
+        updateStats();
+      } else {
+        const synced = await syncUsersSectionAfterCreate(username);
+        if (!synced) showNotification("User created. Server list is still updating; keeping local view for now.", "warning");
+      }
+    } else { showError("createUserError", data.error || "Failed to create user"); }
+  } catch(e) { showError("createUserError", e.message); }
+}
+
+/* =======================================
+   EDIT USER
+   ======================================= */
+
+function openEditUserModal(userId) {
+  const user = acUsers.find(u => u.id === userId);
+  if (!user) return;
+  document.getElementById("editUserId").value = userId;
+  document.getElementById("editUserUsername").value = user.username;
+  document.getElementById("editUserDisplayName").value = user.displayName;
+  hideError("editUserError");
+  populateRoleSelect("editUserRole", user.role);
+  openModal("acEditUserModal");
+}
+
+async function saveEditUser() {
+  const id = document.getElementById("editUserId").value;
+  const displayName = document.getElementById("editUserDisplayName").value.trim();
+  const role = document.getElementById("editUserRole").value;
+  if (!displayName) { showError("editUserError","Display name is required"); return; }
+
+  try {
+    const res = await fetch("/api/access/users/" + id, { method:"PUT", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({displayName,role}) });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      const user = acUsers.find((u) => String(u.id) === String(id));
+      if (user) {
+        user.displayName = displayName;
+        user.role = role;
+
+        for (const roleKey of Object.keys(acRolesInfo || {})) {
+          acRolesInfo[roleKey] = (acRolesInfo[roleKey] || []).filter(
+            (member) => String(member.username || "").toLowerCase() !== String(user.username || "").toLowerCase()
+          );
+        }
+        if (!acRolesInfo[role]) acRolesInfo[role] = [];
+        acRolesInfo[role].push({ username: user.username, displayName });
+      }
+
+      closeModal("acEditUserModal");
+      showNotification("User updated", "success");
+      renderUsersTable();
+      renderRoleMembers();
+      updateStats();
+
+      const synced = await syncUsersSection();
+      if (!synced) showNotification("User updated. Latest list is still syncing from server.", "warning");
+    } else { showError("editUserError", data.error || "Failed to update"); }
+  } catch(e) { showError("editUserError", e.message); }
+}
+
+/* =======================================
+   RESET PASSWORD
+   ======================================= */
+
+function openResetPwModal(userId, username) {
+  document.getElementById("resetPwUserId").value = userId;
+  document.getElementById("resetPwUsername").textContent = username;
+  document.getElementById("resetPwNewPassword").value = "";
+  hideError("resetPwError");
+  openModal("acResetPwModal");
+}
+
+async function resetPassword() {
+  const id = document.getElementById("resetPwUserId").value;
+  const password = document.getElementById("resetPwNewPassword").value;
+  if (!password || password.length < 6) { showError("resetPwError","Password must be at least 6 characters"); return; }
+
+  try {
+    const res = await fetch("/api/access/users/" + id + "/reset-password", { method:"PUT", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({password}) });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeModal("acResetPwModal");
+      showNotification("Password reset successfully", "success");
+    } else { showError("resetPwError", data.error || "Failed"); }
+  } catch(e) { showError("resetPwError", e.message); }
+}
+
+/* =======================================
+   TOGGLE / DELETE USER
+   ======================================= */
+
+async function toggleUserEnabled(userId) {
+  try {
+    const res = await fetch("/api/access/users/" + userId + "/toggle", { method:"PUT" });
+    const data = await res.json();
+    if (res.ok) { showNotification(data.username + " is now " + (data.enabled?"active":"disabled"), data.enabled?"success":"warning"); await loadUsers(); renderUsersTable(); updateStats(); }
+    else { showNotification(data.error || "Failed", "error"); }
+  } catch(e) { showNotification(e.message, "error"); }
+}
+
+async function deleteUser(userId, username) {
+  if (!confirm("Permanently delete user '" + username + "'?\n\nThis cannot be undone.")) return;
+  try {
+    const res = await fetch("/api/access/users/" + userId, { method:"DELETE" });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      acUsers = acUsers.filter((u) => String(u.id) !== String(userId));
+      for (const role of Object.keys(acRolesInfo || {})) {
+        acRolesInfo[role] = (acRolesInfo[role] || []).filter((u) => String(u.username || "").toLowerCase() !== String(username || "").toLowerCase());
+      }
+      renderUsersTable();
+      renderRoleMembers();
+      updateStats();
+      showNotification("User '" + username + "' deleted", "success");
+      const synced = await syncUsersSection();
+      if (!synced) showNotification("User deleted, but latest list could not be fetched yet", "warning");
+    }
+    else { showNotification(data.error || "Failed", "error"); }
+  } catch(e) { showNotification(e.message, "error"); }
+}
+
+/* =======================================
+   CREATE / DELETE ROLE
+   ======================================= */
+
+function openCreateRoleModal() {
+  document.getElementById("newRoleName").value = "";
+  hideError("createRoleError");
+  const sel = document.getElementById("newRoleCopyFrom");
+  sel.innerHTML = '<option value="">- Start with no access -</option>';
+  acRoles.forEach(r => { sel.innerHTML += '<option value="' + r + '">' + r + '</option>'; });
+  openModal("acCreateRoleModal");
+}
+
+async function createRole() {
+  const roleName = document.getElementById("newRoleName").value.toUpperCase().replace(/[^A-Z0-9_]/g,'').trim();
+  const copyFrom = document.getElementById("newRoleCopyFrom").value;
+  if (!roleName || roleName.length < 2) { showError("createRoleError","Role name must be at least 2 characters (letters/digits/underscores)"); return; }
+
+  try {
+    const res = await fetch("/api/access/roles", { method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({roleName, copyFrom}) });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (!acRoles.includes(roleName)) acRoles.push(roleName);
+      acRoles.sort();
+      if (!acRolesInfo[roleName]) acRolesInfo[roleName] = [];
+      if (!acMatrix[roleName]) acMatrix[roleName] = {};
+      closeModal("acCreateRoleModal");
+      renderRoleMembers();
+      renderMatrix();
+      updateStats();
+      showNotification("Role '" + roleName + "' created", "success");
+      const synced = await syncRolesSection();
+      if (!synced) showNotification("Role created, but latest role data could not be fetched yet", "warning");
+    } else { showError("createRoleError", data.error || "Failed"); }
+  } catch(e) { showError("createRoleError", e.message); }
+}
+
+async function deleteRole(roleName) {
+  if (!confirm("Delete role '" + roleName + "'?\n\nAll page-access entries for this role will be removed.\nUsers must be reassigned first.")) return;
+  try {
+    const res = await fetch("/api/access/roles/" + encodeURIComponent(roleName), { method:"DELETE" });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      acRoles = acRoles.filter((r) => r !== roleName);
+      delete acRolesInfo[roleName];
+      delete acMatrix[roleName];
+      renderRoleMembers();
+      renderMatrix();
+      updateStats();
+      showNotification("Role '" + roleName + "' deleted", "success");
+      const synced = await syncRolesSection();
+      if (!synced) showNotification("Role deleted, but latest role data could not be fetched yet", "warning");
+    }
+    else { showNotification(data.error || "Failed to delete role", "error"); }
+  } catch(e) { showNotification(e.message, "error"); }
+}
+
+/* =======================================
+   ROLES & MEMBERS
+   ======================================= */
+
+function renderRoleMembers() {
+  const container = document.getElementById("roleMembersContainer");
+  if (!container) return;
+  if (Object.keys(acRolesInfo).length === 0) { container.innerHTML = '<p style="color:#94a3b8;text-align:center;">No roles</p>'; return; }
+
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;">';
+  for (const [role, users] of Object.entries(acRolesInfo)) {
+    const cls = role.toLowerCase();
+    const allowedCount = acMatrix[role] ? Object.values(acMatrix[role]).filter(v=>v===true).length : (role==="ADMIN"?acPages.length:0);
+    const canDelete = role !== "ADMIN" && users.length === 0;
+
+    html += `<div style="background:var(--ins-secondary-bg);border:1px solid var(--ins-border-color);border-radius:10px;padding:1rem;">
+      <h4 style="margin:0 0 .5rem;font-size:.875rem;display:flex;align-items:center;gap:.5rem;">
+        <span class="role-badge ${cls}"><i class="${role==='ADMIN'?'ti ti-crown':'ti ti-user'}"></i> ${role}</span>
+       <span style="font-weight:400;color:var(--ins-secondary-color);font-size:.75rem;">${users.length} user${users.length!==1?'s':''} · ${allowedCount}/${acPages.length} pages</span>
+        ${canDelete ? `<button onclick="deleteRole('${role}')" style="margin-left:auto;background:none;border:none;color:#ef4444;cursor:pointer;font-size:1rem;" title="Delete role"><i class="ti ti-trash"></i></button>` : ''}
+      </h4>
+      <div style="display:flex;flex-wrap:wrap;">
+        ${users.map(u => `<span class="role-member" title="${u.username}"><i class="ti ti-user"></i>${esc(u.displayName)}<span style="color:#94a3b8;font-size:.7rem;">(${u.username})</span></span>`).join("")}
+        ${users.length===0 ? '<span style="color:var(--ins-secondary-color);font-size:.8rem;">No users assigned</span>' : ''}
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+/* =======================================
+   PERMISSION MATRIX
+   ======================================= */
+
+function renderMatrix() {
+  const table = document.getElementById("accessMatrixTable");
+  if (!table) return;
+  const editableRoles = acRoles.filter(r => r !== "ADMIN");
+
+  let hdr = '<tr><th style="text-align:left;min-width:180px;padding:.6rem 1rem;">Page</th>';
+  hdr += '<th><span class="role-badge admin"><i class="ti ti-crown"></i> ADMIN</span></th>';
+  for (const role of editableRoles) { hdr += `<th><span class="role-badge ${role.toLowerCase()}"><i class="ti ti-user"></i> ${role}</span></th>`; }
+  hdr += '</tr>';
+
+  let body = '';
+  for (const page of acPages) {
+    const label = pageLabel(page);
+    body += `<tr><td style="padding:.5rem 1rem;"><div class="page-name">${label}</div></td>`;
+    body += '<td><input type="checkbox" checked disabled title="Admin always has full access"></td>';
+    for (const role of editableRoles) {
+      const allowed = acMatrix[role]&&acMatrix[role][page]===true;
+      body += `<td><input type="checkbox" ${allowed?"checked":""} onchange="toggleAccess('${role}','${page}',this.checked)" title="${role} -> ${label}"></td>`;
+    }
+    body += '</tr>';
+  }
+
+  table.className = "table table-hover align-middle mb-0 ac-matrix";
+  table.innerHTML = `<thead class="ac-thead">${hdr}</thead><tbody>${body}</tbody>`;
+}
+
+async function toggleAccess(role, page, allowed) {
+  showSaveIndicator(true);
+  try {
+    const res = await fetch("/api/access", { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({role,page,allowed}) });
+    if (res.ok) { if(!acMatrix[role])acMatrix[role]={}; acMatrix[role][page]=allowed; showNotification(`${role} ${allowed?"granted":"revoked"} -> ${pageLabel(page)}`,allowed?"success":"warning"); }
+    else { const e=await res.json(); showNotification(e.error||"Failed","error"); renderMatrix(); }
+  } catch(e) { showNotification(e.message,"error"); renderMatrix(); }
+  finally { showSaveIndicator(false); }
+}
+
+/* =======================================
+   STATS
+   ======================================= */
+
+function updateStats() {
+  const el = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  el("acTotalRoles", acRoles.length);
+  el("acTotalPages", acPages.length);
+  el("acTotalUsers", acUsers.length);
+  el("acActiveUsers", acUsers.filter(u=>u.enabled!==false).length);
+}
+
+/* =======================================
+   HELPERS
+   ======================================= */
+
+function populateRoleSelect(selectId, selected) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = "";
+  acRoles.forEach(r => { sel.innerHTML += `<option value="${r}" ${r===selected?'selected':''}>${r}</option>`; });
+}
+
+function openModal(id) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  if (window.jQuery && typeof window.jQuery.fn.modal === "function") {
+    window.jQuery(m).modal("show");
+    return;
+  }
+  if (window.bootstrap && window.bootstrap.Modal) {
+    window.bootstrap.Modal.getOrCreateInstance(m).show();
+    return;
+  }
+  m.style.display = "block";
+  m.classList.add("show");
+}
+function closeModal(id) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  if (window.jQuery && typeof window.jQuery.fn.modal === "function") {
+    window.jQuery(m).modal("hide");
+    return;
+  }
+  if (window.bootstrap && window.bootstrap.Modal) {
+    const instance = window.bootstrap.Modal.getInstance(m) || window.bootstrap.Modal.getOrCreateInstance(m);
+    instance.hide();
+    return;
+  }
+  m.classList.remove("show");
+  m.style.display = "none";
+}
+function showError(id,msg) { const e=document.getElementById(id); if(e){e.textContent=msg;e.style.display="block";} }
+function hideError(id) { const e=document.getElementById(id); if(e)e.style.display="none"; }
+function showSaveIndicator(show) { const e=document.getElementById("acSaveIndicator"); if(e)e.style.display=show?"block":"none"; }
+function esc(s) { if(!s)return""; const d=document.createElement("div"); d.textContent=String(s); return d.innerHTML; }
+</script>
+<script>
+  (function () {
+    try {
+      if (typeof window.initializeAccessControl === "function") {
+        window.initializeAccessControl();
+      } else if (typeof window["initializeAccess-control"] === "function") {
+        window["initializeAccess-control"]();
+      }
+    } catch (e) {
+      console.error("Failed to initialize Access Control page", e);
+    }
+  })();
+</script>
+
+
+
+
+<!-- access-control.html end  -->

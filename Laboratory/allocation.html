@@ -1,0 +1,1417 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+
+<style>
+    /* ── Lucide icon sizing (all buttons) ── */
+     .nav-tabs .nav-link.active {
+        color: #337AB7 !important;
+        background-color: #fff !important;
+        
+    }
+    .nav-tabs .nav-link {
+        color: #337AB7;
+    }
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    /* ── ibox-title: flex layout for all panels ── */
+    .qa-white-panel .ibox-title {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .qa-white-panel .ibox-title h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .qa-white-panel .ibox-tools {
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .qa-white-panel .ibox-content {
+        padding: 15px 20px;
+    }
+
+    /* ── Form group spacing ── */
+    .qa-white-panel .form-group {
+        margin-bottom: 15px;
+    }
+
+    /* ── All panel tables ── */
+    .qa-white-panel .table td {
+        vertical-align: middle;
+    }
+
+    /* ── Status badges ── */
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    /* .status-new        { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1; }
+    .status-submitted  { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
+    .status-completed  { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; } */
+
+.status-new        { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1; }
+.status-submitted  { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
+.status-completed  { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+.status-allocation { background: #d6e9f8; color: #1e40af; border: 1px solid #b6d4fe; }  
+[data-bs-theme="dark"] .status-allocation { background: #3a2e00; color: #f0c040; border-color: #6b5500; }
+    /* ── Readonly inputs ── */
+    .qa-white-panel .form-control[readonly] {
+        /* background-color: #f5f5f5; */
+        cursor: not-allowed;
+        opacity: 0.85;
+    }
+
+    /* ── DataTables search input ── */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    /* ── Main list table ── */
+    #allServiceRequestDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allServiceRequestDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #allServiceRequestDataTable th,
+    #allServiceRequestDataTable td {
+        text-align: left !important;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* ── Record link ── */
+    .qa-white-panel .selectRequestBtn {
+        color: #337ab7;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .qa-white-panel .selectRequestBtn:hover {
+        text-decoration: underline;
+    }
+
+    /* ── Dropdown — matches employees.html btn-light pattern ── */
+    .qa-white-panel .dropdown .btn-light {
+        background: #fff;
+        /* border: 1px solid #ced4da; */
+        color: #495057;
+        font-size: 14px;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    .qa-white-panel .dropdown .btn-light:focus,
+    .qa-white-panel .dropdown .btn-light:active {
+        /* box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); */
+        /* border-color: #80bdff; */
+        background-color: #fff;
+        color: #495057;
+    }
+
+    .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+    }
+
+    .qa-white-panel .dropdown .btn-light:disabled,
+    .qa-white-panel .dropdown .btn-light[disabled] {
+        background-color: #fff;
+        opacity: 1;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .qa-white-panel .dropdown-menu {
+        font-size: 14px;
+        /* border: 1px solid #ced4da; */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        border-radius: 4px;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 4px 0;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item {
+        padding: 7px 14px;
+        color: #495057;
+        font-size: 13px;
+        /* border-bottom: 1px solid #f0f0f0; */
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    /* .qa-white-panel .dropdown-menu .dropdown-item:hover,
+    .qa-white-panel .dropdown-menu .dropdown-item:focus {
+        background-color: #f0f4ff;
+        color: #1a6faf;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item.active {
+        background-color: #007bff;
+        color: #fff;
+    } */
+
+    /* ── Dark mode ── */
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light {
+        background-color: #2c2c2e;
+        /* border-color: #444; */
+        color: #c9d1d9;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #3a3a3c;
+        border-color: #666;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:disabled {
+        background-color: #1e1e1e;
+        color: #6c757d;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu {
+        background-color: #2b2b2b;
+        border-color: #444;
+    }
+
+     [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item {
+        color: #e0e0e0;
+        /* border-bottom-color: #3d3d3d; */
+        background-color: #2b2b2b;
+    } 
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item:hover {
+        background-color: #4d4d4e;
+        color: #fff;
+    } 
+
+    /* ── Dark mode: disabled inputs ── */
+    [data-bs-theme="dark"] .form-control:disabled,
+    [data-bs-theme="dark"] .form-control[readonly] {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+
+    /* ── Dark mode: status badges ── */
+    [data-bs-theme="dark"] .status-new       { background: #0d3349; color: #7ec8e3; border-color: #1a5a7a; }
+    [data-bs-theme="dark"] .status-submitted { background: #3a2e00; color: #f0c040; border-color: #6b5500; }
+    [data-bs-theme="dark"] .status-completed { background: #0d2e0d; color: #5cb85c; border-color: #1a5c1a; }
+
+    /* ── DataTables dark mode ── */
+    [data-bs-theme="dark"] div.dt-container .dt-search input {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: var(--bs-border-color) !important;
+    }
+
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] select,
+    [data-bs-theme="dark"] .dropdown .btn-light {
+        border: none !important;
+        box-shadow: none !important; /* Optional: removes any shadow */
+    }
+    /* ── Fix typeahead autocomplete dropdown clipping inside modal ── */
+    #allocateSampleModal .modal-content,
+    #allocateSampleModal .modal-body {
+        overflow: visible !important;
+    }
+    #allocateSampleModal .tt-menu,
+    #allocateSampleModal .typeahead,
+    #allocateSampleModal .tt-dropdown-menu {
+        z-index: 99999 !important;
+        position: absolute !important;
+        max-height: 200px;
+        overflow-y: auto;
+        width: 100%;
+    }
+
+    /* ── Sample table: lock checkboxes + inputs until Edit Sample is clicked ── */
+    #allSamplesTable .deleteItemCreatedEntryRow {
+        pointer-events: none !important;
+        opacity: 0.35 !important;
+        cursor: not-allowed !important;
+    }
+    #allSamplesTable.edit-mode-active .deleteItemCreatedEntryRow {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+        cursor: pointer !important;
+    }
+    #allSamplesTable .sampleInput:disabled,
+    #allSamplesTable .sampleInput[disabled] {
+        pointer-events: none !important;
+        background-color: #f5f5f5 !important;
+        cursor: default !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+    }
+    [data-bs-theme="dark"] #allSamplesTable .sampleInput:disabled,
+    [data-bs-theme="dark"] #allSamplesTable .sampleInput[disabled] {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+    [data-bs-theme="dark"] #allSamplesTable .sampleInput:disabled + .select2-container .select2-selection,
+    [data-bs-theme="dark"] #allSamplesTable .select2-container--disabled .select2-selection {
+        background-color: #2c2c2e !important;
+        border-color: #444 !important;
+    }
+    [data-bs-theme="dark"] #allSamplesTable .select2-container--disabled .select2-selection__rendered {
+        color: #c9d1d9 !important;
+    }
+
+    .coa-preview {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .coa-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #436482;
+        padding-bottom: 15px;
+    }
+
+    .coa-header .header-text {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+
+    .coa-header h2 {
+        margin: 15px 0 10px;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #333;
+    }
+
+    .coa-header .subtitle {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .coa-header .regulatory-tags {
+        font-size: 12px;
+        color: #777;
+        margin-top: 5px;
+    }
+
+    .coa-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin: 25px 0;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .coa-meta-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .coa-meta-item .label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 3px;
+    }
+
+    .coa-section {
+        margin-top: 25px;
+        page-break-inside: avoid;
+    }
+
+    .coa-section h4 {
+        font-size: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #436482;
+        border-bottom: 2px solid #436482;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+        letter-spacing: 1px;
+    }
+
+    .coa-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .coa-table thead {
+        background: #f3f4f6;
+    }
+
+    .coa-table th {
+        padding: 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+    }
+
+    .coa-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+    }
+
+    .coa-table tbody tr:nth-child(even) {
+        background: #fafafa;
+    }
+
+    .coa-footer {
+        margin-top: 40px;
+        padding-top: 15px;
+        border-top: 2px solid #ddd;
+        font-size: 11px;
+        text-align: center;
+        color: #666;
+        line-height: 1.6;
+    }
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] input[type="text"] {
+        border: 1px solid #bfc9da !important;   
+        background: #23272f !important;         
+        color: #eee !important;                 
+    }
+
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] input[type="text"]:focus {
+        border-color: #7ec8e3 !important;     
+        box-shadow: 0 0 0 2px rgba(126,200,227,0.2);
+    }
+    @media print {
+        .coa-preview {
+            box-shadow: none;
+            padding: 0;
+        }
+        .coa-section {
+            page-break-inside: avoid;
+        }
+    }
+    html[data-bs-theme="dark"] .daterangepicker,
+    html[data-bs-theme="dark"] .daterangepicker .drp-calendar,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table table {
+        background-color: #23272f !important;
+        border-color: #444 !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table td,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table th {
+        background-color: #23272f !important;
+        color: #bfc9da !important;
+        border-color: transparent !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table thead th {
+        color: #8b95a5 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.off,
+    html[data-bs-theme="dark"] .daterangepicker td.off.in-range,
+    html[data-bs-theme="dark"] .daterangepicker td.off.start-date,
+    html[data-bs-theme="dark"] .daterangepicker td.off.end-date {
+        background-color: #23272f !important;
+        color: #555b66 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.available:hover,
+    html[data-bs-theme="dark"] .daterangepicker th.available:hover {
+        background-color: #2d3139 !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.active,
+    html[data-bs-theme="dark"] .daterangepicker td.active:hover {
+        background-color: #2196f3 !important;
+        color: #fff !important;
+        border-radius: 4px;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.in-range {
+        background-color: #1e3a5f !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker select.monthselect,
+    html[data-bs-theme="dark"] .daterangepicker select.yearselect {
+        background-color: #1a1d23 !important;
+        color: #eee !important;
+        border: 1px solid #444 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .prev.available,
+    html[data-bs-theme="dark"] .daterangepicker .next.available {
+        background-color: #23272f !important;
+        color: #bfc9da !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .drp-buttons {
+        background-color: #23272f !important;
+        border-top: 1px solid #444 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .cancelBtn {
+        background-color: transparent !important;
+        border: 1px solid #444 !important;
+        color: #bfc9da !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .cancelBtn:hover {
+        background-color: #2d3139 !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .applyBtn {
+        background-color: #2196f3 !important;
+        border-color: #2196f3 !important;
+        color: #fff !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .applyBtn:hover {
+        background-color: #1976d2 !important;
+        border-color: #1976d2 !important;
+    }
+    html[data-bs-theme="dark"] .qa-white-panel table,
+html[data-bs-theme="dark"] .qa-white-panel thead,
+html[data-bs-theme="dark"] .qa-white-panel tbody,
+html[data-bs-theme="dark"] .qa-white-panel tr,
+html[data-bs-theme="dark"] .qa-white-panel th,
+html[data-bs-theme="dark"] .qa-white-panel td {
+    background-color: #18191d !important;
+    color: #e0e0e0 !important;
+    border-color: #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel th {
+    font-weight: 600;
+    color: #bfc7d5 !important;
+    background: #18191d !important;
+    border-bottom: 1px solid #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel td {
+    background: #18191d !important;
+    color: #e0e0e0 !important;
+    border-top: 1px solid #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel input[type="text"],
+html[data-bs-theme="dark"] .qa-white-panel input[type="number"],
+html[data-bs-theme="dark"] .qa-white-panel select,
+html[data-bs-theme="dark"] .qa-white-panel textarea {
+    background: #23242a !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #333 !important;
+    border-radius: 4px;
+    box-shadow: none !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel input[type="text"]:focus,
+html[data-bs-theme="dark"] .qa-white-panel input[type="number"]:focus,
+html[data-bs-theme="dark"] .qa-white-panel select:focus,
+html[data-bs-theme="dark"] .qa-white-panel textarea:focus {
+    background: #23242a !important;
+    color: #fff !important;
+    border-color: #4a90e2 !important;
+    outline: none;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel input[readonly],
+html[data-bs-theme="dark"] .qa-white-panel .form-control[readonly] {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    opacity: 1 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .btn,
+html[data-bs-theme="dark"] .qa-white-panel .btn:focus {
+    background: #23242a !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #444 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .btn:hover {
+    background: #35363c !important;
+    color: #fff !important;
+    border-color: #4a90e2 !important;
+}
+[data-bs-theme="dark"] .qa-white-panel .form-control,
+[data-bs-theme="dark"] .qa-white-panel .form-control:disabled,
+[data-bs-theme="dark"] .qa-white-panel input[type="text"]:disabled,
+[data-bs-theme="dark"] .qa-white-panel input[type="number"]:disabled,
+[data-bs-theme="dark"] .qa-white-panel select:disabled {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    border: 1px solid #333 !important;
+    opacity: 1 !important;
+}
+[data-bs-theme="dark"] .select2-container--default .select2-selection--single,
+[data-bs-theme="dark"] .select2-container--default .select2-selection--single:disabled {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    border: 1px solid #333 !important;
+    opacity: 1 !important;
+}
+html[data-bs-theme="dark"] .qa-white-panel .form-control[readonly],
+html[data-bs-theme="dark"] .qa-white-panel input[readonly] {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    opacity: 1 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel select option {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #bfc7d5 !important;
+    background: #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-selection--single .select2-selection__arrow {
+    background: #23242a !important;
+    border-left: 1px solid #333 !important;
+}
+.modal-header-simple {
+        text-align: center;
+        border-bottom: 1px solid #e9ecef;
+        padding: 24px 32px 20px 32px;
+        background-color: white;
+        position: relative;
+    }
+
+    .modal-header-simple .modal-title {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #495057;
+        display: block;
+        width: 100%;
+        line-height: 1.2;
+    }
+
+    .modal-header-simple small.font-bold {
+        display: block;
+        margin: 0;
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 400;
+        line-height: 1.4;
+        width: 100%;
+    }
+    .modal-header-simple * {
+        float: none !important;
+        flex: none !important;
+    }
+
+    .modal-header-simple {
+        display: block !important;
+        flex-direction: column !important;
+    }
+     #allocationRequestDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allocationRequestDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+</style>
+<!-- ========================================= -->
+<!-- allocationPanel.html Start -->
+<div class="qa-white-panel">
+<div class="row animated fadeInRight aasaanPanel" id="allRequestPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Test Allocation <small>Laboratory</small></h5>
+            </div>
+            <div class="ibox-content">
+                <div class="table-responsive">
+                    <table id="allocationRequestDataTable" class="table table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>&nbsp;</th>
+                                <th>ARN</th>
+                                <th>Department</th>
+                                <th>Material Type</th>
+                                <th>Sample ID</th>
+                                <th>Received Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allServiceRequestTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- allocationPanel.html End -->
+<!-- ========================================= -->
+
+
+<!-- ========================================= -->
+<!-- editAllocationPanel.html Start -->
+<div class="row animated fadeInRight aasaanPanel" id="editRequestPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="editRequestTitle"></span></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm showAllRequestsOnCancel"><i data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-default btn-sm" id="allocateBtn"><i data-lucide="list"></i> Bulk Allocation</button>
+                    <button type="button" class="btn btn-default btn-sm" id="updateTestingBtn"><i data-lucide="check"></i> Save</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="complTestingBtn"><i data-lucide="check-check"></i> Send to QC Analysis</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form action="" id="updateRequestForm">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Department</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editDepartmentBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editDepartmentDropdownMenu">
+                                        <a class="dropdown-item edit-department-item" href="#" data-value="">-- None --</a>
+                                        <a class="dropdown-item edit-department-item" href="#" data-value="Production">Production</a>
+                                        <a class="dropdown-item edit-department-item" href="#" data-value="Warehouse">Warehouse</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden editRecordInput" name="description" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Material Type</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editMaterialTypeBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editMaterialTypeDropdownMenu">
+                                        <a class="dropdown-item edit-materialtype-item" href="#" data-value="">-- None --</a>
+                                        <a class="dropdown-item edit-materialtype-item" href="#" data-value="Raw Material">Raw Material</a>
+                                        <a class="dropdown-item edit-materialtype-item" href="#" data-value="Packaging Material">Packaging Material</a>
+                                        <a class="dropdown-item edit-materialtype-item" href="#" data-value="In-Process Material">In-Process Material</a>
+                                        <a class="dropdown-item edit-materialtype-item" href="#" data-value="Finished Goods">Finished Goods</a>
+                                        <a class="dropdown-item edit-materialtype-item" href="#" data-value="Finished Product">Finished Product</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden editRecordInput" name="sampleType" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Sample ID</label>
+                                <input type="text" class="form-control editRecordInput" name="sampleId" placeholder="Enter Sample ID" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Sample Name</label>
+                                <input type="text" class="form-control editRecordInput" name="sampleCondition" placeholder="Enter Sample Name" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Sample Quantity</label>
+                                <input type="number" class="form-control editRecordInput" name="sampleQuantity" placeholder="Enter Sample Quantity" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Sample Unit</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editSampleUnitBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editSampleUnitMenu"></div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden editRecordInput" name="sampleUnit" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Manufacturing Date</label>
+                                <input type="text" class="form-control editRecordInput" id="editManufacturingDate" name="manufacturingDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Expiry Date</label>
+                                <input type="text" class="form-control editRecordInput" id="editExpiryDate" name="expiryDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Batch / Lot #</label>
+                                <input type="text" class="form-control editRecordInput" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>STP Test</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editStpBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" data-value="" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editStpDropdownMenu"></div>
+                                </div>
+                                <input type="hidden" id="editStpSelectionInput" name="testProcedure.id" value="">
+                            </div>
+                        </div>
+                        <input type="hidden" id="editRequestId" name="Id"/>
+                    </div>
+
+                    <!-- Tests Tab -->
+                    <div class="tabs-container">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-allocation-1" aria-expanded="true">Tests</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="tab-allocation-1" class="tab-pane active">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Test</th>
+                                                    <th>Specification</th>
+                                                    <th>Analyst</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allParametersTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div><!-- end qa-white-panel -->
+<!-- editAllocationPanel.html End -->
+<!-- ========================================= -->
+
+
+<!-- ========================================= -->
+<!-- Reject Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-hidden="true" style="display:none;">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Reject Request</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group mb-3">
+                            <label>Remarks</label>
+                            <textarea rows="5" name="request.ApprovalRemarks" id="approvalRemarks" class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning btn-sm" data-bs-dismiss="modal" id="rejectTestingBtn">Reject</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================= -->
+<!-- Bulk Allocation Modal -->
+<div class="modal fade" id="allocationModal" role="dialog" aria-hidden="true" style="display:none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header-simple">
+                <h4 class="modal-title">Allocate Analysis Parameters</h4>
+                <small class="font-bold">Allocate test parameters to individual analysts and plan for equipment usage.</small>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="form-group mb-3">
+                            <label>Allocation By</label>
+                            <select class="select2 form-control" id="allocationByFilter">
+                                <option value="">--none--</option>
+                                <option value="Test">Test</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-6"></div>
+                    <div class="col-lg-6">
+                        <div class="form-group mb-3">
+                            <label>Division</label>
+                            <select class="select2 form-control" id="divisionFilter">
+                                <option value="">--none--</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group mb-3">
+                            <label>Sub-Division</label>
+                            <select class="select2 form-control" id="subDivisionFilter">
+                                <option value="">--none--</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group mb-3">
+                            <label>Test</label>
+                            <select class="select2 form-control" id="servicesFilter">
+                                <option value="">--none--</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group mb-3">
+                            <label>Sample</label>
+                            <select class="select2 form-control" id="sampleFilter">
+                                <option value="">--none--</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="form-group mb-3">
+                            <label>Assign To: Analyst</label>
+                            <select class="select2 form-control" id="analystFilterSelection">
+                                <option value="">--none--</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" id="closeAllocationModalBtn">Close</button>
+                <button type="button" class="btn btn-default" id="allocateSaveBtn">Allocate</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ========================================= -->
+
+<script>
+    try { lucide.createIcons(); } catch(e) { console.error('lucide init:', e); }
+
+    // ── State ──
+    var allocationRecordList  = [];
+    var currentRequestId      = '';
+    var currentRequestItemList = [];
+    var analystList           = [];
+    var stpList               = [];
+    var selectedFilter        = '';
+    var currentSampleList     = [];
+    var currentFieldData      = [];
+
+    // ── Safe DataTable destroy/init ──
+    function destroyAllocationDataTable() {
+        if (!$.fn || !$.fn.DataTable) return;
+        if ($.fn.DataTable.isDataTable('#allocationRequestDataTable')) {
+            $('#allocationRequestDataTable').DataTable().clear().destroy();
+        }
+    }
+    function initAllocationDataTable() {
+        if (!$.fn || !$.fn.DataTable) return;
+        if ($.fn.DataTable.isDataTable('#allocationRequestDataTable')) return;
+        $('#allocationRequestDataTable').DataTable({ order: [], destroy: true });
+    }
+
+    // ── Build the request list table (only requestStatus === "Test Allocation") ──
+    function buildAllocationTable() {
+        destroyAllocationDataTable();
+        $('#allServiceRequestTable').empty();
+        var rows = '';
+        $.each(allocationRecordList, function(i, val) {
+            if (val.requestStatus !== 'Test Allocation') return; // filter
+            var badge = '<span class="status-badge status-allocation">' + val.requestStatus + '</span>';
+            rows +=
+                '<tr>' +
+                '<td><div class="checkbox" style="margin:0;"><input class="selectRequestChkbox" type="checkbox" name="' + val.id + '"><label></label></div></td>' +
+                '<td class="itemNum"><a href="javascript:void(0)" class="selectRequestBtn" id="' + val.id + '">' + (val.referenceNumber || '') + '</a></td>' +
+                '<td>' + (val.description  || '') + '</td>' +
+                '<td>' + (val.sampleType   || '') + '</td>' +
+                '<td>' + (val.sampleId     || '') + '</td>' +
+                '<td>' + JSUTIL.getDate(val.receivedDate) + '</td>' +
+                '<td>' + badge + '</td>' +
+                '</tr>';
+        });
+        $('#allServiceRequestTable').append(rows);
+        initAllocationDataTable();
+        try { lucide.createIcons(); } catch(e) {}
+    }
+
+    // ── Populate UOM dropdown ──
+    function populateUomDropdown(btnId, menuId) {
+        var $menu = $(menuId);
+        var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+        $.each(uomList, function (i, val) {
+            html += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + ' (' + val.description + ')</a>';
+        });
+        $menu.html(html);
+    }
+
+    // ── Populate analyst dropdown in modal ──
+    function populateAnalystDropdown() {
+        $('#analystFilterSelection').empty();
+        var html = '<option value="">--none--</option>';
+        $.each(analystList, function(i, val) {
+            html += '<option value="' + val.id + '">' + val.firstName + ' ' + val.lastName + '</option>';
+        });
+        $('#analystFilterSelection').append(html);
+        if ($.fn.select2) { $('#analystFilterSelection').select2(); }
+    }
+
+    // ── Populate STP dropdown ──
+    function populateStpDropdown(menuId, btnId, hiddenId) {
+        var $menu = $(menuId);
+        var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+        $.each(stpList, function (i, val) {
+            html += '<a class="dropdown-item" href="#" data-value="' + val.id + '">' + val.number + '</a>';
+        });
+        $menu.html(html);
+    }
+
+    // ── Populate request edit form ──
+    function populateRequestData(objList) {
+        console.log('Selected Request:', objList);
+        $('#editRequestTitle').text('ARN - ' + objList.referenceNumber);
+
+        // Department
+        var deptLabel = objList.description || '-- None --';
+        $('#editDepartmentBtn').text(deptLabel);
+        $('#editDepartmentDropdownMenu .dropdown-item').removeClass('active');
+        $('#editDepartmentDropdownMenu .dropdown-item[data-value="' + (objList.description || '') + '"]').addClass('active');
+        $('#editDepartmentDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.description || '');
+
+        // Material Type
+        var matLabel = objList.sampleType || '-- None --';
+        $('#editMaterialTypeBtn').text(matLabel);
+        $('#editMaterialTypeDropdownMenu .dropdown-item').removeClass('active');
+        $('#editMaterialTypeDropdownMenu .dropdown-item[data-value="' + (objList.sampleType || '') + '"]').addClass('active');
+        $('#editMaterialTypeDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleType || '');
+
+        // Plain inputs
+        $('.editRecordInput[name="sampleId"]').val(objList.sampleId || '');
+        $('.editRecordInput[name="sampleCondition"]').val(objList.sampleCondition || '');
+        $('.editRecordInput[name="sampleQuantity"]').val(objList.sampleQuantity || '');
+
+        // Sample Unit
+        var unitLabel = '-- None --';
+        if (objList.sampleUnit) {
+            $.each(uomList, function(i, val) {
+                if (val.name === objList.sampleUnit) {
+                    unitLabel = val.name + ' (' + val.description + ')';
+                    return false;
+                }
+            });
+        }
+        $('#editSampleUnitBtn').text(unitLabel);
+        $('#editSampleUnitMenu .dropdown-item').removeClass('active');
+        $('#editSampleUnitMenu .dropdown-item[data-value="' + (objList.sampleUnit || '') + '"]').addClass('active');
+        $('#editSampleUnitMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleUnit || '');
+
+        // Dates
+        $('#editManufacturingDate').val(JSUTIL.getDate(objList.manufacturingDate));
+        $('#editExpiryDate').val(JSUTIL.getDate(objList.expiryDate));
+        $('.editRecordInput[name="batchNumber"]').val(objList.batchNumber || '');
+
+        // STP
+        if (objList.testProcedure && objList.testProcedure.id) {
+            $('#editStpBtn').text(objList.testProcedure.number || objList.testProcedure.id);
+            $('#editStpSelectionInput').val(objList.testProcedure.id);
+            $('#editStpDropdownMenu .dropdown-item').removeClass('active');
+            $('#editStpDropdownMenu .dropdown-item[data-value="' + objList.testProcedure.id + '"]').addClass('active');
+        } else {
+            $('#editStpBtn').text('-- None --');
+            $('#editStpSelectionInput').val('');
+        }
+        $('#editRequestId').val(objList.id);
+
+        // Load test request items
+        JSUTIL.callAJAXGet(
+            JSUTIL.getUrl('/api/test-request-items?requestId=' + currentRequestId),
+            callbackAfterGetParameters
+        );
+    }
+
+    // ── Render parameters / analyst table ──
+    function callbackAfterGetParameters(objList) {
+        console.log('Test Request Items:', objList);
+        currentRequestItemList = objList || [];
+        var $tbody = $('#allParametersTableBody').empty();
+        var innerHtml = '';
+
+        currentRequestItemList.forEach(function(val) {
+            var serviceName        = val.service ? val.service.name        : '';
+            var serviceDescription = val.service ? val.service.description : '';
+            innerHtml += '<tr>' +
+                '<td>' + serviceName + '</td>' +
+                '<td>' + serviceDescription + '</td>' +
+                '<td><select class="select2 form-control analystUseSelect" id="requestLnItem_' + val.id + '_Analyst"><option value="">--none--</option></select></td>' +
+                '</tr>';
+        });
+
+        $tbody.append(innerHtml);
+        if ($.fn.select2) { $tbody.find('.select2').select2(); }
+
+        // Fill analyst options and set current value
+        var analystOptions = analystList.map(function(a) {
+            return '<option value="' + a.id + '">' + a.firstName + ' ' + a.lastName + '</option>';
+        }).join('');
+
+        currentRequestItemList.forEach(function(val) {
+            var $sel = $('#requestLnItem_' + val.id + '_Analyst');
+            $sel.append(analystOptions);
+            if (val.analyst && val.analyst.id) {
+                $sel.val(val.analyst.id.toString());
+                if ($.fn.select2) { $sel.trigger('change'); }
+            }
+        });
+
+        $('#editRequestPanel').show();
+        $('#allRequestPanel').hide();
+        try { lucide.createIcons(); } catch(e) {}
+    }
+
+    // ── Save test results ──
+    // function saveTestResults(completeAnalysis) {
+    //     var testRequestItems = [];
+    //     $.each(currentRequestItemList, function(i, val) {
+    //         var lineItem = { id: val.id };
+    //         var analystValue = $('#requestLnItem_' + val.id + '_Analyst').val();
+    //         if (analystValue) { lineItem['analyst'] = { id: (analystValue) }; }
+    //         testRequestItems.push(lineItem);
+    //     });
+
+    //     if (completeAnalysis) {
+    //         JSUTIL.callAJAXPut(
+    //             JSUTIL.getUrl('/api/test-request-items/create_multiple'),
+    //             JSON.stringify(testRequestItems),
+    //             function() {
+    //                 var requestObj = { requestStatus: 'QC Analysis' };
+    //                 JSUTIL.callAJAXPut(
+    //                     JSUTIL.getUrl('/api/test-requests/' + currentRequestId),
+    //                     JSON.stringify(requestObj),
+    //                     function() { location.reload(); }
+    //                 );
+    //             }
+    //         );
+    //     } else {
+    //         JSUTIL.callAJAXPost(
+    //             JSUTIL.getUrl('/api/test-request-items/create_multiple'),
+    //             JSON.stringify(testRequestItems),
+    //             function() { location.reload(); }
+    //         );
+    //     }
+    // }
+
+    function saveTestResults(completeAnalysis) {
+        var pendingCount = currentRequestItemList.length;
+        var hasError = false;
+
+        if (pendingCount === 0) {
+            if (completeAnalysis) { updateRequestStatus(); }
+            return;
+        }
+
+        $.each(currentRequestItemList, function(i, val) {
+            var analystValue = $('#requestLnItem_' + val.id + '_Analyst').val();
+            var payload = {};
+            if (analystValue) {
+                payload.analyst = { id: Number(analystValue) };
+            } else {
+                payload.analyst = null;
+            }
+
+            JSUTIL.callAJAXPut(
+                JSUTIL.getUrl('/api/test-request-items/' + val.id),
+                JSON.stringify(payload),
+                function() {
+                    pendingCount--;
+                    if (pendingCount === 0 && !hasError) {
+                        if (completeAnalysis) {
+                            updateRequestStatus();
+                        } else {
+                            location.reload();
+                        }
+                    }
+                },
+                function() {
+                    hasError = true;
+                    JSUTIL.buildErrorModal('Failed to save analyst allocation. Please try again.');
+                }
+            );
+        });
+    }
+
+    function updateRequestStatus() {
+        var requestObj = { requestStatus: 'QC Analysis' };
+        JSUTIL.callAJAXPut(
+            JSUTIL.getUrl('/api/test-requests/' + currentRequestId),
+            JSON.stringify(requestObj),
+            function() { location.reload(); }
+        );
+    }
+    // ── callbackForGetTests (used by allocation modal) ──
+    function callbackForGetTests(response) {
+        $('#servicesFilter').empty();
+        var html = '<option value="" selected>--none--</option>';
+        $.each(response, function(i, val) {
+            html += '<option value="' + val.name + '">' + val.name + '</option>';
+        });
+        $('#servicesFilter').append(html);
+        $('#servicesFilter').closest('.form-group').show();
+    }
+
+    // ── document.ready ──
+    $(document).ready(function() {
+        try { lucide.createIcons(); } catch(e) {}
+
+        // Load UOM
+        populateUomDropdown('editSampleUnitBtn', '#editSampleUnitMenu');
+        // Load employees / analysts
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/employees'), function(data) {
+            analystList = data || [];
+            analystList = analystList.filter(v=>v.firstName&&v.lastName)
+            $('.analystUseSelect').each(function() {
+                var $sel = $(this);
+                $.each(analystList, function(i, val) {
+                    $sel.append('<option value="' + val.id + '">' + val.firstName + ' ' + val.lastName + '</option>');
+                });
+            });
+        });
+
+        // Load STP list
+        JSUTIL.callAJAXGet(
+            JSUTIL.getUrl('/api/test-procedures/search?processStatus=Active&isArchived=false'),
+            function(data) {
+                stpList = data || [];
+                populateStpDropdown('#editStpDropdownMenu', '#editStpBtn', '#editStpSelectionInput');
+                try { lucide.createIcons(); } catch(e) {}
+            }
+        );
+
+        // Load records filtered to "Test Allocation" status
+        $.get(JSUTIL.getUrl('/api/test-requests'), function(data) {
+            allocationRecordList = data || [];
+            buildAllocationTable();
+
+            // Auto-open ?id= record
+            var autoId = new URL(window.location.href).searchParams.get('id');
+            if (autoId) {
+                setTimeout(function() {
+                    var $btn = $('#allServiceRequestTable .selectRequestBtn[id="' + autoId + '"]');
+                    if ($btn.length) { $btn.trigger('click'); }
+                }, 200);
+            }
+        });
+
+        // Init select2
+        if ($.fn.select2) { $('.select2').select2(); }
+
+        // ── Close edit panel → show list ──
+        $(document).on('click', '.showAllRequestsOnCancel', function() {
+            $('#editRequestPanel').hide();
+            $('#allRequestPanel').show();
+        });
+
+        // ── Edit dropdown click handlers ──
+        $(document).on('click', '#editDepartmentDropdownMenu .edit-department-item', function(e) {
+            e.preventDefault();
+            $('#editDepartmentBtn').text($(this).text());
+            $('#editDepartmentDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+            $(this).siblings().removeClass('active'); $(this).addClass('active');
+        });
+
+        $(document).on('click', '#editMaterialTypeDropdownMenu .edit-materialtype-item', function(e) {
+            e.preventDefault();
+            $('#editMaterialTypeBtn').text($(this).text());
+            $('#editMaterialTypeDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+            $(this).siblings().removeClass('active'); $(this).addClass('active');
+        });
+
+        $(document).on('click', '#editSampleUnitMenu .dropdown-item', function(e) {
+            e.preventDefault();
+            $('#editSampleUnitBtn').text($(this).text());
+            $('#editSampleUnitMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+            $(this).siblings().removeClass('active'); $(this).addClass('active');
+        });
+
+        $(document).on('click', '#editStpDropdownMenu .dropdown-item', function(e) {
+            e.preventDefault();
+            $('#editStpBtn').text($(this).text());
+            $('#editStpSelectionInput').val($(this).data('value'));
+            $(this).siblings().removeClass('active'); $(this).addClass('active');
+        });
+
+        // ── Row click → open edit ──
+        $(document).on('click', '#allServiceRequestTable .selectRequestBtn', function() {
+            var currentId = $(this).attr('id');
+            currentRequestId = currentId;
+            $.each(allocationRecordList, function(i, val) {
+                if (Number(currentId) === val.id) {
+                    populateRequestData(val);
+                    return false;
+                }
+            });
+        });
+
+        // ── Save button ──
+        $('#updateTestingBtn').on('click', function() {
+            saveTestResults(false);
+        });
+
+        // ── Send to QC Analysis button ──
+        $('#complTestingBtn').on('click', function() {
+            var hasIncomplete = false;
+            $('.analystUseSelect').each(function() {
+                if (!$(this).val()) { hasIncomplete = true; }
+            });
+            if (hasIncomplete) {
+                JSUTIL.buildErrorModal('Please allocate all parameters.');
+            } else {
+                saveTestResults(true);
+            }
+        });
+
+        // ── Bulk Allocation modal ──
+        $('#allocateBtn').on('click', function() {
+            var _m = new bootstrap.Modal(document.getElementById('allocationModal'));
+            _m.show();
+        });
+
+        // ── Allocation modal filter change ──
+        $("#divisionFilter, #subDivisionFilter, #servicesFilter, #sampleFilter").closest('.form-group').hide();
+        $("#allocationByFilter").on('change', function() {
+            selectedFilter = $(this).val();
+            $("#divisionFilter, #subDivisionFilter, #servicesFilter, #sampleFilter").closest('.form-group').hide();
+
+            if (selectedFilter === "Test") {
+                // Use tests from current request items
+                var currentTests = [];
+                var added = new Set();
+                $.each(currentRequestItemList, function(i, val) {
+                    if (val.service && val.service.id && !added.has(val.service.id)) {
+                        currentTests.push(val.service);
+                        added.add(val.service.id);
+                    }
+                });
+                callbackForGetTests(currentTests);
+            } else if (selectedFilter === "Sample") {
+                $('#sampleFilter').empty();
+                var sampleHtml = '<option value="">--none--</option>';
+                $.each(currentSampleList, function(i, val) {
+                    sampleHtml += '<option value="' + val.sampleId + '">' + val.sampleId + '</option>';
+                });
+                $('#sampleFilter').append(sampleHtml);
+                $('#sampleFilter').closest('.form-group').show();
+            }
+        });
+
+        // ── Allocate save ──
+        $('#allocateSaveBtn').on('click', function() {
+            var selectedAnalyst = $('#analystFilterSelection').val();
+            $.each(currentRequestItemList, function(i, val) {
+                if (selectedFilter === "Test") {
+                    var selectedTest = $('#servicesFilter').val();
+                    if (selectedTest && val.service && val.service.name && selectedTest.indexOf(val.service.name) >= 0) {
+                        var $s = $('#requestLnItem_' + val.id + '_Analyst');
+                        if ($s.hasClass('select2-hidden-accessible')) {
+                            $s.val(selectedAnalyst).trigger('change');
+                        } else {
+                            $s.val(selectedAnalyst);
+                        }
+                        val['analyst'] = selectedAnalyst;
+                    }
+                } else if (selectedFilter === "Sample") {
+                    var selectedSample = $('#sampleFilter').val();
+                    if (selectedSample && val.sampleId && selectedSample.indexOf(val.sampleId) >= 0) {
+                        $('#requestLnItem_' + val.id + '_Analyst').val(selectedAnalyst).trigger('change');
+                        val['analyst'] = selectedAnalyst;
+                    }
+                }
+            });
+            var modalInst = bootstrap.Modal.getInstance(document.getElementById('allocationModal'));
+            if (modalInst) { modalInst.hide(); }
+            // Reset modal fields
+            $("#allocationByFilter, #divisionFilter, #subDivisionFilter, #servicesFilter, #sampleFilter").val('');
+            if ($.fn.select2) {
+                $("#allocationByFilter, #divisionFilter, #subDivisionFilter, #servicesFilter, #sampleFilter").trigger('change');
+            }
+            $('#analystFilterSelection').val('');
+            $("#divisionFilter, #subDivisionFilter, #servicesFilter, #sampleFilter").closest('.form-group').hide();
+        });
+
+        // ── Allocation modal close ──
+        $('#closeAllocationModalBtn').on('click', function() {
+            var modalInst = bootstrap.Modal.getInstance(document.getElementById('allocationModal'));
+            if (modalInst) { modalInst.hide(); }
+        });
+
+        // ── Populate analyst dropdown when modal opens ──
+        $('#allocationModal').on('show.bs.modal', function() {
+            populateAnalystDropdown();
+        });
+    });
+</script>

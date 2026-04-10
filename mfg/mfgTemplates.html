@@ -1,0 +1,399 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #allTemplateTable thead th { border-bottom: 1px solid #eee !important; }
+    #allTemplateTable tbody tr:last-child td { border-bottom: none !important; }
+    .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
+    .selectTemplateBtn { color: #337AB7 !important; text-decoration: none; }
+    .step-type-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .step-type-badge.production { background: #EEF2FF; color: #6366F1; }
+    .step-type-badge.quality_control { background: #ECFEFF; color: #0891B2; }
+    .step-type-badge.approval { background: #FDF4FF; color: #D946EF; }
+    .step-type-badge.final { background: #ECFDF5; color: #059669; }
+    .step-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+    .step-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .step-card-seq { font-family: monospace; font-size: 11px; font-weight: 600; color: #6b7280; min-width: 24px; }
+    .step-card-name { font-size: 13px; font-weight: 600; }
+    .step-card-desc { font-size: 12px; color: #6b7280; }
+</style>
+
+<div class="qa-white-panel">
+
+<!--allTemplatePanel start-->
+<div class="row animated fadeInRight aasaanPanel" id="allTemplatePanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Manufacturing Templates <small>Process Definition</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-sm btn-secondary" id="newTemplateBtn"><i data-lucide="plus"></i>New Template</button>
+                </div>
+            </div>
+            <div class="ibox-content m-b-sm border-bottom">
+                <table id="allTemplateTable" class="table table-hover table-bordered dataTables">
+                    <thead>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Version</th>
+                        <th>Steps</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </thead>
+                    <tbody id="templateTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!--allTemplatePanel end-->
+
+
+<!--editTemplatePanel start-->
+<div class="row animated fadeInRight aasaanPanel" id="editTemplatePanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="editTemplateTitle"></span> <small>Template Editor</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm" id="backToTemplateListBtn"><i data-lucide="x"></i>Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="saveTemplateBtn"><i data-lucide="check"></i>Save Template</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <div class="form-group mb-3">
+                            <label>Template Name</label>
+                            <input type="text" class="form-control editTemplateInput" name="name" required>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group mb-3">
+                            <label>Category</label>
+                            <input type="text" class="form-control editTemplateInput" name="category">
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group mb-3">
+                            <label>Version</label>
+                            <input type="text" class="form-control editTemplateInput" name="version">
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="form-group mb-3">
+                            <label>Description</label>
+                            <textarea class="form-control editTemplateInput" name="description" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Steps Section -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 style="font-weight: 700; margin: 0;">Process Steps</h6>
+                    <button type="button" class="btn btn-default btn-sm" id="addStepBtn"><i data-lucide="plus"></i>Add Step</button>
+                </div>
+                <div id="stepsContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--editTemplatePanel end-->
+
+
+<!--newStepModal-->
+<div class="modal fade" id="stepModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="stepModalTitle">Add Step</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-sm-8">
+                        <div class="form-group mb-3">
+                            <label>Step Name</label>
+                            <input type="text" class="form-control" id="stepNameInput" required>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-group mb-3">
+                            <label>Step Type</label>
+                            <select class="form-control" id="stepTypeInput">
+                                <option value="production">Production</option>
+                                <option value="quality_control">Quality Control</option>
+                                <option value="approval">Approval</option>
+                                <option value="final">Final</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="form-group mb-3">
+                            <label>Description</label>
+                            <textarea class="form-control" id="stepDescInput" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group mb-3">
+                            <label>QC Parameters (JSON, for QC type)</label>
+                            <textarea class="form-control" id="stepQcInput" rows="2" placeholder='[{"param":"...", "spec":"...", "method":"..."}]'></textarea>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group mb-3">
+                            <label>Custom Fields (JSON, for Production/Final)</label>
+                            <textarea class="form-control" id="stepFieldsInput" rows="2" placeholder='[{"key":"...", "label":"...", "type":"text"}]'></textarea>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="stepEditId" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="saveStepBtn">Save Step</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+<script>
+lucide.createIcons();
+
+// ================================================================
+// State
+// ================================================================
+var recordList = [];
+var currentTemplateId = '';
+var currentSteps = [];
+
+// ================================================================
+// Helpers
+// ================================================================
+function showError(message) {
+    if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') { JSUTIL.buildErrorModal(message); } else { alert(message); }
+}
+function getCsrfHeaders() {
+    var token = $("meta[name='_csrf']").attr("content"); var header = $("meta[name='_csrf_header']").attr("content");
+    var headers = {}; if (token && header) { headers[header] = token; } return headers;
+}
+function requestJson(url, method, payload) {
+    var options = { method: method || 'GET', headers: Object.assign({}, getCsrfHeaders()) };
+    if (payload !== undefined) { options.headers['Content-Type'] = 'application/json'; options.body = JSON.stringify(payload); }
+    return fetch(url, options).then(async function(r) { if (!r.ok) { var t = await r.text(); throw new Error(t || ('HTTP ' + r.status)); } var tb = await r.text(); if (!tb) return null; try { return JSON.parse(tb); } catch(e) { return tb; } });
+}
+
+// ================================================================
+// View management
+// ================================================================
+function setView(viewName) {
+    $('#allTemplatePanel').hide(); $('#editTemplatePanel').hide();
+    if (viewName === 'all') $('#allTemplatePanel').show();
+    if (viewName === 'edit') $('#editTemplatePanel').show();
+    lucide.createIcons();
+}
+
+// ================================================================
+// Load templates
+// ================================================================
+async function loadTemplates() {
+    try {
+        var res = await requestJson('/api/manufacturing-templates', 'GET');
+        recordList = Array.isArray(res) ? res : [];
+    } catch (e) { console.error(e); recordList = []; }
+    renderTemplateTable();
+    setView('all');
+}
+
+function renderTemplateTable() {
+    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#allTemplateTable')) { $('#allTemplateTable').DataTable().destroy(); }
+    var html = '';
+    $.each(recordList, function(i, val) {
+        html += '<tr>' +
+            '<td><a href="javascript:void(0);" class="selectTemplateBtn" data-id="' + val.id + '">' + (val.name || '') + '</a></td>' +
+            '<td>' + (val.category || '-') + '</td>' +
+            '<td>' + (val.version || '-') + '</td>' +
+            '<td id="stepCount_' + val.id + '">-</td>' +
+            '<td>' + (val.processStatus || 'Draft') + '</td>' +
+            '<td>' +
+                '<button class="btn btn-default btn-sm duplicateTemplateBtn" data-id="' + val.id + '" style="padding:4px 8px; font-size:12px;"><i data-lucide="copy"></i></button> ' +
+                '<button class="btn btn-default btn-sm deleteTemplateBtn" data-id="' + val.id + '" style="padding:4px 8px; font-size:12px;"><i data-lucide="trash"></i></button>' +
+            '</td></tr>';
+    });
+    $('#templateTableBody').html(html);
+    $('#allTemplateTable').DataTable({ order: [], pageLength: 25 });
+    lucide.createIcons();
+
+    // Load step counts
+    $.each(recordList, function(i, val) {
+        requestJson('/api/manufacturing-templates/' + val.id + '/steps', 'GET').then(function(steps) {
+            $('#stepCount_' + val.id).text(steps ? steps.length : 0);
+        });
+    });
+}
+
+// ================================================================
+// Load steps for a template
+// ================================================================
+async function loadSteps(templateId) {
+    try {
+        var res = await requestJson('/api/manufacturing-templates/' + templateId + '/steps', 'GET');
+        currentSteps = Array.isArray(res) ? res : [];
+    } catch (e) { console.error(e); currentSteps = []; }
+    renderSteps();
+}
+
+function renderSteps() {
+    var container = $('#stepsContainer');
+    container.empty();
+    if (currentSteps.length === 0) {
+        container.html('<p style="color: #6b7280; text-align: center; padding: 20px;">No steps defined. Click "Add Step" to begin.</p>');
+        return;
+    }
+    $.each(currentSteps, function(i, step) {
+        var html = '<div class="step-card">' +
+            '<div class="step-card-header">' +
+                '<span class="step-card-seq">#' + (i + 1) + '</span>' +
+                '<span class="step-card-name">' + (step.name || '') + '</span>' +
+                '<span class="step-type-badge ' + (step.stepType || '') + '">' + (step.stepType || '').replace('_', ' ').toUpperCase() + '</span>' +
+                '<span style="margin-left: auto;">' +
+                    '<button class="btn btn-default btn-sm editStepBtn" data-id="' + step.id + '" data-index="' + i + '" style="padding:2px 6px; font-size:11px;"><i data-lucide="pencil"></i></button> ' +
+                    '<button class="btn btn-default btn-sm deleteStepBtn" data-id="' + step.id + '" style="padding:2px 6px; font-size:11px;"><i data-lucide="trash"></i></button>' +
+                '</span>' +
+            '</div>' +
+            '<div class="step-card-desc">' + (step.description || '') + '</div>' +
+            '</div>';
+        container.append(html);
+    });
+    lucide.createIcons();
+}
+
+// ================================================================
+// Document ready
+// ================================================================
+$(document).ready(function() {
+    loadTemplates();
+
+    // New template
+    $('#newTemplateBtn').on('click', function() {
+        currentTemplateId = '';
+        currentSteps = [];
+        $('.editTemplateInput').val('');
+        $('#editTemplateTitle').text('New Template');
+        $('#stepsContainer').empty();
+        setView('edit');
+    });
+
+    // Select template for editing
+    $('#templateTableBody').on('click', '.selectTemplateBtn', function() {
+        var id = String($(this).data('id'));
+        currentTemplateId = id;
+        requestJson('/api/manufacturing-templates/' + id, 'GET').then(function(tmpl) {
+            if (!tmpl) return;
+            $('#editTemplateTitle').text(tmpl.name || 'Edit Template');
+            $('.editTemplateInput[name="name"]').val(tmpl.name || '');
+            $('.editTemplateInput[name="category"]').val(tmpl.category || '');
+            $('.editTemplateInput[name="version"]').val(tmpl.version || '');
+            $('.editTemplateInput[name="description"]').val(tmpl.description || '');
+            loadSteps(id);
+            setView('edit');
+        });
+    });
+
+    // Duplicate template
+    $('#templateTableBody').on('click', '.duplicateTemplateBtn', function() {
+        var id = String($(this).data('id'));
+        requestJson('/api/manufacturing-templates/' + id + '/duplicate', 'POST').then(function() { loadTemplates(); });
+    });
+
+    // Delete template
+    $('#templateTableBody').on('click', '.deleteTemplateBtn', function() {
+        var id = String($(this).data('id'));
+        if (!confirm('Delete this template and all its steps?')) return;
+        requestJson('/api/manufacturing-templates/' + id, 'DELETE').then(function() { loadTemplates(); });
+    });
+
+    // Back to list
+    $('#backToTemplateListBtn').on('click', function() { setView('all'); });
+
+    // Save template (create or update)
+    $('#saveTemplateBtn').on('click', function() {
+        var payload = {};
+        $('.editTemplateInput').each(function() { var n = $(this).attr('name'); if (n) payload[n] = $(this).val(); });
+        if (!payload.name) { showError('Template name is required.'); return; }
+
+        if (currentTemplateId) {
+            requestJson('/api/manufacturing-templates/' + currentTemplateId, 'PUT', payload).then(function() { loadTemplates(); });
+        } else {
+            requestJson('/api/manufacturing-templates', 'POST', payload).then(function(created) {
+                if (created && created.id) { currentTemplateId = String(created.id); }
+                loadTemplates();
+            });
+        }
+    });
+
+    // Add step
+    $('#addStepBtn').on('click', function() {
+        if (!currentTemplateId) { showError('Save the template first before adding steps.'); return; }
+        $('#stepModalTitle').text('Add Step');
+        $('#stepNameInput').val(''); $('#stepTypeInput').val('production'); $('#stepDescInput').val('');
+        $('#stepQcInput').val(''); $('#stepFieldsInput').val(''); $('#stepEditId').val('');
+        var modal = new bootstrap.Modal(document.getElementById('stepModal'));
+        modal.show();
+    });
+
+    // Edit step
+    $('#stepsContainer').on('click', '.editStepBtn', function() {
+        var idx = $(this).data('index');
+        var step = currentSteps[idx];
+        if (!step) return;
+        $('#stepModalTitle').text('Edit Step');
+        $('#stepNameInput').val(step.name || ''); $('#stepTypeInput').val(step.stepType || 'production');
+        $('#stepDescInput').val(step.description || '');
+        $('#stepQcInput').val(step.qcParams || ''); $('#stepFieldsInput').val(step.fields || '');
+        $('#stepEditId').val(step.id);
+        var modal = new bootstrap.Modal(document.getElementById('stepModal'));
+        modal.show();
+    });
+
+    // Delete step
+    $('#stepsContainer').on('click', '.deleteStepBtn', function() {
+        var stepId = String($(this).data('id'));
+        if (!confirm('Delete this step?')) return;
+        requestJson('/api/manufacturing-templates/' + currentTemplateId + '/steps/' + stepId, 'DELETE')
+            .then(function() { loadSteps(currentTemplateId); });
+    });
+
+    // Save step from modal
+    $('#saveStepBtn').on('click', function() {
+        var payload = {
+            name: $('#stepNameInput').val(),
+            stepType: $('#stepTypeInput').val(),
+            description: $('#stepDescInput').val(),
+            qcParams: $('#stepQcInput').val() || null,
+            fields: $('#stepFieldsInput').val() || null,
+            sequence: currentSteps.length + 1
+        };
+        if (!payload.name) { showError('Step name is required.'); return; }
+
+        var editId = $('#stepEditId').val();
+        var promise;
+        if (editId) {
+            promise = requestJson('/api/manufacturing-templates/' + currentTemplateId + '/steps/' + editId, 'PUT', payload);
+        } else {
+            promise = requestJson('/api/manufacturing-templates/' + currentTemplateId + '/steps', 'POST', payload);
+        }
+        promise.then(function() {
+            var modal = bootstrap.Modal.getInstance(document.getElementById('stepModal'));
+            if (modal) modal.hide();
+            loadSteps(currentTemplateId);
+        });
+    });
+});
+</script>

@@ -1,0 +1,2232 @@
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/bootstrap3-typeahead.min.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- allProductionRequest.html  Start -->
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    .user-search-dropdown {
+        width: 100% !important;
+        left: 0;
+        box-sizing: border-box;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .user-search-dropdown .user-search-item {
+        color: #333 !important;
+        background: #fff !important;
+        padding: 9px 12px !important;
+        font-size: 13px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+    }
+    .user-search-dropdown .user-search-item:last-child {
+        border-bottom: none;
+    }
+    .user-search-dropdown .user-search-item:hover {
+        background: #f5f5f5 !important;
+        color: #000 !important;
+    }
+
+    /* ── Search Dropdown – dark mode ── */
+    [data-bs-theme="dark"] .user-search-dropdown {
+        background: #2b2b2b !important;
+        border-color: #444 !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    [data-bs-theme="dark"] .user-search-dropdown .user-search-item {
+        color: #e0e0e0 !important;
+        background: #2b2b2b !important;
+        border-bottom-color: #3d3d3d;
+    }
+    [data-bs-theme="dark"] .user-search-dropdown .user-search-item:hover {
+        background: #4d4d4e !important;
+        color: #fff !important;
+    }
+
+    .buyer-consignee-wrapper {
+        position: relative;
+    }
+
+    /* ── ibox-title: flex layout ── */
+    .qa-white-panel .ibox-title {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+    .qa-white-panel .ibox-title h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .qa-white-panel .ibox-tools {
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .qa-white-panel .ibox-content {
+        padding: 15px 20px;
+    }
+
+    /* ── Form group spacing ── */
+    .qa-white-panel .form-group {
+        margin-bottom: 15px;
+    }
+    .qa-white-panel .form-group label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #888;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    /* ── All panel tables ── */
+    .qa-white-panel .table td {
+        vertical-align: middle;
+    }
+
+    /* ── Readonly / disabled inputs ── */
+    .qa-white-panel .form-control[readonly] {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+        opacity: 0.85;
+    }
+
+    /* ── Record link ── */
+    .qa-white-panel .editProductTransactionLink {
+        color: #337ab7;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .qa-white-panel .editProductTransactionLink:hover {
+        text-decoration: underline;
+    }
+
+    /* ── DataTables search input ── */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+    #allProductionRequestTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #allProductionRequestTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    #allProductionRequestTable th,
+    #allProductionRequestTable td {
+        text-align: left !important;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* ── Dark mode: DataTables ── */
+    [data-bs-theme="dark"] div.dt-container .dt-search input {
+        background-color: #2c2c2e;
+        color: #c9d1d9;
+        border-color: #555 !important;
+    }
+    [data-bs-theme="dark"] div.dt-container .dt-search input::placeholder { color: #888; }
+    [data-bs-theme="dark"] div.dt-container select {
+        background-color: #2c2c2e;
+        color: #c9d1d9;
+        border-color: #555;
+    }
+    [data-bs-theme="dark"] #allProductionRequestTable thead th {
+        border-bottom-color: #3a3a3c !important;
+    }
+
+    /* ── Dark mode: readonly / disabled inputs ── */
+    [data-bs-theme="dark"] .form-control[readonly],
+    [data-bs-theme="dark"] .form-control:disabled {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+
+    /* ── Dark mode: form-group label ── */
+    [data-bs-theme="dark"] .qa-white-panel .form-group label {
+        color: #aaa;
+    }
+</style>
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allProductTransaction">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Production Request <small>Marketing</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary createProductionRequestBtn"><i
+                                class="ti ti-plus"></i>Create Production Request</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="table-responsive">
+                        <table id="allProductionRequestTable" class="table table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Product</th>
+                                    <th>Customer</th>
+                                    <th>Consignee</th>
+                                    <th>Requester</th>
+                                    <!-- <th>Assigned To</th> -->
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allProductTransactionTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row animated fadeInRight aasaanPanel" id="newProductTransaction" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New Production Request</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-white btn-sm closeNewPTPanel"><i class="fa fa-times "></i>
+                            Close</button>
+                        <button type="button" class="btn btn-sm btn-secondary saveNewPTPanel"><i
+                                class="ti ti-check me-1"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form action="" id="newProductionRequestForm">
+                        <!-- Required hidden backend fields -->
+                        <input type="hidden" name="processStatus" value="New" class="newProductTransactionInput">
+                        <input type="hidden" name="requester.id" class="newProductTransactionInput">
+
+                        <!-- Requested Sequence Section -->
+                        <div class="form-section">
+                            <!-- 1. EPO NO. & 2. Order Id -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newEpoNumber">EPO NO.</label>
+                                        <input type="text" class="form-control newProductTransactionInput"
+                                            name="epoNumber" id="newEpoNumber">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newNumber">Order Id</label>
+                                        <input type="text" class="form-control" name="number" id="newNumber" readonly
+                                            placeholder="Auto-generated on Save">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. PRODUCT & Grade -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="productSearch">PRODUCT <span class="text-danger">*</span></label>
+                                        <div class="buyer-consignee-wrapper">
+                                        <input type="text" id="productSearch" class="form-control"
+                                            placeholder="Search by code or name..." autocomplete="off">
+                                        <input type="hidden" id="selectedProductId" name="product.Id"
+                                            class="newProductTransactionInput1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="">Grade</label>
+                                        <select name="name"
+                                            class="form-control newProductTransactionInput select2 gradeDrop1">
+                                            <option value="">--none--</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. QUANTITY & 5. PRICE -->
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="newQuantity">QUANTITY</label>
+                                        <input type="number" name="quantity"
+                                            class="form-control newProductTransactionInput" id="newQuantity" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="productUom">UOM</label>
+                                        <input type="text" id="productUom" name="uom"
+                                            class="form-control newProductTransactionInput" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newTotalCost">PRICE</label>
+                                        <input type="number" name="totalCost"
+                                            class="form-control newProductTransactionInput" id="newTotalCost" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 6. BUYER & 7. PORT -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="customerName">BUYER</label>
+                                        <div class="buyer-consignee-wrapper">
+                                        <input type="text" placeholder="search.." id="customerName" class="form-control"
+                                            autocomplete="off" />
+                                        <input type="hidden" name="customer.id" class="newProductTransactionInput"
+                                            id="customerHiddenId" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newDestinationPort">PORT</label>
+                                        <input type="text" class="form-control newProductTransactionInput"
+                                            name="destinationPort" id="newDestinationPort">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 8. COUNTRY OF DESTINATION & 9. TERMS OF PAYMENT -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newDestinationCountry">COUNTRY OF DESTINATION</label>
+                                        <input type="text" class="form-control newProductTransactionInput"
+                                            name="destinationCountry" id="newDestinationCountry">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newPaymentTerms">TERMS OF PAYMENT</label>
+                                        <input type="text" name="paymentTerms"
+                                            class="form-control newProductTransactionInput" id="newPaymentTerms">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 10. PARTIAL SHIPMENT & 11. APPLICATION SCHEME -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newPartialShipment">PARTIAL SHIPMENT</label>
+                                        <select name="partialShipment"
+                                            class="form-control select2 newProductTransactionInput"
+                                            id="newPartialShipment">
+                                            <option value="">--none--</option>
+                                            <option value="allowed">Allowed</option>
+                                            <option value="notallowed">Not Allowed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newApplicationScheme">APPLICATION SCHEME</label>
+                                        <input type="text" name="applicationScheme"
+                                            class="form-control newProductTransactionInput" id="newApplicationScheme">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 12. PACK SIZE & 13. BATCH SIZE -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newPackSize">PACK SIZE</label>
+                                        <input type="number" name="packSize"
+                                            class="form-control newProductTransactionInput" id="newPackSize" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newBatchSize">BATCH SIZE</label>
+                                        <input type="number" name="batchSize"
+                                            class="form-control newProductTransactionInput" id="newBatchSize" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 14. SPECIAL INSTRUCTIONS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="newSpecialInstructions">SPECIAL INSTRUCTIONS</label>
+                                        <textarea name="specialInstructions"
+                                            class="form-control newProductTransactionInput" rows="2"
+                                            id="newSpecialInstructions"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 15. LABELLING INSTRUCTIONS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="newLabelInstructions">LABELLING INSTRUCTIONS</label>
+                                        <textarea name="labelInstructions"
+                                            class="form-control newProductTransactionInput" rows="2"
+                                            id="newLabelInstructions"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 16. SHIPPING MARKS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="newShippingMarks">SHIPPING MARKS</label>
+                                        <textarea name="shippingMarks" class="form-control newProductTransactionInput"
+                                            rows="2" id="newShippingMarks"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 17. CONSIGNEE & 19. MODE OF TRANSPORT -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="consigneeName">CONSIGNEE</label>
+                                        <div class="buyer-consignee-wrapper">
+                                        <input type="text" placeholder="search.." id="consigneeName"
+                                            class="form-control" autocomplete="off" />
+                                        <input type="hidden" name="consignee.id" class="newProductTransactionInput"
+                                            id="consigneeHiddenId" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="newModeOfTransport">MODE OF TRANSPORT</label>
+                                        <select name="modeOfTransport"
+                                            class="form-control newProductTransactionInput select2"
+                                            id="newModeOfTransport">
+                                            <option value="">--none--</option>
+                                            <option value="air">Airways</option>
+                                            <option value="road">Roadways</option>
+                                            <option value="sea">Seaways</option>
+                                            <option value="rail">Railways</option>
+                                            <option value="partialpost">Partial Post</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 18. SHIPMENT DETAILS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="newShippingDetails">SHIPMENT DETAILS</label>
+                                        <textarea name="shippingDetails" class="form-control newProductTransactionInput"
+                                            rows="2" id="newShippingDetails"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 20. SHIPPING DEPARTMENT -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="newShippingInstructions">SHIPPING DEPARTMENT</label>
+                                        <textarea name="shippingInstructions"
+                                            class="form-control newProductTransactionInput" rows="2"
+                                            id="newShippingInstructions"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Fields -->
+                        <div style="display: none;">
+                            <input type="text" class="form-control newProductTransactionInput1 datepicker"
+                                name="requestDate" id="newRequestDate">
+                            <input type="text" class="form-control newProductTransactionInput1 datepicker"
+                                name="epoDate" id="newEpoDate">
+                            <input type="hidden" name="shipFrom.id"
+                                class="selectSearchInputAutoCompleteId newProductTransactionInput"
+                                aria-description="search/employee" id="shipFromHiddenId" />
+                            <input type="text" id="shipFrom"
+                                class="typeahead_3 form-control selectSearchInputAutoComplete" />
+                            <input type="hidden" name="assignedTo.id"
+                                class="selectSearchInputAutoCompleteId newProductTransactionInput"
+                                aria-description="search/employee" id="assignToHiddenId" />
+                            <input type="text" id="assignedToName"
+                                class="typeahead_3 form-control selectSearchInputAutoComplete" />
+                            <input type="text" name="plannedStartDate"
+                                class="form-control newProductTransactionInput1 datepicker" id="newPlannedStartDate">
+                            <input type="text" name="plannedEndDate"
+                                class="form-control newProductTransactionInput1 datepicker" id="newPlannedEndDate">
+                            <input type="text" name="actualStartDate"
+                                class="form-control newProductTransactionInput1 datepicker" id="newActualStartDate">
+                            <input type="text" name="actualEndDate"
+                                class="form-control newProductTransactionInput1 datepicker" id="newActualEndDate">
+                            <input type="number" name="priceCif" class="form-control newProductTransactionInput"
+                                id="newPriceCif">
+                            <input type="number" name="priceFob" class="form-control newProductTransactionInput"
+                                id="newPriceFob">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- newProductionRequest.html  End-->
+
+
+
+
+
+
+    <!-- editProductionRequest.html  Start-->
+
+    <div class="row animated fadeInRight aasaanPanel" id="editProductTransaction" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Edit Order Id : <span id="editNumberTitle"></span></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-default closeEditPTPanel">
+                            <i class="ti ti-x me-1"></i> Close
+                        </button>
+                        <button type="button" class="btn btn-sm btn-default btn-sm deletePT">
+                            <i class="ti ti-trash me-1"></i> Cancel
+                        </button>
+                        <!-- NEW EDIT BUTTON -->
+                        <button type="button" class="btn btn-sm btn-default editEditPTPanel">
+                            <i class="ti ti-pencil me-1"></i> Edit
+                        </button>
+
+                        <!-- SAVE (hidden initially) -->
+                        <button type="button" class="btn btn-sm btn-secondary saveEditPTPanel" style="display:none;">
+                            <i class="ti ti-check me-1"></i> Save
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary sendToProduction"
+                            style="background-color: #1c8de3; border-color: #1c8de3;">
+                            <i class="ti ti-send me-1"></i> Send to Production
+                        </button>
+                    </div>
+
+                </div>
+                <div class="ibox-content">
+                    <form action="" id="editProductionRequestForm">
+                        <input type="hidden" id="editProductTransactionId">
+                        <input type="hidden" name="requester.id" class="editProductTransactionInput"
+                            id="editRequesterId">
+
+                        <!-- Requested Sequence Section -->
+                        <div class="form-section">
+                            <!-- 1. EPO NO. & 2. Order Id -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editEpoNumber">EPO NO.</label>
+                                        <input type="text" class="form-control editProductTransactionInput"
+                                            name="epoNumber" id="editEpoNumber">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editNumber">Order Id</label>
+                                        <input type="text" class="form-control editProductTransactionInput"
+                                            name="number" id="editNumber" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. PRODUCT & Grade -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editProductSearch">PRODUCT <span
+                                                class="text-danger">*</span></label>
+                                        <div class="buyer-consignee-wrapper">
+                                        <input type="text" id="editProductSearch" class="form-control"
+                                            placeholder="Search by code or name..." autocomplete="off">
+                                        <input type="hidden" id="editSelectedProductId" name="product.Id"
+                                            class="editProductTransactionInput1">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="">Grade</label>
+                                        <select name="name"
+                                            class="form-control editProductTransactionInput select2 gradeDrop" disabled>
+                                            <option value="">--none--</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. QUANTITY & 5. PRICE -->
+                            <div class="row">
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="editQuantity">QUANTITY</label>
+                                        <input type="number" name="quantity"
+                                            class="form-control editProductTransactionInput" id="editQuantity" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group">
+                                        <label for="editProductUom">UOM</label>
+                                        <input type="text" id="editProductUom" name="uom"
+                                            class="form-control editProductTransactionInput" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editTotalCost">PRICE</label>
+                                        <input type="number" name="totalCost"
+                                            class="form-control editProductTransactionInput" id="editTotalCost" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 6. BUYER & 7. PORT -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editCustomerName">BUYER</label>
+                                        <div class="buyer-consignee-wrapper">
+                                        <input type="text" placeholder="search.." id="editCustomerName"
+                                            class="typeahead_3 form-control selectSearchInputAutoComplete"
+                                            autocomplete="off" />
+                                        <input type="hidden" name="customer.id"
+                                            class="selectSearchInputAutoCompleteId editProductTransactionInput"
+                                            aria-description="search/customer" id="editCustomerHiddenId" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editDestinationPort">PORT</label>
+                                        <input type="text" class="form-control editProductTransactionInput"
+                                            name="destinationPort" id="editDestinationPort">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 8. COUNTRY OF DESTINATION & 9. TERMS OF PAYMENT -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editDestinationCountry">COUNTRY OF DESTINATION</label>
+                                        <input type="text" class="form-control editProductTransactionInput"
+                                            name="destinationCountry" id="editDestinationCountry">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editPaymentTerms">TERMS OF PAYMENT</label>
+                                        <input type="text" name="paymentTerms"
+                                            class="form-control editProductTransactionInput" id="editPaymentTerms">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 10. PARTIAL SHIPMENT & 11. APPLICATION SCHEME -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editPartialShipment">PARTIAL SHIPMENT</label>
+                                        <select name="partialShipment"
+                                            class="form-control select2 editProductTransactionInput"
+                                            id="editPartialShipment">
+                                            <option value="">--none--</option>
+                                            <option value="allowed">Allowed</option>
+                                            <option value="notallowed">Not Allowed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editApplicationScheme">APPLICATION SCHEME</label>
+                                        <input type="text" name="applicationScheme"
+                                            class="form-control editProductTransactionInput" id="editApplicationScheme">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 12. PACK SIZE & 13. BATCH SIZE -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editPackSize">PACK SIZE</label>
+                                        <input type="number" name="packSize"
+                                            class="form-control editProductTransactionInput" id="editPackSize" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editBatchSize">BATCH SIZE</label>
+                                        <input type="number" name="batchSize"
+                                            class="form-control editProductTransactionInput" id="editBatchSize" min="0"
+                                            step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 14. SPECIAL INSTRUCTIONS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="editSpecialInstructions">SPECIAL INSTRUCTIONS</label>
+                                        <textarea name="specialInstructions"
+                                            class="form-control editProductTransactionInput" rows="2"
+                                            id="editSpecialInstructions"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 15. LABELLING INSTRUCTIONS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="editLabelInstructions">LABELLING INSTRUCTIONS</label>
+                                        <textarea name="labelInstructions"
+                                            class="form-control editProductTransactionInput" rows="2"
+                                            id="editLabelInstructions"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 16. SHIPPING MARKS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="editShippingMarks">SHIPPING MARKS</label>
+                                        <textarea name="shippingMarks" class="form-control editProductTransactionInput"
+                                            rows="2" id="editShippingMarks"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 17. CONSIGNEE & 19. MODE OF TRANSPORT -->
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editConsigneeName">CONSIGNEE</label>
+                                        <div class="buyer-consignee-wrapper">
+                                        <input type="text" placeholder="search.." id="editConsigneeName"
+                                            class="typeahead_3 form-control selectSearchInputAutoComplete"
+                                            autocomplete="off" />
+                                        <input type="hidden" name="consignee.id"
+                                            class="selectSearchInputAutoCompleteId editProductTransactionInput"
+                                            aria-description="search/customer" id="editConsigneeHiddenId" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="editModeOfTransport">MODE OF TRANSPORT</label>
+                                        <select name="modeOfTransport"
+                                            class="form-control editProductTransactionInput select2"
+                                            id="editModeOfTransport">
+                                            <option value="">--none--</option>
+                                            <option value="air">Airways</option>
+                                            <option value="road">Roadways</option>
+                                            <option value="sea">Seaways</option>
+                                            <option value="rail">Railways</option>
+                                            <option value="partialpost">Partial Post</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 18. SHIPMENT DETAILS -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="editShippingDetails">SHIPMENT DETAILS</label>
+                                        <textarea name="shippingDetails"
+                                            class="form-control editProductTransactionInput" rows="2"
+                                            id="editShippingDetails"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 20. SHIPPING DEPARTMENT -->
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label for="editShippingInstructions">SHIPPING DEPARTMENT</label>
+                                        <textarea name="shippingInstructions"
+                                            class="form-control editProductTransactionInput" rows="2"
+                                            id="editShippingInstructions"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Fields -->
+                        <div style="display: none;">
+                            <input type="text" class="form-control editProductTransactionInput1" name="requestDate"
+                                id="editRequestDate">
+                            <input type="text" class="form-control editProductTransactionInput1" name="epoDate"
+                                id="editEpoDate">
+                            <input type="hidden" name="shipFrom.id"
+                                class="selectSearchInputAutoCompleteId editProductTransactionInput"
+                                aria-description="search/employee" id="editShipFromHiddenId" />
+                            <input type="text" id="editShipFrom"
+                                class="typeahead_3 form-control selectSearchInputAutoComplete" />
+                            <input type="hidden" name="assignedTo.id"
+                                class="selectSearchInputAutoCompleteId editProductTransactionInput"
+                                aria-description="search/employee" id="editAssignToHiddenId" />
+                            <input type="text" id="editAssignedToName"
+                                class="typeahead_3 form-control selectSearchInputAutoComplete" />
+                            <input type="text" name="plannedStartDate" class="form-control editProductTransactionInput1"
+                                id="editPlannedStartDate">
+                            <input type="text" name="plannedEndDate" class="form-control editProductTransactionInput1"
+                                id="editPlannedEndDate">
+                            <input type="text" name="actualStartDate" class="form-control editProductTransactionInput1"
+                                id="editActualStartDate">
+                            <input type="text" name="actualEndDate" class="form-control editProductTransactionInput1"
+                                id="editActualEndDate">
+                            <input type="number" name="priceCif" class="form-control editProductTransactionInput"
+                                id="editPriceCif">
+                            <input type="number" name="priceFob" class="form-control editProductTransactionInput"
+                                id="editPriceFob">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- editProductionRequest.html  End-->
+
+
+
+
+
+</div>
+<script>
+    lucide.createIcons();
+    // allProductionRequest.js  Start
+
+    // Global variables
+    var recordList = [];
+    var employeeId = null;
+    var allProducts = [];
+    var uomList = [];
+
+    // Load production requests on page load
+    // ── Safe DataTable destroy/init ──
+    function destroyProductionRequestDataTable() {
+        if (!$.fn || !$.fn.DataTable) return;
+        if ($.fn.DataTable.isDataTable('#allProductionRequestTable')) {
+            $('#allProductionRequestTable').DataTable().clear().destroy();
+        }
+    }
+    function initProductionRequestDataTable() {
+        if (!$.fn || !$.fn.DataTable) return;
+        if ($.fn.DataTable.isDataTable('#allProductionRequestTable')) return;
+        $('#allProductionRequestTable').DataTable({ order: [], destroy: true });
+    }
+
+    function loadProductionRequests() {
+        $.ajax({
+            url: '/api/production-requests',
+            type: 'GET',
+            success: function (data) {
+                recordList = data || [];
+                renderProductionRequests();
+            },
+            error: function (err) {
+                console.error('Error loading production requests:', err);
+            }
+        });
+    }
+
+    // Render production requests table
+    function renderProductionRequests() {
+        destroyProductionRequestDataTable();
+        $('#allProductTransactionTable').empty();
+        $.each(recordList, function (i, val) {
+            var innerhtml2 = `<tr><td><a href="javascript:void(0)" class="editProductTransactionLink" data-id="${val.id}">${val.number}</a></td>
+        <td>${val.product ? val.product.name + ' - ' + val.product.number : ''}</td>
+        <td>${val.customer ? val.customer.name : ''}</td>
+        <td>${val.consignee ? val.consignee.name : ''}</td>
+        <td>${val.requester ? val.requester.name : ''}</td>
+        <td>`;
+            var statusBadge = '';
+            if (val.processStatus) {
+                if (val.processStatus === 'New') {
+                    statusBadge = '<span class="label label-warning">New</span>';
+                } else if (val.processStatus === 'In Production') {
+                    statusBadge = '<span class="label label-info">In Production</span>';
+                } else if (val.processStatus === 'Dispatched') {
+                    statusBadge = '<span class="label label-success">Dispatched</span>';
+                } else if (val.processStatus === 'Cancelled') {
+                    statusBadge = '<span class="label label-danger">Cancelled</span>';
+                }
+            }
+            innerhtml2 += statusBadge + '</td></tr>';
+            $('#allProductTransactionTable').append(innerhtml2);
+        });
+        initProductionRequestDataTable();
+    }
+
+    // Load UOM list
+    function loadUomList() {
+        $.ajax({
+            url: '/api/uom',
+            type: 'GET',
+            success: function (data) {
+                uomList = data || [];
+                var innerhtml1 = '<option value="">--none--</option>';
+                $.each(uomList, function (i, val) {
+                    innerhtml1 += '<option value="' + val.name + '">' + val.name + '</option>';
+                });
+                $('.uomDrop').append(innerhtml1);
+            },
+            error: function (err) {
+                console.error('Error loading UOM:', err);
+            }
+        });
+    }
+
+    // Load products
+    function loadProducts() {
+        $.ajax({
+            url: '/api/products?type=Finished Goods',
+            type: 'GET',
+            success: function (data) {
+                allProducts = data || [];
+            },
+            error: function (err) {
+                console.error('Error loading products:', err);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        // Load data
+        loadProductionRequests();
+        loadProducts();
+        loadUomList();
+
+        // Set employee ID (get from session or default)
+        employeeId = FOX.employeeId;
+        $('.newProductTransactionInput[name="requester.id"]').val(employeeId);
+        // Initialize daterangepickers for new form date fields
+        function initializeNewFormDatePickers() {
+            var newDateFields = ['#newRequestDate', '#newEpoDate', '#newPlannedStartDate', '#newPlannedEndDate', '#newActualStartDate', '#newActualEndDate'];
+            newDateFields.forEach(function (fieldId) {
+                var $dateField = $(fieldId);
+                if ($dateField.length) {
+                    try {
+                        if ($dateField.data('daterangepicker')) {
+                            $dateField.data('daterangepicker').remove();
+                        }
+                        $dateField.daterangepicker({
+                            singleDatePicker: true,
+                            showDropdowns: true,
+                            autoUpdateInput: false,
+                            locale: {
+                                format: 'DD/MM/YYYY'
+                            }
+                        });
+                        $dateField.on('apply.daterangepicker', function (ev, picker) {
+                            $(this).val(picker.startDate.format('DD/MM/YYYY'));
+                        });
+                    } catch (e) {
+                        console.log('daterangepicker not available for', fieldId);
+                    }
+                }
+            });
+        }
+
+        // Initialize on page load
+        initializeNewFormDatePickers();
+
+        $('.createProductionRequestBtn').on('click', function () {
+            $('#allProductTransaction').hide()
+            $('#editProductTransaction').hide()
+            $('#newProductTransaction').show()
+            // Reinitialize datepickers when showing new form
+            initializeNewFormDatePickers();
+        })
+        JSUTIL.callAJAXPost('/data/Product/list', JSON.stringify({ "fields": "Name;Number;Uom;", "conditions": [`Type='Finished Goods'`], "logic": "{0}" }), function (res) {
+            allProducts = res
+            var innerhtml = '<option value="">--none--</option>'
+            $('.productDrop').empty()
+            $.each(res, function (i, val) {
+                innerhtml += `<option value="${val.id}">${val.name} - ${val.number}</option>`
+            })
+            $('.productDrop').append(innerhtml)
+        })
+        JSUTIL.callAJAXPost('/data/ProductLabel/list', JSON.stringify({ "fields": "Name;Number;" }), function (res) {
+            console.log('res', res)
+            $('.gradeDrop').empty()
+            var innerhtml = '<option value="">--none--</option>'
+            if (res.length > 0) {
+                $.each(res, function (i, val) {
+                    innerhtml += `<option value="${val.name}">${val.name} - ${val.number}</option>`
+                })
+            }
+            $('.gradeDrop').append(innerhtml)
+        })
+        var innerhtml1 = '<option value="">--none--</option>'
+        $('.uomDrop').empty()
+        $.each(uomList, function (i, val) {
+            innerhtml1 += `<option value="${val.name}">${val.name}</option>`
+        })
+        $('.uomDrop').append(innerhtml1)
+
+        // Add click handler for edit links using event delegation
+        $(document).on('click', '.editProductTransactionLink', function () {
+            var recordId = $(this).data('id');
+            loadProductionRequestForEdit(recordId);
+        });
+
+
+
+    })
+    // allProductionRequest.js  End
+
+
+
+
+
+
+    // newProductionRequest.js Start
+    // Global product cache for search
+    var productSearchCache = null;
+    var customerSearchCache = null;
+
+    $(document).ready(function () {
+        console.log('Initializing product search...');
+        // Initialize product search
+        initializeProductSearch();
+
+        // Initialize buyer (customer) search
+        initializeBuyerSearch();
+
+        // Initialize consignee search
+        initializeConsigneeSearch();
+
+        // Close panel
+        $('.closeNewPTPanel').on('click', function () {
+            $('#newProductTransaction').hide();
+            $('#allProductTransaction').show();
+        });
+
+        // Set requester
+        $('.newProductTransactionInput[name="requester.id"]').val(employeeId);
+
+        // Save button click handler
+        $('#newProductTransaction').on('click', '.saveNewPTPanel', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Save button clicked');
+
+            var saveBtn = $(this);
+            saveBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+
+            // Fields that must be sent as { id: value } nested objects
+            var nestedIdFields = ['customer.id', 'consignee.id', 'requester.id', 'shipFrom.id',
+                                  'assignedTo.id', 'productRecipe.id', 'requestOwner.id'];
+
+            // Fields whose values must be parsed as floats
+            var numericFields = ['quantity', 'totalCost', 'packSize', 'batchSize', 'priceCif', 'priceFob'];
+
+            // Build form data — convert dot-notation keys to nested objects
+            var obj = {};
+            $('.newProductTransactionInput').each(function () {
+                var name = $(this).attr('name');
+                var val = $(this).val();
+                if (!name || val === '' || val === null) return;
+
+                if (nestedIdFields.indexOf(name) !== -1) {
+                    // e.g. "customer.id" → obj.customer = { id: 55 }
+                    var parts = name.split('.');          // ["customer", "id"]
+                    var entityKey = parts[0];             // "customer"
+                    var idVal = parseInt(val, 10);
+                    if (!isNaN(idVal) && idVal > 0) {
+                        obj[entityKey] = { id: idVal };
+                    }
+                } else if (numericFields.indexOf(name) !== -1) {
+                    var floatVal = parseFloat(val);
+                    if (!isNaN(floatVal)) {
+                        obj[name] = floatVal;
+                    }
+                } else {
+                    obj[name] = val;
+                }
+            });
+
+            // Date fields (stored as dd/mm/yyyy, sent as ISO)
+            obj["requestDate"]      = toISOZ($('.newProductTransactionInput1[name="requestDate"]').val());
+            obj["epoDate"]          = toISOZ($('.newProductTransactionInput1[name="epoDate"]').val());
+            obj["plannedStartTime"] = toISOZ($('.newProductTransactionInput1[name="plannedStartDate"]').val());
+            obj["plannedEndTime"]   = toISOZ($('.newProductTransactionInput1[name="plannedEndDate"]').val());
+            obj["actualStartTime"]  = toISOZ($('.newProductTransactionInput1[name="actualStartDate"]').val());
+            obj["actualEndTime"]    = toISOZ($('.newProductTransactionInput1[name="actualEndDate"]').val());
+
+            // Product — always build from the hidden field (name="product.Id" has capital I, handled explicitly)
+            var productId = parseInt($('#selectedProductId').val(), 10);
+            if (!isNaN(productId) && productId > 0) {
+                obj["product"] = { id: productId };
+            }
+
+            // Validate required product field
+            if (!obj["product"] || !obj["product"].id) {
+                alert('Please select a Product.');
+                saveBtn.prop('disabled', false).html('<i class="ti ti-check me-1"></i> Save');
+                return;
+            }
+
+            // Generate Order ID: PR-YY-XXXX
+            var currentYear = new Date().getFullYear().toString().slice(-2);
+            var yearPrefix = 'PR-' + currentYear + '-';
+
+            var currentYearRecords = (recordList || []).filter(function (r) {
+                return r.number && r.number.indexOf(yearPrefix) === 0;
+            });
+
+            var nextNumber = 1;
+            if (currentYearRecords.length > 0) {
+                var maxNum = 0;
+                currentYearRecords.forEach(function (r) {
+                    var parts = r.number.split('-');
+                    var num = parseInt(parts[2], 10);
+                    if (!isNaN(num) && num > maxNum) {
+                        maxNum = num;
+                    }
+                });
+                nextNumber = maxNum + 1;
+            }
+
+            var paddedNumber = String(nextNumber).padStart(4, '0');
+            obj["number"] = yearPrefix + paddedNumber;
+            $('#newNumber').val(obj["number"]);
+
+            console.log('final obj', obj);
+
+            $.ajax({
+                url: '/api/production-requests',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(obj),
+                success: function (res) {
+                    console.log('res', res);
+                    if (res && res.number) {
+                        console.log('Production Request saved successfully! Order ID: ' + res.number);
+                    }
+                    location.reload();
+                },
+                error: function (err) {
+                    console.error('Error:', err);
+                    saveBtn.prop('disabled', false).html('<i class="ti ti-check me-1"></i> Save');
+                }
+            });
+        });
+    });
+
+
+    // Product search using employees.html pattern
+    var productSearchTimer;
+
+    function initializeProductSearch() {
+        console.log('Initializing product search...');
+
+        var $input = $('#productSearch');
+        var $dropdown = $('#productSearchDropdown');
+        var $hiddenId = $('#selectedProductId');
+
+        // Create dropdown if not exists
+        if (!$dropdown.length) {
+            $input.closest('.buyer-consignee-wrapper').append('<div id="productSearchDropdown" class="user-search-dropdown" style="display:none; position:absolute; z-index:1000; max-height:200px; overflow-y:auto;"></div>');
+            $dropdown = $('#productSearchDropdown');
+        }
+
+        // Input event handler
+        $input.on('input', function () {
+            clearTimeout(productSearchTimer);
+            var q = $(this).val();
+            $hiddenId.val('');
+
+            if (!q || q.trim().length < 1) {
+                $dropdown.hide();
+                return;
+            }
+
+            productSearchTimer = setTimeout(function () {
+                searchProducts(q, $input, $dropdown, $hiddenId);
+            }, 300);
+        });
+
+        // Blur handler - hide dropdown
+        $input.on('blur', function () {
+            setTimeout(function () { $dropdown.hide(); }, 150);
+        });
+    }
+
+    // Search products function
+    function searchProducts(query, $inputEl, $dropdownEl, $hiddenEl) {
+        $dropdownEl.empty();
+
+        var apiUrl = '/api/products?type=Finished%20Goods';
+        if (query && query.trim().length > 0) {
+            apiUrl += '&name=' + encodeURIComponent(query);
+        }
+
+        $.get(apiUrl, function (results) {
+            $dropdownEl.empty();
+            if (!results || results.length === 0) {
+                $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">No results found</div>');
+            } else {
+                $.each(results, function (i, item) {
+                    var id = item.id;
+                    var name = item.name || '';
+                    var number = item.number || '';
+                    var uom = item.uom || '';
+                    var displayLabel = (number ? number + ' | ' : '') + name;
+
+                    $('<div class="user-search-item" style="padding:8px; cursor:pointer;"></div>')
+                        .text(displayLabel)
+                        .attr('data-id', id)
+                        .attr('data-uom', uom)
+                        .on('mousedown', function (e) {
+                            e.preventDefault();
+                            $inputEl.val(displayLabel);
+                            $hiddenEl.val(id);
+                            $('#productUom').val(uom);
+                            $dropdownEl.hide();
+                            loadProductGrade(id);
+                        })
+                        .on('mouseenter', function () {
+                            $(this).css('background', '#f5f5f5');
+                        })
+                        .on('mouseleave', function () {
+                            $(this).css('background', '#fff');
+                        })
+                        .appendTo($dropdownEl);
+                });
+            }
+            $dropdownEl.show();
+        }).fail(function () {
+            $dropdownEl.html('<div class="user-search-item" style="color:#888; padding:8px;">Search failed</div>').show();
+        });
+    }
+
+    // Load product grade after selection - using /api/product-labels/search?productId=
+    function loadProductGrade(productId) {
+        console.log('Loading grades for product:', productId);
+
+        $.get('/api/product-labels/search?productId=' + productId, function (res) {
+            console.log('Grade results:', res);
+            $('.gradeDrop1').empty();
+            var innerhtml = '<option value="">--none--</option>';
+            if (res && res.length > 0) {
+                $.each(res, function (i, val) {
+                    var label = val.name + (val.number ? ' - ' + val.number : '');
+                    innerhtml += '<option value="' + val.name + '">' + label + '</option>';
+                });
+            }
+            $('.gradeDrop1').append(innerhtml);
+        }).fail(function (err) {
+            console.error('Error loading grades:', err);
+            $('.gradeDrop1').empty();
+            $('.gradeDrop1').append('<option value="">--none--</option>');
+        });
+    }
+
+    // Buyer (Customer) search using /api/account
+    var buyerSearchTimer;
+
+    function initializeBuyerSearch() {
+        console.log('Initializing buyer search...');
+
+        var $input = $('#customerName');
+        var $dropdown = $('#buyerSearchDropdown');
+        var $hiddenId = $('#customerHiddenId');
+
+        // Create dropdown if not exists
+        if (!$dropdown.length) {
+            $input.closest('.buyer-consignee-wrapper').append('<div id="buyerSearchDropdown" class="user-search-dropdown" style="display:none; position:absolute; z-index:1000; max-height:200px; overflow-y:auto;"></div>');
+            $dropdown = $('#buyerSearchDropdown');
+        }
+
+        // Input event handler
+        $input.on('input', function () {
+            clearTimeout(buyerSearchTimer);
+            var q = $(this).val();
+            $hiddenId.val('');
+
+            if (!q || q.trim().length < 1) {
+                $dropdown.hide();
+                return;
+            }
+
+            buyerSearchTimer = setTimeout(function () {
+                searchBuyers(q, $input, $dropdown, $hiddenId);
+            }, 300);
+        });
+
+        // Blur handler - hide dropdown
+        $input.on('blur', function () {
+            setTimeout(function () { $dropdown.hide(); }, 150);
+        });
+    }
+
+    // Search buyers function - using /api/accounts/search?type=customer&search=
+    function searchBuyers(query, $inputEl, $dropdownEl, $hiddenEl) {
+        $dropdownEl.empty();
+
+        // Using /api/accounts/search with type=customer and search (case-insensitive)
+        var apiUrl = '/api/accounts/search?type=customer&search=' + encodeURIComponent(query);
+
+        $.get(apiUrl, function (results) {
+            $dropdownEl.empty();
+            if (!results || results.length === 0) {
+                $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">No results found</div>');
+            } else {
+                $.each(results, function (i, item) {
+                    var id = item.id;
+                    var name = item.name || '';
+                    var displayLabel = name;
+
+                    $('<div class="user-search-item" style="padding:8px; cursor:pointer;"></div>')
+                        .text(displayLabel)
+                        .attr('data-id', id)
+                        .on('mousedown', function (e) {
+                            e.preventDefault();
+                            $inputEl.val(displayLabel);
+                            $hiddenEl.val(id);
+                            $dropdownEl.hide();
+                        })
+                        .on('mouseenter', function () {
+                            $(this).css('background', '#f5f5f5');
+                        })
+                        .on('mouseleave', function () {
+                            $(this).css('background', '#fff');
+                        })
+                        .appendTo($dropdownEl);
+                });
+            }
+            $dropdownEl.show();
+        }).fail(function () {
+            console.log('Buyer search failed, trying without type filter...');
+            // Fallback: use /api/accounts without type filter
+            var fallbackUrl = '/api/accounts?type=customer&accountStatus=Active';
+            $.get(fallbackUrl, function (results) {
+                $dropdownEl.empty();
+                if (!results || results.length === 0) {
+                    $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">No results found</div>');
+                } else {
+                    $.each(results, function (i, item) {
+                        var id = item.id;
+                        var name = item.name || '';
+                        var displayLabel = name;
+
+                        $('<div class="user-search-item" style="padding:8px; cursor:pointer;"></div>')
+                            .text(displayLabel)
+                            .attr('data-id', id)
+                            .on('mousedown', function (e) {
+                                e.preventDefault();
+                                $inputEl.val(displayLabel);
+                                $hiddenEl.val(id);
+                                $dropdownEl.hide();
+                            })
+                            .on('mouseenter', function () {
+                                $(this).css('background', '#f5f5f5');
+                            })
+                            .on('mouseleave', function () {
+                                $(this).css('background', '#fff');
+                            })
+                            .appendTo($dropdownEl);
+                    });
+                }
+                $dropdownEl.show();
+            }).fail(function () {
+                $dropdownEl.html('<div class="user-search-item" style="color:#888; padding:8px;">Search failed</div>').show();
+            });
+        });
+    }
+
+    // Consignee search using /api/account (same as buyer)
+    var consigneeSearchTimer;
+
+    // Edit form buyer search timer
+    var editBuyerSearchTimer;
+
+    // Edit form consignee search timer
+    var editConsigneeSearchTimer;
+
+    function initializeConsigneeSearch() {
+        console.log('Initializing consignee search...');
+
+        var $input = $('#consigneeName');
+        var $dropdown = $('#consigneeSearchDropdown');
+        var $hiddenId = $('#consigneeHiddenId');
+
+        // Create dropdown if not exists
+        if (!$dropdown.length) {
+            $input.closest('.buyer-consignee-wrapper').append('<div id="consigneeSearchDropdown" class="user-search-dropdown" style="display:none; position:absolute; z-index:1000; max-height:200px; overflow-y:auto;"></div>');
+            $dropdown = $('#consigneeSearchDropdown');
+        }
+
+        // Input event handler
+        $input.on('input', function () {
+            clearTimeout(consigneeSearchTimer);
+            var q = $(this).val();
+            $hiddenId.val('');
+
+            if (!q || q.trim().length < 1) {
+                $dropdown.hide();
+                return;
+            }
+
+            consigneeSearchTimer = setTimeout(function () {
+                searchConsignees(q, $input, $dropdown, $hiddenId);
+            }, 300);
+        });
+
+        // Blur handler - hide dropdown
+        $input.on('blur', function () {
+            setTimeout(function () { $dropdown.hide(); }, 150);
+        });
+    }
+
+    // Initialize edit form buyer search
+    function initializeEditBuyerSearch() {
+        console.log('Initializing edit buyer search...');
+
+        var $input = $('#editCustomerName');
+        var $dropdown = $('#editBuyerSearchDropdown');
+        var $hiddenId = $('#editCustomerHiddenId');
+
+        // Create dropdown if not exists
+        if (!$dropdown.length) {
+            $input.closest('.buyer-consignee-wrapper').append('<div id="editBuyerSearchDropdown" class="user-search-dropdown" style="display:none; position:absolute; z-index:1000; max-height:200px; overflow-y:auto;"></div>');
+            $dropdown = $('#editBuyerSearchDropdown');
+        }
+
+        // Input event handler
+        $input.on('input', function () {
+            clearTimeout(editBuyerSearchTimer);
+            var q = $(this).val();
+            $hiddenId.val('');
+
+            if (!q || q.trim().length < 1) {
+                $dropdown.hide();
+                return;
+            }
+
+            editBuyerSearchTimer = setTimeout(function () {
+                searchEditBuyers(q, $input, $dropdown, $hiddenId);
+            }, 300);
+        });
+
+        // Blur handler - hide dropdown
+        $input.on('blur', function () {
+            setTimeout(function () { $dropdown.hide(); }, 150);
+        });
+    }
+
+    // Search edit buyers function
+    function searchEditBuyers(query, $inputEl, $dropdownEl, $hiddenEl) {
+        $dropdownEl.empty();
+
+        var apiUrl = '/api/accounts/search?type=customer&search=' + encodeURIComponent(query);
+
+        $.get(apiUrl, function (results) {
+            $dropdownEl.empty();
+            if (!results || results.length === 0) {
+                $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">No results found</div>');
+            } else {
+                $.each(results, function (i, item) {
+                    var id = item.id;
+                    var name = item.name || '';
+                    var displayLabel = name;
+
+                    $('<div class="user-search-item" style="padding:8px; cursor:pointer;"></div>')
+                        .text(displayLabel)
+                        .attr('data-id', id)
+                        .on('mousedown', function (e) {
+                            e.preventDefault();
+                            $inputEl.val(name);
+                            $hiddenEl.val(id);
+                            $dropdownEl.hide();
+                        })
+                        .appendTo($dropdownEl);
+                });
+            }
+            $dropdownEl.show();
+        }).fail(function (err) {
+            console.error('Error searching buyers:', err);
+            $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">Error loading results</div>');
+            $dropdownEl.show();
+        });
+    }
+
+    // Initialize edit form consignee search
+    function initializeEditConsigneeSearch() {
+        console.log('Initializing edit consignee search...');
+
+        var $input = $('#editConsigneeName');
+        var $dropdown = $('#editConsigneeSearchDropdown');
+        var $hiddenId = $('#editConsigneeHiddenId');
+
+        // Create dropdown if not exists
+        if (!$dropdown.length) {
+            $input.closest('.buyer-consignee-wrapper').append('<div id="editConsigneeSearchDropdown" class="user-search-dropdown" style="display:none; position:absolute; z-index:1000; max-height:200px; overflow-y:auto;"></div>');
+            $dropdown = $('#editConsigneeSearchDropdown');
+        }
+
+        // Input event handler
+        $input.on('input', function () {
+            clearTimeout(editConsigneeSearchTimer);
+            var q = $(this).val();
+            $hiddenId.val('');
+
+            if (!q || q.trim().length < 1) {
+                $dropdown.hide();
+                return;
+            }
+
+            editConsigneeSearchTimer = setTimeout(function () {
+                searchEditConsignees(q, $input, $dropdown, $hiddenId);
+            }, 300);
+        });
+
+        // Blur handler - hide dropdown
+        $input.on('blur', function () {
+            setTimeout(function () { $dropdown.hide(); }, 150);
+        });
+    }
+
+    // Search edit consignees function
+    function searchEditConsignees(query, $inputEl, $dropdownEl, $hiddenEl) {
+        $dropdownEl.empty();
+
+        var apiUrl = '/api/accounts/search?type=customer&search=' + encodeURIComponent(query);
+
+        $.get(apiUrl, function (results) {
+            $dropdownEl.empty();
+            if (!results || results.length === 0) {
+                $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">No results found</div>');
+            } else {
+                $.each(results, function (i, item) {
+                    var id = item.id;
+                    var name = item.name || '';
+                    var displayLabel = name;
+
+                    $('<div class="user-search-item" style="padding:8px; cursor:pointer;"></div>')
+                        .text(displayLabel)
+                        .attr('data-id', id)
+                        .on('mousedown', function (e) {
+                            e.preventDefault();
+                            $inputEl.val(name);
+                            $hiddenEl.val(id);
+                            $dropdownEl.hide();
+                        })
+                        .appendTo($dropdownEl);
+                });
+            }
+            $dropdownEl.show();
+        }).fail(function (err) {
+            console.error('Error searching consignees:', err);
+            $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">Error loading results</div>');
+            $dropdownEl.show();
+        });
+    }
+
+    // Original initializeConsigneeSearch for new form
+    function initializeConsigneeSearchOriginal() {
+        console.log('Initializing consignee search...');
+
+        var $input = $('#consigneeName');
+        var $dropdown = $('#consigneeSearchDropdown');
+        var $hiddenId = $('#consigneeHiddenId');
+
+        // Create dropdown if not exists
+        if (!$dropdown.length) {
+            $input.closest('.buyer-consignee-wrapper').append('<div id="consigneeSearchDropdown" class="user-search-dropdown" style="display:none; position:absolute; z-index:1000; max-height:200px; overflow-y:auto;"></div>');
+            $dropdown = $('#consigneeSearchDropdown');
+        }
+
+        // Input event handler
+        $input.on('input', function () {
+            clearTimeout(consigneeSearchTimer);
+            var q = $(this).val();
+            $hiddenId.val('');
+
+            if (!q || q.trim().length < 1) {
+                $dropdown.hide();
+                return;
+            }
+
+            consigneeSearchTimer = setTimeout(function () {
+                searchConsignees(q, $input, $dropdown, $hiddenId);
+            }, 300);
+        });
+
+        // Blur handler - hide dropdown
+        $input.on('blur', function () {
+            setTimeout(function () { $dropdown.hide(); }, 150);
+        });
+    }
+
+    // Search consignees function - using /api/accounts/search?type=customer&search=
+    function searchConsignees(query, $inputEl, $dropdownEl, $hiddenEl) {
+        $dropdownEl.empty();
+
+        // Using /api/accounts/search with type=customer and search (case-insensitive)
+        var apiUrl = '/api/accounts/search?type=customer&search=' + encodeURIComponent(query);
+
+        $.get(apiUrl, function (results) {
+            $dropdownEl.empty();
+            if (!results || results.length === 0) {
+                $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">No results found</div>');
+            } else {
+                $.each(results, function (i, item) {
+                    var id = item.id;
+                    var name = item.name || '';
+                    var displayLabel = name;
+
+                    $('<div class="user-search-item" style="padding:8px; cursor:pointer;"></div>')
+                        .text(displayLabel)
+                        .attr('data-id', id)
+                        .on('mousedown', function (e) {
+                            e.preventDefault();
+                            $inputEl.val(displayLabel);
+                            $hiddenEl.val(id);
+                            $dropdownEl.hide();
+                        })
+                        .on('mouseenter', function () {
+                            $(this).css('background', '#f5f5f5');
+                        })
+                        .on('mouseleave', function () {
+                            $(this).css('background', '#fff');
+                        })
+                        .appendTo($dropdownEl);
+                });
+            }
+            $dropdownEl.show();
+        }).fail(function () {
+            console.log('Consignee search failed, trying without type filter...');
+            // Fallback: use /api/accounts without type filter
+            var fallbackUrl = '/api/accounts?type=customer&accountStatus=Active';
+            $.get(fallbackUrl, function (results) {
+                $dropdownEl.empty();
+                if (!results || results.length === 0) {
+                    $dropdownEl.append('<div class="user-search-item" style="color:#888; padding:8px;">No results found</div>');
+                } else {
+                    $.each(results, function (i, item) {
+                        var id = item.id;
+                        var name = item.name || '';
+                        var displayLabel = name;
+
+                        $('<div class="user-search-item" style="padding:8px; cursor:pointer;"></div>')
+                            .text(displayLabel)
+                            .attr('data-id', id)
+                            .on('mousedown', function (e) {
+                                e.preventDefault();
+                                $inputEl.val(displayLabel);
+                                $hiddenEl.val(id);
+                                $dropdownEl.hide();
+                            })
+                            .on('mouseenter', function () {
+                                $(this).css('background', '#f5f5f5');
+                            })
+                            .on('mouseleave', function () {
+                                $(this).css('background', '#fff');
+                            })
+                            .appendTo($dropdownEl);
+                    });
+                }
+                $dropdownEl.show();
+            }).fail(function () {
+                $dropdownEl.html('<div class="user-search-item" style="color:#888; padding:8px;">Search failed</div>').show();
+            });
+        });
+    }
+    // Convert date to ISO format
+    function toISOZ(dateStr) {
+        if (!dateStr) return '';
+        const [day, month, year] = dateStr.split('/');
+        const date = new Date(Date.UTC(year, month - 1, day));
+        return date.toISOString().replace('.000', '');
+    }
+    // newProductionRequest.js End
+
+
+
+
+
+
+    // editProductionRequest.js Start
+
+    var currentEditRecord = null;
+
+    $(document).ready(function () {
+
+        // Close edit panel and return to all records view
+        $('.closeEditPTPanel').on('click', function () {
+            $('#editProductTransaction').hide();
+            $('#allProductTransaction').show();
+            clearEditForm();
+        });
+        initializeEditProductSearch();
+        // Initialize edit form buyer search
+        initializeEditBuyerSearch();
+        // Initialize edit form consignee search
+        initializeEditConsigneeSearch();
+        // Handle product selection change - update UOM dropdown
+        $('.editProductTransactionInput1[name="product.Id"]').on('change', function () {
+            var productId = $(this).val();
+            var currentProduct = allProducts.filter(v => v.id == productId);
+            console.log('current product', currentProduct);
+
+            if (currentProduct.length > 0) {
+                // Enable UOM field
+                $('.editProductTransactionInput[name="uom"]').prop('disabled', false);
+                $('.editProductTransactionInput[name="uom"]').val('').trigger('change.select2');
+                $('.editProductTransactionInput[name="uom"]').val(currentProduct[0].uom).trigger('change.select2');
+            } else {
+                // Disable UOM field if no product selected
+                $('.editProductTransactionInput[name="uom"]').prop('disabled', true);
+                $('.editProductTransactionInput[name="uom"]').val('').trigger('change.select2');
+            }
+        });
+
+        // Save edited production request
+        $('.saveEditPTPanel').on('click', function () {
+            var recordId = $('#editProductTransactionId').val();
+
+            // Validate required fields
+            if (!validateEditForm()) {
+                return;
+            }
+
+            // Disable save button to prevent double submission
+            var saveBtn = $(this);
+            saveBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+
+            // Build the data object from form inputs
+            // NOTE: Using local collector instead of JSUTIL.buildFormDataJSON
+            // because JSUTIL internally calls .select2() which is not loaded here
+            console.log('Before buildFormDataJSON');
+            var obj = {};
+            $('.editProductTransactionInput').each(function () {
+                var name = $(this).attr('name');
+                var val = $(this).val();
+                if (!name) return;
+                // Skip dotted-key fields — handled below as nested objects
+                if (name === 'product.Id' || name === 'customer.id' ||
+                    name === 'consignee.id' || name === 'assignedTo.id' ||
+                    name === 'requester.id' || name === 'shipFrom.id') return;
+                if ($(this).attr('type') === 'checkbox') {
+                    obj[name] = $(this).prop('checked');
+                } else if ($(this).attr('type') === 'number' && val !== '') {
+                    obj[name] = Number(val);
+                } else if (val !== '') {
+                    obj[name] = val;
+                }
+            });
+            console.log('After buildFormDataJSON', obj);
+
+            // Convert date fields to ISO format
+            obj["actualEndTime"] = toISOZ($('.editProductTransactionInput1[name="actualEndDate"]').val());
+            obj["actualStartTime"] = toISOZ($('.editProductTransactionInput1[name="actualStartDate"]').val());
+            obj["plannedStartTime"] = toISOZ($('.editProductTransactionInput1[name="plannedStartDate"]').val());
+            obj["plannedEndTime"] = toISOZ($('.editProductTransactionInput1[name="plannedEndDate"]').val());
+            obj["requestDate"] = toISOZ($('.editProductTransactionInput1[name="requestDate"]').val());
+            obj["epoDate"] = toISOZ($('.editProductTransactionInput1[name="epoDate"]').val());
+
+            // Set product object
+            // Set product object
+            var productId = $('#editSelectedProductId').val();
+            if (productId) {
+                obj["product"] = { id: productId };
+            }
+            // Set customer object
+            var customerId = $('.editProductTransactionInput[name="customer.id"]').val();
+            console.log('Customer ID:', customerId);
+            if (customerId) {
+                obj["customer"] = { id: customerId };
+            }
+
+            // Set consignee object
+            var consigneeId = $('.editProductTransactionInput[name="consignee.id"]').val();
+            console.log('Consignee ID:', consigneeId);
+            if (consigneeId) {
+                obj["consignee"] = { id: consigneeId };
+            }
+
+            // Set assigned to object
+            var assignedToId = $('.editProductTransactionInput[name="assignedTo.id"]').val();
+            if (assignedToId) {
+                obj["assignedTo"] = { id: assignedToId };
+            }
+
+            // Set requester object
+            var requesterId = $('.editProductTransactionInput[name="requester.id"]').val();
+            if (requesterId) {
+                obj["requester"] = { id: requesterId };
+            }
+
+            var shipFromId = $('.editProductTransactionInput[name="shipFrom.id"]').val();
+            if (shipFromId) {
+                obj["shipFrom"] = { id: shipFromId }
+            }
+
+            // Set grade (name) field
+            var gradeName = $('.gradeDrop').val();
+            if (gradeName) {
+                obj["name"] = gradeName;
+            }
+            console.log('final edit obj', obj);
+
+            // Make API call to update the record
+            JSUTIL.callAJAXPut('/api/production-requests/' + recordId, JSON.stringify(obj),
+                function (res) {
+                    console.log('update res', res);
+                    // alert('Production Request updated successfully!');
+                    location.reload();
+                },
+                function (error) {
+                    console.error('Error updating record:', error);
+                    // alert('Error updating Production Request. Please try again.');
+                    // Re-enable save button on error
+                    saveBtn.prop('disabled', false).html('<i class="fa fa-check"></i> Save');
+                }
+            );
+        });
+        $('.editEditPTPanel').on('click', function () {
+            enableEditForm();
+        });
+        $('.deletePT').on('click', function () {
+            JSUTIL.callAJAXPost('/api/production-requests/' + currentEditRecord.id, JSON.stringify({ processStatus: "Cancelled" }), function (res) {
+                console.log('res', res)
+                location.reload()
+            })
+        })
+        $('.sendToProduction').on('click', function () {
+            JSUTIL.callAJAXPut('/api/production-requests/' + currentEditRecord.id, JSON.stringify({ processStatus: "In Production" }), function (res) {
+                console.log('res', res)
+                location.reload()
+            })
+        })
+    });
+    // Initialize edit product search with typeahead
+    function loadProductsForSearch(callback) {
+        $.ajax({
+            url: '/api/products?type=Finished Goods',
+            type: 'GET',
+            success: function (data) {
+                var products = (data || []).map(function (p) {
+                    return {
+                        id: p.id,
+                        name: p.name,
+                        number: p.number,
+                        uom: p.uom,
+                        nameLower: (p.name || '').toLowerCase(),
+                        numberLower: (p.number || '').toLowerCase(),
+                        search: ((p.name || '') + ' ' + (p.number || '')).toLowerCase(),
+                        displayLabel: (p.number || '') + ' | ' + (p.name || '')
+                    };
+                });
+                callback(products);
+            },
+            error: function (err) {
+                console.error('Error loading products:', err);
+                callback([]);
+            }
+        });
+    }
+
+    function initializeEditProductSearch() {
+        loadProductsForSearch(function (products) {
+            // Destroy existing typeahead if any
+            try {
+                $('#editProductSearch').typeahead('destroy');
+            } catch (e) {
+                // ignore destroy errors
+            }
+
+            // Initialize merged search (searches both code and name)
+            $('#editProductSearch').typeahead({
+                source: function (query, process) {
+                    query = (query || '').toLowerCase();
+                    var filtered = products.filter(function (item) {
+                        if (!query) return true;
+                        // Search in both name and number
+                        return item.nameLower.indexOf(query) !== -1 ||
+                            item.numberLower.indexOf(query) !== -1 ||
+                            item.search.indexOf(query) !== -1;
+                    }).map(function (item) {
+                        // Display format: "CODE123 | Product Name"
+                        return item.displayLabel;
+                    });
+                    process(filtered);
+                },
+                afterSelect: function (selectedText) {
+                    var product = products.find(function (p) {
+                        return p.displayLabel === selectedText;
+                    });
+                    if (product) {
+                        populateEditProductFields(product);
+                    }
+                },
+                minLength: 0,
+                items: 10,
+                autoSelect: true
+            });
+        });
+    }
+
+    // Populate edit product fields after selection
+    function populateEditProductFields(product) {
+        $('#editSelectedProductId').val(product.id);
+        $('#editProductSearch').val(product.displayLabel);
+        $('#editProductUom').val(product.uom);
+        populateProductGradeForEdit(product.id)
+    }
+    // Function to validate edit form
+    function validateEditForm() {
+        var errors = [];
+
+        // Check product using the dedicated visible hidden input (editSelectedProductId)
+        // NOTE: editProductTransactionInput1[name="product.Id"] is the same field but
+        // may be disabled after disableEditForm(), so reading from #editSelectedProductId directly
+        if (!$('#editSelectedProductId').val()) {
+            errors.push('Product is required');
+        }
+
+        var requestDateVal = $('#editRequestDate').val();
+        console.log('Request Date value:', requestDateVal);
+        // requestDate is auto-populated from record data (falls back to today via getTodayDate())
+        // It is a hidden field, so only warn in console — do not block save
+        if (!requestDateVal) {
+            console.warn('Request Date is empty — will be omitted from payload');
+        }
+
+        // Validate numeric fields
+        var quantity = $('#editQuantity').val();
+        if (quantity && parseFloat(quantity) < 0) {
+            errors.push('Quantity must be a positive number');
+        }
+
+
+
+        var batchSize = $('#editBatchSize').val();
+        if (batchSize && parseFloat(batchSize) < 0) {
+            errors.push('Batch Size must be a positive number');
+        }
+
+        // // Validate date logic
+        // var plannedStart = $('#editPlannedStartDate').val();
+        // var plannedEnd = $('#editPlannedEndDate').val();
+        // if (plannedStart && plannedEnd) {
+        //     var startDate = parseDateDDMMYYYY(plannedStart);
+        //     var endDate = parseDateDDMMYYYY(plannedEnd);
+        //     if (startDate > endDate) {
+        //         errors.push('Planned End Date must be after Planned Start Date');
+        //     }
+        // }
+
+        // var actualStart = $('#editActualStartDate').val();
+        // var actualEnd = $('#editActualEndDate').val();
+        // if (actualStart && actualEnd) {
+        //     var startDate = parseDateDDMMYYYY(actualStart);
+        //     var endDate = parseDateDDMMYYYY(actualEnd);
+        //     if (startDate > endDate) {
+        //         errors.push('Actual End Date must be after Actual Start Date');
+        //     }
+        // }
+
+        // Display errors if any
+        if (errors.length > 0) {
+            console.log('Please fix the following errors:\n\n' + errors.join('\n'));
+            return false;
+        }
+
+        return true;
+    }
+
+    // Helper function to parse dd/mm/yyyy date string
+    function parseDateDDMMYYYY(dateStr) {
+        if (!dateStr) return null;
+        const [day, month, year] = dateStr.split('/');
+        return new Date(year, month - 1, day);
+    }
+
+    // Function to load production request data into edit form
+    function loadProductionRequestForEdit(recordId) {
+        // Show loading indicator
+        $('#editProductTransaction .ibox-content').append('<div class="sk-spinner sk-spinner-wave" id="editLoadingSpinner"><div class="sk-rect1"></div><div class="sk-rect2"></div><div class="sk-rect3"></div><div class="sk-rect4"></div><div class="sk-rect5"></div></div>');
+
+        // Call API to get full record with nested objects
+        $.ajax({
+            url: '/api/production-requests/' + recordId,
+            type: 'GET',
+            success: function (record) {
+                disableEditForm();
+                currentEditRecord = record;
+
+                // Show edit panel first (needed for datepicker to work)
+                $('#allProductTransaction').hide();
+                $('#newProductTransaction').hide();
+                $('#editProductTransaction').show();
+
+                // Now populate the form (after it's visible)
+                populateEditForm(record);
+
+                // Remove loading spinner
+                $('#editLoadingSpinner').remove();
+            },
+            error: function (err) {
+                console.error('Error loading record:', err);
+                // alert('Error loading record');
+                $('#editLoadingSpinner').remove();
+            }
+        });
+    }
+
+    // Function to populate edit form with record data
+    function populateEditForm(record) {
+        // Store record ID
+        $('#editProductTransactionId').val(record.id);
+
+        // Basic fields
+        $('#editNumber').val(record.number || '');
+        $('#editNumberTitle').text(record.number || '');
+        $('#editEpoNumber').val(record.epoNumber || '');
+        $('#editDestinationPort').val(record.destinationPort || '');
+        $('#editDestinationCountry').val(record.destinationCountry || '');
+
+        // Customer
+        if (record.customer) {
+            $('#editCustomerName').val(record.customer.name || '');
+            $('#editCustomerHiddenId').val(record.customer.id || '');
+        }
+
+        // Consignee
+        if (record.consignee) {
+            $('#editConsigneeName').val(record.consignee.name || '');
+            $('#editConsigneeHiddenId').val(record.consignee.id || '');
+        }
+        if (record.shipfrom) {
+            $('#editShipFrom').val(record.shipFrom.name || '');
+            $('#editShipFromHiddenId').val(record.shipFrom.id || '');
+        }
+
+        // Assigned To
+        if (record.assignedTo) {
+            $('#editAssignedToName').val(record.assignedTo.name || '');
+            $('#editAssignToHiddenId').val(record.assignedTo.id || '');
+        }
+
+        // Requester
+        if (record.requester) {
+            $('#editRequesterId').val(record.requester.id || '');
+        }
+
+        // Date fields - convert from ISO to display format
+        // Add fallback for empty dates
+        $('#editEpoDate').val(fromISOZ(record.epoDate) || '');
+        $('#editRequestDate').val(fromISOZ(record.requestDate) || getTodayDate());
+        console.log('Record requestDate:', record.requestDate);
+        console.log('Formatted requestDate:', fromISOZ(record.requestDate));
+        $('#editPlannedStartDate').val(fromISOZ(record.plannedStartTime));
+        $('#editPlannedEndDate').val(fromISOZ(record.plannedEndTime));
+        $('#editActualStartDate').val(fromISOZ(record.actualStartTime));
+        $('#editActualEndDate').val(fromISOZ(record.actualEndTime));
+
+        // Textarea fields
+        $('#editPaymentTerms').val(record.paymentTerms || '');
+        $('#editPartialShipment').val(record.partialShipment || '').trigger('change.select2');
+        $('#editApplicationScheme').val(record.applicationScheme || '');
+        $('#editSpecialInstructions').val(record.specialInstructions || '');
+        $('#editLabelInstructions').val(record.labelInstructions || '');
+        $('#editShippingMarks').val(record.shippingMarks || '');
+        $('#editModeOfTransport').val(record.modeOfTransport || '').trigger('change.select2');
+        $('#editShippingDetails').val(record.shippingDetails || '');
+        $('#editShippingInstructions').val(record.shippingInstructions || '');
+        // Product - load grades for this product first
+        if (record.product) {
+            var productDisplay = record.product.number ?
+                (record.product.number + ' | ' + record.product.name) :
+                record.product.name;
+            $('#editProductSearch').val(productDisplay);
+            $('#editSelectedProductId').val(record.product.id);
+
+            // Load grades for this product
+            populateProductGradeForEdit(record.product.id);
+        }
+
+        // Grade - keep dropdown disabled for viewing (readonly)
+        // The dropdown is disabled in HTML, so we just set the value for display
+        // We need to enable it briefly to set the value, then disable it again
+        if (record.name) {
+            $('.gradeDrop').prop('disabled', false);
+            $('.gradeDrop').val(record.name);
+            $('.gradeDrop').prop('disabled', true);
+        }
+
+        // UOM
+        if (record.uom) {
+            $('#editProductUom').val(record.uom);
+        }
+
+        // Numeric fields
+        $('#editPackSize').val(record.packSize || '');
+        $('#editBatchSize').val(record.batchSize || '');
+        $('#editQuantity').val(record.quantity || '');
+        $('#editTotalCost').val(record.totalCost || '');
+        $('#editPriceCif').val(record.priceCif || '');
+        $('#editPriceFob').val(record.priceFob || '');
+
+        if (record.processStatus == 'New') {
+            $('.saveEditPTPanel').hide();
+            $('.editEditPTPanel').show();
+            $('.deletePT').show()
+            $('.sendToProduction').show()
+        }
+        else {
+            $('.saveEditPTPanel').hide();
+            $('.editEditPTPanel').hide();
+            $('.deletePT').hide()
+            $('.sendToProduction').hide()
+        }
+    }
+    function populateProductGradeForEdit(productId) {
+        console.log('Loading grades for product ID:', productId);
+        $.get('/api/product-labels/search?productId=' + productId, function (res) {
+            console.log('Grade results:', res);
+            $('.gradeDrop').empty();
+            var innerhtml = '<option value="">--none--</option>';
+            if (res && res.length > 0) {
+                $.each(res, function (i, val) {
+                    var label = val.name + (val.number ? ' - ' + val.number : '');
+                    innerhtml += '<option value="' + val.name + '">' + label + '</option>';
+                });
+            }
+            $('.gradeDrop').append(innerhtml);
+            // Set the grade value if editing
+            if (currentEditRecord && currentEditRecord.name) {
+                $('.gradeDrop').val(currentEditRecord.name);
+            }
+        }).fail(function (err) {
+            console.error('Error loading grades:', err);
+            $('.gradeDrop').empty();
+            $('.gradeDrop').append('<option value="">--none--</option>');
+        });
+    }
+    // Function to clear edit form
+    function clearEditForm() {
+        currentEditRecord = null;
+        $('#editProductTransactionId').val('');
+        $('.editProductTransactionInput').val('');
+        $('.editProductTransactionInput1').val('').trigger('change.select2');
+        $('textarea.editProductTransactionInput').val('');
+
+        // Clear autocomplete fields
+        $('#editCustomerName').val('');
+        $('#editConsigneeName').val('');
+        $('#editShipFrom').val('')
+        $('#editAssignedToName').val('');
+        $('#editProductSearch').val('');
+        $('#editSelectedProductId').val('');
+        $('#editProductUom').val('');
+    }
+
+    // Helper function to get today's date in DD/MM/YYYY format
+    function getTodayDate() {
+        var today = new Date();
+        var day = String(today.getDate()).padStart(2, '0');
+        var month = String(today.getMonth() + 1).padStart(2, '0');
+        var year = today.getFullYear();
+        return day + '/' + month + '/' + year;
+    }
+
+    // Helper function to convert ISO date string to dd/mm/yyyy format
+    function fromISOZ(isoString) {
+        if (!isoString) return '';
+
+        try {
+            var date = new Date(isoString);
+            var day = String(date.getUTCDate()).padStart(2, '0');
+            var month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            var year = date.getUTCFullYear();
+
+            return day + '/' + month + '/' + year;
+        } catch (e) {
+            console.error('Error converting date:', e);
+            return '';
+        }
+    }
+
+    // Helper function to convert dd/mm/yyyy to ISO format
+    function toISOZ(dateStr) {
+        if (!dateStr) return null;
+
+        try {
+            const [day, month, year] = dateStr.split('/');
+            const date = new Date(Date.UTC(year, month - 1, day));
+            return date.toISOString().replace('.000', '');
+        } catch (e) {
+            console.error('Error converting date:', e);
+            return null;
+        }
+    }
+    function disableEditForm() {
+        $('#editProductionRequestForm')
+            .find('input, textarea, select')
+            .prop('disabled', true);
+
+        // Keep number always disabled
+        $('#editNumber').prop('disabled', true);
+
+
+    }
+
+    function enableEditForm() {
+        $('#editProductionRequestForm')
+            .find('input, textarea, select')
+            .prop('disabled', false);
+
+        // Still keep number + UOM protected
+        $('#editNumber').prop('disabled', true);
+
+        $('.saveEditPTPanel').show();
+        $('.editEditPTPanel').hide();
+    }
+
+    // editProductionRequest.js End
+</script>

@@ -1,0 +1,209 @@
+<!-- Rooms & Beds Page -->
+<div class="page-content" id="rooms-page">
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon blue"><i class="ri-hospital-fill"></i></div>
+        <div class="stat-title">Rooms</div>
+      </div>
+      <div class="stat-value">
+        <span id="totalRooms">0</span>
+        <span class="stat-unit">Rooms Available</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon green"><i class="ri-hotel-bed-line"></i></div>
+        <div class="stat-title">Beds</div>
+      </div>
+      <div class="stat-value">
+        <span id="availableBeds">0</span>
+        <span class="stat-unit">Available Beds</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon yellow"><i class="ri-hotel-bed-fill"></i></div>
+        <div class="stat-title">Occupied</div>
+      </div>
+      <div class="stat-value">
+        <span id="occupiedBeds">0</span>
+        <span class="stat-unit">Beds Occupied</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-icon red"><i class="ri-pie-chart-2-line"></i></div>
+        <div class="stat-title">Occupancy</div>
+      </div>
+      <div class="stat-value">
+        <span id="occupancyRate">0%</span>
+        <span class="stat-unit">Occupied</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="search-bar">
+    <!-- <select id="wardFilter" class="select-filter">
+      <option value="">All Wards</option>
+      <option value="general">General Ward</option> -->
+      <!-- <option value="private">Private Rooms</option>
+      <option value="semi-private">Semi-Private</option>
+      <option value="icu">ICU</option>
+      <option value="pediatric">Pediatric Ward</option>
+      <option value="maternity">Maternity Ward</option> -->
+    <!-- </select> -->
+    <!-- <select id="floorFilter" class="select-filter">
+      <option value="">All Floors</option>
+      <option value="1">1st Floor</option>
+      <option value="2">2nd Floor</option>
+      <option value="3">3rd Floor</option>
+    </select> -->
+    <select id="statusFilter" class="select-filter" onchange="filterRooms()">
+      <!-- <option value="">All Status</option> -->
+      <option value="available" selected>Available</option>
+      <option value="occupied">Occupied</option>
+      <!-- <option value="maintenance">Under Maintenance</option>
+      <option value="reserved">Reserved</option> -->
+    </select>
+    <button class="btn btn-primary" onclick="filterRooms()">Apply Filters</button>
+    <button class="btn btn-secondary" onclick="openRoomManagementModal()">Manage Rooms</button>
+  </div>
+
+  <!-- Room Grid -->
+  <div class="room-grid" id="roomGrid">
+    <!-- Dynamic room cards inserted via JS -->
+  </div>
+
+  <!-- Room Occupancy Table -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h3 class="card-title">Room Occupancy Details</h3>
+      <button class="btn btn-outline" onclick="exportRoomData()">Export Report</button>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Room No.</th>
+          <th>Ward Type</th>
+          <th>Floor</th>
+          <th>Total Beds</th>
+          <th>Occupied</th>
+          <th>Available</th>
+          <th>Patient(s)</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="roomsTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Generic Modal Template -->
+<div class="modal hidden" id="roomDetailsModal">
+  <div class="modal-content" style="max-width:700px;">
+    <div class="modal-header">
+      <h3>Room Details</h3>
+      <button class="close-btn" onclick="closeModal('roomDetailsModal')"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body" id="roomDetailsContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('roomDetailsModal')">Close</button>
+      <button class="btn btn-secondary" onclick="assignPatientToRoom()">Assign Patient</button>
+      <button class="btn btn-primary" onclick="dischargeFromRoom()">Discharge Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Patient Modal -->
+<div class="modal hidden" id="assignPatientModal">
+  <div class="modal-content" style="max-width:600px;">
+    <div class="modal-header">
+      <h3>Assign Patient</h3>
+      <button class="close-btn" onclick="closeModal('assignPatientModal')"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="assignPatientForm" onsubmit="handlePatientAssignment(event); return false;">
+        <div class="mb-3">
+          <label for="patientSelect" class="block mb-1">Select Patient *</label>
+          <select id="patientSelect" required class="w-full p-2 select-filter"></select>
+        </div>
+        <div class="mb-3">
+          <label for="bedSelect" class="block mb-1">Select Bed *</label>
+          <select id="bedSelect" required class="w-full p-2 select-filter"></select>
+        </div>
+        <div class="mb-3">
+          <label for="admissionDate" class="block mb-1">Admission Date *</label>
+          <input type="date" id="admissionDate" required class="w-full p-2 border rounded-sm">
+        </div>
+        <div class="mb-3">
+          <label for="admissionNotes" class="block mb-1">Admission Notes</label>
+          <textarea id="admissionNotes" rows="3" class="w-full p-2 border rounded-sm"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('assignPatientModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Assign Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Room Management Modal -->
+<div class="modal hidden" id="roomManagementModal">
+  <div class="modal-content" style="max-width:800px;">
+    <div class="modal-header">
+      <h3>Room Management</h3>
+      <button class="close-btn" onclick="closeModal('roomManagementModal')"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="text" id="roomSearchInput" placeholder="Search..." oninput="filterRoomManagementList()">
+      <div id="roomManagementList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('roomManagementModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Discharge Patient Modal -->
+<div class="modal hidden" id="dischargePatientModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Discharge Patient</h3>
+      <button class="close-btn" onclick="closeModal('dischargePatientModal')"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="dischargePatientForm" onsubmit="handlePatientDischarge(event); return false;">
+        <div class="mb-3">
+          <label for="dischargeDate" class="block mb-1">Discharge Date *</label>
+          <input type="date" id="dischargeDate" required class="w-full p-2 border rounded-sm">
+        </div>
+        <div class="mb-3">
+          <label for="dischargeReason" class="block mb-1">Reason *</label>
+          <select id="dischargeReason" required class="w-full p-2 select-filter">
+            <option value="">Select Reason</option>
+            <option value="recovered">Recovered</option>
+            <option value="transferred">Transferred</option>
+            <option value="home_care">Home Care</option>
+            <option value="ama">Against Medical Advice</option>
+            <option value="deceased">Deceased</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="dischargeNotes" class="block mb-1">Discharge Notes</label>
+          <textarea id="dischargeNotes" rows="4" class="w-full p-2 border rounded-sm"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('dischargePatientModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Discharge Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="assets/js/rooms.js"></script>

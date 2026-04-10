@@ -1,0 +1,469 @@
+<!-- allDocumentControl.html start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allDocumentsPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Documents <small>Document Control</small></h5>
+                    <div class="ibox-tools" style="margin-left:auto; text-align:right;">
+                        <button type="button" class="btn btn-white exportBtn">
+                            <i class="fa fa-upload"></i> Export to Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select class="select2 form-control" id="typeFilter">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select class="select2 form-control" id="sampleTypeFilter">
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="margin-top: 10px;">
+                        <table class="table table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Document Number</th>
+                                    <th>Document Name</th>
+                                    <th>Department</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody class="recordTableBody" id="allDocumentsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- allDocumentControl.html end -->
+
+
+
+<!-- allDocumentControl.js start -->
+<script>
+    let allDocumentsData = [];
+    const typeParameter = {
+        fields: "ExtFolderId;Name",
+        conditions: [],
+        logic: ""
+    };
+    var ansUrl = JSUTIL.getUrl('/data/QualityDocumentType/list');
+    JSUTIL.callAJAXPost(ansUrl, JSON.stringify(typeParameter), callbackAfterGetType);
+    const departmentParameter = {
+        fields: "StartDate;Name",
+        conditions: [],
+        logic: ""
+    };
+    var ansUrlDept = JSUTIL.getUrl('/data/Department/list');
+    JSUTIL.callAJAXPost(ansUrlDept, JSON.stringify(departmentParameter), callbackAfterGetDepartment);
+
+    const versionParameter = {
+        fields: "Document.Id;Document.Number;Document.Name;Document.Department;CurrentVersion;CreatedDate;DueDate;IssueDate;EffectiveDate;ExtFileId;MasterExtFileId;IsArchived;IsObsolete;TechReviewDate",
+        conditions: ['IsArchived = false', 'IsObsolete = false'],
+        logic: "{0} AND {1}"
+    };
+    var ansUrlVersion = JSUTIL.getUrl('/data/QualityDocumentVersion/list');
+    JSUTIL.callAJAXPost(ansUrlVersion, JSON.stringify(versionParameter), callbackAfterGetVersions1);
+
+    function callbackAfterGetVersions1(response) {
+        allDocumentsData = response || [];
+
+        const tableBody = $('#allDocumentsTable');
+        tableBody.empty();
+
+        let innerHtml = '';
+        $.each(recordList, function (i, u) {
+            innerHtml += `
+            <tr>
+                <td class="itemNum"><a href="javascript:void(0);" class="selectDocumentsBtn" name="${u.id}">${u.number}</a></td>
+                <td>${u.name}</td>
+                <td>${u.department}</td>
+                <td>${u.documentType.name}</td>
+            </tr>`;
+        });
+        $('.recordTableBody').append(innerHtml);
+
+        JSUTIL.reinitializeDataTable();
+    }
+    function callbackAfterGetType(response) {
+        console.log(response);
+        $('#typeFilter').empty();
+        var innerHtml = '<option value="">All</option>';
+        $.each(response, function (i, val) {
+            innerHtml += '<option value="' + val.name + '">' + val.name + '</option>';
+        });
+        $('#typeFilter').append(innerHtml);
+    }
+    function callbackAfterGetDepartment(response) {
+        $('#sampleTypeFilter').empty();
+        var innerHtml = '<option value="">All</option>';
+        $.each(response, function (i, val) {
+            innerHtml += '<option value="' + val.name + '">' + val.name + '</option>';
+        });
+        $('#sampleTypeFilter').append(innerHtml);
+    }
+
+    $(document).ready(function () {
+        $('#allDocumentsPanel').show();
+        $('#newDocumentsPanel').hide();
+        $('#editDocumentsPanel').hide();
+
+        $('#typeFilter, #sampleTypeFilter').on('change', function () {
+            $('.dataTables').DataTable().draw();
+        });
+
+        $('.exportBtn').on('click', function () {
+            if (allDocumentsData.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            const exportData = allDocumentsData.map(version => {
+                const doc = version.document || {};
+                return {
+                    "Document Number": doc.number || '',
+                    "Document Name": doc.name || '',
+                    "Current Version": version.currentVersion || '',
+                    "Department": doc.department || '',
+                    "Due Date": JSUTIL.getDate(version.dueDate),
+                    "Issue Date": JSUTIL.getDate(version.issueDate),
+                    "Effective Date": JSUTIL.getDate(version.effectiveDate)
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Documents");
+
+            XLSX.writeFile(workbook, "Document List.xlsx");
+        });
+    });
+    $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            var typeFilter = $('#typeFilter').val();
+            var typeColVal = data[3];
+            if ((typeColVal == '') || (typeColVal.indexOf(typeFilter) >= 0)) {
+                return true;
+            }
+            return false;
+        }
+    );
+    $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            var typeFilter = $('#sampleTypeFilter').val();
+            var typeColVal = data[2];
+            if (typeFilter === "" || typeColVal.indexOf(typeFilter) >= 0) {
+                return true;
+            }
+            return false;
+        }
+    );  
+</script>
+<!-- allDocumentControl.js end -->
+
+
+
+<!-- editDocumentControl.html start -->
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<div class="qa-white-panel">
+<div class="row animated fadeInRight aasaanPanel editPagePanel" id="editDocumentsPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="editRecordTitle"></span></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box editDocumentsCancelBtn">
+                        <i data-lucide="x"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm masterViewBtn">
+                        <img src="https://github.com/dev22419/image/blob/main/master_copy2.png?raw=true"
+                            style="width: auto; height: 13px;margin-bottom:2px">
+                    </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="editDocumentsObj" id="editDocumentsForm">
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="documentNumber">Document Number</label>
+                                <input type="text" class="form-control editDocumentsInput" id="documentNumber"
+                                    name="Number" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label>Department</label>
+                                <input type="text" class="form-control editDocumentsInput" id="department"
+                                    name="Department" readonly>
+                            </div>
+                            <!-- <div class="form-group">
+                                <label for="preparedBy">Prepared By</label>
+                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
+                                <input type="hidden" id="preparedById" name="PreparedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
+                            </div>
+                            <div class="form-group">
+                                <label for="approvedBy">Approved By</label>
+                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
+                                <input type="hidden" id="approvedById" name="ApprovedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
+                            </div>
+                            <div class="form-group">
+                                <label for="issuedBy">Issued By</label>
+                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
+                                <input type="hidden" id="issuedById" name="IssuedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
+                            </div> -->
+                        </div>
+                        <!-- Right Column -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="documentName">Document Name</label>
+                                <input type="text" class="form-control editDocumentsInput" id="documentName" name="Name"
+                                    readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="withdrawalDate">Withdrawal Date</label>
+                                <input type="text" class="form-control editDocumentsInput" id="withdrawalDate"
+                                    name="withdrawalDate" readonly>
+                            </div>
+                            <!-- <div class="form-group">
+                                <label for="preparedDate">Prepared Date</label>
+                                <input type="text" class="form-control datepicker editDocumentsInput" id="preparedDate" name="PreparedDate" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="approvedDate">Approved Date</label>
+                                <input type="text" class="form-control datepicker editDocumentsInput" id="approvedDate" name="ApprovedDate" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="issueDate">Issue Date</label>
+                                <input type="text" class="form-control datepicker editDocumentsInput" id="issueDate" name="IssueDate" disabled>
+                            </div> -->
+                            <input type="hidden" id="editDocumentsId" name="Id" />
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <div class="tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a data-toggle="tab" href="#Uploads" aria-expanded="false">Document Versions</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="Uploads" class="tab-pane active">
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Name</th>
+                                                <th>Version</th>
+                                                <th>Due Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="allDocuments"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<!-- editDocumentControl.html end -->
+
+
+
+<!-- editDocumentControl.js start -->
+<script>
+    var documentId;
+    var documentPath1;
+    var fileName;
+    var masterId;
+    $(document).ready(function () {
+        $('.editDocumentsCancelBtn').on('click', function () {
+            $('#allDocumentsPanel').show();
+            $('#editDocumentsPanel').hide();
+        });
+        $('.masterViewBtn').on('click', function () {
+            JSUTIL.callAJAXGet('/onedrive/view/' + masterId, callbackAfterEditFile);
+        });
+        $('#allDocumentsTable').on('click', '.selectDocumentsBtn', function () {
+            const currentId = $(this).attr('name');
+            currentRecordEquipId = currentId;
+            $.each(recordList, function (i, val) {
+                if (currentRecordEquipId == val.id) {
+                    $('.editDocumentsInput[name="Name"]').val(val.name);
+                    $('.editDocumentsInput[name="Number"]').val(val.number);
+                    $('.editDocumentsInput[name="Department"]').val(val.department);
+                    if (val.withdrawalDate) {
+                        $('.editDocumentsInput[name="withdrawalDate"]').val(JSUTIL.getDate(val.withdrawalDate));
+                        $('input[name="withdrawalDate"]').closest('.form-group').show();
+                    }
+                    else {
+                        $('input[name="withdrawalDate"]').closest('.form-group').hide();
+                    }
+                    $('#editDocumentsId').val(val.id);
+                    $('#editRecordTitle').text(val.number + '-' + val.name);
+                    documentId = val.id;
+                    fileName = val.name
+                }
+            });
+            $('#allDocumentsPanel').hide();
+            $('#editDocumentsPanel').show();
+            const versionParameter = {
+                fields: "Document.Id;CurrentVersion;CreatedDate;DueDate;ExtFileId;MasterExtFileId;IsArchived;IsObsolete;TechReviewDate;IsLegacy;DocumentRequest.Id",
+                conditions: [`Document.Id = ${documentId}`, 'IsArchived = false', 'IsObsolete = false'],
+                logic: "{0} AND {1} AND {2}"
+            };
+            var ansUrl = JSUTIL.getUrl('/data/QualityDocumentVersion/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(versionParameter), callbackAfterGetVersions);
+        });
+    });
+    function callbackAfterGetVersions(response) {
+        console.log(response);
+        masterId = response[response.length - 1].masterExtFileId;
+        $('#allDocuments').empty();
+        var innerHtml = '';
+        $.each(response, function (i, val) {
+            innerHtml += '<tr><td style="width: 10%;">';
+
+            innerHtml += '<button type="button" class="btn btn-outline btn-info deleteTrSelect downloadReceiptBtn" name="' + val.extFileId + '"><i class="fa fa-download"></i></button>';
+
+            // MODIFICATION: Added data-is-legacy attribute to the view button
+            innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.extFileId + '" data-is-legacy="' + val.isLegacy + '" style="margin-left: 5px;"><i class="fa fa-eye"></i></button>' +
+                '</td>' +
+                '<td>' + val.document.name + '</td>' +
+                '<td>' + val.currentVersion + '</td>' +
+                '<td>' + JSUTIL.getDate(val.dueDate) + '</td>' +
+                '</tr>';
+        });
+        $('#allDocuments').append(innerHtml);
+
+        $('.viewDocumentBtn').on('click', function () {
+            documentPath1 = $(this).attr('id');
+
+            // MODIFICATION: Get the isLegacy flag from the button's data attribute
+            const isLegacy = $(this).data('is-legacy');
+
+            var postDocUrl1 = JSUTIL.getUrl('/onedrive/download/' + encodeURIComponent(documentPath1));
+
+            // MODIFICATION: Pass isLegacy to the callback by wrapping it in a function
+            JSUTIL.callAJAXGet(postDocUrl1, function (response) {
+                getBlobCallback(response, isLegacy);
+            });
+        });
+
+        $('.downloadReceiptBtn').on('click', function () {
+            var documentPath2 = $(this).attr('name');
+            var postDocUrl = JSUTIL.getUrl('/onedrive/download/' + encodeURIComponent(documentPath2));
+            JSUTIL.callAJAXGet(postDocUrl, getFormCallback);
+        });
+    }
+    function getFormCallback(response) {
+        console.log(response);
+        var data = 'application/pdf' + ";base64," + encodeURIComponent(response);
+        var a = document.createElement('a');
+        a.href = 'data:' + data;
+        a.download = fileName;
+        a.innerHTML = 'download file';
+        a.click();
+    }
+    async function getBlobCallback(response, isLegacy) {
+        console.log(response);
+
+        try {
+            // Convert base64 to array buffer (needed for both scenarios)
+            const binaryString = atob(response);
+            const pdfBytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                pdfBytes[i] = binaryString.charCodeAt(i);
+            }
+
+            // MODIFICATION: Check if the document is a legacy document
+            // If isLegacy is true, don't stamp. If it's false or undefined, stamp it.
+            if (isLegacy === true) {
+                console.log("Legacy document detected. Skipping watermark.");
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                return; // Exit the function to prevent stamping
+            }
+
+            // --- Stamping logic for non-legacy documents ---
+            console.log("Stamping document with 'CONTROLLED COPY'.");
+            const { PDFDocument, rgb } = PDFLib;
+            const pdfDoc = await PDFDocument.load(pdfBytes);
+            const helveticaFont = await pdfDoc.embedFont('Helvetica-Bold');
+            const pages = pdfDoc.getPages();
+            const footerFontSize = 12;
+            const footerY = 40;
+            const redColor = rgb(1, 0, 0);
+            const controlledCopyText = 'CONTROLLED COPY';
+            const controlledCopyWidth = helveticaFont.widthOfTextAtSize(controlledCopyText, footerFontSize);
+            const controlledCopyX = 225;
+            const controlledBoxPadding = 8;
+            const controlledBoxWidth = controlledCopyWidth + (controlledBoxPadding * 2);
+            const controlledBoxHeight = 20;
+
+            pages.forEach(page => {
+                const { height } = page.getSize();
+
+                page.drawRectangle({
+                    x: controlledCopyX - controlledBoxPadding,
+                    y: footerY - 5,
+                    width: controlledBoxWidth,
+                    height: controlledBoxHeight,
+                    borderColor: redColor,
+                    borderWidth: 2,
+                });
+
+                page.drawText(controlledCopyText, {
+                    x: controlledCopyX,
+                    y: footerY,
+                    font: helveticaFont,
+                    size: footerFontSize,
+                    color: redColor,
+                });
+            });
+
+            const modifiedPdfBytes = await pdfDoc.save();
+            const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+
+        } catch (error) {
+            console.error('Error processing PDF:', error);
+            alert('Failed to process PDF');
+        }
+    }
+    function callbackAfterEditFile(response) {
+        console.log(response);
+        if (response && response.data) {
+            window.open(response.data, '_blank');
+        } else {
+            console.error('Invalid response data.');
+        }
+    }  
+</script>
+<!-- editDocumentControl.js end -->

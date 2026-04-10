@@ -1,0 +1,822 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- ledgerPanel.html   Start -->
+<div class="qa-white-panel">
+ <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Ledger <small>Warehouse</small></h5>
+            </div>
+            <div class="ibox-content m-b-sm border-bottom">
+                <form role="form">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label><strong>Product</strong></label>
+                                <input type="text" placeholder="search.." class="form-control ledger-product-search" />
+                                <input type="hidden" name="Product.Id" class="ledger-product-id" />
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="form-group">
+                                <label><strong>Filter By</strong></label>
+                                <select id="filterTypeDropdown" class="form-control">
+                                    <option value="date">Date Range</option>
+                                    <option value="batch">Batch Number</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Date Range Filters -->
+                        <div id="dateFilterSection" class="col-sm-4" style="padding: 0;display: grid;grid-template-columns: repeat(2,1fr);gap: 10px;">
+                            <div>
+                                <div class="form-group">
+                                    <label><strong>From Date</strong></label>
+                                    <input type="date" id="fromDate" class="form-control" />
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-group">
+                                    <label><strong>To Date</strong></label>
+                                    <input type="date" id="toDate" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Batch Number Filter -->
+                        <div id="batchFilterSection" class="col-sm-4" style="display: none;">
+                            <div class="form-group">
+                                <label><strong>Batch Number</strong></label>
+                                <input type="text" placeholder="search batch.." class="form-control ledger-batch-search" />
+                                <input type="hidden" name="Batch.Id" class="ledger-batch-id" />
+                            </div>
+                        </div>
+
+                        <div class="col-sm-2">
+                            <div class="form-group text-right">
+                                <label>&nbsp;</label>
+                                <div>
+                                    <button type="button" id="fetchTransactionsBtn" class="btn btn-secondary">Fetch</button>
+                                    <button type="button" id="printLedgerBtn" class="btn btn-warning" style="display:none; margin-left: 8px;">
+                                        <i class="ti ti-printer"></i> Print
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row" id="transactionResultsSection" style="display: none;">
+                    <div class="col-sm-12">
+                        <hr>
+                        <h4>Transaction Ledger</h4>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        
+                                        <th>Date</th>
+                                        <th>Transaction Type</th>
+                                        <th>Doc Code</th>
+                                        <th>Batch No</th>
+                                        <th>ARN</th>
+                                        <th>Quantity Receipt</th>
+                                        <th>Quantity Issue</th>
+                                        <th>Closing Balance</th>
+                                        <th>Transaction Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionTableBody">
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="7" class="text-right"><strong>Total:</strong></td>
+                                        <td class="text-right" id="totalAmount"><strong>0</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ledgerPanel.html   End -->
+
+<script>
+// ledgerPanel.js   Start
+$(document).ready(function () {
+    var $productSearchInput = $('.ledger-product-search');
+    var $productIdInput = $('.ledger-product-id');
+    var $batchSearchInput = $('.ledger-batch-search');
+    var $batchIdInput = $('.ledger-batch-id');
+
+    initProductSearch($productSearchInput, $productIdInput);
+
+    var currentBatches = [];
+
+    var currentFilters = {
+        productId: null,
+        productName: '',
+        fromDate: '',
+        toDate: '',
+        batchId: null,
+        batchName: ''
+    };
+
+    var currentTransactions = [];
+
+    // Initialize date inputs
+    var today = new Date().toISOString().split('T')[0];
+    $('#toDate').val(today);
+
+    var thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    $('#fromDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
+
+    // Handle filter type dropdown toggle
+    $('#filterTypeDropdown').on('change', function () {
+        var filterType = $(this).val();
+        if (filterType === 'date') {
+            $('#dateFilterSection').show();
+            $('#batchFilterSection').hide();
+            $batchSearchInput.val('');
+            $batchIdInput.val('');
+        } else {
+            $('#dateFilterSection').hide();
+            $('#batchFilterSection').show();
+            var productId = $productIdInput.val();
+            if (productId) {
+                loadBatchesForProduct(productId);
+            }
+        }
+    });
+
+    // When product changes, reload batches if batch filter is active
+    $productIdInput.on('change', function () {
+        var productId = $(this).val();
+        if ($('#filterTypeDropdown').val() === 'batch' && productId) {
+            loadBatchesForProduct(productId);
+        }
+        $batchSearchInput.val('');
+        $batchIdInput.val('');
+    });
+
+    $productSearchInput.on('blur', function () {
+        setTimeout(function () {
+            var productId = $productIdInput.val();
+            if ($('#filterTypeDropdown').val() === 'batch' && productId) {
+                loadBatchesForProduct(productId);
+            }
+            $batchSearchInput.val('');
+            $batchIdInput.val('');
+        }, 300);
+    });
+
+    $('#fetchTransactionsBtn').on('click', function () {
+        fetchTransactions();
+    });
+
+    $('#printLedgerBtn').on('click', function () {
+        printLedgerReport();
+    });
+
+    function loadBatchesForProduct(productId) {
+        var apiUrl = JSUTIL.getUrl('/api/product-lots/search?productId=' + encodeURIComponent(productId));
+        JSUTIL.callAJAXGet(apiUrl, function (res) {
+            currentBatches = Array.isArray(res) ? res.filter(function (b) {
+                var bProductId =
+                    (b.product && (b.product.Id || b.product.id)) ||
+                    (b.Product && (b.Product.Id || b.Product.id));
+                return String(bProductId) === String(productId);
+            }) : [];
+            initBatchSearch(currentBatches, $batchSearchInput, $batchIdInput);
+        }, function () {
+            currentBatches = [];
+            initBatchSearch([], $batchSearchInput, $batchIdInput);
+        });
+    }
+
+    function fetchTransactions() {
+        var productId = $productIdInput.val();
+        var productName = $productSearchInput.val();
+        var filterType = $('#filterTypeDropdown').val();
+
+        if (!productId) {
+            JSUTIL.buildErrorModal('Please select a product');
+            return;
+        }
+
+        if (filterType === 'date') {
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
+
+            if (!fromDate || !toDate) {
+                JSUTIL.buildErrorModal('Please select both From Date and To Date');
+                return;
+            }
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                JSUTIL.buildErrorModal('From Date cannot be greater than To Date');
+                return;
+            }
+
+            currentFilters = {
+                productId: productId,
+                productName: productName,
+                fromDate: fromDate,
+                toDate: toDate,
+                batchId: null,
+                batchName: ''
+            };
+
+            fetchProductTransactions(productId, function (records) {
+                var filteredTransactions = filterTransactionsByDate(records, productId, fromDate, toDate);
+                console.log('transactions',filteredTransactions)
+                currentTransactions = filteredTransactions;
+                displayTransactions(filteredTransactions);
+                $('#printLedgerBtn').show();
+            });
+
+        } else {
+            var batchId = $batchIdInput.val();
+            var batchName = $batchSearchInput.val();
+
+            if (!batchId) {
+                JSUTIL.buildErrorModal('Please select a batch number');
+                return;
+            }
+
+            currentFilters = {
+                productId: productId,
+                productName: productName,
+                fromDate: '',
+                toDate: '',
+                batchId: batchId,
+                batchName: batchName
+            };
+
+            fetchProductTransactions(productId, function (records) {
+                var filteredTransactions = filterTransactionsByBatch(records, productId, batchId, batchName);
+                console.log('transactions',filteredTransactions)  
+                currentTransactions = filteredTransactions;
+                displayTransactions(filteredTransactions);
+                $('#printLedgerBtn').show();
+            });
+        }
+    }
+
+    function fetchProductTransactions(productId, callback) {
+        if (!productId) {
+            callback([]);
+            return;
+        }
+        var apiUrl = JSUTIL.getUrl(
+            '/api/product-transactions/search?productId=' + encodeURIComponent(productId) +
+            '&type=&changeReason='
+        );
+        JSUTIL.callAJAXGet(apiUrl, function (res) {
+            callback(Array.isArray(res) ? res : []);
+        }, function () {
+            callback([]);
+        });
+    }
+
+    function filterTransactionsByDate(records, productId, fromDate, toDate) {
+        if (!records || records.length === 0) return [];
+        records = records.filter(v=> v.processStatus == 'QA Approved' || v.type!='Stock Adjustment')
+        var fromDateTime = new Date(fromDate);
+        fromDateTime.setHours(0, 0, 0, 0);
+
+        var toDateTime = new Date(toDate);
+        toDateTime.setHours(23, 59, 59, 999);
+
+        return records.filter(function (record) {
+            var recordProductId =
+                record.Product?.Id ||
+                record.Product?.id ||
+                record.product?.Id ||
+                record.product?.id;
+            if (recordProductId != productId) return false;
+
+            var transactionDate = record.TransactionDate || record.transactionDate;
+            if (!transactionDate) return true;
+
+            var recordDate = new Date(transactionDate);
+            return recordDate >= fromDateTime && recordDate <= toDateTime;
+        });
+    }
+
+    function filterTransactionsByBatch(records, productId, batchId, batchName) {
+        if (!records || records.length === 0) return [];
+
+        var selectedBatch = currentBatches.find(function (b) {
+            return String(b.Id || b.id) === String(batchId);
+        });
+
+        var batchNumber = selectedBatch
+            ? (selectedBatch.batchNumber || selectedBatch.BatchNumber || selectedBatch.lotNumber || selectedBatch.LotNumber || batchName)
+            : batchName;
+
+        return records.filter(function (record) {
+            var recordProductId =
+                record.Product?.Id ||
+                record.Product?.id ||
+                record.product?.Id ||
+                record.product?.id;
+            if (recordProductId != productId) return false;
+
+            var recordBatch = record.BatchNumber || record.batchNumber || record.LotNumber || record.lotNumber || '';
+            return String(recordBatch).toLowerCase() === String(batchNumber).toLowerCase();
+        });
+    }
+
+    // Sort by ARN first, then by date within each ARN
+   function sortTransactions(list) {
+    return list.slice().sort(function (a, b) {
+        var dateA = new Date(a.TransactionDate || a.transactionDate);
+        var dateB = new Date(b.TransactionDate || b.transactionDate);
+        return dateA - dateB;
+    });
+}
+
+    function displayTransactions(transactions) {
+        var tableBody = $('#transactionTableBody');
+        tableBody.empty();
+
+        if (transactions.length === 0) {
+            tableBody.append('<tr><td colspan="8" class="text-center">No transactions found for the selected criteria</td></tr>');
+            $('#transactionResultsSection').show();
+            $('#totalAmount').html('<strong>0</strong>');
+            return;
+        }
+
+        var totalAmount = 0;
+
+        // Sort by ARN first, then by date within each ARN
+        var sorted = sortTransactions(transactions);
+
+        // Each ARN tracks its own independent balance
+        var arnBalances = {};
+
+        sorted.forEach(function (transaction) {
+            var date = formatDate(transaction.TransactionDate || transaction.transactionDate);
+            var docCode = transaction.DocNumber || transaction.docNumber || transaction.name || '';
+            var batchNo = transaction.BatchNumber || transaction.batchNumber || transaction?.productLot.batchNumber || '';
+            var arn = (transaction.Arn || transaction.arn || transaction?.productLot.arn || '').toString();
+            var qtyReceipt = parseFloat(transaction.QuantityReceipt || transaction.quantityReceipt || 0);
+            var qtyIssue = parseFloat(transaction.QuantityIssued || transaction.quantityIssued || 0);
+            var transactionAmount = parseFloat(transaction.TransactionAmount || transaction.transactionAmount || 0);
+            var type 
+            if(transaction.type){
+                type =transaction.type
+            }
+            else{
+                type = 'GIM'
+            }
+            // Independent balance per ARN
+            if (!arnBalances[arn]) arnBalances[arn] = 0;
+            arnBalances[arn] += qtyReceipt - qtyIssue;
+
+            totalAmount += transactionAmount;
+
+            var row = '<tr>' +
+                '<td>' + date + '</td>' +
+                `<td>${type}</td>`+
+                '<td>' + docCode + '</td>' +
+                '<td>' + batchNo + '</td>' +
+                '<td>' + arn + '</td>' +
+                '<td class="text-right">' + (qtyReceipt ? qtyReceipt.toFixed(2) : '') + '</td>' +
+                '<td class="text-right">' + (qtyIssue ? qtyIssue.toFixed(2) : '') + '</td>' +
+                '<td class="text-right"><strong>' + arnBalances[arn].toFixed(2) + '</strong></td>' +
+                '<td class="text-right">' + transactionAmount.toFixed(2) + '</td>' +
+                '</tr>';
+
+            tableBody.append(row);
+        });
+
+        $('#totalAmount').html('<strong>' + totalAmount.toFixed(2) + '</strong>');
+        $('#transactionResultsSection').show();
+    }
+
+    function printLedgerReport() {
+        if (currentTransactions.length === 0) {
+            JSUTIL.buildErrorModal('No transactions to print');
+            return;
+        }
+
+        // Sort by ARN first, then by date within each ARN
+        var sortedTransactions = sortTransactions(currentTransactions);
+
+        // Calculate totals
+        var totalReceipt = 0;
+        var totalIssue = 0;
+        var totalStockValue = 0;
+
+        sortedTransactions.forEach(function (transaction) {
+            totalReceipt += parseFloat(transaction.QuantityReceipt || transaction.quantityReceipt || 0);
+            totalIssue += parseFloat(transaction.QuantityIssued || transaction.quantityIssued || 0);
+            totalStockValue += parseFloat(transaction.TransactionAmount || transaction.transactionAmount || 0);
+        });
+
+        var companyName = 'SULESHVARI LABORATORIES LIMITED';
+
+        var filterLabel = '';
+        if (currentFilters.batchId) {
+            filterLabel = 'BATCH: ' + currentFilters.batchName;
+        } else {
+            filterLabel = 'FROM ' + formatDateForReport(currentFilters.fromDate) + ' TO ' + formatDateForReport(currentFilters.toDate);
+        }
+
+        var printContent = '<!DOCTYPE html><html><head><title>Stock Ledger Report</title>';
+        printContent += '<style>';
+        printContent += '@page { size: landscape; margin: 0.5cm; }';
+        printContent += 'body { font-family: "Courier New", monospace; font-size: 10pt; margin: 0; padding: 10px; }';
+        printContent += '.header { margin-bottom: 10px; }';
+        printContent += '.header-row { display: flex; justify-content: space-between; margin-bottom: 2px; }';
+        printContent += '.header-left { text-align: left; }';
+        printContent += '.header-right { text-align: right; }';
+        printContent += '.title { text-align: center; margin: 10px 0; font-weight: bold; }';
+        printContent += 'table { width: 100%; border-collapse: collapse; font-size: 9pt; }';
+        printContent += 'table, th, td { border: 1px solid #000; }';
+        printContent += 'th { background-color: #f0f0f0; padding: 4px; text-align: left; font-weight: bold; }';
+        printContent += 'td { padding: 3px 5px; }';
+        printContent += '.text-right { text-align: right; }';
+        printContent += '.text-center { text-align: center; }';
+        printContent += '.total-row { font-weight: bold; background-color: #f5f5f5; }';
+        printContent += '.footer { margin-top: 15px; }';
+        printContent += '@media print { .no-print { display: none; } }';
+        printContent += '</style></head><body>';
+
+        printContent += '<div class="header">';
+        printContent += '<div class="header-row">';
+        printContent += '<div class="header-left"><strong>Company:</strong> ' + companyName + '</div>';
+        printContent += '<div class="header-right"><strong>Page 1 of 1</strong></div>';
+        printContent += '</div></div>';
+
+        printContent += '<div class="title">Stock Ledger ' + filterLabel + '</div>';
+
+        printContent += '<table><thead><tr>';
+        printContent += '<th rowspan="2">Tran<br>Date</th>';
+        printContent += '<th rowspan="2">Doc Code</th>';
+        printContent += '<th rowspan="2">Batch<br>No</th>';
+        printContent += '<th rowspan="2">AR No</th>';
+        printContent += '<th colspan="2" class="text-center">Quantity</th>';
+        printContent += '<th rowspan="2" class="text-right">Balance</th>';
+        printContent += '<th rowspan="2" class="text-right">Tran<br>Value</th>';
+        printContent += '</tr><tr>';
+        printContent += '<th class="text-right">Receipt</th>';
+        printContent += '<th class="text-right">Issue</th>';
+        printContent += '</tr></thead><tbody>';
+
+        printContent += '<tr><td colspan="8" style="text-align:center"><strong>' + currentFilters.productName + '</strong></td></tr>';
+
+        // Each ARN tracks its own independent balance for print
+        var arnBalances = {};
+
+        sortedTransactions.forEach(function (transaction) {
+            var date = formatDateShort(transaction.TransactionDate || transaction.transactionDate);
+            var docCode = transaction.DocNumber || transaction.docNumber || transaction?.name || '';
+            var batchNo = transaction.BatchNumber || transaction.batchNumber || transaction?.productLot.batchNumber|| '';
+            var arn = (transaction.Arn || transaction.arn || transaction?.productLot?.arn || '').toString();
+            var qtyReceipt = parseFloat(transaction.QuantityReceipt || transaction.quantityReceipt || 0);
+            var qtyIssue = parseFloat(transaction.QuantityIssued || transaction.quantityIssued || 0);
+            var transactionAmount = parseFloat(transaction.TransactionAmount || transaction.transactionAmount || 0);
+
+            // Independent balance per ARN
+            if (!arnBalances[arn]) arnBalances[arn] = 0;
+            arnBalances[arn] += qtyReceipt - qtyIssue;
+
+            printContent += '<tr>';
+            printContent += '<td>' + date + '</td>';
+            printContent += '<td>' + docCode + '</td>';
+            printContent += '<td>' + batchNo + '</td>';
+            printContent += '<td>' + arn + '</td>';
+            printContent += '<td class="text-right">' + (qtyReceipt > 0 ? qtyReceipt.toFixed(3) : '') + '</td>';
+            printContent += '<td class="text-right">' + (qtyIssue > 0 ? qtyIssue.toFixed(3) : '') + '</td>';
+            printContent += '<td class="text-right">' + arnBalances[arn].toFixed(3) + '</td>';
+            printContent += '<td class="text-right">' + transactionAmount.toFixed(2) + '</td>';
+            printContent += '</tr>';
+        });
+
+        // Overall totals row
+        printContent += '<tr class="total-row">';
+        printContent += '<td colspan="4" class="text-right"><strong>Total :</strong></td>';
+        printContent += '<td class="text-right"><strong>' + totalReceipt.toFixed(3) + '</strong></td>';
+        printContent += '<td class="text-right"><strong>' + totalIssue.toFixed(3) + '</strong></td>';
+        printContent += '<td colspan="2"></td>';
+        printContent += '</tr>';
+
+        // Closing balance per ARN summary rows
+        Object.keys(arnBalances).forEach(function (arn) {
+            printContent += '<tr class="total-row">';
+            printContent += '<td colspan="3" class="text-right"><strong>Closing Balance (' + arn + '):</strong></td>';
+            printContent += '<td></td>';
+            printContent += '<td colspan="2" class="text-right"><strong>' + arnBalances[arn].toFixed(3) + '</strong></td>';
+            printContent += '<td colspan="2" class="text-right"><strong>' + totalStockValue.toFixed(2) + '</strong></td>';
+            printContent += '</tr>';
+        });
+
+        printContent += '</tbody></table>';
+        printContent += '<div class="footer">Supply Chain Management Software Generated Report</div>';
+        printContent += '<script>window.onload = function() { window.print(); }<\/script>';
+        printContent += '</body></html>';
+
+        var printWindow = window.open('', '', 'width=1200,height=800');
+        printWindow.document.open();
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        var date = new Date(dateString);
+        var day = String(date.getDate()).padStart(2, '0');
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var year = date.getFullYear();
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+        return day + '/' + month + '/' + year + ' ' + hours + ':' + minutes;
+    }
+
+    function formatDateForReport(dateString) {
+        if (!dateString) return '';
+        var date = new Date(dateString);
+        var day = String(date.getDate()).padStart(2, '0');
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var year = date.getFullYear();
+        return day + '/' + month + '/' + year;
+    }
+
+    function formatDateShort(dateString) {
+        if (!dateString) return '';
+        var date = new Date(dateString);
+        var day = String(date.getDate()).padStart(2, '0');
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var year = date.getFullYear();
+        return day + '/' + month + '/' + year;
+    }
+
+    function loadProductsByName(searchParam, callback) {
+    var trimmedSearch = (searchParam || '').trim();
+    if (!trimmedSearch || trimmedSearch.length <= 2) {
+        callback([]);
+        return;
+    }
+
+    var nameUrl = JSUTIL.getUrl('/api/products?type=&name=' + encodeURIComponent(trimmedSearch));
+    var numberUrl = JSUTIL.getUrl('/api/products?type=&number=' + encodeURIComponent(trimmedSearch));
+
+    var nameResults = null;
+    var numberResults = null;
+
+    function mergeAndReturn() {
+        if (nameResults === null || numberResults === null) return;
+
+        var combined = (nameResults || []).concat(numberResults || []);
+        var seen = {};
+        var deduped = combined.filter(function (p) {
+            var id = p.Id || p.id;
+            if (seen[id]) return false;
+            seen[id] = true;
+            return true;
+        });
+
+        callback(deduped);
+    }
+
+    JSUTIL.callAJAXGet(nameUrl, function (res) {
+        nameResults = Array.isArray(res) ? res : [];
+        mergeAndReturn();
+    }, function () {
+        nameResults = [];
+        mergeAndReturn();
+    });
+
+    JSUTIL.callAJAXGet(numberUrl, function (res) {
+        numberResults = Array.isArray(res) ? res : [];
+        mergeAndReturn();
+    }, function () {
+        numberResults = [];
+        mergeAndReturn();
+    });
+}
+
+    function initProductSearch($searchInput, $hiddenInput) {
+        $searchInput = $searchInput || $('.ledger-product-search');
+        $hiddenInput = $hiddenInput || $('.ledger-product-id');
+        if (typeof $searchInput.typeahead !== 'function') {
+            initProductSearchFallback($searchInput, $hiddenInput);
+            return;
+        }
+
+        $searchInput.typeahead('destroy');
+        $searchInput.typeahead({
+            source: function (query, process) {
+                var trimmedQuery = (query || '').trim();
+                if (!trimmedQuery || trimmedQuery.length <= 2) {
+                    $searchInput.data('mappedList', []);
+                    process([]);
+                    return;
+                }
+                loadProductsByName(trimmedQuery, function (res) {
+                    var mappedProducts = (res || []).map(function (p) {
+                        var id = p.Id || p.id;
+                        var name = p.Name || p.name || '';
+                        var number = p.Number || p.number || '';
+                        var text = number && name ? number + ' - ' + name : (name || number);
+                        return { id: id, text: text };
+                    });
+                    $searchInput.data('mappedList', mappedProducts);
+                    process(mappedProducts.map(function (item) { return item.text; }));
+                });
+            },
+            afterSelect: function (selectedText) {
+                var mappedProducts = this.$element.data('mappedList') || [];
+                var chosen = mappedProducts.find(function (item) { return item.text === selectedText; });
+                var $targetHidden = $hiddenInput.length ? $hiddenInput : this.$element.closest('.form-group').find('.ledger-product-id');
+                $targetHidden.val(chosen && chosen.id ? chosen.id : '');
+
+                if ($('#filterTypeDropdown').val() === 'batch' && chosen && chosen.id) {
+                    loadBatchesForProduct(chosen.id);
+                    $batchSearchInput.val('');
+                    $batchIdInput.val('');
+                }
+            }
+        });
+
+        $searchInput.on('blur', function () {
+            var currentText = ($(this).val() || '').trim();
+            var mappedProducts = $searchInput.data('mappedList') || [];
+            var match = mappedProducts.find(function (item) { return item.text === currentText; });
+            var $targetHidden = $hiddenInput.length ? $hiddenInput : $(this).closest('.form-group').find('.ledger-product-id');
+            $targetHidden.val(match && match.id ? match.id : '');
+        });
+    }
+
+    function initProductSearchFallback($input, $hiddenInput) {
+        $input.off('.ledgerProductSearchFallback');
+        var activeRequestId = 0;
+
+        $input.on('input.ledgerProductSearchFallback', function () {
+            var query = ($(this).val() || '').trim();
+            if (!query || query.length <= 2) {
+                hideProductDropdown();
+                return;
+            }
+            var requestId = ++activeRequestId;
+            loadProductsByName(query, function (res) {
+                if (requestId !== activeRequestId) return;
+                var mapped = (res || []).map(function (p) {
+                    var id = p.Id || p.id;
+                    var name = p.Name || p.name || '';
+                    var number = p.Number || p.number || '';
+                    var text = number && name ? number + ' - ' + name : (name || number);
+                    return { id: id, text: text };
+                });
+                showProductDropdown($input, mapped, function (id, text) {
+                    var $targetHidden = $hiddenInput.length ? $hiddenInput : $input.closest('.form-group').find('.ledger-product-id');
+                    $input.val(text);
+                    $targetHidden.val(id);
+
+                    if ($('#filterTypeDropdown').val() === 'batch' && id) {
+                        loadBatchesForProduct(id);
+                        $batchSearchInput.val('');
+                        $batchIdInput.val('');
+                    }
+                });
+            });
+        });
+
+        $input.on('blur.ledgerProductSearchFallback', function () {
+            setTimeout(function () { hideProductDropdown(); }, 200);
+        });
+
+        function showProductDropdown($field, mappedList, selectCallback) {
+            hideProductDropdown();
+            if (!mappedList || !mappedList.length) return;
+            var dropdownHtml = '<div class="ledger-product-dropdown" style="position: absolute; z-index: 10000; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 250px; overflow-y: auto; width: ' + $field.outerWidth() + 'px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
+            mappedList.forEach(function (item) {
+                dropdownHtml += '<div class="ledger-product-dropdown-item" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px;" data-id="' + item.id + '" data-text="' + $('<div>').text(item.text).html() + '">' +
+                    $('<div>').text(item.text).html() + '</div>';
+            });
+            dropdownHtml += '</div>';
+            $field.closest('.form-group').css('position', 'relative');
+            $field.after(dropdownHtml);
+            $('.ledger-product-dropdown-item').on('click', function () {
+                var itemId = $(this).data('id');
+                var itemText = $(this).data('text');
+                selectCallback(itemId, itemText);
+                hideProductDropdown();
+            }).hover(
+                function () { $(this).css('background-color', '#f5f5f5'); },
+                function () { $(this).css('background-color', 'white'); }
+            );
+        }
+
+        function hideProductDropdown() {
+            $('.ledger-product-dropdown').remove();
+        }
+    }
+
+    function initBatchSearch(batchList, $searchInput, $hiddenInput) {
+        $searchInput = $searchInput || $('.ledger-batch-search');
+        $hiddenInput = $hiddenInput || $('.ledger-batch-id');
+
+        if (typeof $searchInput.typeahead === 'function') {
+            $searchInput.typeahead('destroy');
+        }
+
+        if (!Array.isArray(batchList) || !batchList.length) {
+            initBatchSearchFallback([], $searchInput, $hiddenInput);
+            return;
+        }
+
+        var mappedBatches = batchList.map(function (b) {
+            var id = b.Id || b.id;
+            var batchNumber = b.batchNumber || b.BatchNumber || b.lotNumber || b.LotNumber || '';
+            return { id: id, text: batchNumber, search: batchNumber.toLowerCase() };
+        });
+
+        if (typeof $searchInput.typeahead === 'function') {
+            $searchInput.typeahead({
+                source: function (query, process) {
+                    var q = (query || '').toLowerCase();
+                    var matches = mappedBatches
+                        .filter(function (item) { return item.search.indexOf(q) !== -1; })
+                        .map(function (item) { return item.text; });
+                    process(matches);
+                },
+                afterSelect: function (selectedText) {
+                    var chosen = mappedBatches.find(function (item) { return item.text === selectedText; });
+                    $hiddenInput.val(chosen && chosen.id ? chosen.id : '');
+                }
+            });
+
+            $searchInput.on('blur', function () {
+                var currentText = ($(this).val() || '').trim();
+                var match = mappedBatches.find(function (item) { return item.text === currentText; });
+                $hiddenInput.val(match && match.id ? match.id : '');
+            });
+        } else {
+            initBatchSearchFallback(mappedBatches, $searchInput, $hiddenInput);
+        }
+    }
+
+    function initBatchSearchFallback(mappedBatches, $input, $hiddenInput) {
+        $input.off('.ledgerBatchSearchFallback');
+
+        $input.on('input.ledgerBatchSearchFallback', function () {
+            var query = ($(this).val() || '').toLowerCase();
+            hideBatchDropdown();
+            if (!query) return;
+            var filtered = mappedBatches.filter(function (item) {
+                return item.search.indexOf(query) !== -1;
+            });
+            showBatchDropdown($input, filtered, function (id, text) {
+                $input.val(text);
+                $hiddenInput.val(id);
+            });
+        });
+
+        $input.on('blur.ledgerBatchSearchFallback', function () {
+            setTimeout(function () { hideBatchDropdown(); }, 200);
+        });
+
+        function showBatchDropdown($field, items, selectCallback) {
+            hideBatchDropdown();
+            if (!items || !items.length) return;
+            var dropdownHtml = '<div class="ledger-batch-dropdown" style="position: absolute; z-index: 10000; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 250px; overflow-y: auto; width: ' + $field.outerWidth() + 'px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
+            items.forEach(function (item) {
+                dropdownHtml += '<div class="ledger-batch-dropdown-item" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px;" data-id="' + item.id + '" data-text="' + $('<div>').text(item.text).html() + '">' +
+                    $('<div>').text(item.text).html() + '</div>';
+            });
+            dropdownHtml += '</div>';
+            $field.closest('.form-group').css('position', 'relative');
+            $field.after(dropdownHtml);
+            $('.ledger-batch-dropdown-item').on('click', function () {
+                var itemId = $(this).data('id');
+                var itemText = $(this).data('text');
+                selectCallback(itemId, itemText);
+                hideBatchDropdown();
+            }).hover(
+                function () { $(this).css('background-color', '#f5f5f5'); },
+                function () { $(this).css('background-color', 'white'); }
+            );
+        }
+
+        function hideBatchDropdown() {
+            $('.ledger-batch-dropdown').remove();
+        }
+    }
+
+});
+// ledgerPanel.js   End
+</script>

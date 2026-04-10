@@ -1,0 +1,1077 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<script src="pages/lib/bootstrap3-typeahead.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- allDepartmentalIssuePanel.html start -->
+
+<style>
+    .typeahead.dropdown-menu {
+        z-index: 1060 !important;
+        background: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        border-radius: 4px;
+        padding: 4px 0;
+        min-width: 250px;
+        width: 100%;
+        max-height: 260px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: absolute !important;
+        top: 100% !important;
+        left: 0 !important;
+    }
+
+    /* Keep typeahead dropdown visible above material tables */
+    #newDepartmentalIssuePanel .table-responsive,
+    #editDepartmentalIssuePanel .table-responsive {
+        overflow: visible !important;
+    }
+
+    .typeahead.dropdown-menu li>a {
+        display: block;
+        padding: 8px 16px;
+        clear: both;
+        font-weight: 400;
+        line-height: 1.42857143;
+        color: #333;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    .typeahead.dropdown-menu li>a:hover {
+        background-color: #f5f5f5;
+        color: #262626;
+    }
+
+    .typeahead.dropdown-menu .active>a {
+        background-color: #2563eb;
+        color: #fff;
+    }
+
+    #allDepartmentalIssuePanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allDepartmentalIssuePanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .selectDepartmentalIssue {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    .di-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 6px 0 12px;
+    }
+
+    .di-section-header span {
+        font-weight: 500;
+    }
+</style>
+
+<div class="qa-white-panel">
+
+
+    <div class="row animated fadeInRight aasaanPanel" id="allDepartmentalIssuePanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Departmental Issue <small>Production</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary newDepartmentalBtn"><i
+                                data-lucide="plus"></i>New Departmental Issue</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="table-responsive">
+                        <table id="allDepartmentalIssuePanelTable" class="table table-hover table-bordered dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Production Order Number</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="dataTableRecordList" id="allDepartmentalIssueTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- allDepartmentalIssuePanel.html end -->
+
+
+
+    <!-- editDepartmentalIssuePanel.html start -->
+
+
+    <div class="row animated fadeInRight aasaanPanel" id="editDepartmentalIssuePanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5 class="DepartmentalIssueNumber"></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-default" id="closeEditDepartmentalIssue">
+                            <i data-lucide="x"></i> Close
+                        </button>
+                        <button type="button" class="btn btn-sm btn-default" id="editDepartmentalIssueBtn">
+                            <i data-lucide="pencil"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="saveEditDepartmentalIssue"
+                            style="display:none;">
+                            <i data-lucide="check"></i> Save
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="productRequestDepartmentalIssue">
+                            <i data-lucide="send"></i> Sent to Product Request
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ibox-content">
+                    <form>
+                        <!-- <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Select Production Batch</label>
+                                    <select class="form-control editDepartmentalIssue productionBatch select2"
+                                        name="name" disabled>
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div> -->
+
+                        <div class="di-section-header m-b-sm">
+                            <span>Products</span>
+                            <button type="button" class="btn btn-default btn-sm material-add-btn" id="editDIMaterialAdd"
+                                disabled>
+                                <i data-lucide="plus"></i> Add Material
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px;"></th>
+                                        <th>Product Code</th>
+                                        <th>Product Name</th>
+                                        <th>UOM</th>
+                                        <th>Type</th>
+                                        <th>Requested Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="editDIProductsTable"></tbody>
+                            </table>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- editDepartmentalIssuePanel.html end -->
+
+
+
+
+    <!-- newDepartmentalIssuePanel.html start -->
+
+
+
+
+    <div class="row animated fadeInRight aasaanPanel" id="newDepartmentalIssuePanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small>Departmental Issue</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-default" id="showAllDIFromNew"><i
+                                data-lucide="x"></i> Close</button>
+                        <button type="button" class="btn btn-sm btn-default" id="saveNewDepartmentalIssue"><i
+                                data-lucide="check"></i> Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form action="">
+                        <!-- <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="">
+                                        Select Production Batch
+                                    </label>
+                                    <select name="name"
+                                        class="form-control newDepartmentalIssue productionBatch select2">
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div> -->
+                        <div class="di-section-header m-b-sm">
+                            <span>Add Products To Production Order</span>
+                            <button type="button" class="btn btn-default btn-sm material-add-btn">
+                                <i data-lucide="plus"></i> Add Material
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px;"></th>
+                                        <th>Product Code</th>
+                                        <th>Product Name</th>
+                                        <th>Product UOM</th>
+                                        <th>Type</th>
+                                        <th>Requested Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsSelectionTable"></tbody>
+                            </table>
+
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- newDepartmentalIssuePanel.html start -->
+
+</div>
+
+</div><!-- qa-white-panel end -->
+
+
+<script>
+
+
+    // allDepartmentalIssuePanel.js start
+
+
+    var allProducts = []
+    var alldepartmentalissues = []
+    var departmentalIssueTableSelector = '#allDepartmentalIssuePanelTable'
+
+    function initDepartmentalIssueDataTable(retryCount) {
+        retryCount = typeof retryCount === 'number' ? retryCount : 0
+        if ($.fn && $.fn.DataTable) {
+            if ($.fn.DataTable.isDataTable(departmentalIssueTableSelector)) {
+                return
+            }
+            $(departmentalIssueTableSelector).DataTable({
+                order: [],
+                pageLength: 25
+            })
+            return
+        }
+
+        if (window.JSUTIL && typeof JSUTIL.reinitializeDataTable === 'function') {
+            JSUTIL.reinitializeDataTable()
+        }
+
+        if (retryCount < 40) {
+            setTimeout(function () {
+                initDepartmentalIssueDataTable(retryCount + 1)
+            }, 150)
+        }
+    }
+
+    function destroyDepartmentalIssueTable() {
+        try {
+            if ($.fn.DataTable && $.fn.DataTable.isDataTable(departmentalIssueTableSelector)) {
+                $(departmentalIssueTableSelector).DataTable().clear().destroy()
+            }
+        } catch (e) {
+            console.warn('DataTable destroy warning:', e)
+        }
+        $('#allDepartmentalIssueTable').empty()
+    }
+
+    function renderDepartmentalIssueTable() {
+        destroyDepartmentalIssueTable()
+
+        var innerhtml = ''
+        $.each(alldepartmentalissues, function (i, val) {
+            innerhtml += `<tr data-id="${val.id}"><td><a href="javascript:void(0)" class="selectDepartmentalIssue">${val.number}</a></td><td>${val.type}</td><td>${val.orderStatus}</td></tr>`
+        })
+        $('#allDepartmentalIssueTable').html(innerhtml)
+
+        initDepartmentalIssueDataTable()
+    }
+
+    $(document).ready(function () {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons()
+        }
+
+        JSUTIL.callAJAXGet('/api/products/search?name=&number=&type=&processStatus=', function (res) {
+            var allowedTypes = ['raw material', 'general material', 'packaging material', 'packing material']
+            allProducts = (res || []).filter(function (item) {
+                var t = String(item?.type || item?.Type || '').toLowerCase()
+                return allowedTypes.indexOf(t) !== -1
+            })
+            console.log('all products', allProducts)
+        })
+        alldepartmentalissues = []
+        var innerhtml = '<option value="">--none--</option>'
+        $('.productionBatch').empty()
+        $('#allDepartmentalIssueTable').empty()
+
+        JSUTIL.callAJAXGet('/api/production-orders', function (allOrders) {
+            $.each(allOrders, function (i, val) {
+                if (val.type == 'Batch') {
+                    if (val.orderStatus == 'In Review' || val.orderStatus == 'Approved' || val.orderStatus == 'Assigned' || val.orderStatus == 'In-Production' || val.orderStatus == 'New') {
+                        innerhtml += `<option value='${val.id}'>${val.name}</option>`
+                    }
+                } else if (val.type == 'Departmental Issue') {
+                    alldepartmentalissues.push(val)
+                }
+            })
+            renderDepartmentalIssueTable()
+            $('.productionBatch').append(innerhtml)
+        })
+
+        $(window).off('load.departmentalIssueDT').on('load.departmentalIssueDT', function () {
+            initDepartmentalIssueDataTable()
+        })
+
+        $('#allDepartmentalIssuePanel').on('click', '.selectDepartmentalIssue', function () {
+            var id = $(this).closest('tr').data('id')
+            console.log('selected id ', id)
+            currentDepartmentalIssueId = id
+            $('#allDepartmentalIssuePanel').hide()
+            $('#editDepartmentalIssuePanel').show()
+            resetEditDIPanel()
+            loadDepartmentalIssueDetails(id)
+        })
+
+        $('.newDepartmentalBtn').on('click', function () {
+            $('#allDepartmentalIssuePanel').hide()
+            $('#newDepartmentalIssuePanel').show()
+            $('#editDepartmentalIssuePanel').hide()
+        })
+        $('#showAllDIFromNew').on('click', function () {
+            $('#allDepartmentalIssuePanel').show()
+            $('#newDepartmentalIssuePanel').hide()
+            initDepartmentalIssueDataTable()
+        })
+
+    })
+
+
+
+    // allDepartmentalIssuePanel.js end
+
+
+    // editDepartmentalIssuePanel.js start
+
+    var currentDepartmentalIssueId = null;
+    var deletedOrderMaterials = [];
+    var currentOrder = {}
+    var allmaterials = []
+    $(document).ready(function () {
+        $('#productRequestDepartmentalIssue').on('click', function () {
+            var remarks = `${currentOrder[0].number} (ID:${currentDepartmentalIssueId})`
+            var requestPayload = {
+                remarks: remarks,
+                processStatus: 'Requested',
+                type: 'Departmental Issue'
+            }
+            if (FOX.employeeId) {
+                requestPayload.requestedById = Number(FOX.employeeId);
+                requestPayload.requestedBy = { id: Number(FOX.employeeId) };
+                if (typeof FOX.employeeName !== 'undefined') {
+                    requestPayload.requestedByName = FOX.employeeName;
+                }
+            } else {
+                JSUTIL.buildErrorModal("Your user is not assigned to an employee, contact administrator for help.")
+                return
+            }
+
+            JSUTIL.callAJAXPost('/api/product-requests?autoNumber=true',
+                JSON.stringify(requestPayload),
+                function (reqRes) {
+                    console.log('after product request created', reqRes)
+                    const reqId = reqRes?.id || reqRes?.Id
+
+                    // Create ProductRequestItems one by one
+                    var createNextItem = function (index) {
+                        if (index >= allmaterials.length) {
+                            console.log('All product request items created')
+                            // Update production order status via REST PUT
+                            JSUTIL.callAJAXPut('/api/production-orders/' + currentDepartmentalIssueId,
+                                JSON.stringify({ orderStatus: 'Product Request Requested' }),
+                                function () {
+                                    location.reload()
+                                }
+                            )
+                            return
+                        }
+                        var val = allmaterials[index]
+                        var obj = {
+                            productRequestId: Number(reqId),
+                            productId: val.product.id,
+                            productRequest: { id: Number(reqId) },
+                            product: { id: val.product.id },
+                            quantityRequested: val.plannedQuantity,
+                            quantityIssued: 0,
+                            quantityRemaining: val.plannedQuantity,
+                            quantityRemainingUom: val.product.uom || ''
+                        }
+                        JSUTIL.callAJAXPost('/api/product-request-items',
+                            JSON.stringify(obj),
+                            function () {
+                                createNextItem(index + 1)
+                            }
+                        )
+                    }
+                    createNextItem(0)
+                })
+        })
+    })
+    /* ===============================
+       OPEN EDIT PANEL (delegated - fallback for dynamically added rows)
+    ================================ */
+
+    /* ===============================
+       RESET PANEL
+    ================================ */
+    function resetEditDIPanel() {
+        $('#editDIProductsTable').empty();
+        deletedOrderMaterials = [];
+
+        // $('.editDepartmentalIssue.productionBatch').prop('disabled', true);
+        $('#editDIMaterialAdd').prop('disabled', true);
+    }
+
+    /* ===============================
+       LOAD DATA
+    ================================ */
+    function loadDepartmentalIssueDetails(orderId) {
+
+        JSUTIL.callAJAXGet('/api/production-orders/' + orderId, function (order) {
+            currentOrder = [order]
+            $('.DepartmentalIssueNumber').empty().text(order.number)
+
+            if (order.orderStatus == 'New') {
+                $('#saveEditDepartmentalIssue').hide()
+                $('#editDepartmentalIssueBtn').show()
+                $('#productRequestDepartmentalIssue').show()
+            } else {
+                $('#saveEditDepartmentalIssue').hide()
+                $('#editDepartmentalIssueBtn').hide()
+                $('#productRequestDepartmentalIssue').hide()
+            }
+
+            console.log('select production order', order)
+            $('.editDepartmentalIssue[name="name"]').val(order.name).trigger('change.select2')
+
+            // Load OrderMaterials via REST
+            JSUTIL.callAJAXGet('/api/order-materials?orderId=' + orderId, function (materials) {
+                console.log('materials', materials)
+                allmaterials = materials
+                materials.forEach(function (m) {
+                    addEditDIMaterialRow(m)
+                })
+            })
+        })
+    }
+
+    /* ===============================
+       ADD ROW
+    ================================ */
+    function addEditDIMaterialRow(material = {}) {
+
+        var rowHtml = `
+        <tr data-ordermaterial-id="${material.id || ''}">
+            <td>
+                <button type="button" class="btn btn-xs btn-default remove-edit-di-row" disabled>
+                    <i data-lucide="trash-2"></i>
+                </button>
+            </td>
+            <td>
+                <div class="typeahead-container" style="position: relative;">
+                    <input type="text" class="form-control di-product-code" placeholder="Search code" autocomplete="off" disabled>
+                </div>
+            </td>
+            <td>
+                <div class="typeahead-container" style="position: relative;">
+                    <input type="text" class="form-control di-product-search" placeholder="Search product" autocomplete="off" disabled>
+                </div>
+                <input type="hidden" class="di-product-id">
+            </td>
+            <td>
+                <input type="text" class="form-control di-product-uom" readonly placeholder="Auto filled based on product selection">
+            </td>
+            <td>
+                <input type="text" class="form-control di-product-type" readonly placeholder="Auto filled based on product selection">
+            </td>
+            <td>
+                <input type="number" class="form-control di-qty" min="0" disabled placeholder="Enter quantity">
+            </td>
+        </tr>
+    `;
+
+        var $row = $(rowHtml);
+        $('#editDIProductsTable').append($row);
+        if (window.lucide) lucide.createIcons();
+
+        // Populate existing material data
+        if (material.product) {
+            $row.find('.di-product-id').val(material.product.id);
+            $row.find('.di-product-code').val(material.product.number || '');
+            $row.find('.di-product-search').val(material.product.name || '');
+            $row.find('.di-product-uom').val(material.product.uom || '');
+            $row.find('.di-product-type').val(material.product.type || '');
+            $row.find('.di-qty').val(material.plannedQuantity || 0);
+        }
+
+        // Initialize typeahead for this row (will be enabled when edit mode is activated)
+        initDepartmentalIssueTypeahead($row);
+    }
+
+    /* ===============================
+       ENABLE EDIT MODE
+    ================================ */
+    $('#editDepartmentalIssueBtn').on('click', function () {
+
+        $('#saveEditDepartmentalIssue').show();
+        $(this).hide();
+
+        // $('.editDepartmentalIssue.productionBatch').prop('disabled', false);
+        $('#editDIMaterialAdd').prop('disabled', false);
+
+        // Enable all inputs and delete buttons in the table
+        $('#editDIProductsTable')
+            .find('.di-product-search, .di-product-code, .di-qty, .remove-edit-di-row')
+            .prop('disabled', false);
+    });
+
+    /* ===============================
+       ADD NEW MATERIAL ROW
+    ================================ */
+    $('#editDIMaterialAdd').on('click', function () {
+        addEditDIMaterialRow({});
+
+        // Auto-enable the newly added row if we're in edit mode
+        if ($('#saveEditDepartmentalIssue').is(':visible')) {
+            $('#editDIProductsTable tr:last')
+                .find('.di-product-search, .di-product-code, .di-qty, .remove-edit-di-row')
+                .prop('disabled', false);
+        }
+    });
+
+    /* ===============================
+       REMOVE MATERIAL ROW
+    ================================ */
+    $(document).on('click', '.remove-edit-di-row', function () {
+
+        var $row = $(this).closest('tr');
+        var orderMaterialId = $row.data('ordermaterial-id');
+
+        // If this material exists in database, track it for deletion
+        if (orderMaterialId && orderMaterialId !== '') {
+            deletedOrderMaterials.push(orderMaterialId);
+            console.log('Marked for deletion:', orderMaterialId);
+        }
+
+        $row.remove();
+    });
+
+    /* ===============================
+       SAVE CHANGES
+    ================================ */
+    $('#saveEditDepartmentalIssue').on('click', function () {
+
+        // var productionBatchId = $('.editDepartmentalIssue.productionBatch').val();
+        //
+        // if (!productionBatchId) {
+        //     JSUTIL.buildErrorModal('Please select Production Batch');
+        //     return;
+        // }
+
+        var isValid = true;
+        var materialsPayload = [];
+
+        $('#editDIProductsTable tr').each(function () {
+            var $row = $(this);
+
+            var productId = $row.find('.di-product-id').val();
+            var qty = Number($row.find('.di-qty').val());
+            var omId = $row.data('ordermaterial-id');
+
+            // Skip completely empty rows
+            if (!productId && !qty) return true;
+
+            if (!productId || qty <= 0) {
+                JSUTIL.buildErrorModal('Please ensure all products have valid quantities');
+                isValid = false;
+                return false;
+            }
+
+            materialsPayload.push({
+                id: omId ? omId : null,
+                order: { id: currentDepartmentalIssueId },
+                product: { id: productId },
+                plannedQuantity: qty
+            });
+        });
+
+        if (!isValid) return;
+
+        console.log('Materials to save:', materialsPayload);
+        console.log('Materials to delete:', deletedOrderMaterials);
+
+        // STEP 1: Update ProductionOrder via REST PUT
+        JSUTIL.callAJAXPut('/api/production-orders/' + currentDepartmentalIssueId,
+            JSON.stringify({ type: 'Departmental Issue' }),
+            function () {
+
+                // STEP 2: Delete removed OrderMaterials one by one
+                var deleteNext = function (index) {
+                    if (index >= deletedOrderMaterials.length) {
+                        console.log('OrderMaterials deleted')
+                        saveNextMaterial(0)
+                        return
+                    }
+                    JSUTIL.callAJAXDelete('/api/order-materials/' + deletedOrderMaterials[index], function () {
+                        deleteNext(index + 1)
+                    })
+                }
+
+                // STEP 3: Create / Update OrderMaterials one by one
+                var saveNextMaterial = function (index) {
+                    if (index >= materialsPayload.length) {
+                        console.log('All OrderMaterials saved')
+                        location.reload()
+                        return
+                    }
+                    var m = materialsPayload[index]
+                    var isUpdate = m.id && m.id !== ''
+                    var payload = JSON.stringify({
+                        order: m.order,
+                        product: m.product,
+                        plannedQuantity: m.plannedQuantity
+                    })
+                    if (isUpdate) {
+                        JSUTIL.callAJAXPut('/api/order-materials/' + m.id, payload, function () {
+                            saveNextMaterial(index + 1)
+                        })
+                    } else {
+                        JSUTIL.callAJAXPost('/api/order-materials', payload, function () {
+                            saveNextMaterial(index + 1)
+                        })
+                    }
+                }
+
+                deleteNext(0)
+            }
+        )
+    });
+
+
+    /* ===============================
+       CLOSE PANEL
+    ================================ */
+    $('#closeEditDepartmentalIssue').on('click', function () {
+        $('#editDepartmentalIssuePanel').hide();
+        $('#allDepartmentalIssuePanel').show();
+    });
+
+
+    // editDepartmentalIssuePanel.js end
+
+
+    // newDepartmentalIssuePanel.js start
+
+    // Add material row in New Departmental Issue panel
+    var productSearchCacheByType = {};
+    $(document).on('click', '#newDepartmentalIssuePanel .material-add-btn', function () {
+        addDepartmentalIssueMaterialRow()
+    })
+    function addDepartmentalIssueMaterialRow(itemData = {}) {
+        var $tbody = $('#productsSelectionTable')
+
+        var rowHtml = `
+        <tr class="di-material-row">
+            <td>
+                <button type="button" class="btn btn-xs btn-default remove-di-row">
+                    <i data-lucide="trash-2"></i>
+                </button>
+            </td>
+            <td>
+                <div class="typeahead-container" style="position: relative;">
+                    <input type="text" class="form-control di-product-code" placeholder="Search code" autocomplete="off">
+                </div>
+            </td>
+            <td>
+                <div class="typeahead-container" style="position: relative;">
+                    <input type="text" class="form-control di-product-search" placeholder="Search product" autocomplete="off">
+                </div>
+                <input type="hidden" class="di-product-id">
+            </td>
+            <td>
+                <input type="text" class="form-control di-product-uom" readonly placeholder="Auto filled based on product selection">
+            </td>
+            <td>
+                <input type="text" class="form-control di-product-type" readonly placeholder="Auto filled based on product selection">
+            </td>
+            <td>
+                <input type="number" class="form-control di-qty" min="0" placeholder="Enter quantity">
+            </td>
+        </tr>
+    `
+
+        var $row = $(rowHtml)
+        $tbody.append($row)
+        if (window.lucide) lucide.createIcons();
+
+        initDepartmentalIssueTypeahead($row)
+    }
+    function initDepartmentalIssueTypeahead($row) {
+
+        initializeMaterialTypeahead(
+            $row.find('.di-product-search'),
+            { mode: 'name' }
+        )
+
+        initializeMaterialTypeahead(
+            $row.find('.di-product-code'),
+            { mode: 'code' }
+        )
+
+        // map selection into row
+        $row.find('.di-product-search, .di-product-code').on('change', function () {
+            var chosen = $(this).data('selectedProduct')
+            if (!chosen) return
+
+            $row.find('.di-product-id').val(chosen.id)
+            $row.find('.di-product-code').val(chosen.number)
+            $row.find('.di-product-search').val(chosen.name)
+            $row.find('.di-product-uom').val(chosen.uom)
+            $row.find('.di-product-type').val(chosen.type)
+        })
+
+    }
+    function initializeMaterialTypeahead($input, options) {
+        options = options || {};
+        var mode = options.mode || 'name';
+        loadProductsForMaterialType(function (results) {
+            if (!$.fn || typeof $.fn.typeahead !== 'function') {
+                bindNativeProductSuggestions($input, results, mode)
+                return
+            }
+
+            try {
+                $input.typeahead('destroy');
+            } catch (e) {
+                // ignore destroy errors
+            }
+
+            $input.typeahead({
+                appendTo: $input.parent(),
+                fitToElement: true,
+                source: function (query, process) {
+                    query = (query || '').toLowerCase();
+                    var filteredItems = results.filter(function (item) {
+                        if (!query) {
+                            return true;
+                        }
+                        var matchesSearch = item.search.indexOf(query) !== -1;
+                        var matchesNumber = item.numberLower.indexOf(query) !== -1;
+                        var matchesName = item.nameLower.indexOf(query) !== -1;
+                        return matchesSearch || matchesNumber || matchesName;
+                    }).map(function (item) {
+                        return mode === 'code' ? item.codeLabel : item.text;
+                    });
+                    process(filteredItems);
+                },
+                afterSelect: function (selectedText) {
+                    var chosen = results.find(function (item) {
+                        return item.text === selectedText || item.codeLabel === selectedText;
+                    });
+
+                    if (!chosen) return;
+
+                    var $row = $input.closest('tr');
+
+                    // store selected product on input
+                    $input.data('selectedProduct', chosen);
+
+                    var productName = chosen.name || '';
+                    if (!productName && chosen.text) {
+                        productName = chosen.text.split('|')[0].trim();
+                    }
+                    var productCode = chosen.number || '';
+
+                    // populate row fields
+                    $row.find('.di-product-id').val(chosen.id || '');
+                    $row.find('.di-product-code').val(productCode);
+                    $row.find('.di-product-search').val(productName);
+                    $row.find('.di-product-uom').val(chosen.uom || '');
+                    $row.find('.di-product-type').val(getMaterialTypeLabel(chosen.type));
+
+                    // Set the input value explicitly (like bom.html)
+                    if (mode === 'code') {
+                        $input.val(productCode);
+                    } else {
+                        $input.val(productName);
+                    }
+                }
+            });
+        });
+    }
+
+    function bindNativeProductSuggestions($input, results, mode) {
+        var listId = ensureProductDatalist(results, mode)
+        $input.attr('list', listId)
+
+        $input.off('change.nativeTypeahead').on('change.nativeTypeahead', function () {
+            var entered = String($input.val() || '').trim().toLowerCase()
+            if (!entered) return
+
+            var chosen = results.find(function (item) {
+                return String(item.text || '').toLowerCase() === entered ||
+                    String(item.codeLabel || '').toLowerCase() === entered ||
+                    String(item.name || '').toLowerCase() === entered ||
+                    String(item.number || '').toLowerCase() === entered
+            })
+
+            if (!chosen) {
+                chosen = results.find(function (item) {
+                    return String(item.search || '').indexOf(entered) !== -1
+                })
+            }
+
+            if (!chosen) return
+
+            var $row = $input.closest('tr')
+            $input.data('selectedProduct', chosen)
+
+            $row.find('.material-product-id, .di-product-id').val(chosen.id || '')
+            $row.find('.material-product-code, .di-product-code').val(chosen.number || '')
+            $row.find('.material-product-search, .di-product-search').val(chosen.name || '')
+            $row.find('.material-uom, .di-product-uom').val(chosen.uom || '')
+            $row.find('.material-type-display, .di-product-type').val(getMaterialTypeLabel(chosen.type))
+        })
+    }
+
+    function ensureProductDatalist(results, mode) {
+        var listId = mode === 'code' ? 'diProductCodeSuggestions' : 'diProductNameSuggestions'
+        var $list = $('#' + listId)
+        if (!$list.length) {
+            $list = $('<datalist></datalist>').attr('id', listId)
+            $('body').append($list)
+        }
+
+        var optionsHtml = (results || []).map(function (item) {
+            var label = mode === 'code' ? item.codeLabel : item.text
+            return '<option value="' + $('<div>').text(label || '').html() + '"></option>'
+        }).join('')
+
+        $list.empty().append(optionsHtml)
+        return listId
+    }
+
+    var MATERIAL_TYPE_OPTIONS = [
+        { value: 'raw-material', label: 'Raw Material' },
+        { value: 'packing-material', label: 'Packing Material' },
+        { value: 'general-material', label: 'General Material' }
+    ];
+    function getMaterialTypeLabel(typeValue) {
+        var normalized = String(typeValue || '').toLowerCase();
+        var match = MATERIAL_TYPE_OPTIONS.find(function (opt) {
+            return String(opt.value || '').toLowerCase() === normalized;
+        });
+        return match ? match.label : (typeValue || '');
+    }
+
+    function loadProductsForMaterialType(callback) {
+        var cacheKey = 'all';
+        if (productSearchCacheByType[cacheKey]) {
+            if (typeof callback === 'function') {
+                callback(productSearchCacheByType[cacheKey]);
+            }
+            return;
+        }
+
+        JSUTIL.callAJAXGet('/api/products', function (res) {
+            var mapped = (res || []).map(function (item) {
+                var id = item.Id || item.id;
+                var name = item.Name || item.name || '';
+                var type = item.Type || item.type || '';
+                var uom = item.Uom || item.uom || '';
+                var number = item.Number || item.number || '';
+                var nameLower = (name || '').toLowerCase();
+                var numberLower = (number || '').toLowerCase();
+                var searchTokens = [name, type, id, number].filter(Boolean).join(' ').toLowerCase();
+                var labelParts = [name, "|", number];
+                var displayText = labelParts.join(' ');
+                var codeLabelParts = [];
+                if (number) {
+                    codeLabelParts.push(number);
+                }
+                if (name) {
+                    if (codeLabelParts.length) {
+                        codeLabelParts.push('|');
+                    }
+                    codeLabelParts.push(name);
+                }
+                var codeLabel = codeLabelParts.join(' ');
+                return {
+                    id: id,
+                    text: displayText,
+                    codeLabel: codeLabel || displayText,
+                    search: searchTokens,
+                    name: name,
+                    nameLower: nameLower,
+                    numberLower: numberLower,
+                    number: number,
+                    uom: uom,
+                    type: type
+                };
+            });
+            productSearchCacheByType[cacheKey] = mapped;
+            if (typeof callback === 'function') {
+                callback(mapped);
+            }
+        });
+    }
+    $(document).on('click', '.remove-di-row', function () {
+        $(this).closest('tr').remove()
+    })
+    function collectDepartmentalIssueMaterials() {
+        var materials = []
+        var valid = true
+
+        $('#productsSelectionTable tr').each(function () {
+            var $row = $(this)
+
+            var productId = $row.find('.di-product-id').val()
+            var qty = Number($row.find('.di-qty').val())
+
+            if (!productId || qty <= 0) {
+                JSUTIL.buildErrorModal('Please select product and quantity')
+                valid = false
+                return false
+            }
+
+            materials.push({
+                product: { id: productId },
+                quantity: qty
+            })
+        })
+
+        return valid ? materials : null
+    }
+
+    function getNextDepartmentalIssueNumber(callback) {
+        var year2 = new Date().getFullYear().toString().slice(-2)
+        var maxSeqForYear = 0
+
+        JSUTIL.callAJAXGet('/api/production-orders', function (orders) {
+            (orders || []).forEach(function (order) {
+                if (!order || order.type !== 'Departmental Issue') return
+
+                var orderNumber = String(order.number || '').trim()
+                var match = orderNumber.match(/^DPI-(\d+)-(\d{2})$/i)
+                if (!match) return
+
+                var seq = Number(match[1])
+                var yearSuffix = match[2]
+                if (yearSuffix === year2 && !isNaN(seq) && seq > maxSeqForYear) {
+                    maxSeqForYear = seq
+                }
+            })
+
+            var nextSeq = maxSeqForYear + 1
+            var nextNumber = 'DPI-' + String(nextSeq).padStart(4, '0') + '-' + year2
+            callback(nextNumber)
+        })
+    }
+
+    $(document).on('click', '#saveNewDepartmentalIssue', function () {
+
+        // var productionBatchId = $('.newDepartmentalIssue.productionBatch').val()
+        // if (!productionBatchId) {
+        //     JSUTIL.buildErrorModal('Please select Production Batch')
+        //     return
+        // }
+
+        var materials = collectDepartmentalIssueMaterials()
+        if (!materials || !materials.length) return
+
+        // STEP 1: derive next number from existing departmental issue orders
+        getNextDepartmentalIssueNumber(function (dpiNumber) {
+            // STEP 2: create ProductionOrder via REST POST
+            var orderPayload = {
+                number: dpiNumber,
+                type: 'Departmental Issue',
+                orderStatus: 'New'
+            }
+
+            JSUTIL.callAJAXPost('/api/production-orders',
+                JSON.stringify(orderPayload),
+                function (orderRes) {
+                    console.log('production order created', orderRes)
+                    var orderId = orderRes.id
+
+                    // STEP 3: create OrderMaterials one by one via REST POST
+                    var createNext = function (index) {
+                        if (index >= materials.length) {
+                            console.log('All order materials created')
+                            location.reload()
+                            return
+                        }
+                        var m = materials[index]
+                        JSUTIL.callAJAXPost('/api/order-materials',
+                            JSON.stringify({
+                                order: { id: orderId },
+                                product: { id: m.product.id },
+                                plannedQuantity: m.quantity
+                            }),
+                            function () {
+                                createNext(index + 1)
+                            }
+                        )
+                    }
+                    createNext(0)
+                }
+            )
+        })
+    })
+
+
+    // newDepartmentalIssuePanel.js end
+</script>

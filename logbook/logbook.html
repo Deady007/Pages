@@ -1,0 +1,1816 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
+    #editDataEntryPanel {
+        display: none;
+    }
+
+    #editDataEntryPanel .ibox-title h5 {
+        font-weight: 600;
+    }
+
+    #editDataEntryPanel .entry-meta-card {
+        border: 1px solid #e5e6e7;
+        border-left: 4px solid #1c84c6;
+        border-radius: 4px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        background: #f8fbff;
+    }
+
+    #editDataEntryPanel .entry-meta {
+        color: #4b5563;
+        font-size: 12px;
+        line-height: 1.8;
+    }
+
+    #editDataEntryPanel .section-title {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #2f4050;
+        border-bottom: 1px solid #e5e6e7;
+        padding-bottom: 8px;
+    }
+
+    #editDataEntryPanel .entry-field-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+    }
+
+    #editDataEntryPanel .entry-field-grid .form-group label {
+        font-weight: 600;
+        color: #2f4050;
+        margin-bottom: 6px;
+    }
+
+    #editDataEntryPanel .entry-field-grid .form-control[disabled] {
+        background-color: #f5f5f5;
+        opacity: 0.9;
+    }
+
+    #editDataEntryPanel .history-wrap .table th {
+        background-color: #f5f5f5;
+        font-weight: 600;
+        border-bottom: 2px solid #ddd;
+    }
+
+    #editDataEntryPanel .history-wrap .table td,
+    #editDataEntryPanel .history-wrap .table th {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="qa-white-panel">
+
+    <div class="row animated fadeInRight aasaanPanel" id="editDataEntryPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><i data-lucide="square-pen"></i> Edit Data Entry</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm" id="closeEditDataEntryBtn">
+                            <i data-lucide="x"></i> Close
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm" id="requestEditDataEntryModificationBtn" style="display:none;">
+                            <i data-lucide="undo-2"></i> Request Modification
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm labControlBtn recordEditBtn" id="editDataEntryEditBtn">
+                            <i data-lucide="pencil"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm labControlBtn updateSampleRequestBtn" id="saveEditDataEntryBtn" style="display:none;">
+                            <i data-lucide="check"></i> Save
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="submitEditDataEntryApprovalBtn" style="display:none;">
+                            <i data-lucide="send"></i> Submit for Approval
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="entry-meta-card">
+                        <div class="entry-meta" id="editDataEntryMeta"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h4 class="section-title">Entry Details</h4>
+                            <div class="entry-field-grid" id="editDataEntryFieldsWrap"></div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top:16px;">
+                        <div class="col-sm-12">
+                            <div class="tabs-container">
+                                <ul class="nav nav-tabs" id="editDataEntryHistoryTabNav">
+                                    <li class="active">
+                                        <a data-toggle="tab" href="#editDataEntryHistoryTab">Process Activity</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" style="margin-top: 15px;">
+                                    <div id="editDataEntryHistoryTab" class="tab-pane fade in active">
+                                        <div class="history-wrap">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-hover">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Activity</th>
+                                                        <th>Performed By</th>
+                                                        <th>Notes</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody id="editDataEntryHistoryTable"></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var currentEditDataEntryRecord = null;
+    var currentEditDataEntryTemplate = null;
+    var isEditDataEntryMode = false;
+    var canEditCurrentDataEntry = false;
+
+    function normalizeEditDataEntryId(value) {
+        var raw = (value === null || value === undefined) ? '' : String(value).trim();
+        if (!raw) return '';
+        var num = Number(raw);
+        return Number.isFinite(num) ? num : raw;
+    }
+
+    function parseEditDataEntryCsv(dataEntry, expectedCount) {
+        var raw = (dataEntry === null || dataEntry === undefined) ? '' : String(dataEntry);
+        // Support both pipe (current) and comma (legacy) separators.
+        var separator = raw.indexOf('|') !== -1 ? '|' : ',';
+        var parts = raw.split(separator).map(function (part) {
+            return (part || '').toString().trim();
+        });
+        while (parts.length < expectedCount) {
+            parts.push('');
+        }
+        return parts.slice(0, expectedCount);
+    }
+
+    function escapeEditDataEntryHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatEditDataEntryDate(value) {
+        if (!value) return '-';
+        var parsed = new Date(value);
+        if (isNaN(parsed.getTime())) {
+            return String(value);
+        }
+        var dd = String(parsed.getDate()).padStart(2, '0');
+        var mm = String(parsed.getMonth() + 1).padStart(2, '0');
+        var yyyy = parsed.getFullYear();
+        var hh = String(parsed.getHours()).padStart(2, '0');
+        var min = String(parsed.getMinutes()).padStart(2, '0');
+        return dd + '/' + mm + '/' + yyyy + ' ' + hh + ':' + min;
+    }
+
+    function isEditDataEntryEditable(status) {
+        var normalized = (status || '').toString().trim().toLowerCase();
+        return normalized === 'new' || normalized === 'rejected' || normalized === 'returned' || normalized === 'modification approved' || normalized === '';
+    }
+
+    function isEditDataEntryApproved(status) {
+        var normalized = (status || '').toString().trim().toLowerCase();
+        return normalized === 'approved' || normalized === 'active';
+    }
+
+    function isEditDataEntryPendingForApproval(status) {
+        var normalized = (status || '').toString().trim().toLowerCase();
+        return normalized === 'new' || normalized === 'pending' || normalized === 'pending approval' || normalized === 'modification approved' || normalized === 'rejected' || normalized === '';
+    }
+
+    function setEditDataEntryMode(editMode) {
+        isEditDataEntryMode = !!editMode;
+
+        var currentStatus = (currentEditDataEntryRecord && (currentEditDataEntryRecord.processStatus || currentEditDataEntryRecord.ProcessStatus || '')).toString();
+        var showRequestModification = isEditDataEntryApproved(currentStatus);
+        var showSubmitForApproval = isEditDataEntryPendingForApproval(currentStatus) && !isEditDataEntryMode;
+        $('#requestEditDataEntryModificationBtn').toggle(showRequestModification);
+        $('#submitEditDataEntryApprovalBtn').toggle(showSubmitForApproval);
+
+        if (canEditCurrentDataEntry) {
+            $('#editDataEntryEditBtn').show();
+            $('#saveEditDataEntryBtn').show();
+            if (isEditDataEntryMode) {
+                $('#editDataEntryEditBtn').hide();
+                $('#saveEditDataEntryBtn').show();
+            } else {
+                $('#editDataEntryEditBtn').show();
+                $('#saveEditDataEntryBtn').hide();
+            }
+        } else {
+            $('#editDataEntryEditBtn').hide();
+            $('#saveEditDataEntryBtn').hide();
+        }
+
+        $('#editDataEntryFieldsWrap .edit-data-entry-input').prop('disabled', !(canEditCurrentDataEntry && isEditDataEntryMode));
+    }
+
+    function renderEditDataEntryMeta(record, template) {
+        var entryId = normalizeEditDataEntryId(record && (record.id || record.Id || ''));
+        var status = (record && (record.processStatus || record.ProcessStatus || '')).toString().trim() || 'New';
+        var templateName = (template && template.name || '').toString().trim();
+        var createdDate = (record && (record.createdDate || record.CreatedDate || '')).toString().trim();
+        var created = formatEditDataEntryDate(createdDate);
+
+        $('#editDataEntryMeta').html(
+            '<strong>Entry ID:</strong> ' + entryId +
+            ' &nbsp;&nbsp; <strong>Status:</strong> ' + status +
+            ' &nbsp;&nbsp; <strong>Template:</strong> ' + (templateName || '-') +
+            ' &nbsp;&nbsp; <strong>Created:</strong> ' + created
+        );
+    }
+
+    function buildEditDataEntryFieldHtml(field, index, value, editable) {
+        var fieldName = ((field && field.name) || ('Field ' + (index + 1))).toString();
+        var type = ((field && field.type) || 'text').toString().toLowerCase();
+        var safeValue = (value === null || value === undefined) ? '' : String(value);
+        var escapedValue = escapeEditDataEntryHtml(safeValue);
+        var disabledAttr = editable ? '' : 'disabled';
+        var inputHtml = '';
+
+        if (type === 'date') {
+            var dateVal = '';
+            if (safeValue) {
+                var parsed = new Date(safeValue);
+                if (!isNaN(parsed.getTime())) {
+                    dateVal = parsed.toISOString().slice(0, 10);
+                }
+            }
+            inputHtml = '<input type="date" class="form-control input-sm edit-data-entry-input" data-col="' + index + '" value="' + dateVal + '" ' + disabledAttr + '>';
+        } else if (type === 'time') {
+            inputHtml = '<input type="time" class="form-control input-sm edit-data-entry-input" data-col="' + index + '" value="' + escapedValue + '" ' + disabledAttr + '>';
+        } else if (type === 'number') {
+            inputHtml = '<input type="number" step="any" class="form-control input-sm edit-data-entry-input" data-col="' + index + '" value="' + escapedValue + '" ' + disabledAttr + '>';
+        } else if (type === 'checkbox') {
+            var checkedAttr = (safeValue.toLowerCase() === 'true' || safeValue === '1') ? 'checked' : '';
+            inputHtml = '<input type="checkbox" class="edit-data-entry-input" data-col="' + index + '" ' + checkedAttr + ' ' + disabledAttr + '>';
+        } else if (type === 'dropdown') {
+            var options = (((field && field.options) || '').toString().split(','))
+                .map(function (opt) { return opt.trim(); })
+                .filter(function (opt) { return opt.length > 0; });
+            var optionsHtml = '<option value="">-- Select --</option>';
+            options.forEach(function (opt) {
+                var selectedAttr = String(opt) === safeValue ? 'selected' : '';
+                optionsHtml += '<option value="' + escapeEditDataEntryHtml(opt) + '" ' + selectedAttr + '>' + escapeEditDataEntryHtml(opt) + '</option>';
+            });
+            inputHtml = '<select class="form-control input-sm edit-data-entry-input" data-col="' + index + '" ' + disabledAttr + '>' + optionsHtml + '</select>';
+        } else {
+            inputHtml = '<input type="text" class="form-control input-sm edit-data-entry-input" data-col="' + index + '" value="' + escapedValue + '" ' + disabledAttr + '>';
+        }
+
+        return '' +
+            '<div class="form-group">' +
+            '<label>' + escapeEditDataEntryHtml(fieldName) + '</label>' +
+            inputHtml +
+            '</div>';
+    }
+
+    function renderEditDataEntryFields(record, template) {
+        var fields = (template && Array.isArray(template.fields)) ? template.fields : [];
+        var values = parseEditDataEntryCsv(record && (record.dataEntry || record.DataEntry || ''), fields.length);
+        var status = (record && (record.processStatus || record.ProcessStatus || '')).toString();
+        var editable = canEditCurrentDataEntry && isEditDataEntryMode;
+        var html = '';
+
+        fields.forEach(function (field, idx) {
+            html += buildEditDataEntryFieldHtml(field, idx, values[idx], editable);
+        });
+
+        $('#editDataEntryFieldsWrap').html(html || '<div class="text-muted">No fields available.</div>');
+        setEditDataEntryMode(isEditDataEntryMode);
+    }
+
+    function renderEditDataEntryHistoryRows(list) {
+        var rows = '';
+        (list || []).forEach(function (item) {
+            var d = item.startDate || item.StartDate || item.createdDate || item.CreatedDate || '';
+            var dateLabel = formatEditDataEntryDate(d);
+            var name = (item.name || item.Name || item.type || item.Type || '-').toString();
+            var p = item.performedBy || item.PerformedBy || {};
+            var who = ((p.firstName || p.FirstName || '') + ' ' + (p.lastName || p.LastName || '')).trim() || '-';
+            var notes = (item.notes || item.Notes || item.reason || item.Reason || '').toString().trim() || '-';
+            rows += '<tr><td>' + dateLabel + '</td><td>' + name + '</td><td>' + who + '</td><td>' + notes + '</td></tr>';
+        });
+        $('#editDataEntryHistoryTable').html(rows || '<tr><td colspan="4" class="text-center text-muted">No process activity found.</td></tr>');
+    }
+
+    function loadEditDataEntryHistory(entryId) {
+        JSUTIL.callAJAXGet('/api/process-activities/parent/' + entryId, function (response) {
+            renderEditDataEntryHistoryRows(Array.isArray(response) ? response : (response && response.data) || []);
+        }, function () {
+            renderEditDataEntryHistoryRows([]);
+        });
+    }
+
+    function buildUpdatedDataEntryCsv(template, context) {
+        var fields = (template && Array.isArray(template.fields)) ? template.fields : [];
+        var values = [];
+
+        $('#editDataEntryFieldsWrap .edit-data-entry-input').each(function () {
+            var $el = $(this);
+            var idx = Number($el.attr('data-col'));
+            var field = fields[idx] || {};
+            var type = (field.type || 'text').toString().toLowerCase();
+            var val = '';
+
+            if (type === 'checkbox') {
+                val = $el.is(':checked') ? 'true' : 'false';
+            } else {
+                // Replace any pipe chars so they don't break the persisted separator.
+                val = ($el.val() || '').toString().trim().replace(/\|/g, '/');
+            }
+            values[idx] = val;
+        });
+
+        for (var i = 0; i < fields.length; i++) {
+            if (values[i] === undefined) values[i] = '';
+        }
+
+        return values.join('|');
+    }
+
+    function resolveEditDataEntryUserId() {
+        if (typeof employeeId !== 'undefined' && employeeId) {
+            return normalizeEditDataEntryId(employeeId);
+        }
+        if (typeof employeeiD !== 'undefined' && employeeiD) {
+            return normalizeEditDataEntryId(employeeiD);
+        }
+        return '';
+    }
+
+    function createEditDataEntryActivity(entryId, callback) {
+        var done = (typeof callback === 'function') ? callback : function () { };
+        var userId = resolveEditDataEntryUserId();
+        if (!entryId || !userId) {
+            done(false);
+            return;
+        }
+
+        var payload = {
+            name: 'Data Entry Edited',
+            startDate: new Date(),
+            performedBy: { id: userId },
+            parentRecordId: entryId
+        };
+
+        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify(payload), function () {
+            done(true);
+        }, function () {
+            done(false);
+        });
+    }
+
+    function requestDataEntryModification() {
+        if (!currentEditDataEntryRecord) {
+            JSUTIL.buildErrorModal('No data entry selected.');
+            return;
+        }
+
+        var entryId = normalizeEditDataEntryId(currentEditDataEntryRecord.id || currentEditDataEntryRecord.Id || '');
+        if (!entryId) {
+            JSUTIL.buildErrorModal('Entry ID not found.');
+            return;
+        }
+
+        var status = (currentEditDataEntryRecord.processStatus || currentEditDataEntryRecord.ProcessStatus || '').toString();
+        if (!isEditDataEntryApproved(status)) {
+            JSUTIL.buildErrorModal('Request Modification is only allowed for Approved entries.');
+            return;
+        }
+
+        JSUTIL.callAJAXPost('/data/LogbookEntry/update/' + entryId, JSON.stringify({ processStatus: 'Modification Requested' }), function () {
+            var userId = resolveEditDataEntryUserId();
+            if (userId) {
+                JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify({
+                    name: 'Data Entry Modification Requested',
+                    startDate: new Date(),
+                    performedBy: { id: userId },
+                    parentRecordId: entryId
+                }), function () { }, function () { });
+            }
+
+            if (typeof toastr !== 'undefined' && toastr && typeof toastr.success === 'function') {
+                toastr.success('Modification requested. Awaiting Dept HOD approval.');
+            }
+            if (typeof window.renderLogbookEntryArea === 'function' && window.selectedLogbookTemplate) {
+                window.renderLogbookEntryArea(window.selectedLogbookTemplate);
+            }
+            $('#editDataEntryPanel').hide();
+            $('#newDataEntryPanel').show();
+        }, function () {
+            JSUTIL.buildErrorModal('Unable to request modification right now. Please try again.');
+        });
+    }
+
+    function saveEditedDataEntry() {
+        if (!currentEditDataEntryRecord || !currentEditDataEntryTemplate) {
+            JSUTIL.buildErrorModal('No data entry selected.');
+            return;
+        }
+
+        var entryId = normalizeEditDataEntryId(currentEditDataEntryRecord.id || currentEditDataEntryRecord.Id || '');
+        if (!entryId) {
+            JSUTIL.buildErrorModal('Entry ID not found.');
+            return;
+        }
+
+        var updatedCsv = buildUpdatedDataEntryCsv(currentEditDataEntryTemplate, currentEditDataEntryRecord);
+        var payload = {
+            dataEntry: updatedCsv
+        };
+
+        JSUTIL.callAJAXPost('/data/LogbookEntry/update/' + entryId, JSON.stringify(payload), function () {
+            createEditDataEntryActivity(entryId, function (activityCreated) {
+                if (typeof toastr !== 'undefined' && toastr && typeof toastr.success === 'function') {
+                    toastr.success('Data entry updated successfully');
+                }
+                if (!activityCreated && typeof toastr !== 'undefined' && toastr && typeof toastr.warning === 'function') {
+                    toastr.warning('Data entry saved, but activity could not be logged.');
+                }
+                if (typeof window.renderLogbookEntryArea === 'function' && window.selectedLogbookTemplate) {
+                    window.renderLogbookEntryArea(window.selectedLogbookTemplate);
+                }
+                $('#editDataEntryPanel').hide();
+                $('#newDataEntryPanel').show();
+            });
+        }, function () {
+            JSUTIL.buildErrorModal('Unable to update data entry right now. Please try again.');
+        });
+    }
+
+    function submitEditedDataEntryForApproval() {
+        if (!currentEditDataEntryRecord) {
+            JSUTIL.buildErrorModal('No data entry selected.');
+            return;
+        }
+
+        var entryId = normalizeEditDataEntryId(currentEditDataEntryRecord.id || currentEditDataEntryRecord.Id || '');
+        if (!entryId) {
+            JSUTIL.buildErrorModal('Entry ID not found.');
+            return;
+        }
+
+        var status = (currentEditDataEntryRecord.processStatus || currentEditDataEntryRecord.ProcessStatus || '').toString();
+        if (!isEditDataEntryPendingForApproval(status)) {
+           JSUTIL.buildErrorModal('Only New, Pending, Rejected, or Modification Approved entries can be submitted for approval.');
+            return;
+        }
+
+        JSUTIL.callAJAXPost('/data/LogbookEntry/update/' + entryId, JSON.stringify({
+            processStatus: 'Pending Approval'
+        }), function () {
+            if (typeof toastr !== 'undefined' && toastr && typeof toastr.success === 'function') {
+                toastr.success('Entry submitted for approval');
+            }
+            if (typeof window.renderLogbookEntryArea === 'function' && window.selectedLogbookTemplate) {
+                window.renderLogbookEntryArea(window.selectedLogbookTemplate);
+            }
+            $('#editDataEntryPanel').hide();
+            $('#newDataEntryPanel').show();
+        }, function () {
+            JSUTIL.buildErrorModal('Unable to submit entry for approval right now. Please try again.');
+        });
+    }
+
+    window.showEditDataEntryPanel = function (entryRecord, templateRecord) {
+        if (!entryRecord) {
+            JSUTIL.buildErrorModal('Unable to open data entry details.');
+            return;
+        }
+
+        currentEditDataEntryRecord = $.extend(true, {}, entryRecord);
+        currentEditDataEntryTemplate = $.extend(true, {}, templateRecord || {});
+        canEditCurrentDataEntry = isEditDataEntryEditable((currentEditDataEntryRecord.processStatus || currentEditDataEntryRecord.ProcessStatus || '').toString());
+        isEditDataEntryMode = false;
+
+        renderEditDataEntryMeta(currentEditDataEntryRecord, currentEditDataEntryTemplate);
+        renderEditDataEntryFields(currentEditDataEntryRecord, currentEditDataEntryTemplate);
+
+        var entryId = normalizeEditDataEntryId(currentEditDataEntryRecord.id || currentEditDataEntryRecord.Id || '');
+        if (entryId) {
+            loadEditDataEntryHistory(entryId);
+        } else {
+            renderEditDataEntryHistoryRows([]);
+        }
+
+        $('#newDataEntryPanel').hide();
+        $('#editDataEntryPanel').show();
+    };
+
+    if (window.lucide) lucide.createIcons();
+    $(document).ready(function () {
+        $('#closeEditDataEntryBtn').off('click').on('click', function () {
+            isEditDataEntryMode = false;
+            canEditCurrentDataEntry = false;
+            $('#editDataEntryPanel').hide();
+            $('#newDataEntryPanel').show();
+        });
+
+        $('#editDataEntryEditBtn').off('click').on('click', function () {
+            if (!canEditCurrentDataEntry) {
+                JSUTIL.buildErrorModal('Only New, Rejected, Returned, or Modification Approved entries can be edited.');
+                return;
+            }
+            setEditDataEntryMode(true);
+        });
+
+        $('#saveEditDataEntryBtn').off('click').on('click', function () {
+            saveEditedDataEntry();
+        });
+
+        $('#requestEditDataEntryModificationBtn').off('click').on('click', function () {
+            requestDataEntryModification();
+        });
+
+        $('#submitEditDataEntryApprovalBtn').off('click').on('click', function () {
+            submitEditedDataEntryForApproval();
+        });
+    });
+    </script>
+
+
+
+    <style>
+        #newDataEntryPanel {
+            overflow-x: hidden;
+        }
+
+        #newDataEntryPanel #logbookEntryArea {
+            overflow-x: hidden;
+        }
+
+        #newDataEntryPanel #logbookEntryArea .table-responsive {
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        #newDataEntryPanel #logbookEntryArea .dataTables_wrapper {
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        #newDataEntryPanel #logbookEntryTable {
+            width: 100%;
+            min-width: 100%;
+            table-layout: fixed;
+        }
+
+        #newDataEntryPanel #logbookEntryTable th,
+        #newDataEntryPanel #logbookEntryTable td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+
+        #newDataEntryPanel #logbookEntryTable th:nth-child(n+4),
+        #newDataEntryPanel #logbookEntryTable td:nth-child(n+4) {
+            min-width: 150px;
+        }
+
+        #newDataEntryPanel #logbookEntryTable td .logbook-entry-input {
+            width: 100% !important;
+            min-width: 100%;
+            box-sizing: border-box;
+        }
+
+        #newDataEntryPanel #logbookEntryTable td .select2-container {
+            width: 100% !important;
+        }
+
+        #newDataEntryPanel #logbookEntryTable th:first-child,
+        #newDataEntryPanel #logbookEntryTable td:first-child {
+            width: 80px;
+            min-width: 80px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        #newDataEntryPanel #logbookEntryTable th:nth-child(2),
+        #newDataEntryPanel #logbookEntryTable td:nth-child(2) {
+            width: 70px;
+            min-width: 70px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        #newDataEntryPanel #logbookEntryTable tr.logbook-existing-row {
+            background: #f8f9fb;
+        }
+
+        #newDataEntryPanel #logbookEntryTable tr.logbook-existing-row:hover {
+            background: #f3f5f8;
+        }
+
+        #newDataEntryPanel .logbook-readonly-indicator {
+            color: #8a97a6;
+            text-align: center;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        #newDataEntryPanel .logbook-entry-cell-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #newDataEntryPanel .logbook-edit-entry-btn {
+            border: 0;
+            background: transparent;
+            padding: 0;
+            line-height: 1;
+            color: #6b7280;
+            cursor: pointer;
+        }
+
+        #newDataEntryPanel .logbook-edit-entry-btn:hover,
+        #newDataEntryPanel .logbook-edit-entry-btn:focus {
+            color: #1f2937;
+            outline: none;
+        }
+
+        #newDataEntryPanel #logbookSubmitApprovalBtn[disabled] {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+        }
+    </style>
+
+    <div class="row animated fadeInRight aasaanPanel" id="newDataEntryPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Logbook Entries <small>Data Entry</small></h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Select Logbook Template</label>
+                                <select class="form-control select2" id="logbookEntryTemplateSelect">
+                                    <option value="">-- Choose an approved template --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qa-white-panel" id="logbookEntryAreaWrap" style="display:none; margin-top: 16px;">
+                <div class="ibox float-e-margins" id="logbookEntryArea">
+                    <div class="ibox-content">
+                        <div class="row" id="logbookEntryActionRow" style="margin-bottom:10px;">
+                            <div class="col-sm-12" id="logbookEntryActionBar" style="text-align:right;">
+                                <button type="button" class="btn btn-default btn-sm" id="logbookCloseEntryBtn">
+                                    <i data-lucide="x"></i> Close
+                                </button>
+                                <button type="button" class="btn btn-default btn-sm" id="logbookAddEntryRowBtn" disabled>
+                                    <i data-lucide="plus"></i> Add Row
+                                </button>
+                                <button type="button" class="btn btn-default btn-sm" id="logbookDeleteEntryRowBtn" disabled>
+                                    <i data-lucide="trash"></i> Delete Selected
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="logbookSubmitApprovalBtn" disabled>
+                                    <i data-lucide="send"></i> Submit for Approval
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="logbookSaveEntryBtn" disabled>
+                                    <i data-lucide="check"></i> Save
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="logbookEntryTable">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="text-muted" id="logbookEntryHint" style="margin-top:10px; display:none;">
+                            No fields found in this template.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var logbookTemplateRows = [];
+    var selectedLogbookTemplate = null;
+    var currentLogbookId = '';
+    var isLoadingExistingEntries = false;
+    // Expose current template entries for quick console inspection (mirrors recordList for templates)
+    var logbookEntryList = [];
+
+    function setLogbookEntryList(list) {
+        logbookEntryList = Array.isArray(list) ? list.slice() : [];
+        window.logbookEntryList = logbookEntryList;
+        console.log('logbookEntryList', logbookEntryList);
+    }
+
+    function moveLogbookEntryActionsToHome() {
+        var $home = $('#logbookEntryActionBar');
+        if (!$home.length) return;
+        var $buttons = $('#logbookAddEntryRowBtn, #logbookDeleteEntryRowBtn, #logbookSubmitApprovalBtn, #logbookSaveEntryBtn, #logbookCloseEntryBtn');
+        $buttons.detach().appendTo($home);
+        $home.css({
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: '6px'
+        });
+        $('#logbookEntryActionRow').show();
+    }
+
+    function destroyLogbookEntryDataTable() {
+        moveLogbookEntryActionsToHome();
+        if (!window.$ || !$.fn || !$.fn.DataTable || !$.fn.DataTable.isDataTable) {
+            return;
+        }
+        var $table = $('#logbookEntryTable');
+        if ($table.length && $.fn.DataTable.isDataTable($table)) {
+            $table.DataTable().destroy();
+        }
+    }
+
+    function isLogbookEntryDataTableActive() {
+        if (!window.$ || !$.fn || !$.fn.DataTable || !$.fn.DataTable.isDataTable) {
+            return false;
+        }
+        var $table = $('#logbookEntryTable');
+        return !!($table.length && $.fn.DataTable.isDataTable($table));
+    }
+
+    function getAllLogbookEntryRowNodes() {
+        if (isLogbookEntryDataTableActive()) {
+            var dataTable = $('#logbookEntryTable').DataTable();
+            return dataTable.rows({ page: 'all' }).nodes().toArray();
+        }
+        return $('#logbookEntryTable tbody tr').toArray();
+    }
+
+    // Recalculate header checkbox state based on all checkboxes in the current DataTable page
+    function updateMasterCheckboxState() {
+        var $all = $('#logbookEntryTable tbody .logbook-row-check');
+        var masterChecked = $all.length > 0 && $all.length === $all.filter(':checked').length;
+        $('#logbookSelectAllRows, .dataTables_scrollHead #logbookSelectAllRows').prop('checked', masterChecked);
+    }
+
+    function refreshLogbookEntryPagination(moveToLastPage) {
+        if (!window.$ || !$.fn || !$.fn.DataTable) {
+            return;
+        }
+
+        var $table = $('#logbookEntryTable');
+        if (!$table.length || !$table.find('thead th').length) {
+            return;
+        }
+
+        destroyLogbookEntryDataTable();
+        var dataTable = $table.DataTable({
+            paging: true,
+            searching: true,
+            ordering: false,
+            info: true,
+            lengthChange: true,
+            pageLength: 10,
+            autoWidth: false,
+            scrollX: true
+        });
+
+        placeLogbookEntryActionsInToolbar();
+
+        // ensure master checkbox state is recalculated on each draw
+        dataTable.off('draw').on('draw', function () {
+            updateMasterCheckboxState();
+            updateApprovalButtonState();
+        });
+
+        if (moveToLastPage) {
+            dataTable.page('last').draw('page');
+            return;
+        }
+        dataTable.draw(false);
+    }
+
+    function placeLogbookEntryActionsInToolbar() {
+        var $wrapper = $('#logbookEntryTable').closest('.dataTables_wrapper');
+        var $topRow = $wrapper.find('> .row').first();
+        var $cols = $topRow.children('div');
+        if (!$cols.length) {
+            moveLogbookEntryActionsToHome();
+            return;
+        }
+
+        var $targetCol = $cols.last();
+        var $buttons = $('#logbookAddEntryRowBtn, #logbookDeleteEntryRowBtn, #logbookSubmitApprovalBtn, #logbookSaveEntryBtn, #logbookCloseEntryBtn');
+        $targetCol.css({
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: '6px'
+        });
+        $buttons.detach().appendTo($targetCol);
+        $('#logbookEntryActionRow').hide();
+    }
+
+    function initSelect2InLogbook(context) {
+        if (!(window.$ && $.fn && typeof $.fn.select2 === 'function')) return;
+        var $context = context ? $(context) : $(document);
+        var $targets = $context.find('select.select2').addBack('select.select2');
+        $targets.each(function () {
+            var $el = $(this);
+            if ($el.hasClass('select2-hidden-accessible')) {
+                $el.select2('destroy');
+            }
+            $el.select2({
+                width: '100%',
+                minimumResultsForSearch: 0
+            });
+        });
+    }
+
+    function logbookEscapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function parseLogbookFields(rawFields) {
+        if (!rawFields) return [];
+        if (Array.isArray(rawFields)) return rawFields;
+        if (typeof rawFields === 'string') {
+            try {
+                var parsed = JSON.parse(rawFields);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (err) {
+                return [];
+            }
+        }
+        return [];
+    }
+
+    function normalizeLogbookTemplateList(response) {
+        if (Array.isArray(response)) return response;
+        if (response && Array.isArray(response.data)) return response.data;
+        return [];
+    }
+
+    function getLogbookEntryStatus(entry) {
+        return (entry && (entry.processStatus || entry.ProcessStatus || '')).toString().trim().toLowerCase();
+    }
+
+    function getLogbookEntryAuthorId(entry) {
+        var author = entry && (entry.author || entry.Author || {});
+        return normalizeEntityId(author.id || author.Id || entry.authorId || entry.AuthorId || '');
+    }
+
+    function getCurrentLogbookEmployeeId() {
+        if (typeof FOX !== 'undefined' && FOX && FOX.employeeId) {
+            return normalizeEntityId(FOX.employeeId);
+        }
+        if (typeof employeeId !== 'undefined' && employeeId) {
+            return normalizeEntityId(employeeId);
+        }
+        if (typeof employeeiD !== 'undefined' && employeeiD) {
+            return normalizeEntityId(employeeiD);
+        }
+        return normalizeEntityId(resolveCurrentAuthorId());
+    }
+
+    function isPendingEntryVisibleForApproval(entry) {
+        var status = getLogbookEntryStatus(entry);
+        return status === 'new' || status === 'pending' || status === 'pending approval' || status === 'modification approved' || status === 'rejected' || status === '';
+    }
+
+    function getLogbookEntryStatusLabel(entry) {
+        var status = getLogbookEntryStatus(entry);
+        if (!status || status === 'new') return 'New';
+        if (status === 'pending') return 'Pending';
+        if (status === 'pending approval') return 'Pending Approval';
+        if (status === 'modification requested') return 'Modification Requested';
+        if (status === 'modification approved') return 'Modification Approved';
+        if (status === 'modification rejected') return 'Modification Rejected';
+        if (status === 'returned') return 'Returned';
+        if (status === 'approved') return 'Approved';
+       if (status === 'rejected') {
+        var note = (entry && (entry._rejectionNote || '')).toString().trim();
+        return note ? 'Rejected - ' + note : 'Rejected';
+    }
+        return (entry && (entry.processStatus || entry.ProcessStatus || '')).toString().trim() || 'New';
+    }
+
+    function getLogbookEntryStatusBadge(entry) {
+        var status = getLogbookEntryStatus(entry);
+        var label = getLogbookEntryStatusLabel(entry);
+        var cls = 'background: #f3f4f6; color: #6b7280;';
+        if (status === 'approved') cls = 'background: #d1fae5; color: #065f46;';
+        else if (status === 'pending' || status === 'pending approval') cls = 'background: #dbeafe; color: #1e40af;';
+        else if (status === 'rejected' || status === 'modification rejected') cls = 'background: #fecaca; color: #991b1b;';
+        else if (status === 'returned') cls = 'background: #fef3c7; color: #92400e;';
+        else if (status === 'modification requested') cls = 'background: #fef3c7; color: #92400e;';
+        else if (status === 'modification approved') cls = 'background: #dbeafe; color: #1e40af;';
+        return '<span style="display:inline-block;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600;' + cls + '">' + logbookEscapeHtml(label) + '</span>';
+    }
+
+    function filterVisibleEntryRows(entryList) {
+        var currentAuthorId = getCurrentLogbookEmployeeId();
+        // If we can't resolve the current user, show all entries
+        if (!currentAuthorId) return (entryList || []).slice();
+        return (entryList || []).filter(function (entry) {
+            var status = getLogbookEntryStatus(entry);
+            if (status === 'approved') {
+                return true;
+            }
+            var entryAuthorId = String(getLogbookEntryAuthorId(entry));
+            // Show entry if it has no author (legacy data) or if author matches current user
+            if (!entryAuthorId) return true;
+            if (status === 'new' || status === 'pending' || status === 'pending approval' || status === 'rejected' || status === 'modification requested' || status === 'modification approved' || status === 'modification rejected' || status === 'returned' || status === '') {
+                return String(currentAuthorId) === entryAuthorId;
+            }
+            return false;
+        });
+    }
+
+    function refreshLogbookTemplateList(callback) {
+        var payload = {
+            fields: 'Id;Number;Name;Fields;ProcessStatus;ApplicableDepartments;PreparingDepartments;Header;Footer'
+        };
+
+        JSUTIL.callAJAXPost('/data/LogbookTemplate/list', JSON.stringify(payload), function (response) {
+            var list = normalizeLogbookTemplateList(response);
+            // Store in logbook-specific variable only — do NOT overwrite window.recordList
+            // or window.templates as those are used by other panels (allTemplatePanel etc.)
+            if (typeof callback === 'function') callback(true, list);
+        }, function () {
+            if (typeof callback === 'function') callback(false, []);
+        });
+    }
+
+    function getTemplateStatus(record) {
+        return (record && (record.processStatus || record.ProcessStatus) || '').toString().toLowerCase();
+    }
+
+    function getTemplateId(record) {
+        return (record && (record.id || record.Id || '')).toString();
+    }
+
+    function getTemplateName(record) {
+        return (record && (record.name || record.Name || '')).toString();
+    }
+
+    function parseTemplateApplicableDepartmentIds(record) {
+        var raw = record && (record.applicableDepartments || record.ApplicableDepartments || '');
+        if (!raw) return [];
+
+        if (Array.isArray(raw)) {
+            return raw.map(function (id) {
+                return String(normalizeEntityId(id)).trim();
+            }).filter(function (id) {
+                return id.length > 0;
+            });
+        }
+
+        return String(raw).split(',').map(function (id) {
+            return String(normalizeEntityId(id)).trim();
+        }).filter(function (id) {
+            return id.length > 0;
+        });
+    }
+
+    function isTemplateVisibleForCurrentDepartment(record) {
+        var currentDepartmentId = String(resolveCurrentDepartmentId() || '').trim();
+        if (!currentDepartmentId) return true; // Show all if dept not resolved
+
+        var applicableDepartmentIds = parseTemplateApplicableDepartmentIds(record);
+        if (!applicableDepartmentIds.length) return true; // Show if no dept restriction
+
+        return applicableDepartmentIds.indexOf(currentDepartmentId) !== -1;
+    }
+
+    function isLogbookFieldRequired(field) {
+        var raw = field && (field.required !== undefined ? field.required : field.Required);
+        if (typeof raw === 'boolean') return raw;
+        var normalized = (raw === null || raw === undefined) ? '' : String(raw).trim().toLowerCase();
+        return normalized === 'true' || normalized === '1' || normalized === 'yes';
+    }
+
+    function formatLogbookDisplayValue(field, rawValue) {
+        var type = ((field && field.type) || '').toString().toLowerCase();
+        if (type === 'date') {
+            var parsed = new Date(rawValue);
+            if (!isNaN(parsed.getTime())) {
+                var dd = String(parsed.getDate()).padStart(2, '0');
+                var mm = String(parsed.getMonth() + 1).padStart(2, '0');
+                var yyyy = parsed.getFullYear();
+                return dd + '/' + mm + '/' + yyyy;
+            }
+        }
+        return rawValue;
+    }
+
+    function buildEntryInputByType(field, fieldIndex) {
+        var type = ((field && field.type) || 'text').toString().toLowerCase();
+        var required = isLogbookFieldRequired(field);
+        var reqAttr = required ? 'required' : '';
+        var colAttr = 'data-col="' + fieldIndex + '"';
+
+        if (type === 'number') {
+            return '<input type="number" step="any" class="form-control input-sm logbook-entry-input" ' + colAttr + ' ' + reqAttr + '>';
+        }
+        if (type === 'date') {
+            return '<input type="date" class="form-control input-sm logbook-entry-input" ' + colAttr + ' ' + reqAttr + '>';
+        }
+        if (type === 'time') {
+            return '<input type="time" class="form-control input-sm logbook-entry-input" ' + colAttr + ' ' + reqAttr + '>';
+        }
+        if (type === 'dropdown') {
+            var options = (((field && field.options) || '').toString().split(','))
+                .map(function (opt) { return opt.trim(); })
+                .filter(function (opt) { return opt.length > 0; });
+            var optionsHtml = '<option value="">-- Select --</option>';
+            options.forEach(function (opt) {
+                optionsHtml += '<option value="' + logbookEscapeHtml(opt) + '">' + logbookEscapeHtml(opt) + '</option>';
+            });
+            return '<select class="form-control input-sm logbook-entry-input select2" ' + colAttr + ' ' + reqAttr + '>' + optionsHtml + '</select>';
+        }
+        if (type === 'checkbox') {
+            return '<input type="checkbox" class="logbook-entry-input" style="width:auto;" ' + colAttr + '>';
+        }
+
+        return '<input type="text" class="form-control input-sm logbook-entry-input" ' + colAttr + ' ' + reqAttr + '>';
+    }
+
+    function renderLogbookEntryTableHeader(fields) {
+        var headerHtml = '<tr><th style="width:90px; text-align: center;"><input type="checkbox" id="logbookSelectAllRows"></th><th>Sr No</th><th>Status</th>';
+        fields.forEach(function (field) {
+            var name = logbookEscapeHtml((field && field.name) || 'Field');
+            var requiredMark = isLogbookFieldRequired(field) ? ' <span class="text-danger">*</span>' : '';
+            headerHtml += '<th>' + name + requiredMark + '</th>';
+        });
+        headerHtml += '</tr>';
+        $('#logbookEntryTable thead').html(headerHtml);
+    }
+
+    function renumberLogbookEntryRows() {
+        $('#logbookEntryTable tbody tr').each(function (index) {
+            $(this).find('.logbook-sr-number').text(index + 1);
+        });
+    }
+
+    function addLogbookEntryRow(skipPagination) {
+        if (!selectedLogbookTemplate || !Array.isArray(selectedLogbookTemplate.fields) || !selectedLogbookTemplate.fields.length) {
+            return;
+        }
+
+        // DataTables can ignore direct DOM row writes while active.
+        if (isLogbookEntryDataTableActive()) {
+            destroyLogbookEntryDataTable();
+        }
+
+        var rowHtml = '<tr><td><input type="checkbox" class="logbook-row-check"></td><td class="logbook-sr-number"></td><td><span class="label">New</span></td>';
+        selectedLogbookTemplate.fields.forEach(function (field, idx) {
+            rowHtml += '<td>' + buildEntryInputByType(field, idx) + '</td>';
+        });
+        rowHtml += '</tr>';
+
+        $('#logbookEntryTable tbody').append(rowHtml);
+        renumberLogbookEntryRows();
+        initSelect2InLogbook($('#logbookEntryTable tbody tr:last'));
+        if (!skipPagination) {
+            refreshLogbookEntryPagination(true);
+        }
+    }
+
+    function parseDataEntryCsv(dataEntry, expectedCount) {
+        var raw = (dataEntry === null || dataEntry === undefined) ? '' : String(dataEntry);
+        // Support both pipe (new) and comma (legacy) separators
+        var separator = raw.indexOf('|') !== -1 ? '|' : ',';
+        var parts = raw.split(separator).map(function (part) {
+            return (part || '').toString().trim();
+        });
+        while (parts.length < expectedCount) {
+            parts.push('');
+        }
+        return parts.slice(0, expectedCount);
+    }
+
+    function renderExistingLogbookEntries(entryList, fields) {
+        var sortedEntries = (entryList || []).slice().sort(function (a, b) {
+            var aDate = new Date(a.createdDate || a.CreatedDate || 0).getTime();
+            var bDate = new Date(b.createdDate || b.CreatedDate || 0).getTime();
+            var aHasDate = Number.isFinite(aDate) && aDate > 0;
+            var bHasDate = Number.isFinite(bDate) && bDate > 0;
+
+            if (aHasDate && bHasDate && aDate !== bDate) {
+                return aDate - bDate;
+            }
+
+            var aId = Number(a.id || a.Id || 0);
+            var bId = Number(b.id || b.Id || 0);
+            if (Number.isFinite(aId) && Number.isFinite(bId) && aId !== bId) {
+                return aId - bId;
+            }
+            return 0;
+        });
+
+        var rowsHtml = '';
+        sortedEntries.forEach(function (entry) {
+            var values = parseDataEntryCsv(entry.dataEntry || entry.DataEntry || '', fields.length);
+            var entryId = normalizeEntityId(entry.id || entry.Id || '');
+            var isPending = isPendingEntryVisibleForApproval(entry);
+            rowsHtml += '<tr class="logbook-existing-row" title="Previously saved entry">';
+            if (isPending && entryId) {
+                rowsHtml += '<td>' +
+                    '<div class="logbook-entry-cell-actions">' +
+                        '<input type="checkbox" class="logbook-row-check" data-entry-id="' + logbookEscapeHtml(entryId) + '">' +
+                        '<button type="button" class="logbook-edit-entry-btn" data-entry-id="' + logbookEscapeHtml(entryId) + '" aria-label="Edit entry"><i data-lucide="pencil"></i></button>' +
+                    '</div>' +
+                '</td>';
+            } else {
+                rowsHtml += '<td>' +
+                    '<div class="logbook-entry-cell-actions">' +
+                        '<span class="logbook-readonly-indicator"><i data-lucide="lock"></i></span>' +
+                        '<button type="button" class="logbook-edit-entry-btn" data-entry-id="' + logbookEscapeHtml(entryId) + '" aria-label="Edit entry"><i data-lucide="pencil"></i></button>' +
+                    '</div>' +
+                '</td>';
+            }
+            rowsHtml += '<td class="logbook-sr-number"></td>';
+            rowsHtml += '<td>' + getLogbookEntryStatusBadge(entry) + '</td>';
+            fields.forEach(function (field, idx) {
+                rowsHtml += '<td>' + logbookEscapeHtml(formatLogbookDisplayValue(field, values[idx])) + '</td>';
+            });
+            rowsHtml += '</tr>';
+        });
+        if (rowsHtml) {
+            $('#logbookEntryTable tbody').append(rowsHtml);
+            renumberLogbookEntryRows();
+        }
+    }
+    function attachRejectionNotes(entries, callback) {
+        var rejectedIds = entries
+            .filter(function (e) { return getLogbookEntryStatus(e) === 'rejected'; })
+            .map(function (e) { return Number(normalizeEntityId(e.id || e.Id || '')); })
+            .filter(Boolean);
+
+        if (!rejectedIds.length) {
+            callback(entries);
+            return;
+        }
+
+        var rejectedIdSet = {};
+        rejectedIds.forEach(function(id) { rejectedIdSet[String(id)] = true; });
+
+        JSUTIL.callAJAXGet('/api/process-activities', function (response) {
+            var activities = Array.isArray(response) ? response : [];
+            var noteMap = {};
+            activities.forEach(function (act) {
+                var parentId = String(normalizeEntityId(act.parentRecordId || act.ParentRecordId || ''));
+                if (!rejectedIdSet[parentId]) return;
+                var name = (act.name || act.Name || '').toString().toLowerCase();
+                if (name.indexOf('reject') === -1) return;
+                var note = (act.notes || act.Notes || act.reason || act.Reason || '').toString().trim();
+                if (note) noteMap[parentId] = note;
+            });
+            entries.forEach(function (e) {
+                var id = String(normalizeEntityId(e.id || e.Id || ''));
+                if (noteMap[id]) e._rejectionNote = noteMap[id];
+            });
+            callback(entries);
+        }, function () {
+            callback(entries);
+        });
+    }
+    function renderLogbookEntryArea(templateRecord) {
+        var fields = parseLogbookFields(templateRecord && (templateRecord.fields || templateRecord.Fields));
+        selectedLogbookTemplate = {
+            id: getTemplateId(templateRecord),
+            name: getTemplateName(templateRecord),
+            fields: fields
+        };
+        setLogbookEntryList([]);
+        // Sync Select2 display only — change.select2 does NOT fire the jQuery change handler
+        $('#logbookEntryTemplateSelect').val(String(selectedLogbookTemplate.id || ''));
+        if ($('#logbookEntryTemplateSelect').hasClass('select2-hidden-accessible')) {
+            $('#logbookEntryTemplateSelect').trigger('change.select2');
+        }
+
+        destroyLogbookEntryDataTable();
+        $('#logbookEntryTable tbody').empty();
+        $('#logbookEntryHint').hide();
+
+        if (!fields.length) {
+            $('#logbookEntryAreaWrap').show();
+            $('#logbookEntryTable thead').empty();
+            $('#logbookEntryHint').show();
+            $('#logbookAddEntryRowBtn').prop('disabled', true);
+            $('#logbookDeleteEntryRowBtn').prop('disabled', true);
+            $('#logbookSubmitApprovalBtn').prop('disabled', true);
+            $('#logbookSaveEntryBtn').prop('disabled', true);
+            return;
+        }
+
+        $('#logbookEntryAreaWrap').show();
+        $('#logbookAddEntryRowBtn').prop('disabled', false);
+        $('#logbookDeleteEntryRowBtn').prop('disabled', false);
+        $('#logbookSaveEntryBtn').prop('disabled', true);
+
+        renderLogbookEntryTableHeader(fields);
+        currentLogbookId = '';
+        isLoadingExistingEntries = true;
+        var departmentId = resolveCurrentDepartmentId();
+        var templateId = normalizeEntityId(selectedLogbookTemplate.id);
+
+        if (!departmentId || !templateId) {
+            setLogbookEntryList([]);
+            isLoadingExistingEntries = false;
+            $('#logbookSaveEntryBtn').prop('disabled', false);
+            addLogbookEntryRow(true);
+            refreshLogbookEntryPagination(true);
+            return;
+        }
+
+        findExistingLogbook(departmentId, templateId, function (ok, logbookId) {
+            if (!ok) {
+                setLogbookEntryList([]);
+                isLoadingExistingEntries = false;
+                $('#logbookSaveEntryBtn').prop('disabled', false);
+                JSUTIL.buildErrorModal('Unable to load existing entries.');
+                addLogbookEntryRow(true);
+                refreshLogbookEntryPagination(true);
+                return;
+            }
+            currentLogbookId = logbookId || '';
+            if (!currentLogbookId) {
+                setLogbookEntryList([]);
+                isLoadingExistingEntries = false;
+                $('#logbookSaveEntryBtn').prop('disabled', false);
+                addLogbookEntryRow(true);
+                refreshLogbookEntryPagination(true);
+                return;
+            }
+
+            loadLogbookEntries(currentLogbookId, function (loaded, entries) {
+                if (!loaded) {
+                    setLogbookEntryList([]);
+                    isLoadingExistingEntries = false;
+                    $('#logbookSaveEntryBtn').prop('disabled', false);
+                    JSUTIL.buildErrorModal('Unable to load existing entries.');
+                    addLogbookEntryRow(true);
+                    refreshLogbookEntryPagination(true);
+                    return;
+                }
+                // var visibleEntries = filterVisibleEntryRows(entries);
+                // setLogbookEntryList(visibleEntries);
+                // renderExistingLogbookEntries(visibleEntries, fields);
+                // addLogbookEntryRow(true);
+                // refreshLogbookEntryPagination(true);
+                // isLoadingExistingEntries = false;
+                // $('#logbookSaveEntryBtn').prop('disabled', false);
+                // updateApprovalButtonState();
+                var visibleEntries = filterVisibleEntryRows(entries);
+                setLogbookEntryList(visibleEntries);
+                attachRejectionNotes(visibleEntries, function (enrichedEntries) {
+                    renderExistingLogbookEntries(enrichedEntries, fields);
+                    addLogbookEntryRow(true);
+                    refreshLogbookEntryPagination(true);
+                    isLoadingExistingEntries = false;
+                    $('#logbookSaveEntryBtn').prop('disabled', false);
+                    updateApprovalButtonState();
+                });
+            });
+        });
+    }
+
+    function collectLogbookEntryRows() {
+        var rows = [];
+        var fields = selectedLogbookTemplate ? selectedLogbookTemplate.fields : [];
+
+        var rowNodes = getAllLogbookEntryRowNodes();
+        rowNodes.forEach(function (rowNode) {
+            var $row = $(rowNode);
+
+            // Skip existing saved rows — they have no entry inputs
+            if ($row.hasClass('logbook-existing-row')) return;
+
+            var rowData = {};
+            var rowValid = true;
+
+            $row.find('.logbook-entry-input').each(function () {
+                var $input = $(this);
+                var colIndex = Number($input.attr('data-col'));
+                var field = fields[colIndex] || {};
+                var fieldName = field.name || ('Field ' + (colIndex + 1));
+                var type = (field.type || 'text').toString().toLowerCase();
+                var required = isLogbookFieldRequired(field);
+
+                var value;
+                if (type === 'checkbox') {
+                    value = $input.is(':checked');
+                } else {
+                    value = ($input.val() || '').toString().trim();
+                }
+
+                if (required && (value === '' || value === null || value === undefined)) {
+                    rowValid = false;
+                    $input.addClass('parsley-error');
+                } else {
+                    $input.removeClass('parsley-error');
+                }
+
+                rowData[fieldName] = value;
+            });
+
+            if (Object.keys(rowData).length) {
+                rows.push({ valid: rowValid, values: rowData });
+            }
+        });
+
+        return rows;
+    }
+
+    function getSelectedPendingEntryIds() {
+        return getAllLogbookEntryRowNodes().map(function (rowNode) {
+            var $checkbox = $(rowNode).find('.logbook-row-check[data-entry-id]:checked');
+            if (!$checkbox.length) return '';
+            return normalizeEntityId($checkbox.attr('data-entry-id'));
+        }).filter(Boolean);
+    }
+
+    function updateApprovalButtonState() {
+        $('#logbookSubmitApprovalBtn').prop('disabled', getSelectedPendingEntryIds().length === 0);
+    }
+
+    function normalizeEntityId(value) {
+        var raw = (value === null || value === undefined) ? '' : String(value).trim();
+        if (!raw) return '';
+        var num = Number(raw);
+        return Number.isFinite(num) ? num : raw;
+    }
+
+    var _cachedDepartmentId = null;
+    var _departmentListCache = null;
+
+    function resolveCurrentDepartmentId() {
+        // Return cached result if already resolved
+        if (_cachedDepartmentId) return _cachedDepartmentId;
+
+        // Direct ID available
+        if (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartmentId) {
+            _cachedDepartmentId = normalizeEntityId(FOX.employeeDepartmentId);
+            return _cachedDepartmentId;
+        }
+        if (typeof employeeDepartmentId !== 'undefined' && employeeDepartmentId) {
+            _cachedDepartmentId = normalizeEntityId(employeeDepartmentId);
+            return _cachedDepartmentId;
+        }
+
+        // Match by department name from FOX.employeeDepartment
+        var deptName = '';
+        if (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartment) {
+            var raw = FOX.employeeDepartment;
+            if (typeof raw === 'string') {
+                deptName = raw.trim();
+            } else if (typeof raw === 'object' && raw !== null) {
+                deptName = (raw.name || raw.Name || '').toString().trim();
+            }
+        }
+        if (deptName && Array.isArray(_departmentListCache)) {
+            for (var i = 0; i < _departmentListCache.length; i++) {
+                var d = _departmentListCache[i];
+                var name = (d.name || d.Name || '').toString().trim();
+                if (name.toLowerCase() === deptName.toLowerCase()) {
+                    _cachedDepartmentId = normalizeEntityId(d.id || d.Id);
+                    return _cachedDepartmentId;
+                }
+            }
+        }
+        return '';
+    }
+
+    function preloadDepartmentsAndResolve(callback) {
+        if (Array.isArray(_departmentListCache)) {
+            resolveCurrentDepartmentId();
+            if (typeof callback === 'function') callback();
+            return;
+        }
+        JSUTIL.callAJAXGet('/api/departments', function(res) {
+            _departmentListCache = Array.isArray(res) ? res : [];
+            resolveCurrentDepartmentId();
+            if (typeof callback === 'function') callback();
+        }, function() {
+            _departmentListCache = [];
+            if (typeof callback === 'function') callback();
+        });
+    }
+
+    function resolveCurrentAuthorId() {
+        if (typeof FOX !== 'undefined' && FOX && FOX.employeeId) {
+            return normalizeEntityId(FOX.employeeId);
+        }
+        if (typeof employeeId !== 'undefined' && employeeId) {
+            return normalizeEntityId(employeeId);
+        }
+        if (typeof employeeiD !== 'undefined' && employeeiD) {
+            return normalizeEntityId(employeeiD);
+        }
+        return '';
+    }
+
+    function buildDataEntryCsv(rowValues, fields) {
+        var values = [];
+        (fields || []).forEach(function (field) {
+            var key = field && field.name ? field.name : '';
+            var val = key ? rowValues[key] : '';
+            if (typeof val === 'boolean') {
+                values.push(val ? 'true' : 'false');
+                return;
+            }
+            // Replace any pipe chars in the value to avoid breaking the separator
+            var strVal = (val === null || val === undefined) ? '' : String(val).trim().replace(/\|/g, '/');
+            values.push(strVal);
+        });
+        return values.join('|');
+    }
+
+    function findExistingLogbook(departmentId, templateId, callback) {
+        var payload = { Condition: "department.Id=" + Number(departmentId) + " AND template.Id=" + Number(templateId) };
+
+        JSUTIL.callAJAXPost('/data/Logbook/list', JSON.stringify(payload), function (response) {
+            var list = normalizeLogbookTemplateList(response);
+            if (list.length) {
+                callback(true, normalizeEntityId(list[0].id || list[0].Id || ''));
+                return;
+            }
+            callback(true, '');
+        }, function () {
+            callback(false, '');
+        });
+    }
+
+    function loadLogbookEntries(logbookId, callback) {
+        var payload = { Condition: "logbook.Id=" + Number(logbookId) };
+        JSUTIL.callAJAXPost('/data/LogbookEntry/list', JSON.stringify(payload), function (response) {
+            callback(true, normalizeLogbookTemplateList(response));
+        }, function () {
+            callback(false, []);
+        });
+    }
+
+    function findOrCreateLogbook(departmentId, templateId, templateName, callback) {
+        if (currentLogbookId) {
+            callback(true, currentLogbookId);
+            return;
+        }
+
+        findExistingLogbook(departmentId, templateId, function (ok, existingId) {
+            if (!ok) {
+                callback(false, '');
+                return;
+            }
+            if (existingId) {
+                currentLogbookId = existingId;
+                callback(true, existingId);
+                return;
+            }
+
+            var createPayload = {
+                name: (templateName || '').toString().trim(),
+                department: { id: departmentId },
+                template: { id: templateId }
+            };
+            JSUTIL.callAJAXPost('/data/Logbook/create', JSON.stringify(createPayload), function (createRes) {
+                var createdId = normalizeEntityId(createRes && (createRes.id || createRes.Id || ''));
+                currentLogbookId = createdId || '';
+                callback(!!createdId, createdId);
+            }, function () {
+                callback(false, '');
+            });
+        });
+    }
+
+    function saveLogbookEntriesSequentially(entries, index, done) {
+        if (index >= entries.length) {
+            done(true);
+            return;
+        }
+        var entryPayload = entries[index];
+        JSUTIL.callAJAXPost('/data/LogbookEntry/create', JSON.stringify(entryPayload), function () {
+            saveLogbookEntriesSequentially(entries, index + 1, done);
+        }, function () {
+            done(false);
+        });
+    }
+
+    function submitLogbookEntriesForApprovalSequentially(entryIds, index, done) {
+        if (index >= entryIds.length) {
+            done(true);
+            return;
+        }
+        var entryId = entryIds[index];
+        JSUTIL.callAJAXPost('/data/LogbookEntry/update/' + entryId, JSON.stringify({
+            processStatus: 'Pending Approval'
+        }), function () {
+            submitLogbookEntriesForApprovalSequentially(entryIds, index + 1, done);
+        }, function () {
+            done(false);
+        });
+    }
+
+    function saveLogbookDataEntry() {
+        if (isLoadingExistingEntries) {
+            JSUTIL.buildErrorModal('Please wait, existing logbook entries are still loading.');
+            return;
+        }
+
+        if (!selectedLogbookTemplate || !selectedLogbookTemplate.id) {
+            JSUTIL.buildErrorModal('Please select a template.');
+            return;
+        }
+
+        var rows = collectLogbookEntryRows();
+        if (!rows.length) {
+            JSUTIL.buildErrorModal('Please add at least one entry row.');
+            return;
+        }
+
+        var hasInvalid = rows.some(function (row) { return !row.valid; });
+        if (hasInvalid) {
+            JSUTIL.buildErrorModal('Please fill all required fields.');
+            return;
+        }
+
+        var templateId = normalizeEntityId(selectedLogbookTemplate.id);
+        var departmentId = resolveCurrentDepartmentId();
+        var authorId = resolveCurrentAuthorId();
+
+        if (!departmentId) {
+            JSUTIL.buildErrorModal('Department not found for current user.');
+            return;
+        }
+        if (!authorId) {
+            JSUTIL.buildErrorModal('Author not found for current user.');
+            return;
+        }
+        findOrCreateLogbook(departmentId, templateId, selectedLogbookTemplate.name, function (ok, logbookId) {
+            if (!ok || !logbookId) {
+                JSUTIL.buildErrorModal('Unable to prepare logbook. Please try again.');
+                return;
+            }
+
+            var entries = rows.map(function (row) {
+                return {
+                    dataEntry: buildDataEntryCsv(row.values, selectedLogbookTemplate.fields),
+                    logbook: { id: logbookId },
+                    author: { id: authorId },
+                    processStatus: 'New'
+                };
+            });
+
+            saveLogbookEntriesSequentially(entries, 0, function (saved) {
+                if (!saved) {
+                    JSUTIL.buildErrorModal('Unable to save entry right now. Please try again.');
+                    return;
+                }
+
+                if (typeof toastr !== 'undefined' && toastr && typeof toastr.success === 'function') {
+                    toastr.success('Logbook entry saved successfully');
+                }
+                // Find the full original template record to pass back to renderLogbookEntryArea
+                // so it has all fields (Fields, etc.). Also preserve currentLogbookId across
+                // the re-render to avoid an unnecessary findExistingLogbook round-trip.
+                var savedLogbookId = currentLogbookId;
+                var fullRecord = logbookTemplateRows.find(function (r) {
+                    return String(getTemplateId(r)) === String(selectedLogbookTemplate.id);
+                }) || selectedLogbookTemplate;
+                renderLogbookEntryArea(fullRecord);
+                // Restore the logbook ID that renderLogbookEntryArea just cleared
+                currentLogbookId = savedLogbookId;
+            });
+        });
+    }
+
+    function bindLogbookDataEntryEvents() {
+        $('#logbookCloseEntryBtn').off('click').on('click', function () {
+            selectedLogbookTemplate = null;
+            currentLogbookId = '';
+            isLoadingExistingEntries = false;
+            setLogbookEntryList([]);
+            $('#logbookEntryTemplateSelect').val('');
+            if ($('#logbookEntryTemplateSelect').hasClass('select2-hidden-accessible')) {
+                $('#logbookEntryTemplateSelect').trigger('change.select2');
+            }
+            destroyLogbookEntryDataTable();
+            $('#logbookEntryAreaWrap').hide();
+            $('#logbookEntryTable thead').empty();
+            $('#logbookEntryTable tbody').empty();
+            $('#logbookAddEntryRowBtn').prop('disabled', true);
+            $('#logbookDeleteEntryRowBtn').prop('disabled', true);
+            $('#logbookSubmitApprovalBtn').prop('disabled', true);
+            $('#logbookSaveEntryBtn').prop('disabled', true);
+        });
+
+        $('#logbookEntryTemplateSelect').off('change').on('change', function () {
+            var templateId = ($(this).val() || '').toString().trim();
+            if (!templateId) {
+                selectedLogbookTemplate = null;
+                currentLogbookId = '';
+                isLoadingExistingEntries = false;
+                setLogbookEntryList([]);
+                destroyLogbookEntryDataTable();
+                $('#logbookEntryAreaWrap').hide();
+                $('#logbookEntryTable thead').empty();
+                $('#logbookEntryTable tbody').empty();
+                $('#logbookAddEntryRowBtn').prop('disabled', true);
+                $('#logbookDeleteEntryRowBtn').prop('disabled', true);
+                $('#logbookSubmitApprovalBtn').prop('disabled', true);
+                $('#logbookSaveEntryBtn').prop('disabled', true);
+                return;
+            }
+
+            var record = logbookTemplateRows.find(function (item) {
+                return String(getTemplateId(item)) === templateId;
+            });
+
+            if (!record) {
+                JSUTIL.buildErrorModal('Selected template not found.');
+                return;
+            }
+
+            renderLogbookEntryArea(record);
+        });
+
+        $('#logbookAddEntryRowBtn').off('click').on('click', function () {
+            addLogbookEntryRow();
+        });
+
+        $('#logbookDeleteEntryRowBtn').off('click').on('click', function () {
+            // Destroy DataTable first so DOM rows are accessible directly
+            if (isLogbookEntryDataTableActive()) {
+                destroyLogbookEntryDataTable();
+            }
+            var $checkedRows = $('#logbookEntryTable tbody .logbook-row-check:checked').filter(function () {
+                return !$(this).attr('data-entry-id');
+            });
+            if (!$checkedRows.length) {
+                JSUTIL.buildErrorModal('Select at least one unsaved row to delete.');
+                return;
+            }
+            $checkedRows.closest('tr').remove();
+            renumberLogbookEntryRows();
+            refreshLogbookEntryPagination(true);
+            // clear select-all after deletion
+            $('#logbookSelectAllRows, .dataTables_scrollHead #logbookSelectAllRows').prop('checked', false);
+            updateApprovalButtonState();
+        });
+
+        $('#logbookSaveEntryBtn').off('click').on('click', function () {
+            saveLogbookDataEntry();
+        });
+
+        $('#logbookSubmitApprovalBtn').off('click').on('click', function () {
+            var selectedEntryIds = getSelectedPendingEntryIds();
+            if (!selectedEntryIds.length) {
+                JSUTIL.buildErrorModal('Select at least one pending entry to submit for approval.');
+                return;
+            }
+
+            submitLogbookEntriesForApprovalSequentially(selectedEntryIds, 0, function (submitted) {
+                if (!submitted) {
+                    JSUTIL.buildErrorModal('Unable to submit selected entries for approval right now.');
+                    return;
+                }
+
+                if (typeof toastr !== 'undefined' && toastr && typeof toastr.success === 'function') {
+                    toastr.success('Selected entries submitted for approval');
+                }
+                var savedLogbookId = currentLogbookId;
+                var fullRecord = logbookTemplateRows.find(function (r) {
+                    return String(getTemplateId(r)) === String(selectedLogbookTemplate.id);
+                }) || selectedLogbookTemplate;
+                renderLogbookEntryArea(fullRecord);
+                currentLogbookId = savedLogbookId;
+            });
+        });
+
+        $(document).off('click', '.logbook-edit-entry-btn').on('click', '.logbook-edit-entry-btn', function () {
+            var entryId = normalizeEntityId($(this).attr('data-entry-id'));
+            if (!entryId) {
+                JSUTIL.buildErrorModal('Unable to open data entry details.');
+                return;
+            }
+            var entry = (logbookEntryList || []).find(function (item) {
+                return String(normalizeEntityId(item.id || item.Id || '')) === String(entryId);
+            });
+            if (!entry) {
+                JSUTIL.buildErrorModal('Selected data entry not found. Please refresh and try again.');
+                return;
+            }
+            if (typeof window.showEditDataEntryPanel !== 'function') {
+                JSUTIL.buildErrorModal('Edit data entry panel is not available.');
+                return;
+            }
+            window.showEditDataEntryPanel(entry, selectedLogbookTemplate);
+        });
+
+        // use document-level delegation because DataTables may clone the header for scrolling/paging
+        $(document).off('change', '#logbookSelectAllRows').on('change', '#logbookSelectAllRows', function () {
+            var checked = $(this).is(':checked');
+            // update all row checkboxes in any table instance
+            $('#logbookEntryTable tbody .logbook-row-check').prop('checked', checked);
+            // if DataTables has created other table copies (e.g. for scrolling), sync those as well
+            $('.dataTables_scrollBody #logbookEntryTable tbody .logbook-row-check').prop('checked', checked);
+        });
+
+        // keep master checkbox state in sync when individual rows are toggled
+        $(document).off('change', '#logbookEntryTable tbody .logbook-row-check').on('change', '#logbookEntryTable tbody .logbook-row-check', function () {
+            var $all = $('#logbookEntryTable tbody .logbook-row-check');
+            var $checked = $all.filter(':checked');
+            var masterChecked = $all.length && $all.length === $checked.length;
+            $('#logbookSelectAllRows').prop('checked', masterChecked);
+            // also update cloned master checkboxes if any
+            $('.dataTables_scrollHead #logbookSelectAllRows').prop('checked', masterChecked);
+            updateApprovalButtonState();
+        });
+    }
+
+    function loadApprovedLogbookTemplates() {
+        refreshLogbookTemplateList(function (ok, list) {
+            if (!ok) {
+                JSUTIL.buildErrorModal('Unable to load logbook templates.');
+                return;
+            }
+
+            logbookTemplateRows = (Array.isArray(list) ? list : []).filter(function (record) {
+                return getTemplateStatus(record) === 'approved' && isTemplateVisibleForCurrentDepartment(record);
+            });
+
+            var preservedSelectedId = '';
+            if (selectedLogbookTemplate && selectedLogbookTemplate.id) {
+                preservedSelectedId = String(selectedLogbookTemplate.id);
+            } else {
+                preservedSelectedId = ($('#logbookEntryTemplateSelect').val() || '').toString().trim();
+            }
+
+            var optionsHtml = '<option value="">-- Choose an approved template --</option>';
+            logbookTemplateRows.forEach(function (row) {
+                var id = getTemplateId(row);
+                if (!id) return;
+                var number = (row.number || row.Number || '').toString().trim();
+                var name = getTemplateName(row);
+                var label = number ? (number + ' - ' + name) : name;
+                optionsHtml += '<option value="' + logbookEscapeHtml(id) + '">' + logbookEscapeHtml(label) + '</option>';
+            });
+
+            $('#logbookEntryTemplateSelect').html(optionsHtml);
+            if (preservedSelectedId) {
+                $('#logbookEntryTemplateSelect').val(preservedSelectedId);
+            }
+            initSelect2InLogbook('#logbookEntryTemplateSelect');
+            // Only trigger change if there was no previously selected template (i.e. first load).
+            // Re-triggering when preserving a selection would reset unsaved rows.
+            if (preservedSelectedId && !selectedLogbookTemplate && $('#logbookEntryTemplateSelect').hasClass('select2-hidden-accessible')) {
+                $('#logbookEntryTemplateSelect').trigger('change.select2');
+            }
+        });
+    }
+
+    if (window.lucide) lucide.createIcons();
+    $(document).ready(function () {
+        setLogbookEntryList([]);
+        bindLogbookDataEntryEvents();
+        preloadDepartmentsAndResolve(function() {
+            loadApprovedLogbookTemplates();
+        });
+        initSelect2InLogbook('#logbookEntryTemplateSelect');
+        });
+    </script></div>

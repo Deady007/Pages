@@ -1,0 +1,1475 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #PODataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #PODataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    #PODataTable .selectPOBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+    #PODataTable .selectPOBtn:hover,
+    #PODataTable .selectPOBtn:focus {
+        color: #286090;
+        /* text-decoration: underline; */
+    }
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    .modal-header-simple {
+        text-align: center;
+        border-bottom: 1px solid #e9ecef;
+        padding: 24px 32px 20px 32px;
+        background-color: #f8f9fa;
+        position: relative;
+        display: block !important;
+    }
+    .modal-header-simple .modal-title {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #495057;
+        display: block;
+        width: 100%;
+        line-height: 1.2;
+    }
+    .modal-header-simple small.font-bold {
+        display: block;
+        margin: 0;
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 400;
+        line-height: 1.4;
+        width: 100%;
+    }
+    .process-flow-container {
+        margin: 5px auto;
+        background: white;
+        padding: 10px 5px;
+        max-width: 100%;
+        border-radius: 10px;
+    }
+    .flow-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .step-button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 18px;
+        min-width: 150px;
+        height: 32px;
+        background: #fed804;
+        border: 2px solid #fed804;
+        border-radius: 999px;
+        cursor: default;
+        font-size: 14px;
+        font-weight: 500;
+        color: #000;
+        transition: 0.2s ease;
+        justify-content: flex-start;
+    }
+    .step-button.active {
+        background: #ff9800 !important;
+        border-color: #fed804;
+    }
+    .step-button .stepnumber {
+        width: 23px;
+        height: 23px;
+        background: white;
+        border: 2px solid #c5d4ff;
+        color: #000;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    .step-button.active .stepnumber {
+        border-color: #ff9800;
+    }
+    .step-button p {
+        margin: 0;
+        font-size: 14px;
+    }
+    html[data-bs-theme="dark"] .process-flow-container {
+        background: #2d2f38 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    }
+</style>
+<!-- allPoPanel.html    Start -->
+<div class="qa-white-panel">
+
+    <div class="row animated fadeInRight aasaanPanel" id="POPanel" style="padding-top: 5px;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h5>QA Approval - Purchase Order <small>Purchase </small></h5>
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;" id="pageButtons">
+                        <!-- <button type="button" class="btn btn-sm btn-secondary newPOBtn" style="display: none;"><i
+                                data-lucide="plus"></i> New PO</button> -->
+                        <button type="button" class="btn btn-sm btn-default CloseBtn" style="display: none;"><i
+                                data-lucide="x"></i> Close</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtnEdit" style="display: none;"><i
+                                data-lucide="x"></i> Close</button>
+                        <button type="button" class="btn btn-sm btn-secondary approveRejectBtn" style="display: none;"><i
+                                data-lucide="checkbox"></i> Approve / Reject</button>
+                        <!-- <button type="button" class="btn btn-sm btn-default printPoBtn" style="display: none;"><i
+                                data-lucide="printer"></i> Print</button> -->
+                         <!-- <button type="button" class="btn btn-sm btn-default emailOrderBtn" style="display: none;"><i
+                                data-lucide="mail"></i> Email</button> -->
+                        <button type="button" class="btn btn-sm btn-default orderCancelBtn" style="display: none;"><i
+                                data-lucide="trash"></i> Cancel</button>
+                        <button type="button" class="btn btn-sm btn-default addCustomerModal" style="display: none;"><i
+                                data-lucide="plus"></i> Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModal" style="display: none;"><i
+                                data-lucide="plus"></i> Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;"><i
+                                data-lucide="plus"></i> Taxes</button>
+                        <button type="button" class="btn btn-sm invoiceSaveBtn" style="display: none;"><i
+                                data-lucide="check"></i> Save</button>
+                        <button type="button" class="btn btn-sm btn-default orderEditBtn" style="display: none;"><i
+                                data-lucide="pencil"></i> Edit</button>
+                        <button type="button" class="btn btn-sm editOrderSaveBtn" style="display: none;"><i
+                                data-lucide="check"></i> Save</button>
+                        <button type="button" class="btn btn-sm btn-default approvedBtn" style="display: none;"><i
+                                data-lucide="send"></i> Request Approval</button>
+                    </div>
+                </div>
+            
+                <div class="ibox-content" style="padding: 15px 20px 20px 20px;">
+                    <div class="table-responsive">
+                        <table id="PODataTable" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Date / Time</th>
+                                    <th>Vendor</th>
+                                    <th>Total</th>
+                                    <th>Order Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="POTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- allPoPanel.html    End -->
+
+
+
+
+
+
+
+
+    <!-- editPoReview.html  Start -->
+
+    <style type="text/css">
+        .lnItemInputVal,
+        .lnItemInputValTotal {
+            text-align: right;
+        }
+
+        .invoiceHiddenInputBox {
+            border: none;
+            outline: none;
+            text-align: right;
+        }
+
+        .table.invoice-total {
+            width: 40%;
+            margin-left: auto;
+        }
+        .table.invoice-total td:last-child {
+            text-align: right;
+            white-space: nowrap;
+        }
+    </style>
+    <div class="row animated fadeInRight aasaanPanel" id="EditPO" style="display: none;">
+        <!-- Process Flow Bar -->
+          <div class="col-lg-12">
+        <div class="process-flow-container">
+            <div class="flow-row">
+                <button class="step-button step-initiation" data-step="0">
+                    <div class="stepnumber">1</div>
+                    <p>Initiation</p>
+                </button>
+                <button class="step-button step-hod-review" data-step="1">
+                    <div class="stepnumber">2</div>
+                    <p>Review</p>
+                </button>
+                <button class="step-button step-qa-approval active" data-step="2">
+                    <div class="stepnumber">3</div>
+                    <p>Approval</p>
+                </button>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title" style="display: flex; align-items: center; justify-content: space-between;">
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;" id="pageButtons">
+                        <!-- <button type="button" class="btn btn-sm btn-secondary newPOBtn" style="display: none;"><i
+                                data-lucide="plus"></i> New PO</button> -->
+                        <button type="button" class="btn btn-sm btn-default CloseBtn" style="display: none;"><i
+                                data-lucide="x"></i> Close</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtnEdit" style="display: none;"><i
+                                data-lucide="x"></i> Close</button>
+                        <button type="button" class="btn btn-sm btn-secondary approveRejectBtn" style="display: none;"><i
+                                data-lucide="checkbox"></i> Approve / Reject</button>
+                        <!-- <button type="button" class="btn btn-sm btn-default printPoBtn" style="display: none;"><i
+                                data-lucide="printer"></i> Print</button> -->
+                         <!-- <button type="button" class="btn btn-sm btn-default emailOrderBtn" style="display: none;"><i
+                                data-lucide="mail"></i> Email</button> -->
+                        <button type="button" class="btn btn-sm btn-default orderCancelBtn" style="display: none;"><i
+                                data-lucide="trash"></i> Cancel</button>
+                        <button type="button" class="btn btn-sm btn-default addCustomerModal" style="display: none;"><i
+                                data-lucide="plus"></i> Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModal" style="display: none;"><i
+                                data-lucide="plus"></i> Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;"><i
+                                data-lucide="plus"></i> Taxes</button>
+                        <button type="button" class="btn btn-sm invoiceSaveBtn" style="display: none;"><i
+                                data-lucide="check"></i> Save</button>
+                        <button type="button" class="btn btn-sm btn-default orderEditBtn" style="display: none;"><i
+                                data-lucide="pencil"></i> Edit</button>
+                        <button type="button" class="btn btn-sm editOrderSaveBtn" style="display: none;"><i
+                                data-lucide="check"></i> Save</button>
+                        <button type="button" class="btn btn-sm btn-default approvedBtn" style="display: none;"><i
+                                data-lucide="send"></i> Request Approval</button>
+                    </div>
+                </div>
+            <div class="ibox-content p-xl">
+                <form action="/purchase/po/update" method="post" id="editPoForm">
+                    <input type="hidden" id="custId">
+                    <input type="hidden" id="manuId">
+
+                    <!-- Band 1: PO Number + Company Address inline -->
+                    <div class="row" style="margin-bottom: 5px;">
+                        <div class="col-sm-12">
+                            <h4 style="margin: 0 0 4px 0;">PO No. <span class="text-navy" id="purchaseNumber"></span>
+                            </h4>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 6px 0 10px; border-color: #e5e5e5;">
+
+                    <!-- Band 2: Vendor (left) | Manufacturer (right) -->
+                    <div class="row" style="margin-bottom: 8px;">
+                        <div class="col-sm-6">
+                            <label style="font-weight: 600; color: #555; margin-bottom: 2px;">To (Vendor):</label>
+                            <address id="custAddress" style="margin: 0; font-style: normal; font-weight: 600;">
+                            </address>
+                        </div>
+                        <div class="col-sm-6">
+                            <label style="font-weight: 600; color: #555; margin-bottom: 2px;">Manufacturer:</label>
+                            <address id="manuAddress" style="margin: 0; font-style: normal; font-weight: 600;">
+                            </address>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 6px 0 10px; border-color: #e5e5e5;">
+
+                    <!-- Band 3: PO Date + Delivery Date (left) | Quotation No + Quotation Date (right) -->
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0 5px;">
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="width: 40%; padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            PO Date:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control datepicker" id="orderDate"
+                                                name="orderObj.OrderDate" style="width: 100%;" disabled>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            Delivery Date:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control datepicker"
+                                                id="editDeliveryDate" name="orderObj.DeliveryDate" style="width: 100%;"
+                                                disabled>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-sm-6">
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0 5px;">
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="width: 40%; padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            Quotation No:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control" id="editQuotationNumber"
+                                                name="orderObj.QuoteNumber" placeholder="—" style="width: 100%;"
+                                                readonly>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            Quotation Date:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control datepicker"
+                                                id="editQuotationDate" name="orderObj.QuoteDate" style="width: 100%;"
+                                                disabled>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive m-t">
+                        <table class="table invoice-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;"> </th>
+                                    <th style="text-align: left;">Sr #</th>
+                                    <th style="text-align: left;">Product</th>
+                                    <th style="text-align: left;">UOM</th>
+                                    <th style="text-align: right;">Quantity</th>
+                                    <th style="text-align: right;">Unit Price</th>
+                                    <th style="text-align: right;">Discount</th>
+                                    <th style="text-align: right;">Total Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderLnItemTable"></tbody>
+                        </table>
+                    </div>
+
+                    <table class="table invoice-total">
+                        <tbody id="editPO">
+                            <!-- <tr>
+                            <td><strong>Sub-Total:</strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="subTotal" readonly></td>
+                        </tr>
+                        <tr id="taxRow1" style="display: none;">
+                            <td><strong id="taxName1"></strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal" readonly></td>
+                        </tr>
+                        <tr id="taxRow2" style="display: none;">
+                            <td><strong id="taxName2"></strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal2" readonly></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total:</strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="editInvoiceTotal" readonly></td>
+                        </tr> -->
+                        </tbody>
+                    </table>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-6 col-sm-12">
+                            <label><strong>Payment Terms:</strong></label>
+                            <textarea type="text" class="input-sm form-control editRecordInput" id="editPoTerms"
+                                name="orderObj.PaymentTerms"
+                                style="padding-top: 0.5rem;border-radius: 5px; transition: border 0.3s ease, box-shadow 0.3s ease;"
+                                rows="5" readonly></textarea>
+                        </div>
+                    </div>
+                </form>
+                <div class="tabs-container" style="margin-top: 10px;">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="false">Documents</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="tab-1" class="tab-pane active">
+                            <div class="panel-body">
+                                <div id="uploadContainer" style="padding: 15px; max-height: 76vh; overflow-y: auto;">
+                                    <div class="upload-toolbar" style="text-align: right; margin-bottom: 10px;">
+                                        <button class="btn btn-default" id="uploadFileBtn">
+                                            <i data-lucide="upload"></i> Upload File
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allDocumentsTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- #EditPO row ends here -->
+
+</div>
+<!-- qa-white-panel ends here -->
+
+<!-- Approval Modal — outside all panels -->
+<div class="modal inmodal fade" id="approvalModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header modal-header-simple">
+                <h4 class="modal-title">Approve / Reject</h4>
+                <small class="font-bold">Approve or reject a request by reviewing all related information.</small>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label>Remarks</label>
+                            <textarea rows="5" name="request.ApprovalRemarks" id="approvalRemarks"
+                                class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" id="rejectBtn">Reject</button>
+                <button type="button" class="btn btn-secondary" id="approveBtn">Approve</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print preview panel — sibling of #EditPO and #POPanel, NOT nested inside either -->
+<div class="row animated fadeInRight aasaanPanel" id="printRequestPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Print Preview</h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm closePrintScheduleBtn">Close</button>
+                    <button type="button" class="btn btn-default btn-sm" id="printRequestScheduleBtn">Print</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="row" id="reportContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editPoReview.html    End -->
+
+<!-- File Upload Modal (matches purchaseOrder.html pattern) -->
+<div class="modal inmodal fade" id="poFileUploadModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header modal-header-simple">
+                <h4 class="modal-title">Upload Document</h4>
+                <small class="font-bold">Select a file to attach to this Purchase Order.</small>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Select File</label>
+                    <input type="file" id="fileInputVQ" class="form-control" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="processPoFileBtn"><i data-lucide="upload"></i> Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- File Upload Modal End -->
+<script>
+    
+    // var FOX = { financialDecimals: 2 };
+    FOX['financialDecimals'] = 2
+    lucide.createIcons();
+    // allPoPanel.js    Start
+    $(document).ready(function () {
+        handlePanelVisibility();
+    });
+
+
+    $(document).on('click', '.newPOBtn', function () {
+        $('#POPanel').hide();
+        $('#AddPO').show();
+        handlePanelVisibility();
+        TAXPANEL.initialize(assignTaxesCallback);
+        state = "newRecordPanel";
+        
+    });
+
+    function handlePanelVisibility() {
+        //PO Panel
+        if ($('#POPanel').is(':visible')) {
+            //console.log('PO Panel visible');
+            if (dataflag == true) {
+                $('.newPOBtn').show()
+            }
+            else {
+                $('.newPOBtn').hide()
+            }
+            $('.addDeductionModal').hide();
+            $('.addProductModal').hide();
+            $('.manageTaxesBtn').hide()
+            $('.invoiceSaveBtn').hide();
+            $('.addCustomerModal').hide();
+            $('.addManufacturerModal').hide();
+            $('.CloseBtn').hide();
+            $('.emailOrderBtn').hide();
+            $('.printPoBtn').hide();
+            $('.orderCancelBtn').hide();
+            $('.CloseBtnEdit').hide();
+            $('#addButton').hide();
+            $('.orderEditBtn').hide();
+            $('.editOrderSaveBtn').hide();
+            $('.approvedBtn').hide();
+            $('.approveRejectBtn').hide();
+            //AddPo
+        } else if ($('#AddPO').is(':visible')) {
+            $('.newPOBtn').hide();
+            $('.addDeductionModal').show();
+            $('.addProductModal').show();
+            $('.manageTaxesBtn').show()
+            $('.invoiceSaveBtn').show();
+            $('.addCustomerModal').show();
+            $('.addManufacturerModal').show();
+            $('.CloseBtn').show();
+            $('.emailOrderBtn').hide();
+            $('.printPoBtn').hide();
+            $('.orderCancelBtn').hide();
+            $('.CloseBtnEdit').hide();
+            $('#addButton').show();
+            $('.orderEditBtn').hide();
+            $('.editOrderSaveBtn').hide();
+            $('.approvedBtn').hide();
+            $('.approveRejectBtn').hide();
+        }
+        else if ($('#EditPO').is(':visible')) {
+            $('.newPOBtn').hide();
+            $('.CloseBtn').hide();
+            $('.CloseBtnEdit').show();
+            $('.emailOrderBtn').show();
+            $('.printPoBtn').show();
+            $('.invoiceSaveBtn').hide();
+            $('.addProductModal').hide();
+            $('.manageTaxesBtn').hide();
+            $('.addCustomerModal').hide();
+            $('.orderEditBtn').hide();
+            $('.editOrderSaveBtn').hide();
+            $('.approvedBtn').hide();
+            $('#addButton').hide();
+            // approveRejectBtn — show based on dataflag (set by caller based on orderStatus)
+            if (dataflag == false) {
+                $('.approveRejectBtn').show();
+            }
+            else {
+                $('.approveRejectBtn').hide();
+            }
+        }
+        else if ($('#printRequestPanel').is(':visible')) {
+            // print preview is showing — hide all toolbar buttons
+            $('.newPOBtn').hide();
+            $('.CloseBtn').hide();
+            $('.CloseBtnEdit').hide();
+            $('.printPoBtn').hide();
+            $('.approveRejectBtn').hide();
+            $('.invoiceSaveBtn').hide();
+            $('.orderEditBtn').hide();
+            $('.editOrderSaveBtn').hide();
+            $('.approvedBtn').hide();
+            $('.orderCancelBtn').hide();
+        }
+    }
+
+    function init() {
+        // OLD: used pre-loaded recordList variable
+        // new DataTable('#PODataTable');
+        // var innerHtml = '';
+        // $.each(recordList, function (i, val) {
+        //     innerHtml += '<tr>' +
+        //         '<td class="itemNum"><a href="javascript:void(0);" class="selectPOBtn" id="' + val.id + '">' + val.number + '</a></td>' +
+        //         '<td>' + JSUTIL.getDate(val.orderDate) + '</td>' +
+        //         '<td>' + (val.vendor ? val.vendor.name : '') + '</td>' +
+        //         '<td>' + val.totalAmount + '</td>' +
+        //         '<td>' + val.orderStatus + '</td>' +
+        //         '</tr>';
+        // });
+        // $('#POPanel table tbody').append(innerHtml);
+        // JSUTIL.reinitializeDataTable();
+        // // JSUTIL.redrawDataTable();
+        // $('.selectPOBtn').on('click', function () {
+        //     state = "editRecordPanel";
+        //     var currentId = $(this).attr('id');
+        //     $.each(recordList, function (i, val) {
+        //         var currentId = $(this).attr('id');
+        //         currentRecordId = currentId;
+        //         if (Number(currentId) === val.id) {
+        //             handlePanelVisibility();
+        //         }
+        //     });
+        // });
+
+        // NEW: GET /api/purchase/orders/status/In Review — filter to review-only orders
+        // var getUrl = JSUTIL.getUrl('/api/purchase/orders/status/In Review');
+        // NEW: GET /api/purchase/orders — list all purchase orders
+        var getUrl = JSUTIL.getUrl('/api/purchase/orders');
+        JSUTIL.callAJAXGet(getUrl, function (response) {
+            recordList = Array.isArray(response) ? response : (response && response.data ? response.data : []);
+
+            var innerHtml = '';
+            $.each(recordList, function (i, val) {
+                if(val.orderStatus !== "QA Review") return; 
+                innerHtml += '<tr>' +
+                    '<td class="itemNum"><a href="javascript:void(0);" class="selectPOBtn" id="' + val.id + '">' + val.number + '</a></td>' +
+                    '<td>' + JSUTIL.getDate(val.orderDate) + '</td>' +
+                    '<td>' + (val.vendor ? val.vendor.name : '') + '</td>' +
+                    '<td>' + val.totalAmount + '</td>' +
+                    '<td>' + val.orderStatus + '</td>' +
+                    '</tr>';
+            });
+
+            if ($.fn.DataTable.isDataTable('#PODataTable')) {
+                $('#PODataTable').DataTable().destroy();
+            }
+            $('#POTable').html(innerHtml);
+            new DataTable('#PODataTable', { order: [[0, 'desc']] });
+            lucide.createIcons();
+        });
+    }
+    init();
+    // allPoPanel.js    End
+
+
+
+
+
+
+
+    // editPoReview.js  Start
+    var currentRecordId = '';
+    var orderObj = {};
+    var orderItemList = [];
+    var recordList = [];
+    var dataflag = true;   // true = hide approveRejectBtn; set to false when order is QA Review
+    quoteId = '';
+    var gst;
+
+    $(document).ready(function () {
+        handlePanelVisibility();
+        // Global safety-net: clean up orphan backdrops after every modal close
+        $(document).on('hidden.bs.modal', '.modal', function () {
+            $(this).attr('aria-hidden', 'true');
+            if ($('.modal.show').length === 0) {
+                $('body').removeClass('modal-open').css('padding-right', '');
+                $('.modal-backdrop').remove();
+                setTimeout(function () { $('body').trigger('focus'); }, 50);
+            }
+        });
+        // Note: fields are readonly/disabled in approval mode — no datepicker needed
+        // $('#orderDate').datepicker({ format: 'yyyy-mm-dd', autoclose: true });
+        // $('#editDeliveryDate').datepicker({ format: 'yyyy-mm-dd', autoclose: true });
+        // $('#editQuotationDate').datepicker({ format: 'yyyy-mm-dd', autoclose: true });
+        $('.manageTaxesBtn').on('click', function () {
+            // OLD: $('#taxpanel_addTaxModal').modal('show'); // BS3 - not available
+            // NEW: BS5 bootstrap.Modal
+            var modalEl = document.getElementById('taxpanel_addTaxModal');
+            var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        });
+        // Upload File button — POST /api/files/upload (matches purchaseOrder.html pattern)
+        $(document).on('click', '#uploadFileBtn', function () {
+            $('#fileInputVQ').val('');
+            var modalEl = document.getElementById('poFileUploadModal');
+            var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        });
+        // Modal process upload
+        $(document).on('click', '#processPoFileBtn', function () {
+            var files = $('#fileInputVQ')[0].files;
+            if (!files || files.length === 0) {
+                JSUTIL.buildErrorModal('Please select a file to upload.');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('file', files[0]);
+            formData.append('folder', 'PO');
+            formData.append('description', 'po_document');
+            formData.append('patientId', String(currentRecordId));
+            formData.append('uploadedAt', new Date().toISOString().slice(0, 19));
+            JSUTIL.startSpinner();
+            $.ajax({
+                url: JSUTIL.getUrl('/api/files/upload'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    $('#fileInputVQ').val('');
+                    JSUTIL.stopSpinner();
+                    var modalEl = document.getElementById('poFileUploadModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                    loadPoDocuments(currentRecordId);
+                },
+                error: function (err) {
+                    console.error('Upload failed:', err);
+                    JSUTIL.stopSpinner();
+                    JSUTIL.buildErrorModal('File upload failed. Please try again.');
+                }
+            });
+        });
+        // Use event delegation - Cancel button lives in a separately loaded HTML fragment
+        $(document).on('click', '.showRequestOnCancel', function () {
+            $('#vendorUploadFilesPanel').hide();
+            $('#EditPO').show();
+            handlePanelVisibility();
+        });
+        $(document).on('click', '.deleteLnItem1', function () {
+            let itemId = $(this).attr('id');
+            // OLD: var postUrl = '/purchase/po/delete_item?id=' + itemId + '&poId=' + currentRecordId;
+            // OLD: JSUTIL.callAJAXGet(postUrl, callbackAfterDelete);
+            // NEW: DELETE /api/purchase/orders/{poId}/items/{itemId}
+            var deleteUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/items/' + itemId);
+            JSUTIL.callAJAXDelete(deleteUrl, callbackAfterDelete);
+            $(this).parent().parent().remove();
+            calculateTotals1();
+        });
+        $('.orderEditBtn').on('click', function () {
+            $('.lnItemInputVal1').removeAttr('readonly');
+            $('#orderDate').removeAttr('disabled');
+            $('#editDeliveryDate').removeAttr('disabled');
+            $('#editQuotationNumber').removeAttr('readonly');
+            $('#editQuotationDate').removeAttr('disabled');
+            $('#editPoTerms').removeAttr('readonly');
+            $('.deleteLnItem1').removeAttr('disabled');
+            $('.editOrderSaveBtn').show();
+            $('.orderEditBtn').hide();
+            $('#addButton').show();
+            $('.addCustomerModal').hide();
+            $('.addManufacturerModal').hide();
+            $('.addProductModal').show();
+            $('.manageTaxesBtn').show()
+            renderAppliedTax();
+        });
+        $('.editOrderSaveBtn').on('click', function () {
+            // OLD: JSUTIL.callAJAXFormPost('editPoForm', callbackAfterEditRequest);
+            // NEW: PUT /api/purchase/orders/{id}
+            var headerPayload = {
+                vendorId:       Number($('#custId').val())  || '',
+                manufacturerId: Number($('#manuId').val())  || '',
+                orderDate:      $('#orderDate').val()       || '',
+                deliveryDate:   $('#editDeliveryDate').val()|| '',
+                quoteNumber:    $('#editQuotationNumber').val() || '',
+                quoteDate:      $('#editQuotationDate').val()   || '',
+                paymentTerms:   $('#editPoTerms').val()     || '',
+                notes:          '',
+                subTotal:       Number(orderObj.subTotalAmount) || 0,
+                taxAmount:      Number(orderObj.taxAmount)      || 0,
+                taxAmount2:     Number(orderObj.taxAmount2)     || 0,
+                totalAmount:    Number(orderObj.totalAmount)    || 0
+            };
+            if (orderObj.taxAccount1 && orderObj.taxAccount1.id) headerPayload.taxAccountId1 = Number(orderObj.taxAccount1.id);
+            if (orderObj.taxAccount2 && orderObj.taxAccount2.id) headerPayload.taxAccountId2 = Number(orderObj.taxAccount2.id);
+
+            var putUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+            JSUTIL.callAJAXPut(putUrl, JSON.stringify(headerPayload), callbackAfterEditRequest);
+        });
+
+    });
+
+
+    // Use event delegation for approveRejectBtn — works reliably after reload
+    // and avoids issues where button is not yet visible when .on('click') fires
+    $(document).on('click', '.approveRejectBtn', function () {
+        var modalEl = document.getElementById('approvalModal');
+        // Always get fresh instance to avoid stale state after reload
+        var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.show();
+    });
+
+    // Print functionality
+    // $('.printPoBtn').on('click', function () {
+    //     JSUTIL.openInNewTab('/print/PurchaseOrder?id=' + currentRecordId);
+    // });
+     function generatePurchaseOrderReportHTML(order, items) {
+        console.log('Generating report HTML for order:', order,items);
+        function safe(v, fallback) { return (v === null || v === undefined || v === '') ? (fallback||'') : v; }
+        function toNumber(v){ var n=Number(v); return Number.isFinite(n)?n:0; }
+        function fmtDate(d){ if(!d) return 'N/A'; try { var dt=new Date(d); return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear(); } catch(e){return d;} }
+
+        items = Array.isArray(items) ? items : (items || []);
+        var o = order || {};
+        var v = o.vendor || {};
+        var taxName = (o.taxAccount1 && o.taxAccount1.name) ? String(o.taxAccount1.name) : '';
+        var showIGST = /igst/i.test(taxName);
+        var showCGSTSGST = /cgst|sgst/i.test(taxName);
+        if (!showIGST && !showCGSTSGST) { showIGST = true; showCGSTSGST = true; }
+        var totalCols = 10 + (showIGST ? 1 : 0) + (showCGSTSGST ? 2 : 0) + 1;
+            var taxAmount = o.taxAmount || '';
+            var taxAmount2 = o.taxAmount2 || '';
+        var itemsHtml = '';
+        if (items.length === 0) {
+            itemsHtml = '<tr><td colspan="' + totalCols + '" style="text-align:center; padding:10px;">No items available</td></tr>';
+        } else {
+            items.forEach(function(val, i){
+            var pr = val.product || {};
+            var itemPrice = toNumber(val.itemPrice);
+            var discPct = toNumber(val.discountPercent) || 0;
+            var netRate = itemPrice - (itemPrice * discPct / 100);
+            var taxA = taxAmount || 0;
+            var taxB = taxAmount || 0;
+            var taxC = taxAmount2 || 0;
+            var value = toNumber(val.value || val.totalValue) || (netRate + taxA + taxB + taxC);
+
+            itemsHtml += '<tr>' +
+                '<td style="text-align:center;">' + (i+1) + '</td>' +
+                '<td style="word-break:break-word;"><b>' + safe(pr.number,'') + '</b><br>' + safe(pr.name,'') + '</td>' +
+                '<td style="text-align:center;">' + safe(pr.hsn,'') + '</td>' +
+                '<td style="text-align:center;">' + safe(pr.uom,'') + '</td>' +
+                '<td style="text-align:center;">' + safe(val.quantity,'') + '</td>' +
+                '<td style="text-align:center;">' + safe(val.deliveryQty || val.quantity,'') + '</td>' +
+                '<td style="text-align:center;">' + safe(fmtDate(val.deliveryDate || o.orderDate),'') + '</td>' +
+                '<td style="text-align:right;">' + (itemPrice? itemPrice.toFixed(2): '') + '</td>' +
+                '<td style="text-align:right;">' + (discPct? discPct.toFixed(2): '') + '</td>' +
+                '<td style="text-align:right;">' + (netRate? netRate.toFixed(2) : '') + '</td>' +
+                (showIGST ? '<td style="text-align:right;">' + (taxA? taxA.toFixed(2): '') + '</td>' : '') +
+                (showCGSTSGST ? '<td style="text-align:right;">' + (taxB? taxB.toFixed(2): '') + '</td>' : '') +
+                (showCGSTSGST ? '<td style="text-align:right;">' + (taxC? taxC.toFixed(2): '') + '</td>' : '') +
+                '<td style="text-align:right;">' + (value? value.toFixed(2): '') + '</td>' +
+                '</tr>';
+            });
+        }
+
+        var totalHtml = (o && typeof o.totalAmount !== 'undefined') ? Number(o.totalAmount).toFixed(2) : '';
+
+        return `<!DOCTYPE html>
+        <html>
+        <head>
+        <meta charset="utf-8">
+        <title>Purchase Order - ${safe(o.number,'')}</title>
+        <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        @page{size:A4;margin:8mm}
+        body{font-family:Arial, sans-serif;color:#000;font-size:11px;padding:8px}
+        .page{width:100%}
+        table{width:100%;border-collapse:collapse;font-size:11px}
+        th,td{border:1px solid #000;padding:4px;vertical-align:top}
+        th{background:#f2f2f2;font-weight:700;text-align:center}
+        .section-note,.footer-bar{border:1px solid #000;padding:6px;margin-top:8px;font-size:10px}
+        .header-top td{border:none;padding:2px}
+        .company-right{font-size:11px}
+        .sign{margin-top:20px;height:50px}
+        .foot-right{float:right}
+        @media print{body{margin:0;padding:0}}
+        </style>
+        </head>
+        <body>
+        <div class="page">
+        <!-- Header -->
+        <table style="table-layout:fixed;margin-bottom:6px">
+            <colgroup><col style="width:50%"><col style="width:30%"><col style="width:20%"></colgroup>
+            <tr>
+            <td style="text-align:center;font-weight:700;font-size:13px">PURCHASE ORDER</td>
+            <td colspan="2" class="company-right" style="font-weight:700;font-size:11px">Suleshvari Pharma Private Limited</td>
+            </tr>
+            <tr>
+            <td style="vertical-align:top;padding:6px">
+                <div><strong>P.O. No</strong> : ${safe(o.number,'')} &nbsp;&nbsp; <strong>Date</strong> : ${fmtDate(o.orderDate)} &nbsp; user Indent No</div>
+                <div><strong>Department</strong> : ${safe(o.department || '')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Budget No. :</div>
+                <div><strong>Indent No & Dt</strong> : ${safe(o.quoteNumber,'')} &nbsp; ${fmtDate(o.quoteDate)}</div>
+            </td>
+            <td colspan="2" style="vertical-align:top;padding:6px;font-size:10px">
+                <div><strong>Admin Office</strong> Plot No.: 4724, GIDC Estate, Ankleshwar Dist. Bharuch, Gujarat - 392002</div>
+                <div><strong>Phone</strong> : +91 22 6647 4747 &nbsp; <strong>Email</strong> : gami.sppl@gmail.com</div>
+                <div><strong>Web</strong> : www.suleshvaripharma.com &nbsp; <strong>PAN No.</strong> : AAACI1220M</div>
+                <div><strong>Location GST No</strong> : 24AAACI1220M2ZY</div>
+            </td>
+            </tr>
+            <tr>
+            <td style="vertical-align:top;padding:6px">
+                <div><strong>Vendor's Name & Address</strong> : ${safe(v.name,'')}</div>
+                <div>${safe(v.billingStreet,'')}${v.billingStreet2? ', '+v.billingStreet2 : ''}</div>
+                <div>${safe(v.billingCity,'')} ${v.billingPostalCode? ' '+v.billingPostalCode : ''}</div>
+                <div>${safe(v.billingState||v.billingCountry,'')}</div>
+                <div><strong>Email</strong> : ${safe(v.email,'')}</div>
+                <div style="margin-top:6px"><strong>Registration No</strong> : ${safe(v.gst,'')}</div>
+            </td>
+            <td colspan="2" style="vertical-align:top;padding:6px;font-size:10px">
+                <div><strong>Bill To</strong> : Suleshvari Pharma Private Limited ANKLESHWAR</div>
+                <div>PLOT NO.4722,4723,4730,4731,4732 G.I.D.C. ESTATE, 393002 GUJARAT</div>
+                <div style="margin-top:12px"><strong>Registration No</strong> : ${safe(v.gst,'')}</div>
+            </td>
+            </tr>
+        </table>
+
+        <div class="section-note">Please arrange to supply the following against this order in accordance with terms and conditions printed overleaf.</div>
+
+        <!-- Items -->
+        <table style="table-layout:fixed;margin-top:8px">
+            <colgroup>
+            <col style="width:3.5%"><col style="width:15%"><col style="width:5.5%"><col style="width:4.5%"><col style="width:5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:6%"><col style="width:5.5%"><col style="width:5.5%">
+            ${showIGST?'<col style="width:5%">':''}
+            ${showCGSTSGST?'<col style="width:5%">':''}
+            ${showCGSTSGST?'<col style="width:5%">':''}
+            <col style="width:6%">
+            </colgroup>
+            <thead>
+            <tr>
+                <th>Sr. No</th><th>Item Code & Description</th><th>HSN Code</th><th>Uom</th><th>Total Quantity</th><th>Delivery Schedule Quantity</th><th>Date</th><th>Basic Price (Rs.)</th><th>Discount</th><th>Net Rate</th>
+                ${showIGST?'<th>IGST value</th>':''}
+                ${showCGSTSGST?'<th>CGST value</th><th>SGST value</th>':''}
+                <th>Value (Rs.)</th>
+            </tr>
+            </thead>
+            <tbody>
+            ${itemsHtml}
+            <tr>
+                <td colspan="${totalCols-1}" style="text-align:right;font-weight:bold;padding:6px">Total :</td>
+                <td style="text-align:right;font-weight:bold;padding:6px">${totalHtml}</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Footer -->
+        <table style="margin-top:8px">
+            <tr>
+            <td style="width:35%;vertical-align:top;padding:6px"><strong>Payment Terms</strong><div>${safe(o.paymentTerms,'')}</div></td>
+            <td style="width:35%;vertical-align:top;padding:6px"><strong>Transportation arrange by Supplier.</strong><div>Freight inclusive in basic price.</div></td>
+            <td style="width:30%;vertical-align:top;padding:6px;text-align:right"><div><strong>Total P.O. Value : Rs.</strong> ${totalHtml}</div></td>
+            </tr>
+            <tr>
+            <td colspan="3" style="vertical-align:top;padding:6px">
+                <div><strong>For Suleshvari Pharma Private Limited</strong></div>
+                <div style="height:40px"></div>
+                <div>${safe(o.signatory1,'Authorized Signatory')}</div>
+                <div style="font-size:10px">${safe(o.signatory1Title,'Designation')}</div>
+            </td>
+            </tr>
+        </table>
+
+        <div class="section-note" style="margin-top:8px">
+            <div><strong>Instructions For GST Compliances</strong></div>
+            <div>1. To issue duly signed Tax Invoice (E-invoice wherever applicable) with prescribed details (including proper HSN/SAC and applicable GST rate).</div>
+            <div>2. To file prescribed periodic returns and pay tax to Govt. within stipulated timeline.</div>
+            <div>3. If Company is unable to avail Input Tax Credit(ITC) due to non-compliance then we will hold payment of GST amount till compliance is done. If ITC is ultimately lapsed due to non-compliance / late compliance, GST amount will not be paid and if it is already paid then debit note will be issued. Company reserves the right to recover / adjust interest, penalty and incidental expenses.</div>
+        </div>
+
+        <div class="footer-bar"> <strong>Registered Office</strong> : Plot No.: 4724 GIDC Estate, Ankleshwar, Dist. Bharuch, Gujarat - 392002 <span style="float:right">Page 1 of 1</span></div>
+        </div>
+        </body>
+        </html>`;
+        }
+
+// ── Print preview — top-level scope (matches purchaseOrder.html) ─────────────
+var reportIframe = null;
+
+async function showPurchaseOrderPreview() {
+    // Always fetch fresh data — prevents blank print from stale orderObj
+    try {
+        JSUTIL.startSpinner();
+        var res = await fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId));
+        if (!res.ok) throw new Error('Failed to load order: ' + res.status);
+        var data = await res.json();
+        orderObj      = data.order      || data.orderObj || data;
+        orderItemList = data.items      || data.orderItemList || [];
+    } catch (err) {
+        JSUTIL.stopSpinner();
+        JSUTIL.buildErrorModal('Unable to load purchase order for printing.');
+        return;
+    }
+    JSUTIL.stopSpinner();
+
+    if (!orderObj || !orderObj.number) {
+        JSUTIL.buildErrorModal('Purchase order data is missing. Please reopen the order and try again.');
+        return;
+    }
+
+    var reportHtml = generatePurchaseOrderReportHTML(orderObj, orderItemList);
+
+    $('#reportContent').empty();
+    var iframe = document.createElement('iframe');
+    iframe.style.width  = '100%';
+    iframe.style.height = '600px';
+    iframe.style.border = 'none';
+    $('#reportContent').append(iframe);
+
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(reportHtml);
+    doc.close();
+
+    reportIframe = iframe;
+    $('#printRequestPanel').show();
+    $('#EditPO').hide();
+}
+
+$('#printRequestScheduleBtn').off('click').on('click', function () {
+    if (!reportIframe) { JSUTIL.buildErrorModal('Report not loaded.'); return; }
+    try {
+        reportIframe.contentWindow.focus();
+        reportIframe.contentWindow.print();
+    } catch (e) {
+        console.error('Print failed', e);
+        JSUTIL.buildErrorModal('Unable to print report. Please try again.');
+    }
+});
+
+$('.closePrintScheduleBtn').off('click').on('click', function () {
+    $('#printRequestPanel').hide();
+    $('#EditPO').show();
+    handlePanelVisibility();
+    reportIframe = null;
+});
+
+// Print button handler — event delegation, top-level
+$(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
+    if (!currentRecordId) {
+        JSUTIL.buildErrorModal('No purchase order selected for printing.');
+        return;
+    }
+    showPurchaseOrderPreview();
+});
+// ─────────────────────────────────────────────────────────────────────────────
+    /* Open a blank window and print the HTML */
+    function openAndPrint(html) {
+        const w = window.open('', '_blank', 'noopener');
+        if (!w) {
+            JSUTIL.buildErrorModal('Popup blocked. Allow popups for this site to print.');
+            return;
+        }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        // Wait briefly so resources settle, then print
+        setTimeout(function(){ 
+            try { w.print(); } catch(e) { console.error(e); }
+        }, 400);
+    }
+    $('.CloseBtnEdit').on('click', function () {
+        $('#EditPO').hide();
+        $('#POPanel').show();
+
+        handlePanelVisibility();
+
+    });
+    $(document).on('change', '.lnItemInputVal1', function () {
+        calculateTotals1();
+    });
+    // $('#approveBtn').on('click', function () {
+    //     console.log('Approve clicked. Updating products and order status...');
+    //     var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
+    //     if (modalInstance) modalInstance.hide();
+
+    //     // Prepare product updates for upsert_multiple
+    //     var productUpdates = [];
+
+    //     $.each(orderItemList, function (index, item) {
+    //         var currentQtyOnOrder = Number(item.product.quantityOnOrder) || 0;
+    //         var orderQuantity = Number(item.quantity) || 0;
+    //         var newQtyOnOrder = currentQtyOnOrder + orderQuantity;
+
+    //         // Add product update to array
+    //         productUpdates.push({
+    //             id: item.product.id,
+    //             quantityOnOrder: newQtyOnOrder
+    //         });
+    //     });
+
+    //     // First, update all products using upsert_multiple
+    //     // var productUrl = JSUTIL.getUrl('/data/Product/upsert_multiple');
+    //     var productUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/items');
+    //     JSUTIL.callAJAXPost(productUrl, JSON.stringify(productUpdates), function (productResponse) {
+    //         console.log('Products updated:', productResponse);
+
+    //         // OLD: After products are updated, approve the PO via old endpoint
+    //         // var obj = { orderStatus: 'Approved' };
+    //         // var postUrl = JSUTIL.getUrl('/data/PurchaseOrder/update/' + currentRecordId);
+    //         // JSUTIL.callAJAXPost(postUrl, JSON.stringify(obj), submitForApprovalCallback);
+
+    //         // NEW: PATCH /api/purchase/orders/{id}/status
+    //         fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
+    //             method: 'PATCH',
+    //             headers: { 'Content-Type': 'text/plain' },
+    //             body: 'Approved'
+    //         })
+    //         .then(function (res) {
+    //             if (!res.ok) throw new Error('Status update failed: ' + res.status);
+    //             submitForApprovalCallback(res);
+    //         })
+    //         .catch(function (err) {
+    //             console.error('Approve PATCH failed:', err);
+    //             JSUTIL.stopSpinner();
+    //         });
+    //     });
+    // });
+    $('#approveBtn').off('click').on('click', async function () {
+    // Hide modal first (BS5)
+    var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
+    if (modalInstance) modalInstance.hide();
+
+    JSUTIL.startSpinner();
+
+    try {
+        // 1) Update each product quantityOnOrder using PUT /api/products/{id}
+        for (var i = 0; i < orderItemList.length; i++) {
+            var item = orderItemList[i];
+            var product = item.product || {};
+            var productId = Number(product.id);
+
+            if (!productId) continue;
+
+            var currentQtyOnOrder = Number(product.quantityOnOrder) || 0;
+            var orderQuantity = Number(item.quantity) || 0;
+            var newQtyOnOrder = currentQtyOnOrder + orderQuantity;
+
+            // If your Product PUT requires full object, keep `...product` fields explicitly.
+            // If partial update is accepted, this minimal payload is enough.
+            var productPayload = {
+                quantityOnOrder: newQtyOnOrder
+            };
+
+            var productRes = await fetch(JSUTIL.getUrl('/api/products/' + productId), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productPayload)
+            });
+
+            if (!productRes.ok) {
+                // throw new Error('Product update failed for productId=' + productId + ' status=' + productRes.status);
+            }
+        }
+
+        // 2) After all products updated, approve PO
+        var statusRes = await fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'text/plain' },
+            body: 'Approved'
+        });
+
+        if (!statusRes.ok) {
+            // throw new Error('Status update failed: ' + statusRes.status);
+        }
+
+        submitForApprovalCallback(statusRes);
+    } catch (err) {
+        console.error('Approve flow failed:', err);
+        // JSUTIL.buildErrorModal('Unable to approve. Please check product update API payload.');
+    } finally {
+        JSUTIL.stopSpinner();
+    }
+});
+    $('#rejectBtn').on('click', function () {
+        // Hide modal first (BS5)
+        var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
+        if (modalInstance) modalInstance.hide();
+
+        // OLD: var obj = { orderStatus: 'Rejected' };
+        // OLD: var postUrl = JSUTIL.getUrl('/data/PurchaseOrder/update/' + currentRecordId);
+        // OLD: JSUTIL.callAJAXPost(postUrl, JSON.stringify(obj), function (res) { location.reload(); });
+
+        // NEW: PATCH /api/purchase/orders/{id}/status
+        fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'text/plain' },
+            body: 'Rejected'
+        })
+        .then(function (res) {
+            if (!res.ok) throw new Error('Status update failed: ' + res.status);
+            location.reload();
+        })
+        .catch(function (err) {
+            console.error('Reject PATCH failed:', err);
+        });
+
+        
+    });
+
+
+    $(document).on('click', '.selectPOBtn', function () {
+        var currentId = $(this).attr('id');
+        currentRecordId = currentId;
+
+        // Find the record from recordList
+        const record = recordList.find(r => r.id == currentId);
+
+        // OLD: var postUrl = JSUTIL.getUrl('/purchase/po/page_data?id=' + currentRecordId);
+        // OLD: JSUTIL.callAJAXGet(postUrl, getDetailsCallback);
+        // OLD: var postDocUrl = JSUTIL.getUrl('/data/upload/documents?referenceNumber=' + currentRecordId + '&additionalInfo=');
+        // OLD: JSUTIL.callAJAXGet(postDocUrl, callbackAfterGetDocuments);
+
+        // NEW: GET /api/purchase/orders/{id}
+        var getUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+        JSUTIL.callAJAXGet(getUrl, getDetailsCallback);
+        // NEW: GET /api/files?patientId={id}&folder=PO (matches purchaseOrder.html pattern)
+        loadPoDocuments(currentRecordId);
+
+        handlePanelVisibility();
+    });
+
+    function getDetailsCallback(response) {
+        console.log(response);
+        gst = response;
+
+        // OLD: orderItemList = response.orderItemList;
+        // OLD: orderObj = response.orderObj;
+        // OLD: customeremail = orderObj.vendor.email;
+        // NEW: API returns { order: {...}, items: [...] }
+        orderItemList = response.items || response.orderItemList || [];
+        orderObj = response.order || response.orderObj;
+        customeremail = orderObj.vendor ? orderObj.vendor.email : '';
+
+        // Set dataflag: false = show approveRejectBtn (order is "QA Review"), true = hide it
+        dataflag = (orderObj.orderStatus === 'QA Review') ? false : true;
+
+        // NEW: read from orderObj directly
+        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "QA Review" || orderObj.orderStatus === "Approved") {
+            $('.approvedBtn').hide();
+            $('.orderEditBtn').hide();
+            $('.orderCancelBtn').hide();
+            $('#uploadFileBtn').hide();
+        } else {
+            $('.approvedBtn').show();
+            $('.orderEditBtn').show();
+            $('.orderCancelBtn').show();
+            $('#uploadFileBtn').show();
+        }
+
+        // Populate header information
+        // OLD: $('#customerId').val(orderObj.vendor.id);
+        $('#customerId').val(orderObj.vendor ? orderObj.vendor.id : '');
+        // OLD: $('#custAddress').text(orderObj.vendor.name);
+        $('#custAddress').text(orderObj.vendor ? orderObj.vendor.name : '');
+        $('#manuAddress').text(orderObj.manufacturer ? orderObj.manufacturer.name : '');
+        $('#purchaseNumber').text(orderObj.number);
+        $('#orderDate').val(JSUTIL.getDate(orderObj.orderDate));
+        $('#editDeliveryDate').val(orderObj.deliveryDate ? JSUTIL.getDate(orderObj.deliveryDate) : '');
+        $('#editQuotationNumber').val(orderObj.quoteNumber || '');
+        $('#editQuotationDate').val(orderObj.quoteDate ? JSUTIL.getDate(orderObj.quoteDate) : '');
+        $('#editPoTerms').val(orderObj.paymentTerms);
+
+        populateOrderItems();
+
+        $('#POPanel').hide();
+        $('#EditPO').show();
+        handlePanelVisibility();
+    }
+    function callbackAfterDocumentUpload(response) {
+        // kept for compatibility — not used with new /api/files upload flow
+    }
+
+    function callbackAfterDocumentCreation(response) {
+        // kept for compatibility — not used with new /api/files upload flow
+    }
+
+    // Load documents: GET /api/files?patientId={id}&folder=PO (matches purchaseOrder.html)
+    function loadPoDocuments(poId) {
+        var url = JSUTIL.getUrl('/api/files?patientId=' + poId + '&folder=PO');
+        JSUTIL.callAJAXGet(url, function (res) {
+            renderPoDocumentTable(res || []);
+        });
+    }
+
+    function renderPoDocumentTable(files) {
+        files = (files || []).slice().sort(function (a, b) {
+            return (b.id || 0) - (a.id || 0);
+        });
+        var tbody = $('#allDocumentsTable');
+        tbody.empty();
+        if (!files || files.length === 0) {
+            tbody.append('<tr><td colspan="3" class="text-center">No Data available</td></tr>');
+            return;
+        }
+        files.forEach(function (f) {
+            var row =
+                '<tr>' +
+                '<td style="width:12%;">' +
+                '<button type="button" class="btn btn-sm btn-outline btn-default viewPoDocumentBtn" data-id="' + f.id + '" style="margin-right:4px;"><i data-lucide="eye"></i></button>' +
+                '<button type="button" class="btn btn-sm btn-outline btn-default deletePoDocumentBtn" data-id="' + f.id + '"><i data-lucide="trash"></i></button>' +
+                '</td>' +
+                '<td>' + (f.originalName || f.name || '') + '</td>' +
+                '<td>' + (f.uploadedAt ? JSUTIL.getDate(f.uploadedAt) : (f.createdAt ? JSUTIL.getDate(f.createdAt) : '')) + '</td>' +
+                '</tr>';
+            tbody.append(row);
+        });
+        lucide.createIcons();
+    }
+
+    // View/download document: GET /api/files/download/{id}
+    $(document).on('click', '.viewPoDocumentBtn', function () {
+        var fileId = $(this).data('id');
+        window.open(JSUTIL.getUrl('/api/files/download/' + fileId), '_blank');
+    });
+
+    // Delete document: DELETE /api/files/{id}
+    $(document).on('click', '.deletePoDocumentBtn', function () {
+        var fileId = $(this).data('id');
+        var $row = $(this).closest('tr');
+        $.ajax({
+            url: JSUTIL.getUrl('/api/files/' + fileId),
+            type: 'DELETE',
+            success: function () { $row.remove(); },
+            error: function (err) { console.error('Delete failed:', err); }
+        });
+    });
+    function populateOrderItems() {
+        $('#orderLnItemTable').empty();
+        let itemCount = 1;
+        $.each(orderItemList, function (index, item) {
+            var innerHtml = '<tr>' +
+                '<td><button class="btn btn-sm btn-default deleteLnItem1" style="padding: 3px 6px;" disabled id="' + item.id + '"><i class="ti ti-trash"></i></button></td>' +
+                '<td style="text-align: left;">' + itemCount + '</td>' +
+                '<td style="text-align: left;"><strong>' + item.product.name + '</strong></td>' +
+                '<td style="text-align: left;"><strong>' + item.product.uom + '</strong></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" value="' + item.quantity + '" class="form-control lnItemInputVal1 lnItemQuantity1"  name="poItemList[' + (itemCount - 1) + '].Quantity" readonly/></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemPrice1" value="' + item.itemPrice + '"  name="poItemList[' + (itemCount - 1) + '].ItemPrice" readonly/></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemDiscount1" value="' + (item.discountPercent || 0) + '"  name="poItemList[' + (itemCount - 1) + '].DiscountPercent" readonly/></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemTotal1" value="' + item.lineTotal + '"  name="poItemList[' + (itemCount - 1) + '].LineTotal" readonly/></td>' +
+                '</tr>';
+
+            itemCount++;
+            $('#orderLnItemTable').append(innerHtml);
+        });
+
+
+        updateTotals();
+    }
+
+
+    function updateTotals() {
+        var sub   = (orderObj.subTotalAmount || 0).toFixed(FOX.financialDecimals);
+        var tax1  = (orderObj.taxAmount      || 0).toFixed(FOX.financialDecimals);
+        var tax2  = (orderObj.taxAmount2     || 0).toFixed(FOX.financialDecimals);
+        var total = (orderObj.totalAmount    || 0).toFixed(FOX.financialDecimals);
+
+        // Only show tax row 1 when account exists AND tax amount is non-zero
+        var tax1Row = '';
+        if (orderObj.taxAccount1 && orderObj.taxAccount1.id && Number(orderObj.taxAmount) > 0) {
+            tax1Row = '<tr>' +
+                '<td><strong>' + orderObj.taxAccount1.name + ' (' + orderObj.taxAccount1.amount + '%) :</strong></td>' +
+                '<td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal" value="' + tax1 + '" name="orderObj.TaxAmount" readonly /></td>' +
+                '</tr>';
+        }
+
+        // Only show tax row 2 when account exists AND tax amount is non-zero
+        var tax2Row = '';
+        if (orderObj.taxAccount2 && orderObj.taxAccount2.id && Number(orderObj.taxAmount2) > 0) {
+            tax2Row = '<tr>' +
+                '<td><strong>' + orderObj.taxAccount2.name + ' (' + orderObj.taxAccount2.amount + '%) :</strong></td>' +
+                '<td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal2" value="' + tax2 + '" name="orderObj.TaxAmount2" readonly /></td>' +
+                '</tr>';
+        }
+
+        var summaryHTML =
+            '<tr>' +
+                '<td><strong>Sub-Total :</strong></td>' +
+                '<td><input type="text" class="invoiceHiddenInputBox" id="editSubTotal" value="' + sub + '" name="orderObj.SubTotalAmount" readonly /></td>' +
+            '</tr>' +
+            tax1Row +
+            tax2Row +
+            '<tr>' +
+                '<td><strong>Total :</strong></td>' +
+                '<td><input type="text" class="invoiceHiddenInputBox" id="editInvoiceTotal" value="' + total + '" name="orderObj.TotalAmount" readonly /></td>' +
+            '</tr>';
+
+        document.getElementById('editPO').innerHTML = summaryHTML;
+    }
+
+
+    // Cancel PO
+    $('.orderCancelBtn').on('click', function () {
+        JSUTIL.startSpinner();
+        // OLD: var postUrl = '/purchase/po/cancel?id=' + currentRecordId;
+        // OLD: JSUTIL.callAJAXGet(postUrl, function (response) { console.log(response); location.reload(); });
+        // NEW: POST /api/purchase/orders/{id}/cancel
+        var cancelUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/cancel');
+        JSUTIL.callAJAXPost(cancelUrl, JSON.stringify({}), function (response) {
+            console.log(response);
+            JSUTIL.stopSpinner();
+            location.reload();
+        });
+    });
+    function callbackAfterEditRequest(response) {
+        console.log(response);
+        location.reload();
+    }
+    function submitForApprovalCallback(response) {
+        console.log(response);
+        location.reload();
+    }
+    function renderAppliedTax() {
+        var appliedTaxArray = [];
+        // OLD: if (gst.orderObj['taxAccount1']) { appliedTaxArray.push(gst.orderObj['taxAccount1']); }
+        // OLD: if (gst.orderObj['taxAccount2']) { appliedTaxArray.push(gst.orderObj['taxAccount2']); }
+        // NEW: API returns { order: {...}, items: [...] } — use safe accessor
+        var _orderObj = gst.order || gst.orderObj || orderObj;
+        if (_orderObj['taxAccount1']) {
+            appliedTaxArray.push(_orderObj['taxAccount1']);
+        }
+        if (_orderObj['taxAccount2']) {
+            appliedTaxArray.push(_orderObj['taxAccount2']);
+        }
+        console.log(TAXPANEL.taxArray);
+        TAXPANEL.initialize(assignTaxesCallback, appliedTaxArray);
+    }
+    function callbackAfterDelete() {
+        location.reload();
+    }
+
+    function calculateTotals1() {
+        var subTotal = 0.00;
+        var deductionTotal = 0.00;
+        var deductionTotal2 = 0.00;
+        // OLD: var deductionAmount = Number(gst.orderObj.taxAccount1.amount);
+        // OLD: var deductionAmount2 = Number(gst.orderObj.taxAccount2.amount);
+        // NEW: read safely from orderObj with null guards
+        var deductionAmount  = (orderObj.taxAccount1 && orderObj.taxAccount1.amount) ? Number(orderObj.taxAccount1.amount) : 0;
+        var deductionAmount2 = (orderObj.taxAccount2 && orderObj.taxAccount2.amount) ? Number(orderObj.taxAccount2.amount) : 0;
+        $('.lnItemTotal1').each(function () {
+            var quantity = $(this).parent().parent().find('.lnItemQuantity1').val();
+            var unitPrice = $(this).parent().parent().find('.lnItemPrice1').val();
+            unitPrice = Number(quantity) * Number(unitPrice);
+            var discount = $(this).parent().parent().find('.lnItemDiscount1').val();
+            var newRate = Number(unitPrice) - (Number(unitPrice) * Number(discount) / 100);
+            $(this).val(newRate.toFixed(FOX.financialDecimals));
+            subTotal += newRate;
+        });
+        $('#editSubTotal').val(subTotal.toFixed(FOX.financialDecimals));
+        if (deductionAmount) {
+            deductionTotal = subTotal * deductionAmount / 100;
+        }
+        if (deductionAmount2) {
+            deductionTotal2 = subTotal * deductionAmount2 / 100;
+        }
+        $('#deductionTotal').val(deductionTotal.toFixed(FOX.financialDecimals));
+        $('#deductionTotal2').val(deductionTotal2.toFixed(FOX.financialDecimals));
+        var invoiceTotal = 0.00;
+        invoiceTotal += subTotal + deductionTotal + deductionTotal2;
+        $('#editInvoiceTotal').val(invoiceTotal.toFixed(FOX.financialDecimals));
+    }
+    // editPoReview.js     End
+</script>

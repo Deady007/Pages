@@ -1,0 +1,1159 @@
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css">
+<!-- allSecurityOutwardPanel.html   Start -->
+<style>
+    #allOutwardPanel .ibox,
+    #viewOutwardPanel .ibox,
+    #newOutwardPanel .ibox {
+        background-color: var(--ins-secondary-bg);
+        border: var(--ins-border-width, 1px) solid var(--ins-border-color);
+        border-radius: 8px;
+        box-shadow: var(--ins-box-shadow-sm);
+        margin-bottom: 0;
+    }
+
+    #allOutwardPanel .ibox-title,
+    #viewOutwardPanel .ibox-title,
+    #newOutwardPanel .ibox-title {
+        background-color: var(--ins-secondary-bg);
+        border-bottom: var(--ins-border-width, 1px) solid var(--ins-border-color);
+        border-radius: 8px 8px 0 0;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #allOutwardPanel .ibox-content,
+    #viewOutwardPanel .ibox-content,
+    #newOutwardPanel .ibox-content {
+        background-color: var(--ins-secondary-bg);
+        border-radius: 0 0 8px 8px;
+        padding: 16px;
+    }
+
+    #allOutwardPanel .ibox-title h5,
+    #viewOutwardPanel .ibox-title h5,
+    #newOutwardPanel .ibox-title h5 {
+        margin: 0;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #allOutwardDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allOutwardDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+</style>
+<div class="row animated fadeInRight aasaanPanel" id="allOutwardPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Material Outward <small>Security</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn  btn-sm btn-secondary newMaterialOutwardBtn">
+                        <i data-lucide="plus"></i>New Material Outward</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="table-responsive">
+                    <table id="allOutwardDataTable" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Outward Number</th>
+                                <th>Outward Date</th>
+                                <th>Type</th>
+                                <th>Gate Pass Number</th>
+                                <th>Vehicle Number</th>
+                                <th>Transporter Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allOutwardTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- allSecurityOutwardPanel.html   End -->
+
+
+
+
+
+<!-- editSecurityOutwardPanel.html   Start -->
+<div class="row animated fadeInRight aasaanPanel" id="viewOutwardPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>View <small>Material Outward Details</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box viewOutwardCloseBtn">
+                        <i data-lucide="x"></i> Close
+                    </button>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <div class="row">
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+                            <label>Outward Number</label>
+                            <p class="form-control-static" id="view_outwardNumber"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Gate Pass Type</label>
+                            <p class="form-control-static" id="view_gatePassType"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Gate Pass Number</label>
+                            <p class="form-control-static" id="view_gatePassNumber"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Store Name</label>
+                            <p class="form-control-static" id="view_storeName"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Doc No</label>
+                            <p class="form-control-static" id="view_docNo"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Doc Date</label>
+                            <p class="form-control-static" id="view_docDate"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Category</label>
+                            <p class="form-control-static" id="view_category"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Entry Time</label>
+                            <p class="form-control-static" id="view_entryTime"></p>
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+                            <label>To (Customer)</label>
+                            <p class="form-control-static" id="view_customerName"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Customer Address</label>
+                            <p class="form-control-static" id="view_customerAddress" style="white-space: pre-line;"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Consignee</label>
+                            <p class="form-control-static" id="view_consigneeName"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Consignee Address</label>
+                            <p class="form-control-static" id="view_consigneeAddress" style="white-space: pre-line;">
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <hr>
+                <h4>MATERIAL DETAILS</h4>
+
+                <div class="table-responsive mt-3">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Sr</th>
+                                <th>Item Name</th>
+                                <th>UOM</th>
+                                <th>Qty</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="view_outwardItemsTable"></tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-right"><strong>Total</strong></td>
+                                <td id="view_totalQty"><strong>0.000</strong></td>
+                                <td id="view_totalValue"><strong>0.00</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <hr>
+
+                <div class="row">
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>L.R. No</label>
+                            <p class="form-control-static" id="view_lrNumber"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>L.R. Date</label>
+                            <p class="form-control-static" id="view_lrDate"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Authorized Signature</label>
+                            <p class="form-control-static" id="view_authorizedSignature"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Name Of Transporter</label>
+                            <p class="form-control-static" id="view_transportCompany"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Mode Of Dispatch</label>
+                            <p class="form-control-static" id="view_modeOfDispatch"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Vehicle Number</label>
+                            <p class="form-control-static" id="view_deliveryVehicle"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Driver Name</label>
+                            <p class="form-control-static" id="view_deliveryDriver"></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editSecurityOutwardPanel.html   End -->
+
+
+
+
+
+
+
+
+<!-- newSecurityOutwardPanel.html   Start -->
+
+<div class="row animated fadeInRight aasaanPanel" id="newOutwardPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>New <small>Material Outward</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box newOutwardCancelBtn">
+                        <i data-lucide="x"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm newOutwardSaveBtn">
+                        <i data-lucide="check"></i> Save
+                    </button>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <form role="form" id="materialOutwardForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Gate Pass Type</label>
+                                <!-- <select class="form-control gatePassTypeSelect select2" id="gatePassTypeSelect">
+                                    <option value="">--none--</option>
+                                    <option value="Dispatch">Dispatch</option>
+                                    <option value="Disposal">Disposal</option>
+                                    <option value="Manual">Manual</option>
+                                </select> -->
+                                <div class="dropdown">
+                                    <button
+                                        class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="gatePassTypeBtn" data-bs-toggle="dropdown"
+                                        aria-haspopup="true" aria-expanded="false">
+                                        <span>--none--</span>
+                                    </button>
+                                    <div class="dropdown-menu w-100" aria-labelledby="gatePassTypeBtn">
+                                        <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                        <a class="dropdown-item" href="#" data-value="Dispatch">Dispatch</a>
+                                        <a class="dropdown-item" href="#" data-value="Disposal">Disposal</a>
+                                        <a class="dropdown-item" href="#" data-value="Manual">Manual</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="gatePassTypeSelect" name="gatePassTypeSelect" value="">
+                            </div>
+
+                            <!-- <div class="form-group gatePassGroup" style="display: none;">
+                                <label>Gate Pass</label>
+                                <select class="form-control gatePassSelect select2" id="gatePassSelect">
+                                    <option value="">-- Select Gate Pass --</option>
+                                </select>
+                            </div> -->
+
+                            <div class="form-group gatePassGroup mb-3" style="display: none;">
+                                <label>Gate Pass</label>
+                                <div class="dropdown">
+                                    <button
+                                        class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="gatePassBtn" data-bs-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false">
+                                        <span>-- Select Gate Pass --</span>
+                                    </button>
+                                    <div class="dropdown-menu w-100" aria-labelledby="gatePassBtn"
+                                        id="gatePassDropdownMenu">
+                                        <a class="dropdown-item active" href="#" data-value="">-- Select Gate Pass
+                                            --</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="gatePassSelect" name="gatePassSelect" value="">
+                            </div>
+                            <div class="form-group mb-3">
+                                <label>Store Name</label>
+                                <input type="text" class="form-control" id="storeName" readonly>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Doc No</label>
+                                <input type="text" class="form-control" id="docNo" readonly>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Doc Date</label>
+                                <input type="text" class="form-control newOutwardInput" name="gatePassDate" readonly>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Category</label>
+                                <input type="text" class="form-control" id="category" readonly>
+                            </div>
+
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="form-group mb-3">
+                                <label>To (Customer)</label>
+                                <input type="text" class="form-control" id="customerName" readonly>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Customer Address</label>
+                                <textarea class="form-control" id="customerAddress" rows="4" readonly></textarea>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Consignee</label>
+                                <input type="text" class="form-control" id="consigneeName" readonly>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label>Consignee Address</label>
+                                <textarea class="form-control" id="consigneeAddress" rows="4" readonly></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="gatePassDetailsSection" style="display: none;">
+                        <hr>
+                        <h4>MATERIAL DETAILS</h4>
+
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered" id="outwardItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Sr</th>
+                                        <th>Item Name</th>
+                                        <th>UOM</th>
+                                        <th>Qty</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-right"><strong>Total</strong></td>
+                                        <td id="totalQty"><strong>0.000</strong></td>
+                                        <td id="totalValue"><strong>0.00</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>L.R. No</label>
+                                    <input type="text" class="form-control" id="lrNumber" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>L.R. Date</label>
+                                    <input type="text" class="form-control datepicker" id="lrDate" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Authorized Signature</label>
+                                    <input type="text" class="form-control newOutwardInput" name="authorizedSignature">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Name Of Transporter</label>
+                                    <input type="text" class="form-control newOutwardInput" name="transportCompany">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Mode Of Dispatch</label>
+                                    <input type="text" class="form-control newOutwardInput" name="modeOfDispatch">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Vehicle Number</label>
+                                    <input type="text" class="form-control newOutwardInput" name="deliveryVehicle">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Driver Name</label>
+                                    <input type="text" class="form-control newOutwardInput" name="deliveryDriver">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- newSecurityOutwardPanel.html   End -->
+<script>
+    lucide.createIcons();
+    //  allSecurityOutwardPanel.js   Start
+
+    $(document).ready(function () {
+        new DataTable('#allOutwardDataTable');
+        function renderOutwardRows(list) {
+            var innerHtml = '';
+            var safeList = Array.isArray(list) ? list : [];
+            var outwardOnly = safeList.filter(function (val) {
+                var type = ((val && (val.entryType || val.entrytype || val.EntryType)) || '').toString().toLowerCase();
+                return !type || type === 'outward';
+            });
+
+            $.each(outwardOnly, function (i, val) {
+                var gatePassNumber = '';
+                var gatePassType = '';
+                var vehicleNumber = '';
+                var transporterName = '';
+
+                if (val.remarks && typeof val.remarks === 'string') {
+                    try {
+                        var remarksData = JSON.parse(val.remarks);
+
+                        if (remarksData.gatePass && remarksData.gatePass.number) {
+                            gatePassNumber = remarksData.gatePass.number;
+                        }
+
+                        if (remarksData.productRelease && remarksData.productRelease.type) {
+                            gatePassType = remarksData.productRelease.type;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing remarks JSON:', e);
+                    }
+                }
+
+                if (val.productRelease) {
+                    if (val.productRelease.number && !gatePassNumber) {
+                        gatePassNumber = val.productRelease.number;
+                    }
+                    if (val.productRelease.type && !gatePassType) {
+                        gatePassType = val.productRelease.type;
+                    }
+                }
+
+                vehicleNumber = val.deliveryVehicle ||
+                    (val.productRelease ? val.productRelease.deliveryVehicle || '' : '');
+
+                transporterName = val.transportCompany ||
+                    (val.productRelease ? val.productRelease.transportCompany || '' : '');
+
+                innerHtml += '<tr>' +
+                    '<td class="itemNum"><a href="javascript:void(0);" class="selectOutwardBtn" id="' + val.id + '">' + val.number + '</a></td>' +
+                    '<td>' + JSUTIL.getDate(val.gateEntryTime || val.gateEntryDate || val.documentDate) + '</td>' +
+                    '<td>' + gatePassType + '</td>' +
+                    '<td>' + gatePassNumber + '</td>' +
+                    '<td>' + vehicleNumber + '</td>' +
+                    '<td>' + transporterName + '</td>' +
+                    '</tr>';
+            });
+
+            $('#allOutwardTable').empty().append(innerHtml);
+            JSUTIL.reinitializeDataTable();
+        }
+
+        $(document).off('click.materialOutwardNew', '.newMaterialOutwardBtn').on('click.materialOutwardNew', '.newMaterialOutwardBtn', function () {
+            $('#allOutwardPanel').hide();
+            $('#newOutwardPanel').show();
+        });
+
+        JSUTIL.callAJAXPost(
+            JSUTIL.getUrl('/data/GateEntry/list'),
+            JSON.stringify({
+                fields: 'Id;Number;GateEntryTime;GateEntryDate;DocumentDate;EntryType;DeliveryVehicle;TransportCompany;Remarks;ProductRelease.Number;ProductRelease.Type;ProductRelease.DeliveryVehicle;ProductRelease.TransportCompany',
+                conditions: ["EntryType='Outward'"],
+                logic: '{0}'
+            }),
+            function (rows) {
+                renderOutwardRows(rows || []);
+            },
+            function (error) {
+                console.error('Failed to load outward list:', error);
+                renderOutwardRows([]);
+            }
+        );
+    });
+    //  allSecurityOutwardPanel.js   End
+
+
+
+
+    //  editSecurityOutwardPanel.js   Start
+
+    $(document).ready(function () {
+
+        $(document).off('click.materialOutwardSelect', '.selectOutwardBtn').on('click.materialOutwardSelect', '.selectOutwardBtn', function () {
+            var outwardId = $(this).attr('id');
+            loadOutwardDetails(outwardId);
+        });
+
+        function loadOutwardDetails(outwardId) {
+            JSUTIL.callAJAXPost(
+                JSUTIL.getUrl('/data/GateEntry/list'),
+                JSON.stringify({
+                    "fields": "Id;Number;DocumentDate;GateEntryTime;EntryType;DeliveryVehicle;DeliveryDriver;TransportCompany;LrNumber;LrDate;Remarks",
+                    "conditions": [`Id=${outwardId}`],
+                    "logic": "{0}"
+                }),
+                function (gateEntryList) {
+                    if (gateEntryList && gateEntryList.length > 0) {
+                        var gateEntry = gateEntryList[0];
+                        console.log('Gate Entry:', gateEntry);
+
+                        var remarksData = {};
+                        try {
+                            if (gateEntry.remarks) {
+                                remarksData = JSON.parse(gateEntry.remarks);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing remarks:', e);
+                        }
+
+                        $('#view_outwardNumber').text(gateEntry.number || '-');
+                        $('#view_docDate').text(JSUTIL.getDate(gateEntry.documentDate) || '-');
+                        $('#view_entryTime').text(formatDateTime(gateEntry.gateEntryTime) || '-');
+
+                        if (remarksData.gatePass) {
+                            $('#view_gatePassNumber').text(remarksData.gatePass.number || '-');
+                        } else {
+                            $('#view_gatePassNumber').text('-');
+                        }
+
+                        if (remarksData.productRelease) {
+                            $('#view_gatePassType').text(remarksData.productRelease.type || '-');
+                            $('#view_docNo').text(remarksData.productRelease.number || '-');
+                            $('#view_category').text(remarksData.productRelease.type || '-');
+                        } else {
+                            $('#view_gatePassType').text('-');
+                            $('#view_docNo').text('-');
+                            $('#view_category').text('-');
+                        }
+
+                        if (remarksData.customer) {
+                            $('#view_customerName').text(remarksData.customer.name || '-');
+                            $('#view_customerAddress').text(remarksData.customer.address || '-');
+                        } else {
+                            $('#view_customerName').text('-');
+                            $('#view_customerAddress').text('-');
+                        }
+
+                        if (remarksData.consignee) {
+                            $('#view_consigneeName').text(remarksData.consignee.name || '-');
+                            $('#view_consigneeAddress').text(remarksData.consignee.address || '-');
+                        } else {
+                            $('#view_consigneeName').text('-');
+                            $('#view_consigneeAddress').text('-');
+                        }
+
+                        $('#view_storeName').text(remarksData.storeName || '-');
+
+                        $('#view_deliveryVehicle').text(gateEntry.deliveryVehicle || '-');
+                        $('#view_deliveryDriver').text(gateEntry.deliveryDriver || '-');
+                        $('#view_transportCompany').text(gateEntry.transportCompany || '-');
+                        $('#view_lrNumber').text(gateEntry.lrNumber || '-');
+                        $('#view_lrDate').text(JSUTIL.getDate(gateEntry.lrDate) || '-');
+                        $('#view_authorizedSignature').text(remarksData.authorizedSignature || '-');
+                        $('#view_modeOfDispatch').text(remarksData.modeOfDispatch || '-');
+
+                        var tbody = $('#view_outwardItemsTable');
+                        tbody.empty();
+
+                        var totalQty = 0;
+                        var totalValue = 0;
+
+                        if (remarksData.gateEntryItems && remarksData.gateEntryItems.length > 0) {
+                            $.each(remarksData.gateEntryItems, function (i, item) {
+                                var quantity = parseFloat(item.quantity) || 0;
+                                var value = parseFloat(item.value) || 0;
+
+                                totalQty += quantity;
+                                totalValue += value;
+
+                                var row = '<tr>' +
+                                    '<td>' + (i + 1) + '</td>' +
+                                    '<td>' + (item.itemName || '-') + '</td>' +
+                                    '<td>' + (item.uom || '-') + '</td>' +
+                                    '<td class="text-right">' + quantity.toFixed(3) + '</td>' +
+                                    '<td class="text-right">' + value.toFixed(2) + '</td>' +
+                                    '</tr>';
+                                tbody.append(row);
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="5" class="text-center">No items found</td></tr>');
+                        }
+
+                        $('#view_totalQty').html('<strong>' + totalQty.toFixed(3) + '</strong>');
+                        $('#view_totalValue').html('<strong>' + totalValue.toFixed(2) + '</strong>');
+
+                        $('#allOutwardPanel').hide();
+                        $('#viewOutwardPanel').show();
+                    }
+                }
+            );
+        }
+
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return '';
+
+            try {
+                var date = new Date(dateTimeString);
+
+                var day = String(date.getDate()).padStart(2, '0');
+                var month = String(date.getMonth() + 1).padStart(2, '0');
+                var year = date.getFullYear();
+                var hours = String(date.getHours()).padStart(2, '0');
+                var minutes = String(date.getMinutes()).padStart(2, '0');
+                var seconds = String(date.getSeconds()).padStart(2, '0');
+
+                return day + '/' + month + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds;
+            } catch (e) {
+                console.error('Date formatting error:', e);
+                return dateTimeString;
+            }
+        }
+
+        $(document).off('click.materialOutwardClose', '.viewOutwardCloseBtn').on('click.materialOutwardClose', '.viewOutwardCloseBtn', function () {
+            $('#viewOutwardPanel').hide();
+            $('#allOutwardPanel').show();
+        });
+    });
+    //  editSecurityOutwardPanel.js   End
+
+
+
+
+
+
+
+    //  newSecurityOutwardPanel.js
+
+
+    var products = [];
+    var gatePassData = {};
+    var currentProductReleaseId = null;
+
+    $(document).ready(function () {
+
+        $('input[name="gatePassDate"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: false,
+            locale: { format: 'DD/MM/YYYY' }
+        });
+
+        $('input[name="gatePassDate"]').on('apply.daterangepicker', function (ev, picker) {
+            $(this).val(picker.startDate.format('DD/MM/YYYY'));
+        });
+        JSUTIL.callAJAXPost('/data/Product/list', JSON.stringify({ "fields": "Id;Name;UnitPrice" }), function (res) {
+            console.log('Products:', res);
+            products = res;
+        });
+
+        $('#gatePassTypeSelect').off('change.materialOutwardType').on('change.materialOutwardType', function () {
+            var selectedType = $(this).val();
+
+            if (selectedType) {
+                $('.gatePassGroup').show();
+
+                var conditions = [
+                    `Type='${selectedType}'`,
+                    "ProductRelease.ProcessStatus='Finalized'",
+                    "ProcessStatus='New'"
+                ];
+
+                JSUTIL.callAJAXPost(
+                    JSUTIL.getUrl('/data/GatePass/list'),
+                    JSON.stringify({
+                        "fields": "Id;Number;ProductRelease.Id;ProductRelease.Number;ProductRelease.Type;ProductRelease.ProductionRequest.Customer.Name",
+                        "conditions": conditions,
+                        "logic": "{0} AND {1} AND {2}"
+                    }),
+                    function (gatePasses) {
+                        console.log('Gate Passes:', gatePasses);
+
+                        // var options = '<option value="">-- Select Gate Pass --</option>';
+                        // $.each(gatePasses, function (i, gp) {
+                        //     options += '<option value="' + gp.id + '">' + gp.number + '</option>';
+                        // });
+
+                        // $('#gatePassSelect').html(options).trigger('change.select2');
+                        var selectOptions = '<option value="">-- Select Gate Pass --</option>';
+                        var dropdownItems = '<a class="dropdown-item active" href="#" data-value="">-- Select Gate Pass --</a>';
+
+                        $.each(gatePasses, function (i, gp) {
+                            selectOptions += '<option value="' + gp.id + '">' + gp.number + '</option>';
+                            dropdownItems += '<a class="dropdown-item" href="#" data-value="' + gp.id + '">' + gp.number + '</a>';
+                        });
+
+                        $('#gatePassSelect').html(selectOptions);
+                        $('#gatePassDropdownMenu').html(dropdownItems);
+                        $('#gatePassBtn span').first().text('-- Select Gate Pass --');
+                    }
+                );
+            } else {
+                $('.gatePassGroup').hide();
+                $('.gatePassDetailsSection').hide();
+                $('#gatePassSelect').html('<option value="">-- Select Gate Pass --</option>').trigger('change.select2');
+                $('#gatePassDropdownMenu').html('<a class="dropdown-item active" href="#" data-value="">-- Select Gate Pass --</a>');
+                $('#gatePassBtn span').first().text('-- Select Gate Pass --');
+            }
+        });
+
+        $('#gatePassSelect').off('change.materialOutwardGatePass').on('change.materialOutwardGatePass', function () {
+            var gatePassId = $(this).val();
+
+            if (gatePassId) {
+
+                JSUTIL.callAJAXPost(
+                    JSUTIL.getUrl('/data/GatePass/list'),
+                    JSON.stringify({
+                        "fields": "Id;Number;ProductRelease.Id;ProductRelease.Number;ProductRelease.Type;ProductRelease.DeliveryVehicle;ProductRelease.TransportCompany;ProductRelease.DeliveryDriver;ProductRelease.ProductionRequest.Customer.Name;ProductRelease.ProductionRequest.Customer.BillingStreet;ProductRelease.ProductionRequest.Customer.BillingStreet2;ProductRelease.ProductionRequest.Customer.BillingCity;ProductRelease.ProductionRequest.Customer.BillingState;ProductRelease.ProductionRequest.Customer.BillingPostalCode;ProductRelease.ProductionRequest.Consignee.Name;ProductRelease.ProductionRequest.Consignee.BillingStreet;ProductRelease.ProductionRequest.Consignee.BillingStreet2;ProductRelease.ProductionRequest.Consignee.BillingCity;ProductRelease.ProductionRequest.Consignee.BillingState;ProductRelease.ProductionRequest.Consignee.BillingPostalCode",
+                        "conditions": [`Id=${gatePassId}`],
+                        "logic": "{0}"
+                    }),
+                    function (gatePassList) {
+                        if (gatePassList && gatePassList.length > 0) {
+                            var gatePass = gatePassList[0];
+                            gatePassData = gatePass;
+                            console.log('Selected Gate Pass:', gatePass);
+
+                            if (gatePass.productRelease) {
+                                currentProductReleaseId = gatePass.productRelease.id;
+
+
+                                $('#storeName').val('Warehouse A');
+                                $('#docNo').val(gatePass.productRelease.number || '');
+                                $('#category').val(gatePass.productRelease.type || '');
+
+                                if (gatePass.productRelease.productionRequest && gatePass.productRelease.productionRequest.customer) {
+                                    var customer = gatePass.productRelease.productionRequest.customer;
+                                    $('#customerName').val(customer.name || '');
+
+                                    var customerAddr = '';
+                                    if (customer.billingStreet) customerAddr += customer.billingStreet + '\n';
+                                    if (customer.billingStreet2) customerAddr += customer.billingStreet2 + '\n';
+                                    if (customer.billingCity) customerAddr += customer.billingCity;
+                                    if (customer.billingState) customerAddr += ', ' + customer.billingState;
+                                    if (customer.billingPostalCode) customerAddr += ' - ' + customer.billingPostalCode;
+
+                                    $('#customerAddress').val(customerAddr);
+                                }
+
+
+                                if (gatePass.productRelease.productionRequest && gatePass.productRelease.productionRequest.consignee) {
+                                    var consignee = gatePass.productRelease.productionRequest.consignee;
+                                    $('#consigneeName').val(consignee.name || '');
+
+                                    var consigneeAddr = '';
+                                    if (consignee.billingStreet) consigneeAddr += consignee.billingStreet + '\n';
+                                    if (consignee.billingStreet2) consigneeAddr += consignee.billingStreet2 + '\n';
+                                    if (consignee.billingCity) consigneeAddr += consignee.billingCity;
+                                    if (consignee.billingState) consigneeAddr += ', ' + consignee.billingState;
+                                    if (consignee.billingPostalCode) consigneeAddr += ' - ' + consignee.billingPostalCode;
+
+                                    $('#consigneeAddress').val(consigneeAddr);
+                                }
+
+
+                                $('.newOutwardInput[name="deliveryVehicle"]').val(gatePass.productRelease.deliveryVehicle || '');
+                                $('.newOutwardInput[name="transportCompany"]').val(gatePass.productRelease.transportCompany || '');
+                                $('.newOutwardInput[name="deliveryDriver"]').val(gatePass.productRelease.deliveryDriver || '');
+
+
+                                fetchGatePassItems(gatePassId);
+
+
+                                fetchDispatchInstruction(currentProductReleaseId);
+
+                                $('.gatePassDetailsSection').show();
+                            }
+                        }
+                    }
+                );
+            } else {
+                $('.gatePassDetailsSection').hide();
+                gatePassData = {};
+                currentProductReleaseId = null;
+            }
+        });
+
+        function fetchGatePassItems(gatePassId) {
+            JSUTIL.callAJAXPost(
+                JSUTIL.getUrl('/data/GatePassItem/list'),
+                JSON.stringify({
+                    "fields": "Id;ProductReleaseItem.Product.Name;ProductReleaseItem.Product.Uom;ProductReleaseItem.Product.UnitPrice;ProductReleaseItem.ProductLot.Quantity;ProductReleaseItem.Uom",
+                    "conditions": [`GatePass.Id=${gatePassId}`],
+                    "logic": "{0}"
+                }),
+                function (items) {
+                    console.log('Gate Pass Items:', items);
+
+                    var tbody = $('#outwardItemsTable tbody');
+                    tbody.empty();
+
+                    var totalQty = 0;
+                    var totalValue = 0;
+
+                    if (items && items.length > 0) {
+                        $.each(items, function (i, item) {
+                            var productName = '';
+                            var uom = '';
+                            var quantity = 0;
+                            var unitPrice = 0;
+                            var value = 0;
+
+                            if (item.productReleaseItem) {
+                                if (item.productReleaseItem.product) {
+                                    productName = item.productReleaseItem.product.name || '';
+                                    uom = item.productReleaseItem.uom || item.productReleaseItem.product.uom || '';
+                                    unitPrice = item.productReleaseItem.product.unitPrice || 0;
+                                }
+
+                                if (item.productReleaseItem.productLot) {
+                                    quantity = Math.abs(item.productReleaseItem.productLot.quantity) || 0;
+                                }
+                            }
+
+                            value = quantity * unitPrice;
+                            totalQty += quantity;
+                            totalValue += value;
+
+                            var row = '<tr>' +
+                                '<td>' + (i + 1) + '</td>' +
+                                '<td>' + productName + '</td>' +
+                                '<td>' + uom + '</td>' +
+                                '<td class="text-right">' + quantity.toFixed(3) + '</td>' +
+                                '<td class="text-right">' + value.toFixed(2) + '</td>' +
+                                '</tr>';
+                            tbody.append(row);
+                        });
+                    }
+
+                    $('#totalQty').html('<strong>' + totalQty.toFixed(3) + '</strong>');
+                    $('#totalValue').html('<strong>' + totalValue.toFixed(2) + '</strong>');
+                }
+            );
+        }
+
+        function fetchDispatchInstruction(productReleaseId) {
+            JSUTIL.callAJAXPost(
+                JSUTIL.getUrl('/data/DispatchInstruction/list'),
+                JSON.stringify({
+                    "fields": "Id;LrNumber;LrDate",
+                    "conditions": [`ProductRelease.Id=${productReleaseId}`],
+                    "logic": "{0}"
+                }),
+                function (dispatchInstructions) {
+                    console.log('Dispatch Instructions:', dispatchInstructions);
+
+                    if (dispatchInstructions && dispatchInstructions.length > 0) {
+                        var di = dispatchInstructions[0];
+                        $('#lrNumber').val(di.lrNumber || '');
+                        $('#lrDate').val(JSUTIL.getDate(di.lrDate) || '');
+                    }
+                }
+            );
+        }
+
+
+        function convertToISODate(dateString) {
+            if (!dateString) return '';
+
+            try {
+                var parts = dateString.split(/[\/\-]/);
+                var year, month, day;
+
+                if (parts.length === 3) {
+                    day = parseInt(parts[0], 10);
+                    month = parseInt(parts[1], 10) - 1;
+                    year = parseInt(parts[2], 10);
+                } else {
+                    var d = new Date(dateString);
+                    day = d.getDate();
+                    month = d.getMonth();
+                    year = d.getFullYear();
+                }
+
+
+                return (
+                    year + '-' +
+                    String(month + 1).padStart(2, '0') + '-' +
+                    String(day).padStart(2, '0') +
+                    'T00:00:00Z'
+                );
+
+            } catch (e) {
+                console.error('Date conversion error:', e);
+                return '';
+            }
+        }
+
+
+        function updateGatePassStatus(gatePassId, callback) {
+            console.log('Updating Gate Pass status to Material Sent for ID:', gatePassId);
+
+            var updateData = {
+                processStatus: 'Material Sent'
+            };
+
+            JSUTIL.callAJAXPost(
+                JSUTIL.getUrl('/data/GatePass/update/' + gatePassId),
+                JSON.stringify(updateData),
+                function (response) {
+                    console.log('Gate Pass status updated:', response);
+                    if (callback) callback(response);
+                },
+                function (error) {
+                    console.error('Error updating Gate Pass status:', error);
+                    toastr.error('Failed to update Gate Pass status');
+                }
+            );
+        }
+
+
+        $(document).off('click.materialOutwardSave', '.newOutwardSaveBtn').on('click.materialOutwardSave', '.newOutwardSaveBtn', function () {
+
+            $('.newOutwardSaveBtn').prop('disabled', true);
+            var gatePassId = $('#gatePassSelect').val();
+            var gatePassTypeSelect = $('#gatePassTypeSelect').val();
+
+            if (!gatePassId) {
+                toastr.error('Please select a Gate Pass');
+                $('.newOutwardSaveBtn').prop('disabled', false);
+                return;
+            }
+
+            var gatePassDate = $('.newOutwardInput[name="gatePassDate"]').val();
+            if (!gatePassDate) {
+                toastr.error('Please enter Doc Date');
+                $('.newOutwardSaveBtn').prop('disabled', false);
+                return;
+            }
+
+
+            var gateEntryItems = [];
+            $('#outwardItemsTable tbody tr').each(function () {
+                var $row = $(this);
+                var cells = $row.find('td');
+
+                if (cells.length > 0) {
+                    var itemName = $(cells[1]).text();
+                    var uom = $(cells[2]).text();
+                    var qty = parseFloat($(cells[3]).text()) || 0;
+                    var value = parseFloat($(cells[4]).text()) || 0;
+
+                    gateEntryItems.push({
+                        itemName: itemName,
+                        uom: uom,
+                        quantity: qty,
+                        value: value
+                    });
+                }
+            });
+
+            var remarksData = {
+                gatePass: {
+                    id: gatePassId,
+                    number: gatePassData.number || ''
+                },
+                productRelease: {
+                    id: currentProductReleaseId,
+                    number: $('#docNo').val(),
+                    type: $('#category').val()
+                },
+                customer: {
+                    name: $('#customerName').val(),
+                    address: $('#customerAddress').val()
+                },
+                consignee: {
+                    name: $('#consigneeName').val(),
+                    address: $('#consigneeAddress').val()
+                },
+                storeName: $('#storeName').val(),
+                gateEntryItems: gateEntryItems,
+                authorizedSignature: $('.newOutwardInput[name="authorizedSignature"]').val() || '',
+                modeOfDispatch: $('.newOutwardInput[name="modeOfDispatch"]').val() || ''
+            };
+
+            var now = new Date();
+            var currentDateTime = now.toISOString().split('.')[0] + 'Z';
+
+            var gateEntryData = {
+                entryType: 'Outward',
+                documentDate: convertToISODate(gatePassDate),
+                gateEntryTime: currentDateTime,
+                deliveryVehicle: $('.newOutwardInput[name="deliveryVehicle"]').val() || '',
+                deliveryDriver: $('.newOutwardInput[name="deliveryDriver"]').val() || '',
+                transportCompany: $('.newOutwardInput[name="transportCompany"]').val() || '',
+                lrNumber: $('#lrNumber').val() || '',
+                lrDate: convertToISODate($('#lrDate').val()),
+                remarks: JSON.stringify(remarksData)
+            };
+
+            console.log('Gate Entry Data to Save:', gateEntryData);
+
+            JSUTIL.callAJAXGet('/process/get_next_sequence?name=GateExit', function (res) {
+                console.log('next seq', res);
+                var seqNum = String(res).padStart(4, '0');
+                var year2 = new Date().getFullYear().toString().slice(-2);
+                var sequence = 'SO-' + year2 + '-' + seqNum;
+                gateEntryData['number'] = sequence;
+
+                JSUTIL.callAJAXPost(
+                    JSUTIL.getUrl('/data/GateEntry/create'),
+                    JSON.stringify(gateEntryData),
+                    function (response) {
+                        console.log('Save Response:', response);
+
+                        updateGatePassStatus(gatePassId, function () {
+                            toastr.success('Material Outward created successfully and Gate Pass status updated to Material Sent');
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1000);
+                        });
+                    },
+                    function (error) {
+                        console.error('Error saving Gate Entry:', error);
+                        toastr.error('Failed to create Material Outward');
+                        $('.newOutwardSaveBtn').prop('disabled', false);
+                    }
+                );
+            });
+        });
+
+        function resetOutwardForm() {
+            $('#materialOutwardForm')[0].reset();
+            $('#gatePassTypeSelect').val('').trigger('change');
+            $('#gatePassSelect').val('').trigger('change');
+            $('#outwardItemsTable tbody').empty();
+            $('#totalQty').html('<strong>0.000</strong>');
+            $('#totalValue').html('<strong>0.00</strong>');
+            $('.gatePassGroup').hide();
+            $('.gatePassDetailsSection').hide();
+            $('.newOutwardSaveBtn').prop('disabled', false);
+            gatePassData = {};
+            currentProductReleaseId = null;
+        }
+
+        $(document).off('click.materialOutwardCancel', '.newOutwardCancelBtn').on('click.materialOutwardCancel', '.newOutwardCancelBtn', function () {
+            resetOutwardForm();
+            $('#newOutwardPanel').hide();
+            $('#allOutwardPanel').show();
+        });
+    });
+
+    $(document).on('click', '#gatePassTypeBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#gatePassTypeBtn span').first().text($(this).text());
+        $('#gatePassTypeSelect').val(value).trigger('change');
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+    });
+    $(document).on('click', '#gatePassBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#gatePassBtn span').first().text($(this).text());
+        $('#gatePassSelect').val(value).trigger('change');
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+    });
+    //  newSecurityOutwardPanel.js   End
+
+
+</script>

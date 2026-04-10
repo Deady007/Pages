@@ -1,0 +1,986 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!--sentToQAPanel.html start -->
+
+<style>
+    .assign-bom-btn {
+        color: #337AB7 !important;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #sentToQADataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #sentToQADataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+</style>
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="sentToQAPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>BPCR Request <small>Quality Assurance</small></h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="table-responsive">
+                        <table id="sentToQADataTable" class="table table-hover table-bordered dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Doc Code</th>
+                                    <th>Batch</th>
+                                    <th>BOM</th>
+                                    <th>Plant</th>
+                                    <th>Owner</th>
+                                    <th>Quantity</th>
+                                    <th>Status</th>
+                                    <!-- <th style="width: 150px;">Actions</th> -->
+                                </tr>
+                            </thead>
+                            <tbody id="sentToQATable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="assignBOMModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Approve Batches</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="fw-bold">Doc Code</label>
+                        <div id="assignBatchLabel" class="form-control-static"
+                            style="margin-top: 5px; font-size: 14px; color: #337AB7;">-</div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label class="fw-bold">Batches To Approve</label>
+                        <div class="table-responsive" style="max-height: 240px; overflow-y: auto; margin-top: 10px;">
+                            <table class="table" id="assignBatchListTable"
+                                style="border: 1px solid #e7eaec; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="border: 1px solid #e7eaec;">Select</th>
+                                        <th style="border: 1px solid #e7eaec;">Batch Number</th>
+                                        <th style="border: 1px solid #e7eaec;">BOM</th>
+                                        <th style="border: 1px solid #e7eaec;">Plant</th>
+                                        <th style="border: 1px solid #e7eaec;">Owner</th>
+                                        <th style="border: 1px solid #e7eaec;">Start Date</th>
+                                        <th style="border: 1px solid #e7eaec;">Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assignBatchListBody">
+                                    <tr>
+                                        <td colspan="7" class="text-muted text-center"
+                                            style="border: 1px solid #e7eaec;">No batches selected.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- <div class="form-group">
+                    <label>BOM</label>
+                    <div id="assignBOMDisplay" class="form-control-static text-navy">-</div>
+                    <input type="hidden" id="assignBOMId">
+                    <div class="text-muted small" id="assignBOMHint" style="display:none;"></div>
+                </div> -->
+                    <div class="form-group">
+                        <label>Verification Password</label>
+                        <input type="password" class="form-control" id="assignBOMPassword"
+                            placeholder="Enter your password to proceed">
+                    </div>
+                    <div class="alert alert-danger" id="assignBOMError" style="display:none;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="confirmAssignBOMBtn">Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--sentToQAPanel.html end -->
+
+
+
+    <script>
+        var bpcrTableSelector = '#sentToQADataTable';
+        lucide.createIcons();
+        // sentToQAPanel.js start
+
+        // const SENT_TO_QA_STATUS = 'Sent to QA';
+        // const QA_APPROVAL_LABEL = 'QA Approval';
+        // const READY_STATUS_AFTER_BOM = 'New';
+        // let qaBatchRecords = [];
+        // let bomOptions = [];
+        // let bomNameById = {};
+        // let bomMetaById = {};
+        // let currentAssignGroup = null;
+        // let isVerifyingAssign = false;
+        // let selectedAssignOrderKeys = [];
+        var SENT_TO_QA_STATUS = 'Sent to QA';
+var QA_APPROVAL_LABEL = 'QA Approval';
+var READY_STATUS_AFTER_BOM = 'New';
+var qaBatchRecords = [];
+var bomOptions = [];
+var bomNameById = {};
+var bomMetaById = {};
+var currentAssignGroup = null;
+var isVerifyingAssign = false;
+var selectedAssignOrderKeys = [];
+
+        $(document).ready(function () {
+         //   new DataTable('#sentToQADataTable');
+            refreshQABatchList();
+            loadBOMOptions();
+              $(window).off('load.bpcrDT').on('load.bpcrDT', function () {
+        initBpcrDataTable();
+    });
+            // recordList often arrives after component render; refresh again shortly
+            // setTimeout(refreshQABatchList, 400);
+            // setTimeout(refreshQABatchList, 1200);
+
+            $(document).on('click', '.assign-bom-btn', function () {
+                var groupKey = $(this).data('groupKey');
+                var recordGroup = qaBatchRecords.find(function (r) { return String(r.groupKey) === String(groupKey); });
+                openAssignBOMModal(recordGroup);
+            });
+
+            $('#confirmAssignBOMBtn').on('click', function () {
+                console.log("Clicked");
+                verifyAndAssignBOM();
+            });
+
+            $(document).on('change', 'input[name="assignBatchSelect"]', function () {
+                var orderKey = $(this).val();
+                if ($(this).is(':checked')) {
+                    addSelectedAssignOrderKey(orderKey);
+                } else {
+                    removeSelectedAssignOrderKey(orderKey);
+                }
+                showAssignError('');
+            });
+        });
+
+        function buildQABatchList() {
+            if (!Array.isArray(window.recordList)) {
+                return [];
+            }
+            var filtered = window.recordList.filter(function (r) {
+                var status = (r.orderStatus || r.OrderStatus || '').toLowerCase();
+                return status === SENT_TO_QA_STATUS.toLowerCase();
+            });
+            var grouped = {};
+            filtered.forEach(function (item) {
+                var batchNumber = (item.Number || item.number || '').toString().trim();
+                var groupKey = batchNumber || (item.id ? String(item.id) : '');
+                if (!groupKey) {
+                    return;
+                }
+                var qty = Number(item.quantity || item.Quantity || 0) || 0;
+                var plantName = item.plant?.name
+                    || item.productRecipe?.plant?.name
+                    || item.productRecipe?.productStage?.plant?.name
+                    || '';
+                var bomId = getOrderBomId(item);
+                if (!grouped[groupKey]) {
+                    grouped[groupKey] = {
+                        groupKey: groupKey,
+                        number: batchNumber || groupKey,
+                        representative: item,
+                        plantName: plantName || '',
+                        bomId: bomId || '',
+                        totalQuantity: 0,
+                        orders: []
+                    };
+                }
+                var group = grouped[groupKey];
+                group.orders.push(item);
+                group.totalQuantity += qty;
+                if (!group.plantName && plantName) {
+                    group.plantName = plantName;
+                }
+                if (!group.bomId && bomId) {
+                    group.bomId = bomId;
+                }
+                var plannedStart = getPlannedStartTimeValue(item);
+                if (plannedStart) {
+                    var existing = group.plannedStartTime;
+                    if (!existing || new Date(plannedStart) < new Date(existing)) {
+                        group.plannedStartTime = plannedStart;
+                    }
+                }
+            });
+            return Object.keys(grouped).map(function (key) { return grouped[key]; });
+        }
+
+        function renderQATable(list) {
+            var rows = '';
+            (list || []).forEach(function (group) {
+                var representative = group.representative || {};
+                var plantName = group.plantName
+                    || representative.plant?.name
+                    || representative.productRecipe?.plant?.name
+                    || representative.productRecipe?.productStage?.plant?.name
+                    || '';
+                var bomId = group.bomId || getOrderBomId(representative);
+                var ordersCount = (group.orders || []).length;
+                var firstBatchName = representative.name || representative.number || '';
+                var batchLabel = ordersCount > 1
+                    ? (firstBatchName ? (firstBatchName + ' (+' + (ordersCount - 1) + ' more)') : ordersCount + ' batches')
+                    : (firstBatchName || '');
+                var bomName = bomId ? (bomNameById[bomId] || bomId) : '-';
+                var ownerName = getOrderOwnerName(representative) || '-';
+                var qtyDisplay = getBatchSizeDisplayForOrder(representative, bomId)
+                    || group.totalQuantity
+                    || representative.quantity
+                    || representative.Quantity
+                    || ordersCount
+                    || '-';
+                rows += `
+            <tr>
+                <td><a class="assign-bom-btn" data-group-key="${group.groupKey}">${group.number || representative.number || ''}</a></td>
+                <td>${escapeHtml(batchLabel)}</td>
+                <td>${escapeHtml(bomName)}</td>
+                <td>${escapeHtml(plantName || '-')}</td>
+                <td>${escapeHtml(ownerName)}</td>
+                <td>${escapeHtml(qtyDisplay)}</td>
+                <td><span class="label">${QA_APPROVAL_LABEL}</span></td>
+                
+            </tr>
+        `;
+            });
+            // <td>
+            //                 <button type="button" class="btn btn-secondary btn-xs assign-bom-btn" data-group-key="${group.groupKey}">
+            //                     Approve Batch${ordersCount > 1 ? 'es' : ''}
+            //                 </button>
+            //             </td>
+          destroyQATable();
+$('#sentToQATable').html(rows);
+initBpcrDataTable();
+        }
+
+      function destroyQATable() {
+    try {
+        if ($.fn.DataTable && $.fn.DataTable.isDataTable(bpcrTableSelector)) {
+            $(bpcrTableSelector).DataTable().clear().destroy();
+        }
+    } catch (e) {
+        console.warn('DataTable destroy warning:', e);
+    }
+    $('#sentToQATable').empty();
+}
+       
+function initBpcrDataTable(retryCount) {
+    retryCount = typeof retryCount === 'number' ? retryCount : 0;
+    if (typeof $.fn.DataTable === 'function') {
+        if (!$.fn.DataTable.isDataTable(bpcrTableSelector)) {
+            $(bpcrTableSelector).DataTable({ order: [], pageLength: 25 });
+        }
+        return;
+    }
+    if (retryCount < 40) {
+        setTimeout(function () {
+            initBpcrDataTable(retryCount + 1);
+        }, 150);
+    }
+}
+function loadBOMOptions() {
+            var postUrl = '/api/product-recipes/list';
+            var postData = {
+                fields: 'Id;MasterBatchRecord;Name;Product.Id;Product.Name;Type;ProcessStatus;ProductQuantity;QuantityVariation;Product.Uom;ProductStage.Product.Uom',
+                // conditions: ["ProcessStatus = 'Approved'"],
+                // logic: '{0}'
+            };
+            JSUTIL.callAJAXPost(postUrl, JSON.stringify(postData), function (response) {
+                bomOptions = response || [];
+                bomNameById = {};
+                bomMetaById = {};
+                (bomOptions || []).forEach(function (item) {
+                    var id = item.id || item.Id;
+                    if (!id) {
+                        return;
+                    }
+                    var mbr = item.masterBatchRecord || item.MasterBatchRecord || '';
+                    var name = item.name || item.Name || '';
+                    var label = mbr || name || ('BOM ' + id);
+                    bomNameById[String(id)] = label;
+                    bomMetaById[String(id)] = {
+                        batchSize: getNullableNumber(item.productQuantity, item.ProductQuantity),
+                        variation: getNullableNumber(item.quantityVariation, item.QuantityVariation),
+                        uom: getBOMProductUom(item)
+                    };
+                });
+                initBOMTypeahead();
+                renderQATable(qaBatchRecords);
+            });
+        }
+
+        function refreshQABatchList() {
+            JSUTIL.callAJAXGet('/api/production-orders', function (response) {
+                var allRecords = Array.isArray(response) ? response : (response && response.data ? response.data : []);
+                var filtered = allRecords.filter(function (r) {
+                    var status = (r.orderStatus || r.OrderStatus || '').toLowerCase();
+                    return status === SENT_TO_QA_STATUS.toLowerCase();
+                });
+                qaBatchRecords = buildQABatchListFromData(filtered);
+                renderQATable(qaBatchRecords);
+            }, function (err) {
+                console.error('Failed to load production orders', err);
+                renderQATable([]);
+            });
+        }
+        function buildQABatchListFromData(records) {
+            var grouped = {};
+            records.forEach(function (item) {
+                var batchNumber = (item.number || item.Number || '').toString().trim();
+                var groupKey = batchNumber || (item.id ? String(item.id) : '');
+                if (!groupKey) return;
+
+                var qty = Number(item.quantity || item.Quantity || 0) || 0;
+                var plantName = item.plant?.name
+                    || item.productRecipe?.plant?.name
+                    || item.productRecipe?.productStage?.plant?.name
+                    || '';
+                var bomId = getOrderBomId(item);
+
+                if (!grouped[groupKey]) {
+                    grouped[groupKey] = {
+                        groupKey: groupKey,
+                        number: batchNumber || groupKey,
+                        representative: item,
+                        plantName: plantName || '',
+                        bomId: bomId || '',
+                        totalQuantity: 0,
+                        orders: []
+                    };
+                }
+                var group = grouped[groupKey];
+                group.orders.push(item);
+                group.totalQuantity += qty;
+                if (!group.plantName && plantName) group.plantName = plantName;
+                if (!group.bomId && bomId) group.bomId = bomId;
+
+                var plannedStart = getPlannedStartTimeValue(item);
+                if (plannedStart) {
+                    var existing = group.plannedStartTime;
+                    if (!existing || new Date(plannedStart) < new Date(existing)) {
+                        group.plannedStartTime = plannedStart;
+                    }
+                }
+            });
+            return Object.keys(grouped).map(function (key) { return grouped[key]; });
+        }
+        function initBOMTypeahead() {
+            var typeaheadData = (bomOptions || []).map(function (item) {
+                var masterBatchRecord = item.masterBatchRecord || item.MasterBatchRecord || item.name || item.Name || '';
+                return {
+                    id: item.Id || item.id,
+                    name: masterBatchRecord,
+                    productName: item.Product?.Name || item.product?.name || ''
+                };
+            });
+
+            var $inputs = $('.typeahead_assign_bom');
+            if (!$inputs.length || typeof $inputs.typeahead !== 'function') {
+                return;
+            }
+            $inputs.typeahead('destroy');
+            $inputs.typeahead({
+                minLength: 1,
+                autoSelect: true,
+                source: typeaheadData,
+                displayText: function (item) {
+                    var product = item.productName ? ' - ' + item.productName : '';
+                    return item.name + product;
+                },
+                afterSelect: function (item) {
+                    $('#assignBOMId').val(item.id);
+                    $('#assignBOMHint').hide();
+                }
+            });
+        }
+
+        function openAssignBOMModal(record) {
+            currentAssignGroup = record || null;
+            selectedAssignOrderKeys = [];
+            $('#assignBOMPassword').val('');
+            $('#assignBOMError').hide().text('');
+            $('#assignBOMId').val('');
+            $('#assignBOMDisplay').text('-');
+            $('#assignBOMHint').hide().text('');
+            renderAssignBatchTable(null);
+            setAssignLoading(false);
+
+            var representative = record && record.representative ? record.representative : record;
+            var bomIdFromOrder = record ? (record.bomId || getOrderBomId(representative)) : '';
+            var orderCount = (record && record.orders && record.orders.length) ? record.orders.length : 0;
+            if (!record || !representative) {
+                $('#assignBatchLabel').text('-');
+                $('#assignBOMHint').text('Batch not found.').show();
+                $('#confirmAssignBOMBtn').prop('disabled', true);
+            } else {
+                var batchLabel = representative.number || representative.name || representative.id || '-';
+                if (orderCount > 1) {
+                    batchLabel = (record.number || batchLabel) + ' (' + orderCount + ' batches)';
+                }
+                $('#assignBatchLabel').text(batchLabel);
+                $('#assignBOMId').val(bomIdFromOrder);
+                $('#assignBOMDisplay').text(bomIdFromOrder || '-');
+                $('#assignBOMHint').text(orderCount > 1
+                    ? 'Select a batch below to approve. BOM will be taken from the selected batch.'
+                    : 'BOM will be taken from this batch.'
+                ).show();
+                $('#confirmAssignBOMBtn').prop('disabled', false);
+            }
+            renderAssignBatchTable(record);
+            var modal = new bootstrap.Modal(document.getElementById('assignBOMModal'));
+            modal.show();
+        }
+
+        function attachBOMToBatchGroup(targetOrder) {
+            if (!currentAssignGroup || !Array.isArray(currentAssignGroup.orders) || !currentAssignGroup.orders.length) {
+                showAssignError('Select a batch first.');
+                setAssignLoading(false);
+                return;
+            }
+            var selectedOrders = Array.isArray(targetOrder) ? targetOrder : getSelectedAssignOrders();
+            if (!selectedOrders.length) {
+                showAssignError('Select at least one batch to approve.');
+                setAssignLoading(false);
+                return;
+            }
+            var ordersQueue = selectedOrders.slice();
+
+            function processNext() {
+                if (!ordersQueue.length) {
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('assignBOMModal'));
+                    if (modal) modal.hide();
+                    //location.reload();
+                    return;
+                }
+                var order = ordersQueue.shift();
+                var orderId = order.id;
+                var orderQty = order.quantity || order.Quantity || 1;
+                var orderBomId = getOrderBomId(order) || $('#assignBOMId').val();
+                if (!orderBomId) {
+                    console.error('No BOM id found for order', orderId);
+                    showAssignError('No BOM id available for batch ' + (order.number || order.name || orderId) + '.');
+                    setAssignLoading(false);
+                    return;
+                }
+                var parsedBomId = Number(orderBomId);
+                var bomIdValue = Number.isNaN(parsedBomId) ? orderBomId : parsedBomId;
+                var payload = {
+                    productRecipe: { id: bomIdValue },
+                    orderStatus: READY_STATUS_AFTER_BOM
+                };
+                JSUTIL.callAJAXPut(`/api/production-orders/${orderId}`,
+                    JSON.stringify(payload),
+                    function () {
+                        copyBOMToOrderMaterial(bomIdValue, orderId, orderQty, function () {
+                            processNext();
+                        });
+                    },
+                    function (err) {
+                        console.error('Failed to attach BOM to batch', orderId, err);
+                        showAssignError('Failed to attach BOM for batch ' + (order.number || order.name || orderId) + '. Please try again.');
+                        setAssignLoading(false);
+                    }
+                );
+            }
+
+            processNext();
+        }
+
+        // function copyBOMToOrderMaterial(bomId, orderId, orderQuantity, onComplete) {
+        //     // avoid duplicate material creation if already present
+        //     fetchExistingOrderMaterials(orderId, function (existingItems) {
+        //         if (existingItems.length) {
+        //             console.warn('Materials already exist for order; skipping duplicate copy.');
+        //             if (typeof onComplete === 'function') {
+        //                 onComplete();
+        //             }
+        //             return;
+        //         }
+
+        //         var bomCondition = /^[0-9]+$/.test(String(bomId))
+        //             ? `ProductRecipe.Id = ${bomId}`
+        //             : `ProductRecipe.Id = '${bomId}'`;
+        //         var payload = {
+        //             fields: 'Id;Type;Quantity;Product.Id;Product.Name;Product.Uom;Step.Id;Step.Name',
+        //             conditions: [bomCondition],
+        //             logic: "{0}"
+        //         };
+
+        //         JSUTIL.callAJAXPost('/api/product-recipe-byproducts/list', JSON.stringify(payload), function (items) {
+        //             if (!items || !items.length) {
+        //                 console.warn("No materials found in BOM");
+        //                 if (typeof onComplete === 'function') {
+        //                     onComplete();
+        //                 }
+        //                 return;
+        //             }
+
+        //             var orderMaterials = items.map(function (item, index) {
+        //                 var stepName = (item.step && (item.step.name || item.step.Name))
+        //                     || (item.Step && (item.Step.Name || item.Step.name))
+        //                     || '';
+        //                 return {
+        //                     type: item.type || "raw-material",
+        //                     materialStatus: "Planned",
+        //                     productLot: stepName,
+        //                     plannedQuantity: (Number(item.quantity) * Number(orderQuantity)),
+        //                     actualQuantity: 0,
+        //                     quantityConsumed: 0,
+        //                     quantityToWarehouse: 0,
+        //                     quantityDiscarded: 0,
+        //                     sequence: index + 1,
+        //                     remarks: orderId,
+        //                     product: { id: item.product?.id }
+        //                 };
+        //             });
+
+        //             JSUTIL.callAJAXPost('/data/OrderMaterial/upsert_multiple',
+        //                 JSON.stringify(orderMaterials),
+        //                 function () {
+        //                     if (typeof onComplete === 'function') {
+        //                         onComplete();
+        //                     }
+        //                 },
+        //                 function (err) {
+        //                     console.error('Failed to copy BOM to OrderMaterial', err);
+        //                     if (typeof onComplete === 'function') {
+        //                         onComplete();
+        //                     }
+        //                 }
+        //             );
+        //         });
+        //     });
+        // }
+
+        // function fetchExistingOrderMaterials(orderId, callback) {
+        //     var payload = {
+        //         fields: 'Id',
+        //         conditions: [`Remarks = '${orderId}'`],
+        //         logic: '{0}'
+        //     };
+        //     JSUTIL.callAJAXPost('/data/OrderMaterial/list',
+        //         JSON.stringify(payload),
+        //         function (items) {
+        //             if (typeof callback === 'function') {
+        //                 callback(items || []);
+        //             }
+        //         },
+        //         function () {
+        //             if (typeof callback === 'function') {
+        //                 callback([]);
+        //             }
+        //         }
+        //     );
+        // }
+
+        function copyBOMToOrderMaterial(bomId, orderId, orderQuantity, onComplete) {
+            console.log('[DEBUG] copyBOMToOrderMaterial called with bomId:', bomId, 'orderId:', orderId, 'orderQuantity:', orderQuantity);
+            fetchExistingOrderMaterials(orderId, function (existingItems) {
+                console.log('[DEBUG] fetchExistingOrderMaterials callback - existingItems:', existingItems, 'length:', existingItems.length);
+                if (existingItems.length) {
+                    console.warn('Materials already exist for order; skipping duplicate copy.');
+                    if (typeof onComplete === 'function') {
+                        onComplete();
+                    }
+                    return;
+                }
+
+                console.log('[DEBUG] No existing materials found, proceeding to fetch BOM byproducts...');
+                // NOTE: /api/product-recipe-byproducts/list POST with conditions body returns [] (not supported).
+                // Use the dedicated GET endpoint: /api/product-recipe-byproducts/product-recipe/{id}
+                console.log('[DEBUG] Fetching BOM byproducts via GET for bomId:', bomId);
+
+                JSUTIL.callAJAXGet('/api/product-recipe-byproducts/product-recipe/' + Number(bomId), function (items) {
+                    console.log('[DEBUG] BOM byproducts response - items:', items, 'count:', items ? items.length : 0);
+                    if (!items || !items.length) {
+                        console.warn("No materials found in BOM");
+                        if (typeof onComplete === 'function') {
+                            onComplete();
+                        }
+                        return;
+                    }
+
+                    var orderMaterials = items.map(function (item, index) {
+                        var stepName = (item.step && (item.step.name || item.step.Name))
+                            || (item.Step && (item.Step.Name || item.Step.name))
+                            || '';
+                        return {
+                            type: item.type || "raw-material",
+                            materialStatus: "Planned",
+                            productLot: stepName,
+                            plannedQuantity: (Number(item.quantity) * Number(orderQuantity)),
+                            actualQuantity: 0,
+                            quantityConsumed: 0,
+                            quantityToWarehouse: 0,
+                            quantityDiscarded: 0,
+                            sequence: index + 1,
+                            // remarks: String(orderId),
+                            order: { id: orderId },
+                            product: { id: item.product?.id }
+                        };
+                    });
+
+                    // POST one by one since new API has no bulk endpoint
+                    var queue = orderMaterials.slice();
+                    function postNext() {
+                        if (!queue.length) {
+                            if (typeof onComplete === 'function') {
+                                onComplete();
+                            }
+                            return;
+                        }
+                        var material = queue.shift();
+                        JSUTIL.callAJAXPost('/api/order-materials',
+                            JSON.stringify(material),
+                            function () { postNext(); },
+                            function (err) {
+                                console.error('Failed to create order material', err);
+                                postNext();
+                            }
+                        );
+                    }
+                    postNext();
+                });
+            });
+        }
+        function fetchExistingOrderMaterials(orderId, callback) {
+            JSUTIL.callAJAXGet('/api/order-materials?orderId=' + orderId,
+                function (items) {
+                    if (typeof callback === 'function') {
+                        callback(Array.isArray(items) ? items : []);
+                    }
+                },
+                function () {
+                    if (typeof callback === 'function') {
+                        callback([]);
+                    }
+                }
+            );
+        }
+        function getOrderBomId(order) {
+            if (!order) {
+                return '';
+            }
+            var raw = order.productRecipe?.id
+                ?? order.productRecipe?.Id
+                ?? order.totalCost
+                ?? order.TotalCost
+                ?? '';
+            return raw === undefined || raw === null ? '' : String(raw).trim();
+        }
+
+        function getOrderOwnerName(order) {
+            return order?.orderOwner?.name
+                || order?.owner?.name
+                || order?.Owner?.Name
+                || '';
+        }
+
+        function getPlannedStartTimeValue(order) {
+            if (!order) {
+                return '';
+            }
+            var value = order.plannedStartTime
+                ?? order.PlannedStartTime
+                ?? '';
+            return value === undefined || value === null ? '' : String(value);
+        }
+
+        function getOrderKey(order) {
+            if (!order) {
+                return '';
+            }
+            var rawKey = order.id
+                ?? order.Id
+                ?? order.number
+                ?? order.name
+                ?? '';
+            return rawKey === undefined || rawKey === null ? '' : String(rawKey);
+        }
+
+        function getOrderLabel(order) {
+            if (!order) {
+                return 'selected batch';
+            }
+            return order.number || order.name || order.id || order.Id || 'selected batch';
+        }
+
+        function addSelectedAssignOrderKey(orderKey) {
+            if (!orderKey) {
+                return;
+            }
+            if (selectedAssignOrderKeys.indexOf(orderKey) === -1) {
+                selectedAssignOrderKeys.push(orderKey);
+            }
+        }
+
+        function removeSelectedAssignOrderKey(orderKey) {
+            selectedAssignOrderKeys = selectedAssignOrderKeys.filter(function (key) {
+                return key !== orderKey;
+            });
+        }
+
+        function getSelectedAssignOrders() {
+            if (!currentAssignGroup || !Array.isArray(currentAssignGroup.orders) || !currentAssignGroup.orders.length) {
+                return [];
+            }
+            var hasExplicitSelection = Array.isArray(selectedAssignOrderKeys) && selectedAssignOrderKeys.length > 0;
+            if (!hasExplicitSelection && currentAssignGroup.orders.length === 1) {
+                return [currentAssignGroup.orders[0]];
+            }
+            return currentAssignGroup.orders.filter(function (order) {
+                return selectedAssignOrderKeys.indexOf(getOrderKey(order)) !== -1;
+            });
+        }
+
+        function getBomDisplayLabel(bomId) {
+            if (!bomId) {
+                return '-';
+            }
+            var key = String(bomId);
+            return bomNameById[key] || key;
+        }
+
+        function getBomMeta(bomId) {
+            if (!bomId) {
+                return null;
+            }
+            return bomMetaById[String(bomId)] || null;
+        }
+
+        function getBOMProductUom(item) {
+            return item?.product?.uom
+                || item?.product?.Uom
+                || item?.Product?.Uom
+                || item?.productStage?.product?.uom
+                || item?.productStage?.product?.Uom
+                || item?.ProductStage?.Product?.Uom
+                || '';
+        }
+
+        function getOrderUom(order) {
+            return order?.product?.uom
+                || order?.product?.Uom
+                || order?.productStage?.product?.uom
+                || order?.productStage?.product?.Uom
+                || order?.ProductStage?.Product?.Uom
+                || order?.Product?.Uom
+                || order?.uom
+                || order?.Uom
+                || '';
+        }
+
+        function isEmptyValue(value) {
+            return value === undefined || value === null || value === '';
+        }
+
+        function getNullableNumber() {
+            for (var i = 0; i < arguments.length; i++) {
+                var val = arguments[i];
+                if (val === undefined || val === null || val === '') {
+                    continue;
+                }
+                var num = Number(val);
+                if (!Number.isNaN(num)) {
+                    return num;
+                }
+            }
+            return null;
+        }
+
+        function formatBatchSizeDisplay(batchSize, variation, uom) {
+            if (isEmptyValue(batchSize)) {
+                return '';
+            }
+            var sizeText = batchSize;
+            var variationText = isEmptyValue(variation) ? '' : ('±' + variation);
+            var uomText = uom ? (' ' + uom) : '';
+            return ('' + sizeText + variationText + uomText).trim();
+        }
+
+        function getBatchSizeDisplayForOrder(order, bomIdOverride) {
+            var bomId = bomIdOverride || getOrderBomId(order);
+            var bomMeta = getBomMeta(bomId);
+            var batchSize = bomMeta?.batchSize;
+            var variation = bomMeta?.variation;
+            var uom = bomMeta?.uom || getOrderUom(order);
+            if (!isEmptyValue(batchSize)) {
+                return formatBatchSizeDisplay(batchSize, variation, uom);
+            }
+            var orderBatchSize = getNullableNumber(order?.quantity, order?.Quantity);
+            var orderVariation = getNullableNumber(order?.quantityVariation, order?.QuantityVariation);
+            var orderUom = uom || getOrderUom(order);
+            return formatBatchSizeDisplay(orderBatchSize, orderVariation, orderUom);
+        }
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatDateDDMMYYYY(value) {
+            if (!value) {
+                return '';
+            }
+            var date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return '';
+            }
+            var day = String(date.getDate()).padStart(2, '0');
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var year = date.getFullYear();
+            return day + '/' + month + '/' + year;
+        }
+
+        function renderAssignBatchTable(recordGroup) {
+            var $tbody = $('#assignBatchListBody');
+            if (!$tbody.length) {
+                return;
+            }
+            if (!recordGroup || !Array.isArray(recordGroup.orders) || !recordGroup.orders.length) {
+                $tbody.html('<tr><td colspan="7" class="text-muted text-center">No batches selected.</td></tr>');
+                return;
+            }
+            var shouldAutoSelectSingle = recordGroup.orders.length === 1 && (!selectedAssignOrderKeys || !selectedAssignOrderKeys.length);
+            var rows = recordGroup.orders.map(function (order) {
+                var batchName = order.name || order.number || order.id || '-';
+                var bomId = getOrderBomId(order) || '';
+                var bomLabel = getBomDisplayLabel(bomId);
+                var plantName = order.plant?.name
+                    || order.productRecipe?.plant?.name
+                    || order.productRecipe?.productStage?.plant?.name
+                    || '-';
+                var ownerName = getOrderOwnerName(order) || '-';
+                var qty = getBatchSizeDisplayForOrder(order, bomId) || order.quantity || order.Quantity || '-';
+                var startDate = formatDateDDMMYYYY(getPlannedStartTimeValue(order)) || '-';
+                var orderKey = getOrderKey(order);
+                var isChecked = selectedAssignOrderKeys && selectedAssignOrderKeys.indexOf(orderKey) !== -1;
+                if (shouldAutoSelectSingle) {
+                    selectedAssignOrderKeys = [orderKey];
+                    isChecked = true;
+                }
+                return '<tr>' +
+                    '<td class="text-center" style="border: 1px solid #e7eaec;">' +
+                    '<input type="checkbox" name="assignBatchSelect" value="' + escapeHtml(orderKey) + '" ' + (isChecked ? 'checked' : '') + '>' +
+                    '</td>' +
+                    '<td style="border: 1px solid #e7eaec;">' + escapeHtml(batchName) + '</td>' +
+                    '<td style="border: 1px solid #e7eaec;">' + escapeHtml(bomLabel) + '</td>' +
+                    '<td style="border: 1px solid #e7eaec;">' + escapeHtml(plantName) + '</td>' +
+                    '<td style="border: 1px solid #e7eaec;">' + escapeHtml(ownerName) + '</td>' +
+                    '<td style="border: 1px solid #e7eaec;">' + escapeHtml(startDate) + '</td>' +
+                    '<td style="border: 1px solid #e7eaec;">' + escapeHtml(qty) + '</td>' +
+                    '</tr>';
+            }).join('');
+            $tbody.html(rows);
+        }
+
+        function showAssignError(message) {
+            var $error = $('#assignBOMError');
+            if (!$error.length) {
+                return;
+            }
+            if (message) {
+                $error.text(message).show();
+            } else {
+                $error.text('').hide();
+            }
+        }
+
+        function setAssignLoading(isLoading) {
+            isVerifyingAssign = isLoading;
+            var $btn = $('#confirmAssignBOMBtn');
+            $btn.prop('disabled', isLoading);
+        }
+
+        function verifyAndAssignBOM() {
+            if (isVerifyingAssign) {
+                return;
+            }
+            showAssignError('');
+            if (!currentAssignGroup || !Array.isArray(currentAssignGroup.orders) || !currentAssignGroup.orders.length) {
+                showAssignError('Select a batch first.');
+                return;
+            }
+            var selectedOrders = getSelectedAssignOrders();
+            if (!selectedOrders.length) {
+                showAssignError('Select at least one batch to approve.');
+                return;
+            }
+            var missingBomOrder = selectedOrders.find(function (order) { return !getOrderBomId(order); });
+            if (missingBomOrder) {
+                showAssignError('No BOM id found for ' + getOrderLabel(missingBomOrder) + '.');
+                return;
+            }
+            // if (typeof employeeUsername === 'undefined' || !employeeUsername) {
+            //     showAssignError('Cannot verify user: username not available.');
+            //     return;
+            // }
+
+            var password = ($('#assignBOMPassword').val() || '').trim();
+            if (!password) {
+                showAssignError('Enter your password to continue.');
+                return;
+            }
+            if (!FOX.employeeUsername) {
+                showAssignError('Cannot verify user: username not available.');
+                return;
+            }
+            setAssignLoading(true);
+            var verifyPayload = {
+                username: FOX.employeeUsername,
+                password: password
+            };
+            JSUTIL.callAJAXPost('/api/auth/login',
+                JSON.stringify(verifyPayload),
+                function (response) {
+                    if (!response) {
+                        showAssignError('Invalid password, please try again.');
+                        setAssignLoading(false);
+                        return;
+                    }
+                    attachBOMToBatchGroup(selectedOrders);
+                },
+                function () {
+                    showAssignError('Invalid password, please try again.');
+                    setAssignLoading(false);
+                });
+        }
+
+        // sentToQAPanel.js end
+    </script>
+</div>

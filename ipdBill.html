@@ -1,0 +1,163 @@
+<!-- Edit IPD Bill Section -->
+  <div class="card ipd-bill-card">
+    <div class="card-header flex justify-between items-center no-print">
+      <h3>IPD Bill</h3>
+      <button class="btn btn-outline" onclick="backToBillings()">← Back</button>
+    </div>
+    <div class="card-body">
+      <!-- Patient Details -->
+      <div class="patient-details">
+        <div class="patient-info-grid-bill">
+          <!-- LEFT COLUMN -->
+          <div class="patient-col">
+                <div><strong>Patient Name:</strong> <span id="editBillPatientName"></span></div>
+                <div><strong>Address:</strong> <span id="editBillPatientAddress"></span></div>
+                <div><strong>Age:</strong> <span id="editBillPatientAge"></span></div>
+                <div><strong>Contact:</strong> <span id="editBillPatientPhone"></span></div>
+            </div>
+          <!-- RIGHT COLUMN -->
+           <div class="patient-col">
+                <div><strong>Date:</strong> <span id="editBillDate2"></span></div>
+                <div><strong>Patient ID:</strong> <span id="editBillPatientId"></span></div>
+                <div><strong>Invoice No:</strong> <span id="editBillInvoiceId"></span></div>
+                <div><strong>Weight:</strong> <span id="editBillPatientWeight"></span></div>
+            </div>
+        </div>
+      </div>
+
+      <!-- Charges Table -->
+      <h4 class="text-md font-semibold mb-2 mt-4">Charges</h4>
+      <table class="table charges-table">
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>Description</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="chargesTableBody">
+          <!-- JS will fill rows here -->
+        </tbody>
+      </table>
+
+      <!-- Inventory Table -->
+      <h4 class="text-md font-semibold mb-2 mt-4">Operation Theatre and Medication Charges</h4>
+      <table class="table inventory-table">
+        <thead>
+          <tr>
+            <th>Sr. No.</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Amount</th>
+            <th>Batch</th>
+            <th>Expiry</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryTableBody">
+          <!-- JS will fill rows here -->
+        </tbody>
+      </table>
+
+      <!-- Bill Summary -->
+      <div class="bill-summary mt-4">
+        <table>
+          <tr>
+            <td>Subtotal</td>
+            <td id="billSubtotal">₹0.00</td>
+          </tr>
+          <tr>
+            <td>Discount</td>
+            <td id="billDiscount">0%</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td id="billTotal"><strong>₹0.00</strong></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Payment Options Section -->
+      <div class="mb-6 p-4 bg-white border border-gray-200 rounded-md payment-options">
+        <h4 class="text-md font-semibold mb-4 pb-2 border-b-2 border-blue-400">
+          <i class="ri-bank-card-line"></i> Payment Options
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <label class="block font-medium mb-1">Payment Method</label>
+            <select id="editBillingPaymentMethod" class="w-full border rounded-md p-2" onchange="toggleEditBillingPaymentFields()">
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="upi">UPI</option>
+              <option value="credit">Credit</option>
+              <option value="installment">Installment</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium mb-1">Payment Status</label>
+            <select id="editBillingPaymentStatus" class="w-full border rounded-md p-2" onchange="toggleEditBillingPaidAmount()">
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="partial">Partially Paid</option>
+            </select>
+          </div>
+          <div id="editBillingPaidAmountContainer" class="hidden">
+            <label class="block font-medium mb-1">Paid Amount (₹)</label>
+            <input type="number" id="editBillingPaidAmount" class="w-full border rounded-md p-2" placeholder="Enter paid amount" oninput="calculateEditBillingBalance()" />
+          </div>
+          <div id="editBillingBalanceContainer" class="hidden">
+            <label class="block font-medium mb-1">Balance Amount</label>
+            <input type="text" id="editBillingBalanceAmount" class="w-full border rounded-md p-2 bg-gray-100 text-red-600 font-medium" readonly />
+          </div>
+          <div id="editBillingCreditContainer" class="hidden">
+            <label class="block font-medium mb-1">Credit Due Date</label>
+            <input type="date" id="editBillingCreditDueDate" class="w-full border rounded-md p-2" />
+          </div>
+          <div id="editBillingInstallmentContainer" class="hidden">
+            <label class="block font-medium mb-1">No. of Installments</label>
+            <input type="number" id="editBillingInstallments" class="w-full border rounded-md p-2" placeholder="Enter number of installments" min="2" max="12" oninput="calculateEditInstallmentDetails()" />
+          </div>
+          <div id="editBillingInstallmentAmountContainer" class="hidden">
+            <label class="block font-medium mb-1">Amount per Installment</label>
+            <input type="text" id="editBillingInstallmentAmount" class="w-full border rounded-md p-2 bg-gray-100" readonly />
+          </div>
+          <div id="editBillingDueDateContainer" class="hidden">
+            <label class="block font-medium mb-1">First Due Date</label>
+            <input type="date" id="editBillingFirstDueDate" class="w-full border rounded-md p-2" />
+          </div>
+        </div>
+      </div>
+      <!-- Payment Summary -->
+      <div class="mb-2 mt-2 p-2 bg-blue-50 rounded-md payment-summary-section">
+        <h4 class="text-md font-semibold mb-0">Payment Summary</h4>
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-sm text-gray-600 mb-0">Total Amount</p>
+            <p id="editSummaryTotalAmount" class="text-lg font-bold text-blue-600">₹0.00</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-0">Paid Amount</p>
+            <p id="editSummaryPaidAmount" class="text-lg font-bold text-green-600">₹0.00</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-0">Balance</p>
+            <p id="editSummaryBalanceAmount" class="text-lg font-bold text-red-600">₹0.00</p>
+          </div>
+        </div>
+      </div>
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-2">
+        <button class="btn btn-primary" onclick="saveEditedIPDBill()">
+          <i class="ri-save-line"></i> Save Changes
+        </button>
+        <button class="btn btn-secondary" onclick="window.print()">
+          <i class="ri-printer-line"></i> Print
+        </button>
+        <button class="btn btn-danger" onclick="backToBillings()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/ipdBill.js"></script>
+  <link rel="stylesheet" href="assets/css/ipdbill.css" />

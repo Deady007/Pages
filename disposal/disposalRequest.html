@@ -1,0 +1,893 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #allDispensingPanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allDispensingPanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .selectCompoundBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    /* Tab styling - Bootstrap 5 style matching manufacturers.html */
+    .nav-tabs .nav-link {
+        color: #337ab7;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #286090;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #337ab7;
+        font-weight: 600;
+        border-color: #dee2e6 #dee2e6 #fff;
+    }
+
+    /* ── Form group spacing ── */
+    .qa-white-panel .ibox-content {
+        padding: 15px 20px;
+    }
+
+    .qa-white-panel .form-group {
+        margin-bottom: 15px;
+    }
+
+    .qa-white-panel .form-group label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #888;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    /* ── Dark mode: form-group label ── */
+    [data-bs-theme="dark"] .qa-white-panel .form-group label {
+        color: #aaa;
+    }
+</style>
+<!--allDespensingPanel.html start-->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allDespensingPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Dispensing <small>Outward</small></h5>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <table id="allDispensingPanelTable" class="table table-hover table-bordered dataTables">
+                        <thead>
+                            <th>Number</th>
+                            <th>Material Type</th>
+                            <th>Outward Type</th>
+                            <th>Request Date</th>
+                            <th>Initiator</th>
+                            <th>Status</th>
+                        </thead>
+                        <tbody class="dataTableRecordList" id="allProductCompoundTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--allDespensingPanel.html end-->
+
+
+
+
+    <!--editDespensingPanel.html start-->
+    <div class="row animated fadeInRight aasaanPanel" id="editDespensingPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRequestTitle"></span></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showAllCompoundsOnCancel"><i
+                                data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-default btn-sm" id="printGatepassBtn"><i
+                                data-lucide="printer"></i>Print Gatepass</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="complTestingBtn2"><i
+                                data-lucide="check-check"></i>Complete Disposal</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Document Code</label>
+                                <input type="text" class="form-control editStudyRequestInput" name="sopReference"
+                                    disabled />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Storage Location</label>
+                                <select class="select2 form-control editStudyRequestInput storageLocationDropDown"
+                                    name="storageLocation.id" disabled>
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Material Type</label>
+                                <input type="text" class="form-control editStudyRequestInput" name="materialType"
+                                    disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Outward Type</label>
+                                <select class="select2 form-control editStudyRequestInput" name="wasteCategory"
+                                    disabled>
+                                    <option value="">--none--</option>
+                                    <option value="Material Sale">Material Sale</option>
+                                    <option value="Rejected Return">Rejected Return</option>
+                                    <option value="Inter Unit Transfer">Inter Unit Transfer</option>
+                                    <option value="Returnable">Returnable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select class="select2 form-control editStudyRequestInput departmentDropDown"
+                                    name="department.id" disabled>
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Vendor</label>
+                                <input type="text" placeholder="search.."
+                                    class="typeahead_3 form-control selectSearchInputAutoComplete" disabled />
+                                <input type="hidden" name="vendor.id"
+                                    class="selectSearchInputAutoCompleteId editStudyRequestInput"
+                                    aria-description="search/vendor" disabled />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Initiated By</label>
+                                <input type="text" class="form-control editStudyRequestInput" name="initiator.name"
+                                    disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Executed By</label>
+                                <input type="text" class="form-control editStudyRequestInput" name="executor.name"
+                                    disabled>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Remarks</label>
+                                <textarea class="form-control editStudyRequestInput" name="initiatorNotes" rows="4"
+                                    disabled></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Products Tab -->
+                    <ul class="nav nav-tabs mb-3 mt-4" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#tab-1" role="tab" aria-selected="true">Products</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="tab-1" class="tab-pane fade show active" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered">
+                                    <thead id="allRequestsTableHead"></thead>
+                                    <tbody id="allRequestsTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--editDespensingPanel.html end-->
+
+
+
+
+    <!--gatePassPrintPanel.html start-->
+    <style>
+        .gatepass-preview {
+            padding: 30px;
+            background: #fff;
+        }
+
+        .gatepass-header {
+            text-align: center;
+            border-bottom: 2px solid #436482;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .gatepass-header h2 {
+            margin: 5px 0;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .gatepass-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: #f7f9fc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .gatepass-section {
+            margin-top: 20px;
+        }
+
+        .gatepass-section h4 {
+            text-transform: uppercase;
+            font-size: 14px;
+            border-bottom: 2px solid #436482;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .gatepass-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .gatepass-table th,
+        .gatepass-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .gatepass-footer {
+            margin-top: 25px;
+            font-size: 11px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+            }
+
+            .ibox-title {
+                display: none;
+            }
+
+            .gatepass-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+    <div class="row animated fadeInRight" id="gatePassPrintPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Non-Returnable Gatepass</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm closeSampleChecklist"><i
+                                data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-default btn-sm printChecklistBtn"><i
+                                data-lucide="printer"></i>Print</button>
+                        <button type="button" class="btn btn-default btn-sm exportChecklistPdfBtn"><i
+                                data-lucide="download"></i>Export PDF</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="gatepassDocument" class="gatepass-preview">
+                        <!-- HEADER -->
+                        <div class="gatepass-header">
+                            <h2>NON-RETURNABLE GATEPASS CUM CHALLAN</h2>
+                            <div><strong id="companyName"></strong></div>
+                            <div>Subject to Ankleshwar Jurisdiction</div>
+                        </div>
+                        <!-- META -->
+                        <div style="display:flex; gap:40px; font-size:12px; margin-bottom:15px;">
+                            <div style="flex:1; line-height:1.5;">
+                                <strong>To,</strong><br>
+                                <span id="cust1"></span><br>
+                                <span id="cust2"></span><br>
+                                <span id="cust3"></span><br>
+                                <span id="cust4"></span><br>
+                                <span id="cust5"></span>
+                            </div>
+                            <div style="flex:1;">
+                                <div><strong>Store Name :</strong> <span id="storeName"></span></div>
+                                <div><strong>Doc No :</strong> <span id="docNo"></span></div>
+                                <div><strong>Doc Date :</strong> <span id="docDate"></span></div>
+                                <div><strong>Category :</strong> <span id="category"></span></div>
+                                <div><strong>Department :</strong> <span id="department"></span></div>
+                            </div>
+                        </div>
+                        <!-- REFERENCE -->
+                        <div class="gatepass-section">
+                            <strong>Reference:</strong>
+                            <span id="referenceText"></span>
+                        </div>
+                        <!-- ITEMS -->
+                        <div class="gatepass-section">
+                            <h4>Material Details</h4>
+                            <table class="gatepass-table">
+                                <thead>
+                                    <tr class="center">
+                                        <th>Sr</th>
+                                        <th>Item Name</th>
+                                        <th>UOM</th>
+                                        <th>Qty</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemTableBody"></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="right"><strong>Total</strong></td>
+                                        <td class="right"><strong id="totalQty"></strong></td>
+                                        <td class="right"><strong id="totalValue"></strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <div style="margin-top:40px; font-size:11px;">
+                            <div
+                                style="display:flex; justify-content:space-between; text-align:center; margin-bottom:20px;">
+                                <div style="width:18%; display:flex; flex-direction:column; justify-content:flex-end;">
+                                    <div>Prepared By</div>
+                                    <div id="preparedByName" style="font-weight:bold; min-height:14px;"></div>
+                                    <div style="border-top:1px solid #000; margin-top:30px;"></div>
+                                </div>
+                                <div style="width:18%; display:flex; flex-direction:column; justify-content:flex-end;">
+                                    <div>Checked By</div>
+                                    <div id="authorizedByName" style="font-weight:bold; min-height:14px;"></div>
+                                    <div style="border-top:1px solid #000; margin-top:30px;"></div>
+                                </div>
+                                <div style="width:18%; display:flex; flex-direction:column; justify-content:flex-end;">
+                                    <div>L.R. No / Date</div>
+                                    <div style="min-height:44px;"></div>
+                                    <div style="border-top:1px solid #000;"></div>
+                                </div>
+                                <div style="width:22%; display:flex; flex-direction:column; justify-content:flex-end;">
+                                    <div>Name Of Transporter<br>& Mode Of Dispatch</div>
+                                    <div style="min-height:44px;"></div>
+                                    <div style="border-top:1px solid #000;"></div>
+                                </div>
+                                <div style="width:18%; display:flex; flex-direction:column; justify-content:flex-end;">
+                                    <div>Authorized Signature</div>
+                                    <div style="min-height:44px;"></div>
+                                    <div style="border-top:1px solid #000;"></div>
+                                </div>
+                            </div>
+                            <div style="border-top:1px solid #ccc; padding-top:10px; text-align:center;">
+                                <div><strong>For <span id="forCompanyName"></span></strong></div>
+                                <div>Printed On: <span id="printedOn"></span></div>
+                                <div>"Supply Chain Management Software Generated Report"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--gatePassPrintPanel.html end-->
+
+
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // ================================================================
+    // State
+    // ================================================================
+    var recordList = [];
+    var equipmentList = '';
+    var currentRequestId = '';
+    var currentProcessStatus = '';
+    var gatepassData = {};
+
+    // Store Choices.js instances keyed by element name (or a unique key)
+    var choicesInstances = {};
+
+    // ================================================================
+    // Common helpers (matching departments.html pattern)
+    // ================================================================
+    function showError(message) {
+        if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') {
+            JSUTIL.buildErrorModal(message);
+        } else {
+            alert(message);
+        }
+    }
+
+    function getCsrfHeaders() {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = {};
+        if (token && header) {
+            headers[header] = token;
+        }
+        return headers;
+    }
+
+    function requestJson(url, method, payload) {
+        var options = {
+            method: method || 'GET',
+            headers: Object.assign({}, getCsrfHeaders())
+        };
+        if (payload !== undefined) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(payload);
+        }
+        return fetch(url, options).then(async function (response) {
+            if (!response.ok) {
+                var text = await response.text();
+                throw new Error(text || ('HTTP ' + response.status));
+            }
+            var textBody = await response.text();
+            if (!textBody) return null;
+            try {
+                return JSON.parse(textBody);
+            } catch (e) {
+                return textBody;
+            }
+        });
+    }
+
+    // ================================================================
+    // Choices.js - Initialize & Destroy helpers
+    // ================================================================
+
+    /**
+     * Initialize Choices.js on all select.select2 elements within a container.
+     * Skips elements that are already initialized.
+     */
+    function initChoices(container) {
+        var scope = container || document;
+        scope.querySelectorAll('select.select2:not(.choices__input)').forEach(function (el) {
+            if (el.closest('.choices')) return;
+
+            var instance = new Choices(el, {
+                searchEnabled: true,
+                removeItemButton: true,
+                shouldSort: false,
+                placeholderValue: '--none--',
+                allowHTML: true
+            });
+
+            var key = buildChoicesKey(el);
+            if (key) {
+                choicesInstances[key] = instance;
+            }
+        });
+    }
+
+    /**
+     * Build a unique key for a Choices instance from element attributes.
+     */
+    function buildChoicesKey(el) {
+        var name = el.getAttribute('name');
+        if (!name) return null;
+        var index = el.getAttribute('data-index');
+        return index !== null ? name + '_' + index : name;
+    }
+
+    /**
+     * Get a stored Choices instance by select name and optional data-index.
+     */
+    function getChoicesInstance(name, index) {
+        var key = index !== undefined && index !== null ? name + '_' + index : name;
+        return choicesInstances[key] || null;
+    }
+
+    /**
+     * Destroy all Choices.js instances within a container (for cleanup before re-render).
+     */
+    function destroyChoicesInContainer(container) {
+        var scope = container || document;
+        scope.querySelectorAll('select.select2').forEach(function (el) {
+            var key = buildChoicesKey(el);
+            if (key && choicesInstances[key]) {
+                choicesInstances[key].destroy();
+                delete choicesInstances[key];
+            }
+        });
+    }
+
+    /**
+     * Set value on a Choices instance by name (and optional index).
+     * Falls back silently if instance not found.
+     */
+    function setChoicesValue(name, value, index) {
+        var instance = getChoicesInstance(name, index);
+        if (instance) {
+            instance.setChoiceByValue(value || '');
+        }
+    }
+
+
+    // ================================================================
+    // View management
+    // ================================================================
+    function setView(viewName) {
+        $('#allDespensingPanel').hide();
+        $('#editDespensingPanel').hide();
+        $('#gatePassPrintPanel').hide();
+        if (viewName === 'all') $('#allDespensingPanel').show();
+        if (viewName === 'edit') $('#editDespensingPanel').show();
+        if (viewName === 'gatepass') $('#gatePassPrintPanel').show();
+        lucide.createIcons();
+    }
+
+    // ================================================================
+    // Render dispensing table
+    // ================================================================
+    function renderDispensingTable() {
+        if ($.fn && $.fn.DataTable) {
+            if ($.fn.DataTable.isDataTable('#allDispensingPanelTable')) {
+                var dtInstance = $('#allDispensingPanelTable').DataTable();
+                dtInstance.clear();
+                dtInstance.destroy();
+            }
+        }
+
+        var innerHtml = '';
+        $.each(recordList, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td><a href="javascript:void(0);" class="selectCompoundBtn" data-id="' + val.id + '">' + (val.number || '') + '</a></td>' +
+                '<td>' + (val.materialType || '') + '</td>' +
+                '<td>' + (val.wasteCategory || '') + '</td>' +
+                '<td>' + JSUTIL.getDate(val.requestDate) + '</td>' +
+                '<td>' + getEmployeeFullName(val.initiator) + '</td><td>';
+            if (val.processStatus === 'Issued') {
+                innerHtml += '<span class="label label-info">' + val.processStatus + '</span>';
+            } else if (val.processStatus === 'New') {
+                innerHtml += '<span class="label label">' + val.processStatus + '</span>';
+            } else {
+                innerHtml += '<span class="label label-success">' + val.processStatus + '</span>';
+            }
+            innerHtml += '</td></tr>';
+        });
+        $('#allProductCompoundTable').html(innerHtml);
+
+        if ($.fn && $.fn.DataTable) {
+            $('#allDispensingPanelTable').DataTable({ order: [], pageLength: 25 });
+        }
+    }
+
+    // ================================================================
+    // Load dispensing records with Submitted status from API
+    // ================================================================
+    async function loadDispensingRecords() {
+        try {
+            var apiResponse = await requestJson('/api/disposal-requests/by-status?status=Submitted', 'GET');
+            recordList = Array.isArray(apiResponse) ? apiResponse : [];
+            // Sort by ID in descending order (newest first)
+            recordList.sort(function(a, b) {
+                return b.id - a.id;
+            });
+        } catch (apiErr) {
+            console.error(apiErr);
+            recordList = [];
+        }
+        renderDispensingTable();
+        setView('all');
+    }
+
+    // ================================================================
+    // Load dropdown data, then init Choices.js
+    // ================================================================
+    var ajaxDoneCount = 0;
+    var ajaxTotal = 2;
+
+    function onAllDropdownsReady() {
+        ajaxDoneCount++;
+        if (ajaxDoneCount >= ajaxTotal) {
+            initChoices(document.getElementById('editDespensingPanel'));
+        }
+    }
+
+    function loadDropdowns() {
+        JSUTIL.callAJAXGet(
+            JSUTIL.getUrl('/api/storage-locations'),
+            function (objList) {
+                $('.storageLocationDropDown').empty();
+                $('.storageLocationDropDown').append('<option value="">--none--</option>');
+                $.each(objList, function (i, val) {
+                    $('.storageLocationDropDown').append('<option value="' + val.id + '">' + val.name + '</option>');
+                });
+                onAllDropdownsReady();
+            }
+        );
+
+        JSUTIL.callAJAXPost(
+            JSUTIL.getUrl('/api/departments'),
+            JSON.stringify({ 'fields': 'Name' }),
+            function (objList) {
+                $('.departmentDropDown').empty();
+                $('.departmentDropDown').append('<option value="">--none--</option>');
+                $.each(objList, function (i, val) {
+                    $('.departmentDropDown').append('<option value="' + val.id + '">' + val.name + '</option>');
+                });
+                onAllDropdownsReady();
+            }
+        );
+    }
+
+    // ================================================================
+    // allDespensingPanel.js
+    // ================================================================
+    $(document).ready(function () {
+        loadDropdowns();
+        loadDispensingRecords();
+
+        $('#allProductCompoundTable').on('click', '.selectCompoundBtn', function () {
+            var currentId = String($(this).data('id') || $(this).attr('name'));
+            currentRequestId = currentId;
+
+            var match = recordList.find(function (item) { return String(item.id) === currentId; });
+            if (!match) return;
+
+            currentProcessStatus = match.processStatus;
+            $('#editRequestTitle').text(match.number);
+            $('.editStudyRequestInput[name="initiatorNotes"]').val(match.initiatorNotes);
+            $('.editStudyRequestInput[name="sopReference"]').val(match.sopReference);
+            $('.editStudyRequestInput[name="materialType"]').val(match.materialType);
+            // $('.editStudyRequestInput[name="initiator.name"]').val(match.initiator ? match.initiator.name : '');
+            // $('.editStudyRequestInput[name="executor.name"]').val(match.executor ? match.executor.name : '');
+            $('.editStudyRequestInput[name="initiator.name"]').val(getEmployeeFullName(match.initiator));
+            $('.editStudyRequestInput[name="executor.name"]').val(getEmployeeFullName(match.executor));
+
+            if (match.vendor && match.vendor.id) {
+                $('.editStudyRequestInput[name="vendor.id"]').val(match.vendor.id);
+                $('.editStudyRequestInput[name="vendor.id"]').parent().find(".selectSearchInputAutoComplete").val(match.vendor.name);
+            } else {
+                $('.editStudyRequestInput[name="vendor.id"]').val('');
+                $('.editStudyRequestInput[name="vendor.id"]').parent().find(".selectSearchInputAutoComplete").val('');
+            }
+
+            // Set Choices.js dropdowns
+            setChoicesValue('wasteCategory', match.wasteCategory || '');
+            setChoicesValue('storageLocation.id', (match.storageLocation && match.storageLocation.id) ? String(match.storageLocation.id) : '');
+            setChoicesValue('department.id', (match.department && match.department.id) ? String(match.department.id) : '');
+
+            // Load request items via REST API
+            JSUTIL.callAJAXGet('/api/disposal-request-items?requestId=' + currentRequestId, callbackAfterGetRequestItems);
+
+            // Prepare gatepass data
+            gatepassData = {
+                companyName: "IPCA LABORATORIES LIMITED",
+                customerAddress: [
+                    match.vendor ? match.vendor.name : '',
+                    match.vendor ? match.vendor.billingStreet : '',
+                    match.vendor ? match.vendor.billingStreet2 : '',
+                    match.vendor ? (match.vendor.billingCity + ' - ' + match.vendor.billingPostalCode) : ''
+                ],
+                storeName: (match.storageLocation && match.storageLocation.name) || '',
+                docNo: match.sopReference,
+                docDate: new Date().toLocaleDateString('en-GB'),
+                category: match.wasteCategory,
+                department: (match.department && match.department.name) || '',
+                reference: match.initiatorNotes,
+                vehicleNo: "",
+                dispatchMode: "",
+                // preparedBy: match.initiator ? match.initiator.name : '',
+                // authorizedBy: match.executor ? match.executor.name : '',
+                preparedBy: getEmployeeFullName(match.initiator),
+                authorizedBy: getEmployeeFullName(match.executor),
+                items: []
+            };
+
+            setView('edit');
+        });
+    });
+
+    function callbackAfterGetRequestItems(objList) {
+        var innerHtml = '';
+        var headerHtml = '<tr><th>Product</th><th>Stock Type</th><th>Quantity</th></tr>';
+        $('#allRequestsTableHead').empty().append(headerHtml);
+        $('#allRequestsTable').empty();
+        $.each(objList, function (i, val) {
+            innerHtml += '<tr class="productRequestItem" name="' + val.id + '">' +
+                '<td>' + val.product.number + ' - ' + val.product.name + '</td>' +
+                '<td>' + val.stockType + '</td>' +
+                '<td>' + val.quantity + ' ' + val.uom + '</td>' +
+                '</tr>';
+        });
+        $('#allRequestsTable').append(innerHtml);
+
+        // Populate gatepass items
+        gatepassData.items = [];
+        $.each(objList, function (i, val) {
+            gatepassData.items.push({
+                name: val.product.name,
+                uom: val.uom,
+                qty: Number(val.quantity),
+                value: 0
+            });
+        });
+    }
+
+
+    // ================================================================
+    // editDespensingPanel.js
+    // ================================================================
+    $(document).ready(function () {
+        $('.showAllCompoundsOnCancel').on('click', function () {
+            setView('all');
+        });
+
+        $('#complTestingBtn2').on('click', function () {
+            var jsobj = {
+                'processStatus': 'Issued',
+                'executor': { 'id': FOX.employeeId }
+            };
+            requestJson('/api/disposal-requests/' + currentRequestId, 'PUT', jsobj)
+                .then(function (response) {
+                    console.log(response);
+                    loadDispensingRecords();
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    showError('Unable to complete disposal.');
+                });
+        });
+    });
+
+
+    // ================================================================
+    // gatePassPrintPanel.js
+    // ================================================================
+    $(document).ready(function () {
+        $('#printGatepassBtn').on('click', function () {
+            setView('gatepass');
+            loadGatepass(gatepassData);
+        });
+
+        $('.closeSampleChecklist').on('click', function () {
+            setView('edit');
+        });
+
+        $('.printChecklistBtn').on('click', function () {
+            printElement('gatepassDocument');
+        });
+
+        $('.exportChecklistPdfBtn').on('click', function () {
+            exportElementToPdf('gatepassDocument', 'GatePassDocument.pdf');
+        });
+    });
+
+    function loadGatepass(data) {
+        $('#companyName').text(data.companyName);
+        $.each(data.customerAddress, function (i, line) {
+            $('#cust' + (i + 1)).text(line);
+        });
+        $('#storeName').text(data.storeName);
+        $('#docNo').text(data.docNo);
+        $('#docDate').text(data.docDate);
+        $('#category').text(data.category);
+        $('#department').text(data.department);
+        $('#referenceText').text(data.reference);
+        $('#vehicleNo').text(data.vehicleNo);
+        $('#dispatchMode').text(data.dispatchMode);
+
+        var rows = '';
+        var totalQty = 0;
+        var totalValue = 0;
+        $.each(data.items, function (index, item) {
+            totalQty += parseFloat(item.qty) || 0;
+            totalValue += parseFloat(item.value) || 0;
+            rows += '<tr>' +
+                '<td class="center">' + (index + 1) + '</td>' +
+                '<td>' + item.name + '</td>' +
+                '<td class="center">' + item.uom + '</td>' +
+                '<td class="right">' + Number(item.qty).toFixed(3) + '</td>' +
+                '<td class="right">' + Number(item.value).toFixed(2) + '</td>' +
+                '</tr>';
+        });
+        $('#itemTableBody').html(rows);
+        $('#totalQty').text(totalQty.toFixed(3));
+        $('#totalValue').text(totalValue.toFixed(2));
+        $('#preparedByName').text(data.preparedBy);
+        $('#authorizedByName').text(data.authorizedBy);
+        $('#forCompanyName').text(data.companyName);
+        $('#printedOn').text(new Date().toLocaleString());
+    }
+
+    function printElement(elementId) {
+        var element = document.getElementById(elementId);
+        if (!element) {
+            showError('No printable content found');
+            return;
+        }
+
+        var printWindow = window.open('', '', 'height=800,width=800');
+        printWindow.document.write('<html><head><title>Print</title>');
+        printWindow.document.write('<style>');
+        printWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; }');
+        printWindow.document.write('table { width: 100%; border-collapse: collapse; }');
+        printWindow.document.write('td, th { border: 1px solid #ddd; padding: 8px; font-size: 12px; }');
+        printWindow.document.write('h2 { text-transform: uppercase; letter-spacing: 1px; }');
+        printWindow.document.write('.checklist-section { page-break-inside: avoid; }');
+        printWindow.document.write('</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(element.outerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+
+        setTimeout(function () {
+            printWindow.print();
+            printWindow.close();
+        }, 300);
+    }
+    function getEmployeeFullName(emp) {
+        if (!emp) return '';
+        if (emp.name) return emp.name;
+        return ((emp.firstName || '') + ' ' + (emp.lastName || '')).trim() || ('ID: ' + emp.id);
+    }
+    function exportElementToPdf(elementId, filename) {
+        var element = document.getElementById(elementId);
+        if (!element) {
+            showError('No content found to export');
+            return;
+        }
+        if (typeof html2pdf === 'undefined') {
+            showError('html2pdf.js not loaded');
+            return;
+        }
+        var opt = {
+            margin: 10,
+            filename: filename || 'document.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>

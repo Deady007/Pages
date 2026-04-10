@@ -1,0 +1,450 @@
+<!-- consultations-view.html -->
+<div class="page-content" id="view-consultation-page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-header flex justify-between items-center">
+      <button class="btn btn-outline" onclick="backToConsultation()">
+        ← Back
+      </button>
+        <button class="btn btn-primary" onclick="goToAdmitPatient(getCurrentPatientId())">Admit Patient</button>
+    </div>
+
+    <div class="card-body">
+      <!-- Patient Information -->
+      <div class="mb-6">
+        <h4 class="text-md font-semibold mb-4 pb-2 border-b-2 border-blue-500" style="color: #374151;">
+          Patient Information
+        </h4>
+        <div class="grid grid-cols-4 gap-4">
+          <!-- Name Card -->
+          <div style="background: #f7fafe; border-left: 3px solid var(--primary); padding: 1rem; border-radius: 8px;">
+            <p class="text-md text-gray-500 mb-1">Name</p>
+            <p class="font-semibold text-gray-800 mb-0" id="consultationPatientName">John Doe</p>
+          </div>
+          
+          <!-- Contact Card -->
+          <div style="background: #f7fafe; border-left: 3px solid var(--primary); padding: 1rem; border-radius: 8px;">
+            <p class="text-md text-gray-500 mb-1">Contact</p>
+            <p class="font-semibold text-gray-800 mb-0" id="consultationPatientContact">+91 98765 43210</p>
+          </div>
+          
+          <!-- Age Card -->
+          <div style="background: #f7fafe; border-left: 3px solid var(--primary); padding: 1rem; border-radius: 8px;">
+            <p class="text-md text-gray-500 mb-1">Age</p>
+            <p class="font-semibold text-gray-800 mb-0" id="consultationPatientAge">45 years</p>
+          </div>
+          
+          <!-- Weight Card -->
+          <div style="background: #f7fafe; border-left: 3px solid var(--primary); padding: 1rem; border-radius: 8px;">
+            <p class="text-md text-gray-500 mb-1">Weight</p>
+            <p class="font-semibold text-gray-800 mb-0" id="consultationPatientWeight">75 kg</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medical History -->
+      <div class="mb-6">
+        <h4
+          class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500 flex items-center justify-between"
+          style="color: #374151;"
+        >
+          <span>Medical History</span>
+          <button
+            id="toggleHistoryBtn"
+            class="btn-icon"
+            style="background: var(--primary); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;"
+            onclick="openAddHistory()"
+            aria-label="Show / hide history"
+          >
+            <i class="ri-arrow-down-s-line" id="toggleHistoryIcon"></i>
+          </button>
+        </h4>
+        <div
+          id="patientHistoryContainer"
+          class="bg-white p-3 rounded-md text-sm"
+          style="display: none; color: #6b7280;"
+        >
+          <p>Diabetes Type 2 (2018), Hypertension (2020), Asthma (Childhood)</p>
+        </div>
+      </div>
+
+      <!-- Observation -->
+      <div class="mb-6">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500 flex items-center justify-between" style="color: #374151;">
+          <span>Observation</span>
+          <!-- <button
+            id="toggleObservationBtn"
+            class="btn-icon"
+            style="background: var(--primary); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;"
+            onclick="toggleSection('Observation')"
+            aria-label="Show / hide observation"
+          > -->
+            <!-- <i class="ri-arrow-down-s-line" id="toggleObservationIcon"></i> -->
+          <!-- </button> -->
+        </h4>
+        <div
+          id="observationContainer"
+          class="bg-white p-3 rounded-md text-sm"
+        >
+          <div id="patientQueueObservations" class="quill-editor editor-observation" data-placeholder="Enter observations..." style="background: white;"></div>
+        </div>
+      </div>
+
+      <!-- Advice -->
+      <div class="mb-6">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500 flex items-center justify-between" style="color: #374151;">
+          <span>Advice</span>
+          <!-- <button
+            id="toggleAdviceBtn"
+            class="btn-icon"
+            style="background: var(--primary); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;"
+            onclick="toggleSection('Advice')"
+            aria-label="Show / hide advice"
+          > -->
+            <!-- <i class="ri-arrow-down-s-line" id="toggleAdviceIcon"></i> -->
+          </button>
+        </h4>
+        <div
+          id="adviceContainer"
+          class="bg-white p-3 rounded-md text-sm">
+          <div id="patientQueueAdvice" class="quill-editor editor-advice" data-placeholder="Enter advice..." style="background: white;"></div>
+        </div>
+      </div>
+
+
+      <!-- Upload File -->
+      <div class="mb-6">
+      <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500" style="color: #374151;">
+        Upload Test Report
+      </h4>
+      
+      <!-- File Upload Section -->
+      <div class="flex gap-3 items-end">
+       <div class="flex-2">
+      <!-- <label class="block mb-2 font-medium text-sm text-gray-700">Select File</label> -->
+      <input
+        type="file"
+        id="testReportFile"
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        class="hidden"
+        multiple
+        onchange="updateSelectedFiles(this)"
+      />
+      <label for="testReportFile" class="inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer transition hover:bg-blue-700">
+        Choose File
+      </label>
+      <span id="fileNameDisplay" class="ml-2 text-gray-600 text-sm">No file chosen</span>
+    </div>
+        
+        <button class="btn btn-primary" onclick="uploadTestReport()" style="padding: 0.5rem 1.25rem; border-radius: 6px;">
+          <i class="ri-upload-2-line"></i> Upload
+        </button>
+      </div>
+      
+      <!-- Uploaded Files List -->
+      <div id="uploadedReportsList" class="mt-3 bg-white p-3 rounded-md border border-gray-200 hidden">
+        <p class="text-sm font-semibold mb-2">Uploaded Reports:</p>
+        <div id="reportFilesContainer"></div>
+      </div>
+    </div>
+    
+      <!-- Procedures Section -->
+      <div class="mb-6">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500" style="color: #374151;">
+          Procedures
+        </h4>
+
+        <!-- Input Row -->
+        <div class="flex gap-3 items-end mb-3">
+          <div class="flex-2">
+            <label class="block mb-2 font-medium text-sm text-gray-700">Select Procedure</label>
+            <select
+              id="procedureSelect"
+              class="w-full p-2 border border-gray-300 rounded-md text-sm"
+              onchange="updateProcedurePrice()"
+              style="background: white;"
+            >
+              <option value="">-- Select Procedure --</option>
+            </select>
+          </div>
+
+          <div class="flex-1">
+            <label class="block mb-2 font-medium text-sm text-gray-700">Price</label>
+            <input
+              type="number"
+              id="procedurePrice"
+              class="w-full p-2 border border-gray-300 rounded-md text-sm"
+              placeholder="0.00"
+              style="background: white;"
+            />
+          </div>
+
+          <button class="btn btn-primary" onclick="addProcedure()" style="padding: 0.5rem 1.25rem; border-radius: 6px;">
+            <i class="ri-add-line"></i> Add
+          </button>
+        </div>
+
+        <!-- Procedure List -->
+        <div id="procedureList" class="bg-white p-3 rounded-md border border-gray-200">
+          <div class="flex justify-between items-center">
+            <div>
+              <strong class="text-gray-800">Blood Test</strong>
+              <span class="text-gray-600 ml-3">₹500.00</span>
+            </div>
+            <button class="action-btn-danger" style="background: #fee2e2; color: #ef4444; border: none; padding: 0.375rem 0.5rem; border-radius: 4px; cursor: pointer;">
+              <i class="ri-close-line"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medicines Section -->
+      <div class="mb-6">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500" style="color: #374151;">
+          Add Medicines
+        </h4>
+
+        <div class="flex flex-col gap-4">
+          <div class="flex gap-3 items-end">
+            <!-- Medicine Search -->
+            <div class="relative flex-2">
+              <label class="block mb-2 font-medium text-sm text-gray-700">Search Medicine</label>
+              <input
+                type="text"
+                id="medicineSearchConsultants"
+                placeholder="Search medicines..."
+                class="w-full p-2 border border-gray-300 rounded-md text-sm"
+                style="background: white;"
+                oninput="searchMedicinesConsultants()"
+                autocomplete="on"
+              />
+              <ul
+                id="medicineDropdown"
+                class="absolute z-50 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto hidden shadow-lg"
+              ></ul>
+            </div>
+
+            <!-- Days -->
+            <div class="flex-1">
+              <label class="block mb-2 font-medium text-sm text-gray-700">Days</label>
+              <input
+                id="medicineDays"
+                type="number"
+                placeholder="Days"
+                class="w-full p-2 border border-gray-300 rounded-md text-sm"
+                style="background: white;"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-3 text-sm">
+            <!-- Morning -->
+          <div class="flex flex-col bg-white p-3 rounded-md border border-gray-200">
+            <label class="font-medium text-gray-700 mb-1">Morning</label>
+              <input
+                  type="text"
+                  id="morningDosage"
+                  class="border border-gray-300 p-2 rounded w-full text-xs"
+                  placeholder="Enter instructions"
+                  style="background: white;"
+                />
+            </div>
+
+            <!-- Lunch -->
+            <div class="flex flex-col bg-white p-3 rounded-md border border-gray-200">
+              <label class="font-medium text-gray-700 mb-1">Lunch</label>
+              <input
+                id="lunchDosage"
+                class="border border-gray-300 p-2 rounded w-full text-xs"
+                placeholder="Enter instructions"
+                style="background: white;"
+                rows="1"
+              ></input>
+            </div>
+
+            <!-- Dinner -->
+            <div class="flex flex-col bg-white p-3 rounded-md border border-gray-200">
+              <label class="font-medium text-gray-700 mb-1">Dinner</label>
+              <input
+                id="dinnerDosage"
+                class="border border-gray-300 p-2 rounded w-full text-xs"
+                placeholder="Enter instructions"
+                style="background: white;"
+                rows="1"
+              ></input>
+            </div>
+
+            <!-- SOS -->
+            <div class="flex flex-col bg-white p-3 rounded-md border border-gray-200">
+              <label class="font-medium text-gray-700 mb-1">SOS</label>
+              <input
+                id="sosDosage"
+                class="border border-gray-300 p-2 rounded w-full text-xs"
+                placeholder="Enter instructions"
+                style="background: white;"
+                rows="1"
+              ></input>
+            </div>
+          </div>
+          <!-- Timing + Dosage -->
+          <!-- <div class="grid grid-cols-2 gap-3 text-sm"> -->
+            <!-- Morning -->
+            <!-- <div class="flex items-start gap-2 bg-white p-3 rounded-md border border-gray-200">
+              <input
+                type="checkbox"
+                id="medMorning"
+                onchange="toggleDosageInput('morning')"
+                style="margin-top: 2px;"
+              />
+              <div class="flex-1">
+                <label class="font-medium text-gray-700">Morning</label>
+                <input
+                  type="text"
+                  id="morningDosage"
+                  class="border border-gray-300 p-2 rounded w-full mt-1 text-xs hidden"
+                  placeholder="e.g., 1 tablet after food"
+                  style="background: white;"
+                />
+              </div>
+            </div> -->
+
+            <!-- Lunch -->
+            <!-- <div class="flex items-start gap-2 bg-white p-3 rounded-md border border-gray-200">
+              <input
+                type="checkbox"
+                id="medLunch"
+                onchange="toggleDosageInput('lunch')"
+                style="margin-top: 2px;"
+              />
+              <div class="flex-1">
+                <label class="font-medium text-gray-700">Lunch</label>
+                <input
+                  type="text"
+                  id="lunchDosage"
+                  class="border border-gray-300 p-2 rounded w-full mt-1 text-xs hidden"
+                  placeholder="e.g., 1 tablet after food"
+                  style="background: white;"
+                />
+              </div>
+            </div> -->
+
+            <!-- Dinner -->
+            <!-- <div class="flex items-start gap-2 bg-white p-3 rounded-md border border-gray-200">
+              <input
+                type="checkbox"
+                id="medDinner"
+                onchange="toggleDosageInput('dinner')"
+                style="margin-top: 2px;"
+              />
+              <div class="flex-1">
+                <label class="font-medium text-gray-700">Dinner</label>
+                <input
+                  type="text"
+                  id="dinnerDosage"
+                  class="border border-gray-300 p-2 rounded w-full mt-1 text-xs hidden"
+                  placeholder="e.g., 1 tablet after food"
+                  style="background: white;"
+                />
+              </div>
+            </div> -->
+
+            <!-- SOS -->
+            <!-- <div class="flex items-start gap-2 bg-white p-3 rounded-md border border-gray-200">
+              <input
+                type="checkbox"
+                id="medSOS"
+                onchange="toggleDosageInput('sos')"
+                style="margin-top: 2px;"
+              />
+              <div class="flex-1">
+                <label class="font-medium text-gray-700">SOS</label>
+                <input
+                  type="text"
+                  id="sosDosage"
+                  class="border border-gray-300 p-2 rounded w-full mt-1 text-xs hidden"
+                  placeholder="e.g., whenever severe pain"
+                  style="background: white;"
+                />
+              </div>
+            </div>
+          </div> -->
+
+          <button onclick="addMedicine()" class="btn btn-primary" style="padding: 0.5rem 1.25rem; border-radius: 6px; align-self: center; margin-bottom: 0.5rem;">
+            <i class="ri-add-line"></i> Add Medicine
+          </button>
+        </div>
+
+        <!-- Display Added Medicines -->
+        <table class="w-full table-auto mt-6 text-sm border border-gray-300" style="border-radius: 8px; overflow: hidden;">
+          <thead style="background: #f3f4f6;">
+            <tr>
+              <th class="py-3 px-4 border-b border-gray-300 text-left text-gray-700 font-semibold">SL</th>
+              <th class="py-3 px-4 border-b border-gray-300 text-left text-gray-700 font-semibold">Medicine</th>
+              <th class="py-3 px-4 border-b border-gray-300 text-left text-gray-700 font-semibold">Days</th>
+              <th class="py-3 px-4 border-b border-gray-300 text-left text-gray-700 font-semibold">Instructions</th>
+              <th class="py-3 px-4 border-b border-gray-300 text-left text-gray-700 font-semibold">Action</th>
+            </tr>
+          </thead>
+          <tbody id="medicineTableBody" style="background: white;"></tbody>
+        </table>
+      </div>
+
+      <!-- Consultation Charge -->
+      <div class="mb-6 mt-6">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500" style="color: #374151;">
+          Consultation Charge
+        </h4>
+        <input
+          type="number"
+          id="consultationCharge"
+          class="p-2 border border-gray-300 rounded-md w-full md:w-1/2 text-sm focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter consultation charge..."
+          oninput="calculateTotalCharge()"
+          style="background: white;"
+          required
+        />
+      </div>
+
+      <div class="mb-6 mt-6">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500" style="color: #374151;">
+          Discount Remarks
+        </h4>
+        <input
+          type="number"
+          id="discountRemarks"
+          class="p-2 border border-gray-300 rounded-md w-full md:w-1/2 text-sm focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter discount remarks..."
+          oninput="calculateTotalCharge()"
+          style="background: white;"
+          required
+        />
+      </div>
+
+      <!-- Charges Breakdown -->
+      <div id="chargesSection" class="mb-6 p-4 bg-gray-50 rounded-md border border-gray-200 hidden">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-500" style="color: #374151;">
+          Charges:
+        </h4>
+        <div id="proceduresBreakdown" class="text-sm text-gray-700 mb-2"></div>
+        <div id="consultationChargeBreakdown" class="text-sm text-gray-700"></div>
+      </div>
+
+      <!-- Total Charge -->
+    
+      <div class="flex justify-between items-center mb-4">
+        <h4 class="text-lg font-bold text-gray-800">Total Charge:</h4>
+        <span id="totalChargeAmount" class="text-xl text-blue-600 font-bold">₹0.00</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50">
+      <button class="btn btn-outline" onclick="backToConsultation()" style="padding: 0.5rem 1.25rem; border-radius: 6px;">
+        Cancel
+      </button>
+      <button class="btn btn-primary" onclick="saveConsultationData()" style="padding: 0.5rem 1.25rem; border-radius: 6px;">
+        <i class="ri-save-line"></i> Save Consultation
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,803 @@
+<!-- <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css">
+<script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"> -->
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #allBlendingMaterialTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allBlendingMaterialTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .ibox-content .form-group {
+        margin-bottom: 10px;
+    }
+
+    .dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+        position: absolute !important;
+        transform: none !important;
+        will-change: auto;
+        z-index: 1050;
+    }
+
+    .dropdown {
+        position: relative;
+    }
+
+    .form-group .dropdown {
+        width: 100%;
+    }
+
+    .dropdown-menu.show {
+        display: block;
+        top: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        min-width: 100%;
+        transform: translate3d(0px, 0px, 0px) !important;
+    }
+
+    .dropdown-menu .form-control {
+        border: 0.5px solid #ddd;
+    }
+
+    .dropdown-menu .form-control:focus {
+        border-color: #6c757d;
+    }
+
+    .dropdown-items-container {
+        border-top: 1px solid #e9ecef;
+    }
+
+    .bom-lot-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        color: #2563eb;
+        border-left: 3px solid #2563eb;
+        padding-left: 8px;
+    }
+
+    .bom-lot-head h4 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #2563eb;
+    }
+
+    .blending-material-panel {
+        padding: 16px;
+        border-radius: 8px;
+    }
+
+    .blendingMaterialNumber {
+        color: #337ab7 !important;
+        text-decoration: none;
+    }
+
+    .blendingMaterialNumber:hover,
+    .blendingMaterialNumber:focus {
+        color: #286090 !important;
+        text-decoration: underline;
+    }
+</style>
+<!-- allBlendingMaterialPanel.html   Start -->
+<div class="qa-white-panel blending-material-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allBlendingMaterialPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title" >
+                    <h5>Blending Material <small>Warehouse</small></h5>
+                    <div class="ibox-tools" style="display: flex; align-items: center; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary btn-sm newBlendingMaterialBtn"><i
+                                data-lucide="plus"></i> New Blending Material</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered" id="allBlendingMaterialTable">
+                            <thead>
+                                <tr>
+                                    <th>Receipt #</th>
+                                    <th>Type</th>
+                                    <th>Process Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allBlendingMaterialTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- allBlendingMaterialPanel.html   End -->
+
+
+
+
+
+    <!-- editBlendingMaterialPanel.html     Start -->
+
+
+    <div class="row animated fadeInRight" id="EditBlendingMaterial" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Blending Material <small>Edit</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newBlendingMaterialCancelBtn">
+                            <i data-lucide="x"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" id="editBlendingMaterialBtn">
+                            <i data-lucide="pencil"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="saveBlendingMaterialBtn"
+                            style="display: none;">
+                            <i data-lucide="check"></i> Save
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="qcBlendingMaterialBtn">
+                            <i data-lucide="send"></i> Send to QC
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+
+                    <div class="row form-group">
+
+                        <div class="col-sm-6">
+                            <label for="productSelect">Products</label>
+                            <select class="form-control editBlendingMaterial" id="productSelectBtn" disabled>
+                                <option value="">-- Select Product --</option>
+                            </select>
+                            <input type="hidden" name="transportCompany" id="productSelectHidden"
+                                class="editBlendingMaterial">
+                        </div>
+                        <div class="col-sm-6">
+                            <label>Previous Quantity</label>
+                            <input type="text" class="form-control editBlendingMaterial" placeholder="Enter Previous Quantity" name="prevQty">
+                        </div>
+                        <div class="col-sm-12" style="margin-top: 10px;">
+                            <div class="bom-lot-head">
+                                <h4 class="m-t-none m-b-sm">Product Lot</h4>
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <button type="button" class="btn btn-primary btn-sm editBlendingMaterial"
+                                    id="addProductLotRowBtn">
+                                    <i data-lucide="plus"></i> Add
+                                </button>
+                            </div>
+                            <table class="table table-bordered" id="productLotTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product Lot</th>
+                                        <th>Quantity</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-sm-6">
+                            <label>Total Quantity</label>
+                            <input type="text" class="form-control editBlendingMaterial" placeholder="Enter Total Quantity" name="totalQty" disabled>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- editBlendingMaterialPanel.html    End -->
+
+
+
+
+
+
+    <!-- newBlendingMaterialPanel.html     Start -->
+
+    <div class="row animated fadeInRight" id="AddBlendingMaterial" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Blending Material <small>New</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newBlendingMaterialCancelBtn">
+                            <i data-lucide="x"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="createBlendingMaterialBtn">
+                            <i data-lucide="check"></i> Save
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+
+                    <div class="row form-group">
+                        <div class="col-sm-6">
+                            <label for="productSelect">Products</label>
+                            <select class="form-control" id="newProductSelectBtn" disabled>
+                                <option value="">-- select --</option>
+                            </select>
+                            <input type="hidden" id="newProductSelectHidden" value="">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- newBlendingMaterialPanel.html     End -->
+
+
+</div>
+<script>
+    // allBlendingMaterialPanel.js     Start
+    lucide.createIcons();
+    $(document).ready(function () {
+
+        $("#allBlendingMaterialPanel").show();
+        $("#EditBlendingMaterial").hide();
+
+        loadData();
+
+        // Product Lot select handler
+        $(document).on('change', '.batchSelect', function () {
+            var lotId = $(this).val();
+            var $row = $(this).closest('tr');
+            $row.find('.lotSelectHidden').val(lotId);
+
+            var lot = productLotsForDropdown.find(function (l) { return String(l.id) === String(lotId); });
+            var $qtyInput = $row.find('.lot-quantity-input');
+            if (!lotId) {
+                $qtyInput.val('');
+            } else if (lot && lot.quantity !== undefined) {
+                $qtyInput.val(lot.quantity);
+            }
+
+            updateTotalQuantity();
+        });
+
+    });
+
+    function loadData() {
+        JSUTIL.callAJAXGet('/api/product-receipts/search?type=Blending%20Material', function (data) {
+            recordList = data || [];
+            console.log('Fetched blending materials:', recordList);
+            recordList.forEach(function (element) {
+                if (element.number.includes("BM-")) {
+                    var row = '<tr>' +
+                        '<td><a href="javascript:void(0)" class="blendingMaterialNumber" name="' + element.id + '">' + element.number + '</a></td>' +
+                        '<td>' + element.type + '</td>' +
+                        '<td>' + element.processStatus + '</td>' +
+                        '</tr>';
+                    $("#allBlendingMaterialTableBody").append(row);
+                }
+            });
+            new DataTable('#allBlendingMaterialTable');
+            lucide.createIcons();
+
+            // Re-bind click handlers after rows are added
+            $(".blendingMaterialNumber").off("click").on("click", function () {
+                $("#EditBlendingMaterial").show();
+                $("#saveBlendingMaterialBtn").hide();
+                $("#allBlendingMaterialPanel").hide();
+                currentRecordId = $(this).attr('name');
+                loadBlendingMaterialData(currentRecordId);
+            });
+        })
+
+    }
+
+
+    // allBlendingMaterialPanel.js     End
+
+
+
+
+
+    // editBlendingMaterialPanel.js    Start
+
+    var currntRecordId = "";
+    var LotList = "";
+    var LotQtys = "";
+    var currentRecord = {};
+    var cuurentProduct = {};
+
+    function getTestRequestList(response) {
+        if (Array.isArray(response)) return response;
+        if (response && Array.isArray(response.data)) return response.data;
+        return [];
+    }
+
+    function getNextReferenceNumber(testRequests) {
+        var now = new Date();
+        var currentYear = String(now.getFullYear());
+        var currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        var referencePattern = /^ARN\/(\d{4})\/(\d{2})\/(\d{5})$/;
+        var maxSequence = 0;
+
+        (testRequests || []).forEach(function (item) {
+            if (!item) return;
+
+            var oldReferenceNumber = String(item.refrenceNumber || item.referenceNumber || '').trim();
+            var match = oldReferenceNumber.match(referencePattern);
+
+            if (match && match[3]) {
+                var seq = parseInt(match[3], 10);
+                if (!isNaN(seq) && seq > maxSequence) {
+                    maxSequence = seq;
+                }
+            }
+        });
+
+        var nextSequence = String(maxSequence + 1).padStart(5, '0');
+        return 'ARN/' + currentYear + '/' + currentMonth + '/' + nextSequence;
+    }
+
+
+    $(document).ready(function () {
+
+        $(".editBlendingMaterial").prop("disabled", true);
+        // Also disable the Add button for Product Lot initially
+        $('#addProductLotRowBtn').prop('disabled', true);
+        // Also disable dropdown buttons
+        $('#productSelectBtn').prop('disabled', true);
+
+        $(document).on('change', '#productSelectBtn', function () {
+            $('#productSelectHidden').val($(this).val());
+        });
+
+        // .blendingMaterialNumber click is bound in loadData() after rows are added
+
+        $(".newBlendingMaterialCancelBtn").on("click", function () {
+
+            $("#EditBlendingMaterial").hide();
+            $("#allBlendingMaterialPanel").show();
+        });
+
+
+
+        $("#editBlendingMaterialBtn").on("click", function () {
+
+            $("#saveBlendingMaterialBtn").show();
+            $("#editBlendingMaterialBtn").hide();
+            $(".editBlendingMaterial").prop("disabled", false);
+            // Enable the Add button for Product Lot
+            $('#addProductLotRowBtn').prop('disabled', false);
+            // Enable dropdown button
+            $('#productSelectBtn').prop('disabled', false);
+
+        });
+
+        $("#saveBlendingMaterialBtn").on("click", function () {
+            // Collect selected product lot IDs and their quantities
+
+
+            $('#productLotTable tbody tr').each(function () {
+                var lotId = $(this).find('.lotSelectHidden').val();
+                var qty = $(this).find('.lot-quantity-input').val();
+                if (lotId)
+                    LotList += lotId + ";";
+
+                if (qty)
+                    LotQtys += qty + ";";
+            });
+
+            var obj = {
+                exchangeRate: $(".editBlendingMaterial[name='prevQty']").val() || "0",
+                freightCharges: $(".editBlendingMaterial[name='totalQty']").val() || "0",
+                remarks: LotList,
+                invoiceNumber: LotQtys
+            };
+
+            console.log("Updating Blending Material with data:", obj);
+
+            JSUTIL.callAJAXPut("/api/product-receipts/" + currntRecordId, JSON.stringify(obj), function (response) {
+                console.log("Blending Material updated:", response);
+                // location.reload();
+            });
+        });
+
+        $("#qcBlendingMaterialBtn").on("click", function () {
+            JSUTIL.callAJAXGet('/api/test-requests', function (testRequestResponse) {
+                var testRequests = getTestRequestList(testRequestResponse);
+                var nextReferenceNumber = getNextReferenceNumber(testRequests);
+
+                var payload = {
+                    batchNumber: currentRecord.number,
+                    description: 'Warehouse',
+                    receivedDate: new Date().toISOString().split("T")[0],
+                    requestStatus: 'New',
+                    sampleCondition: cuurentProduct.name,
+                    sampleId: cuurentProduct.id,
+                    sampleType: cuurentProduct.type,
+                    sampleUnit: cuurentProduct.uom,
+                    samplingMethod: currentRecordId,
+                    refrenceNumber: nextReferenceNumber,
+                }
+
+                console.log("Payload: ", payload);
+
+                JSUTIL.callAJAXPost("/api/test-requests", JSON.stringify(payload), function (response) {
+                    console.log("Test Request created for QC:", response);
+                    $('#productLotTable tbody tr').each(function () {
+                        var lotId = $(this).find('.lotSelectHidden').val();
+                        var qty = $(this).find('.lot-quantity-input').val();
+                        if (lotId)
+                            LotList += lotId + ";";
+
+                        if (qty)
+                            LotQtys += qty + ";";
+                    });
+
+                    var obj = {
+                        exchangeRate: $(".editBlendingMaterial[name='prevQty']").val() || "0",
+                        freightCharges: $(".editBlendingMaterial[name='totalQty']").val() || "0",
+                        remarks: LotList,
+                        invoiceNumber: LotQtys,
+                        processStatus: "QC"
+                    };
+
+                    JSUTIL.callAJAXPut("/api/product-receipts/" + currntRecordId, JSON.stringify(obj), function (response) {
+                        console.log("Blending Material sent to QC:", response);
+                        // location.reload();
+                    });
+                });
+            });
+        });
+    });
+
+    function loadBlendingMaterialData(currentId) {
+        // console.log("currentId:", currentId);
+        currntRecordId = currentId;
+        recordList.forEach(data => {
+            // console.log("Checking record ID:", data.id);
+            if (data.id == currentId) {
+                currentRecord = data;
+                var productId = Number(data.transportCompany);
+                console.log("Product ID for editing:", productId);
+
+                JSUTIL.callAJAXGet('/api/products/' + productId, function (prod) {
+                    cuurentProduct = prod || {};
+                    console.log('Fetched product for editing:', prod);
+                    // Update the select for editing
+                    $('#productSelectBtn').empty();
+                    var innerHTML = '<option value="">-- Select Product --</option>';
+                    if (prod && prod.id) {
+                        innerHTML += `<option value="${prod.id}">${prod.name}</option>`;
+                    }
+                    $('#productSelectBtn').append(innerHTML);
+                    if (prod && prod.id) {
+                        $('#productSelectBtn').val(prod.id);
+                        $('#productSelectHidden').val(prod.id);
+                        $(".editBlendingMaterial[name='prevQty']").val(data.exchangeRate || (prod.quantityOnHand - prod.quantityReserved) || 0);
+                    }
+                })
+
+                // // ProductLot
+                var lotSearchUrl = '/api/product-lots/search?productId=' + encodeURIComponent(productId);
+                JSUTIL.callAJAXGet(lotSearchUrl, function (response) {
+                    var remarksArr = (data.remarks || '').split(';').filter(Boolean);
+                    var lots = [];
+                    if (response && Array.isArray(response.data)) {
+                        lots = response.data;
+                    } else if (Array.isArray(response)) {
+                        lots = response;
+                    }
+
+                    var inWarehouseLots = lots.filter(function (lot) {
+                        var status = String((lot && lot.processStatus) || '').trim().toLowerCase();
+                        return status === 'in-warehouse' || status === 'in warehouse';
+                    });
+
+                    var lotsForDropdown = inWarehouseLots.slice();
+                    remarksArr.forEach(function (selectedLotId) {
+                        var alreadyPresent = lotsForDropdown.some(function (lot) {
+                            return String(lot.id) === String(selectedLotId);
+                        });
+                        if (!alreadyPresent) {
+                            var selectedLot = lots.find(function (lot) {
+                                return String(lot.id) === String(selectedLotId);
+                            });
+                            if (selectedLot) {
+                                lotsForDropdown.push(selectedLot);
+                            }
+                        }
+                    });
+
+                    // console.log("Product Lots for editing (API):", lots);
+                    console.log("Product Lots for editing (In-Warehouse):", inWarehouseLots);
+                    callbackAfterGetLot(lotsForDropdown);
+                    // --- Populate Product Lot and Quantity from remarks and invoiceNumber ---
+                    var invoiceArr = (data.invoiceNumber || '').split(';').filter(Boolean);
+                    // Clear existing rows
+                    $('#productLotTable tbody').empty();
+                    for (var i = 0; i < Math.max(remarksArr.length, invoiceArr.length); i++) {
+                        var lotId = remarksArr[i] || '';
+                        var qty = invoiceArr[i] || '';
+                        // Add a new row
+                        var options = '<option value="">-- Select Product Lot--</option>';
+                        productLotsForDropdown.forEach(function (lot) {
+                            var selected = lot.id == lotId ? 'selected' : '';
+                            options += `<option value="${lot.id}" ${selected}>${lot.batchNumber}</option>`;
+                        });
+                        var newRow = `<tr>
+                        <td>
+                            <select class="form-control batchSelect editBlendingMaterial" disabled>${options}</select>
+                            <input type="hidden" class="lotSelectHidden editBlendingMaterial" value="${lotId}">
+                        </td>
+                        <td><input type="number" class="form-control lot-quantity-input editBlendingMaterial" name="quantity[]" placeholder="Quantity" min="0" value="${qty}" disabled></td>
+                        <td><button type="button" class="btn btn-default btn-sm editBlendingMaterial removeProductLotRowBtn" disabled><i data-lucide="trash"></i></button></td>
+                    </tr>`;
+                        $('#productLotTable tbody').append(newRow);
+                    }
+                    // Re-initialize any remaining elements
+                    updateTotalQuantity();
+                    // Refresh icons after dynamic content
+                    lucide.createIcons();
+                    // Disable Add button for Product Lot on load
+                    $('#addProductLotRowBtn').prop('disabled', true);
+                })
+
+                if (data.processStatus === "New") {
+                    $("#qcBlendingMaterialBtn").show();
+                    $("#editBlendingMaterialBtn").show();
+                }
+                else if (data.processStatus === "QC") {
+                    console.log("In QC status");
+                    $("#qcBlendingMaterialBtn").hide();
+                    $("#editBlendingMaterialBtn").hide();
+                    $("#saveBlendingMaterialBtn").hide();
+                }
+
+            }
+
+        });
+
+        // Initialize any remaining elements
+        // No need for select2 since we're using custom dropdowns
+    }
+
+    // Store product lots globally for use in dropdowns
+    var productLotsForDropdown = [];
+    function callbackAfterGetLot(response) {
+        console.log("Product Lots for editing:", response);
+        productLotsForDropdown = response || [];
+        updateAllBatchSelects();
+    }
+
+    function updateAllBatchSelects() {
+        // Update all product lot selects with current data
+        $('#productLotTable tbody tr').each(function () {
+            var $select = $(this).find('.batchSelect');
+            console.log("Select :", $select);
+            var currentValue = $(this).find('.lotSelectHidden').val();
+
+            var innerHTML = '<option value="">-- Select Product Lot--</option>';
+            productLotsForDropdown.forEach(function (lot) {
+                innerHTML += `<option value="${lot.id}">${lot.batchNumber}</option>`;
+            });
+
+            $select.html(innerHTML);
+            $select.val(currentValue);
+        });
+    }
+
+    $(document).on('click', '#addProductLotRowBtn', function () {
+        var options = '<option value="">-- Select Product Lot--</option>';
+        productLotsForDropdown.forEach(function (lot) {
+            options += `<option value="${lot.id}">${lot.batchNumber}</option>`;
+        });
+        var newRow = `<tr>
+        <td>
+                <select class="form-control batchSelect editBlendingMaterial">
+                ${options}
+            </select>
+            <input type="hidden" class="lotSelectHidden editBlendingMaterial">
+        </td>
+        <td><input type="number" class="form-control lot-quantity-input editBlendingMaterial" name="quantity[]" placeholder="Quantity" min="0"></td>
+        <td><button type="button" class="btn btn-default btn-sm editBlendingMaterial removeProductLotRowBtn"><i data-lucide="trash"></i></button></td>
+    </tr>`;
+        $('#productLotTable tbody').append(newRow);
+
+        lucide.createIcons(); // Refresh icons for new row
+    });
+
+    // When a Product Lot is selected via dropdown, update quantity (handled by dropdown click handler above)
+
+    $(document).on('click', '.removeProductLotRowBtn', function () {
+        var $row = $(this).closest('tr');
+        $row.remove();
+
+        // Rebuild LotList and LotQtys from remaining rows
+        var newLotList = '';
+        var newLotQtys = '';
+        $('#productLotTable tbody tr').each(function () {
+            var lotId = $(this).find('.lotSelectHidden').val();
+            var qty = $(this).find('.lot-quantity-input').val();
+            if (lotId) newLotList += lotId + ';';
+            if (qty) newLotQtys += qty + ';';
+        });
+        LotList = newLotList;
+        LotQtys = newLotQtys;
+
+        var obj = {
+            remarks: LotList,
+            invoiceNumber: LotQtys
+        }
+
+        JSUTIL.callAJAXPut("/api/product-receipts/" + currntRecordId, JSON.stringify(obj), function (response) {
+            console.log("Blending Material updated after removing lot:", response);
+        });
+
+        updateTotalQuantity();
+        lucide.createIcons(); // Refresh icons after row removal
+    });
+
+
+    $(document).on('click', '#addProductLotRowBtn', function () {
+        setTimeout(updateTotalQuantity, 100);
+    });
+
+    // Calculate and set Total Quantity
+    function updateTotalQuantity() {
+        var prevQty = parseFloat($(".editBlendingMaterial[name='prevQty']").val()) || 0;
+        var totalLotsQty = 0;
+        $('#productLotTable tbody tr').each(function () {
+            var qty = parseFloat($(this).find('.lot-quantity-input').val());
+            if (!isNaN(qty)) totalLotsQty += qty;
+        });
+        var total = prevQty + totalLotsQty;
+        $(".editBlendingMaterial[name='totalQty']").val(total);
+    }
+
+
+    $(document).on('input', ".editBlendingMaterial[name='prevQty']", function () {
+        updateTotalQuantity();
+    });
+
+    $(document).on('click', '.removeProductLotRowBtn', function () {
+        $(this).closest('tr').remove();
+    });
+
+    // editBlendingMaterialPanel.js    End
+
+
+
+
+
+
+    // newBlendingMaterialPanel.js     Start
+
+    $(document).ready(function () {
+        $(".newBlendingMaterialBtn").on("click", function () {
+            $("#AddBlendingMaterial").show();
+            $("#allBlendingMaterialPanel").hide();
+            $("#EditBlendingMaterial").hide();
+
+        });
+
+        $(".newBlendingMaterialCancelBtn").on("click", function () {
+            $("#AddBlendingMaterial").hide();
+            $("#allBlendingMaterialPanel").show();
+        });
+
+        $(document).on('change', '#newProductSelectBtn', function () {
+            $('#newProductSelectHidden').val($(this).val());
+        });
+
+        fetch('/api/products', { method: 'GET' })
+            .then(async function (response) {
+                if (!response.ok) {
+                    var text = await response.text();
+                    throw new Error(text || ('HTTP ' + response.status));
+                }
+                return response.json();
+            })
+            .then(function (products) {
+                console.log('Fetched products:', products);
+                var blendingProducts = (Array.isArray(products) ? products : []).filter(function (p) {
+                    return p.category === 'Blending Material';
+                });
+
+                console.log('Filtered Blending Material products:', blendingProducts);
+
+                var optionsHtml = '<option value="">-- select --</option>';
+                $.each(blendingProducts, function (j, val2) {
+                    var pId = val2.id || val2.Id;
+                    var pName = val2.name || val2.Name || '';
+                    console.log('Adding product to dropdown:', pId, pName);
+                    optionsHtml += '<option value="' + pId + '">' + pName + '</option>';
+                });
+
+                $('#newProductSelectBtn').html(optionsHtml);
+                $('#newProductSelectBtn').prop('disabled', false);
+                console.log('Product dropdown populated with', blendingProducts.length, 'Blending Material products');
+            })
+            .catch(function (error) {
+                console.error('Products load failed:', error);
+            });
+
+
+        $("#createBlendingMaterialBtn").on("click", function () {
+            // Check if a product is selected
+            var selectedProduct = $('#newProductSelectHidden').val();
+            if (!selectedProduct) {
+                console.log('No product selected. Aborting blending material creation.');
+                return;
+            }
+
+            JSUTIL.callAJAXGet("/api/product-receipts", function (receipts) {
+                var year2 = new Date().getFullYear().toString().slice(-2);
+                var list = receipts || [];
+                var numberRegex = new RegExp('^BM-(\\d{4})-' + year2 + '$');
+                var maxSeq = 0;
+
+                list.forEach(function (item) {
+                    if (!item || item.type !== 'Blending Material') return;
+                    var oldNumber = String(item.number || '').trim();
+                    var match = oldNumber.match(numberRegex);
+                    if (match && match[1]) {
+                        var seq = parseInt(match[1], 10);
+                        if (!isNaN(seq) && seq > maxSeq) {
+                            maxSeq = seq;
+                        }
+                    }
+                });
+
+                var nextSeq = String(maxSeq + 1).padStart(4, '0');
+                var dpiNumber = 'BM-' + nextSeq + '-' + year2;
+
+                var obj = {
+                    "number": dpiNumber,
+                    "transportCompany": $('#newProductSelectHidden').val(),
+                    "type": "Blending Material",
+                    "processStatus": "New"
+                }
+                console.log('Creating blending material with data:', obj);
+
+                JSUTIL.callAJAXPost('/api/product-receipts', JSON.stringify(obj), function (response) {
+                    console.log("Response: ", response);
+                    location.reload();
+                });
+            });
+        });
+    });
+
+    // newBlendingMaterialPanel.js     End
+
+
+</script>

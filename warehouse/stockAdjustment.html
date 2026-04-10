@@ -1,0 +1,1209 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- allProductTransactionPanel.html    Start -->
+<style>
+    #stockAdjustmentTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #stockAdjustmentTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    .qa-white-panel .openTransactionBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    .qa-white-panel .form-group {
+        margin-bottom: 15px;
+    }
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+    #stockAdjustmentTable th,
+    #stockAdjustmentTable td {
+        text-align: left !important;
+    }
+</style>
+<div class="qa-white-panel stock-adjustment-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allTransactionPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Stock Adjustment <small>Warehouse</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-secondary newRecordTransactionBtn"><i
+                                data-lucide="plus"></i> New Stock Adjustment</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+
+                    <div class="table-responsive">
+                        <table id="stockAdjustmentTable"
+                            class="table table-bordered table-hover dataTables stock-adjustment-table">
+                            <thead>
+                                <tr>
+                                    <th>Receipt Number</th>
+                                    <th>Reason</th>
+                                    <th>Product Code</th>
+                                    <th>Batch Number</th>
+                                    <th>Process Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row animated fadeInRight aasaanPanel" id="newTransactionPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <div class="ibox-tools"
+                        style="margin-left: auto; display: flex; justify-content: flex-end; gap: 8px;">
+                        <button type="button" class="btn btn-sm btn-default closeNewTransaction"><i
+                                class="ti ti-x"></i>Close</button>
+                        <button type="button" class="btn btn-sm btn-secondary saveNewTransaction"><i
+                                class="ti ti-check"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form action="">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group" style="position: relative;">
+                                    <label>Product Search</label>
+                                    <input type="text" placeholder="Search product..." class="form-control"
+                                        id="productSearchInput" />
+                                    <input type="hidden" id="productId" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="">Batch</label>
+                                    <select class="form-control select2 batchDrop createNewTransaction"
+                                        name="productlot.id">
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="">Entry Type</label>
+                                    <select class="form-control select2 createNewTransaction" name="stocktype">
+                                        <option value="">--none--</option>
+                                        <option value="addstock"> Add Stock </option>
+                                        <option value="removestock">Remove Stock</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label for="">Total Quantity</label>
+                                    <input type="number" class="form-control createNewTransaction" placeholder="Enter Total Quantity" name="totalQuantity">
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label for="">UOM</label>
+                                    <input type="text" class="form-control uomFromProduct" placeholder="Enter UOM" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="">Reason / Justification</label>
+                                    <textarea class="form-control createNewTransaction" rows="3"
+                                        name="description" placeholder="Enter Reason"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- allProductTransactionPanel.html    End -->
+
+
+
+
+
+
+
+    <!-- editProductTransactionPanel.html   Start -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="editTransactionPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Edit Transaction<span class="ptnumber"></span></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-default closeEditTransaction">
+                            <i class="ti ti-x"></i> Close
+                        </button>
+
+                        <button type="button" class="btn btn-sm btn-default editTransactionBtn">
+                            <i class="ti ti-pencil"></i> Edit
+                        </button>
+
+                        <button type="button" class="btn btn-sm btn-secondary saveEditTransaction" style="display:none">
+                            <i class="ti ti-check"></i> Save
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary sendToApprovalBtn"><i
+                                class="ti ti-send"></i> Send to Approval</button>
+                        <button type="button" class="btn btn-sm btn-default sendBackToNewBtn"><i class="ti ti-x"></i>
+                            Reject</button>
+                        <button type="button" class="btn btn-sm btn-secondary approveBtn"><i class="ti ti-checks"></i>
+                            Approve</button>
+                    </div>
+
+                </div>
+                <div class="ibox-content">
+                    <form action="">
+                        <input type="hidden" id="editTransactionId" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Receipt Number</label>
+                                    <input type="text" class="form-control" id="editReceiptNumber" readonly />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Process Status</label>
+                                    <input type="text" class="form-control" id="editProcessStatus" readonly />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group" style="position: relative;">
+                                    <label>Product Search</label>
+                                    <input type="text" placeholder="Search product..." class="form-control"
+                                        id="editProductSearchInput" />
+                                    <input type="hidden" id="editProductId" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="">Batch</label>
+                                    <select class="form-control select2 batchDrop editTransaction" name="productlot.id">
+                                        <option value="">--none--</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label for="">Entry Type</label>
+                                    <select class="form-control select2 editTransaction" name="stocktype">
+                                        <option value="">--none--</option>
+                                        <option value="addstock">Add Stock</option>
+                                        <option value="removestock">Remove Stock</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label for="">Total Quantity</label>
+                                    <input type="number" class="form-control editTransaction"  placeholder="Enter Total Quantity" name="totalQuantity">
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="form-group">
+                                    <label for="">UOM</label>
+                                    <input type="text" class="form-control editUomFromProduct" placeholder="Enter UOM" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label for="">Reason / Justification</label>
+                                    <textarea class="form-control editTransaction" rows="3"
+                                        name="description" placeholder="Enter Reason"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- editProductTransactionPanel.html   End -->
+</div>
+<script>
+    //allProductTransactionPanel.js    Start
+
+    var ALL_PRODUCTS = [];
+    var productSearchCacheByType = {};
+    var STOCK_ADJUSTMENT_RECORDS = [];
+
+    function getNextStockAdjustmentSequence(list) {
+        var year2 = new Date().getFullYear().toString().slice(-2);
+        var maxSeq = 0;
+        (list || []).forEach(function (item) {
+            var rawName = item && (item.name || item.Name) ? String(item.name || item.Name) : '';
+            var name = rawName.trim();
+            var match = name.match(/^PT-(\d{2})-(\d+)$/i);
+            if (match && match[1] === year2) {
+                var parsed = parseInt(match[2], 10);
+                if (!Number.isNaN(parsed)) {
+                    maxSeq = Math.max(maxSeq, parsed);
+                }
+            }
+        });
+        var seqNum = String(maxSeq + 1).padStart(4, '0');
+        return 'PT-' + year2 + '-' + seqNum;
+    }
+
+    var STOCK_ADJUSTMENT_LAST_FETCH = [];
+
+    function refreshStockAdjustmentDataTable() {
+        var selector = '#stockAdjustmentTable';
+        if (!$.fn.DataTable || !$(selector).length) {
+            return;
+        }
+        if ($.fn.dataTable.isDataTable(selector)) {
+            var dt = $(selector).DataTable();
+            dt.columns.adjust().draw(false);
+            return;
+        }
+        if (!$('#allTransactionPanel').is(':visible')) {
+            setTimeout(refreshStockAdjustmentDataTable, 150);
+            return;
+        }
+        new DataTable(selector);
+    }
+
+    function renderStockAdjustmentTable(list) {
+        var html = '';
+        var recordList = Array.isArray(list) ? list : [];
+        recordList = recordList.filter(v=>v.type == 'Stock Adjustment')
+        if (!recordList.length) {
+            console.warn('[stockAdjustment] recordList is missing or empty');
+        }
+        recordList = recordList.sort((a, b) => b.id - a.id);
+        STOCK_ADJUSTMENT_RECORDS = recordList.slice();
+        window.recordList = recordList;
+        
+        $.each(recordList, function (i, val) {
+            html += `
+            <tr>
+                <td>
+                    <a href="javascript:void(0)" 
+                       class="openTransactionBtn"
+                       data-id="${val.id}">
+                       ${val.name || '-'}
+                    </a>
+                </td>
+                <td>${val.description}</td>
+                <td>${val.product?.number || '-'} ${val.product?.name || '-'}</td>
+                <td>${val.productLot?.batchNumber || '-'}</td>
+                <td>${val.processStatus || '-'}</td>
+            </tr>`;
+        });
+
+        $('#transactionTable').html(html);
+        try {
+            if ($.fn.DataTable) {
+                var selector = '#stockAdjustmentTable';
+                if ($.fn.dataTable.isDataTable(selector)) {
+                    $(selector).DataTable().destroy();
+                }
+                refreshStockAdjustmentDataTable();
+            }
+        } catch (e) {
+            console.warn('[stockAdjustment] unable to initialize datatable', e);
+        }
+    }
+
+    function loadStockAdjustmentTransactions() {
+        JSUTIL.callAJAXGet('/api/product-transactions', function (res) {
+            var list = [];
+            if (res && Array.isArray(res.data)) {
+                list = res.data;
+            } else if (Array.isArray(res)) {
+                list = res;
+            }
+            STOCK_ADJUSTMENT_LAST_FETCH = list;
+            renderStockAdjustmentTable(list);
+        }, function () {
+            var fallback = Array.isArray(window.recordList) ? window.recordList : [];
+            STOCK_ADJUSTMENT_LAST_FETCH = fallback;
+            renderStockAdjustmentTable(fallback);
+        });
+    }
+
+    $(document).ready(function () {
+        console.log('[stockAdjustment] document ready');
+        $('#allTransactionPanel').show();
+        $('#newTransactionPanel').hide();
+        $('#editTransactionPanel').hide();
+        setTimeout(loadStockAdjustmentTransactions, 0);
+        JSUTIL.callAJAXGet('/api/products', function (res) {
+            var list = [];
+            if (res && Array.isArray(res.data)) {
+                list = res.data;
+            } else if (Array.isArray(res)) {
+                list = res;
+            }
+            ALL_PRODUCTS = list;
+            var innerhtml = '<option value="">--none--</option>'
+            $('.productDrop').empty()
+            $.each(list, function (i, val) {
+                innerhtml += `<option value="${val.id}">${val.number} - ${val.name}</option>`
+            })
+            $('.productDrop').append(innerhtml)
+        })
+
+        $(document).on('click', '.newRecordTransactionBtn', function (e) {
+            console.log('[stockAdjustment] newRecordTransactionBtn clicked', {
+                target: e.target,
+                panelVisible: {
+                    allTransaction: $('#allTransactionPanel').is(':visible'),
+                    newTransaction: $('#newTransactionPanel').is(':visible')
+                }
+            });
+            e.preventDefault();
+            $('#allTransactionPanel').hide();
+            $('#newTransactionPanel').show();
+            console.log('[stockAdjustment] panels toggled', {
+                allTransaction: $('#allTransactionPanel').is(':visible'),
+                newTransaction: $('#newTransactionPanel').is(':visible')
+            });
+        });
+
+        $('.closeNewTransaction').on('click', function () {
+            $('#allTransactionPanel').show()
+            $('#newTransactionPanel').hide()
+            $('.createNewTransaction').val('').trigger('change')
+            $('#productSearchInput').val('')
+            $('#productId').val('')
+            $('.uomFromProduct').val('')
+        })
+
+        // Initialize typeahead for product search
+        initializeTransactionTypeahead($('#productSearchInput'))
+
+        $(document).on('change', '#productId', function () {
+            var productId = $(this).val();
+            console.log('Product selected:', productId);
+
+            if (productId) {
+                JSUTIL.startSpinner()
+
+                // Fetch product details including UOM
+                JSUTIL.callAJAXGet('/api/products/' + productId, function (productRes) {
+                    console.log('Product details:', productRes);
+                    if (productRes && productRes.uom) {
+                        $('.uomFromProduct').val(productRes.uom);
+                    }
+                });
+
+                // Fetch batches for the selected product
+                console.log(productId, 'Fetching batches for product ID')
+
+                JSUTIL.callAJAXGet('/api/product-lots/search?productId=' + encodeURIComponent(productId), function (res) {
+                    console.log('batches', res)
+                    var list = [];
+                    if (res && Array.isArray(res.data)) {
+                        list = res.data;
+                    } else if (Array.isArray(res)) {
+                        list = res;
+                    }
+                    $('.createNewTransaction[name="productlot.id"]').empty()
+                    var innerhtml = '<option value="">--none--</option>'
+                    $.each(list, function (i, val) {
+                        innerhtml += `<option value="${val.id}">${val.batchNumber} - ${val.quantity}</option>`
+                    })
+                    $('.createNewTransaction[name="productlot.id"]').append(innerhtml)
+                    JSUTIL.stopSpinner()
+                })
+            }
+            else {
+                $('.createNewTransaction[name="productlot.id"]').empty().append('<option value="">--none--</option>')
+                $('.uomFromProduct').val('');
+            }
+        })
+
+        $('.saveNewTransaction').on('click', function () {
+            // Validate required fields
+            var productId = $('#productId').val();
+            var stockType = $('.createNewTransaction[name="stocktype"]').val();
+            var totalQuantity = $('.createNewTransaction[name="totalQuantity"]').val();
+
+            if (!productId) {
+                JSUTIL.buildErrorModal('Please select a product');
+                return;
+            }
+
+            if (!stockType) {
+                JSUTIL.buildErrorModal('Please select entry type');
+                return;
+            }
+
+            if (!totalQuantity || totalQuantity <= 0) {
+                JSUTIL.buildErrorModal('Please enter a valid quantity');
+                return;
+            }
+
+            var obj = {
+                type: "Stock Adjustment",
+                product: { id: Number(productId) },
+                productLot: { id: Number($('.createNewTransaction[name="productlot.id"]').val()) },
+                description: $('.createNewTransaction[name="description"]').val() || '',
+                changeReason: stockType,
+
+                processStatus: 'New'
+            }
+            if (stockType == 'addstock') {
+                obj['quantityReceipt'] = Number(totalQuantity)
+                obj['quantityIssued'] = 0
+            }
+            else if (stockType == 'removestock') {
+                obj['quantityIssued'] = Number(totalQuantity)
+                obj['quantityReceipt'] = 0
+            }
+            JSUTIL.startSpinner();
+            var sequence = getNextStockAdjustmentSequence(STOCK_ADJUSTMENT_RECORDS);
+            obj['name'] = sequence;
+            console.log('res', obj);
+            JSUTIL.callAJAXPost('/api/product-transactions', JSON.stringify(obj), function (params) {
+                console.log('Transaction created:', params);
+                JSUTIL.stopSpinner();
+                location.reload();
+            });
+        })
+    })
+
+    // function loadProductsByNameForStockAdjustment(searchParam, callback) {
+    //     var trimmedSearch = (searchParam || '').trim();
+    //     if (!trimmedSearch || trimmedSearch.length <= 2) {
+    //         callback([]);
+    //         return;
+    //     }
+
+    //     var nameParam = encodeURIComponent(trimmedSearch);
+    //     var searchUrl = JSUTIL.getUrl('/api/products?type=&name=' + nameParam);
+    //     JSUTIL.callAJAXGet(searchUrl, function (res) {
+    //         callback(Array.isArray(res) ? res : []);
+    //     }, function () {
+    //         callback([]);
+    //     });
+    // }
+
+function loadProductsByNameForStockAdjustment(searchParam, callback) {
+    var trimmedSearch = (searchParam || '').trim();
+    if (!trimmedSearch || trimmedSearch.length < 2) {
+        callback([]);
+        return;
+    }
+
+    var nameUrl = JSUTIL.getUrl('/api/products/search?name=' + encodeURIComponent(trimmedSearch));
+    JSUTIL.callAJAXGet(nameUrl, function (res) {
+        var items = res && (res.data || res.items || res);
+        if (Array.isArray(items) && items.length > 0) {
+            callback(items);
+            return;
+        }
+        var numberUrl = JSUTIL.getUrl('/api/products/search?number=' + encodeURIComponent(trimmedSearch));
+        JSUTIL.callAJAXGet(numberUrl, function (res2) {
+            var items2 = res2 && (res2.data || res2.items || res2);
+            callback(Array.isArray(items2) ? items2 : []);
+        }, function () {
+            callback([]);
+        });
+    }, function () {
+        callback([]);
+    });
+}
+    
+    function initializeStockAdjustmentProductSearch($searchInput, $hiddenInput, onSelect) {
+        $searchInput = $searchInput || $('#productSearchInput');
+        $hiddenInput = $hiddenInput || $('#productId');
+
+        if (typeof $searchInput.typeahead !== 'function') {
+            initializeStockAdjustmentProductSearchFallback($searchInput, $hiddenInput, onSelect);
+            return;
+        }
+
+        try {
+            $searchInput.typeahead('destroy');
+        } catch (e) {
+            // ignore destroy errors
+        }
+
+        $searchInput.typeahead({
+            source: function (query, process) {
+                var trimmedQuery = (query || '').trim();
+                if (!trimmedQuery || trimmedQuery.length < 2) {
+    $searchInput.data('mappedList', []);
+    process([]);
+    return;
+}
+                loadProductsByNameForStockAdjustment(trimmedQuery, function (res) {
+                    var mappedProducts = (res || []).map(function (p) {
+                        var id = p.Id || p.id;
+                        var name = p.Name || p.name || '';
+                        var number = p.Number || p.number || '';
+                        var uom = p.Uom || p.uom || '';
+                        var text = number && name ? number + ' - ' + name : (name || number);
+                        return {
+                            id: id,
+                            name: name,
+                            number: number,
+                            uom: uom,
+                            text: text
+                        };
+                    });
+                    $searchInput.data('mappedList', mappedProducts);
+                    process(mappedProducts.map(function (item) { return item.text; }));
+                });
+            },
+            afterSelect: function (selectedText) {
+                var mappedProducts = this.$element.data('mappedList') || [];
+                var chosen = mappedProducts.find(function (item) { return item.text === selectedText; });
+                var $targetHidden = $hiddenInput.length ? $hiddenInput : this.$element.closest('.form-group').find('input[type="hidden"]');
+                $targetHidden.val(chosen && chosen.id ? chosen.id : '').trigger('change');
+                if (typeof onSelect === 'function') {
+                    onSelect(chosen || null);
+                }
+            }
+        });
+
+        $searchInput.off('blur.stockAdjustmentProductSearch').on('blur.stockAdjustmentProductSearch', function () {
+            var currentText = ($(this).val() || '').trim();
+            var mappedProducts = $searchInput.data('mappedList') || [];
+            var match = mappedProducts.find(function (item) { return item.text === currentText; });
+            var $targetHidden = $hiddenInput.length ? $hiddenInput : $(this).closest('.form-group').find('input[type="hidden"]');
+            $targetHidden.val(match && match.id ? match.id : '').trigger('change');
+            if (typeof onSelect === 'function') {
+                onSelect(match || null);
+            }
+        });
+    }
+
+    function initializeStockAdjustmentProductSearchFallback($input, $hiddenInput, onSelect) {
+        $input.off('.stockAdjustmentProductSearchFallback');
+        var activeRequestId = 0;
+
+        $input.on('input.stockAdjustmentProductSearchFallback', function () {
+            var query = ($(this).val() || '').trim();
+            if (!query || query.length < 2) {
+    hideStockAdjustmentProductDropdown();
+    return;
+}
+            var requestId = ++activeRequestId;
+            loadProductsByNameForStockAdjustment(query, function (res) {
+                if (requestId !== activeRequestId) {
+                    return;
+                }
+                var mapped = (res || []).map(function (p) {
+                    var id = p.Id || p.id;
+                    var name = p.Name || p.name || '';
+                    var number = p.Number || p.number || '';
+                    var uom = p.Uom || p.uom || '';
+                    var text = number && name ? number + ' - ' + name : (name || number);
+                    return { id: id, text: text, name: name, number: number, uom: uom };
+                });
+                showStockAdjustmentProductDropdown($input, mapped, function (chosen) {
+                    var $targetHidden = $hiddenInput.length ? $hiddenInput : $input.closest('.form-group').find('input[type="hidden"]');
+                    $input.val(chosen.text);
+                    $targetHidden.val(chosen.id || '').trigger('change');
+                    if (typeof onSelect === 'function') {
+                        onSelect(chosen || null);
+                    }
+                });
+            });
+        });
+
+        $input.on('blur.stockAdjustmentProductSearchFallback', function () {
+            setTimeout(function () {
+                hideStockAdjustmentProductDropdown();
+            }, 200);
+        });
+    }
+
+    function showStockAdjustmentProductDropdown($field, mappedList, selectCallback) {
+        hideStockAdjustmentProductDropdown();
+        if (!mappedList || !mappedList.length) {
+            return;
+        }
+
+        var dropdownHtml = '<div class="stock-adjustment-product-dropdown" style="position: absolute; z-index: 10000; background: white; border: 1px solid #ddd; border-radius: 4px; max-height: 250px; overflow-y: auto; width: ' + $field.outerWidth() + 'px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">';
+        mappedList.forEach(function (item) {
+            dropdownHtml += '<div class="stock-adjustment-product-dropdown-item" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 14px;" data-id="' + item.id + '">' +
+                $('<div>').text(item.text).html() +
+                '</div>';
+        });
+        dropdownHtml += '</div>';
+
+        $field.closest('.form-group').css('position', 'relative');
+        $field.after(dropdownHtml);
+
+        $('.stock-adjustment-product-dropdown-item').on('click', function () {
+            var itemId = $(this).data('id');
+            var chosen = mappedList.find(function (item) { return String(item.id) === String(itemId); });
+            if (chosen) {
+                selectCallback(chosen);
+            }
+            hideStockAdjustmentProductDropdown();
+        }).hover(
+            function () { $(this).css('background-color', '#f5f5f5'); },
+            function () { $(this).css('background-color', 'white'); }
+        );
+    }
+
+    function hideStockAdjustmentProductDropdown() {
+        $('.stock-adjustment-product-dropdown').remove();
+    }
+
+    function initializeTransactionTypeahead($input) {
+        initializeStockAdjustmentProductSearch($input, $('#productId'), function (chosen) {
+            $('#productId').val(chosen && chosen.id ? chosen.id : '');
+            $('#productSearchInput').val(chosen ? chosen.text : '');
+            $('.uomFromProduct').val(chosen && chosen.uom ? chosen.uom : '');
+        });
+    }
+
+    // allProductTransactionPanel.js    End
+
+
+
+
+
+    // editProductTransactionPanel.js   Start
+
+    // Edit Product Transaction Panel JavaScript
+    // This file handles all edit transaction panel functionality
+
+    var editTransactionData = {};
+
+    $(document).ready(function () {
+
+        // Initialize typeahead for edit product search
+        initializeEditProductTypeahead();
+
+        // Event: Open transaction for editing
+        $(document).on('click', '.openTransactionBtn', function () {
+            var transactionId = $(this).data('id');
+            openEditTransactionPanel(transactionId);
+        });
+
+        // Event: Close edit transaction panel
+        $('.closeEditTransaction').on('click', function () {
+            closeEditTransactionPanel();
+        });
+
+        // Event: Product change in edit panel
+        $(document).on('change', '#editProductId', function () {
+            var productId = $(this).val();
+            handleEditProductChange(productId);
+        });
+
+        // Event: Save edited transaction
+        $('.saveEditTransaction').on('click', function () {
+            saveEditedTransaction();
+        });
+
+        $('.sendToApprovalBtn').on('click', function () {
+            JSUTIL.callAJAXPut('/api/product-transactions/' + editTransactionData.id, JSON.stringify({ "processStatus": "QA Review" }), function (res) {
+                console.log('res', res)
+                location.reload()
+            })
+        })
+        $('.approveBtn').on('click', function () {
+            if (!editTransactionData || !editTransactionData.id) {
+                JSUTIL.buildErrorModal('Please open a transaction before approving.');
+                return;
+            }
+            if (!editTransactionData.product || !editTransactionData.product.id) {
+                JSUTIL.buildErrorModal('Transaction product is missing.');
+                return;
+            }
+            if (!editTransactionData.productLot || !editTransactionData.productLot.id) {
+                JSUTIL.buildErrorModal('Transaction batch is missing.');
+                return;
+            }
+            if (editTransactionData.changeReason == 'addstock') {
+                JSUTIL.callAJAXPut('/api/product-lots/' + editTransactionData.productLot.id, JSON.stringify({ quantity: Number(editTransactionData.productLot.quantity + editTransactionData.quantityReceipt) }), function (res) {
+                    console.log('after productlot updated', res)
+                    JSUTIL.callAJAXPut('/api/products/' + editTransactionData.product.id, JSON.stringify({ quantityOnHand: Number(editTransactionData.productLot.quantityOnHand + editTransactionData.quantityReceipt) }), function (res) {
+                        console.log('after product updated', res)
+                        JSUTIL.callAJAXPut('/api/product-transactions/' + editTransactionData.id, JSON.stringify({ processStatus: "QA Approved", transactionDate: new Date().toISOString() }), function (res) {
+                            console.log('after productTransaction update', res)
+                            location.reload()
+                        })
+                    })
+                })
+            }
+            else if (editTransactionData.changeReason == 'removestock') {
+                JSUTIL.callAJAXPut('/api/product-lots/' + editTransactionData.productLot.id, JSON.stringify({ quantity: Number(editTransactionData.productLot.quantity - editTransactionData.quantityIssued) }), function (res) {
+                    console.log('after productlot updated', res)
+                    JSUTIL.callAJAXPut('/api/products/' + editTransactionData.product.id, JSON.stringify({ quantityOnHand: Number(editTransactionData.productLot.quantityOnHand - editTransactionData.quantityIssued) }), function (res) {
+                        console.log('after product updated', res)
+                        JSUTIL.callAJAXPut('/api/product-transactions/' + editTransactionData.id, JSON.stringify({ processStatus: "QA Approved" ,transactionDate:new Date().toISOString()}), function (res) {
+                            console.log('after productTransaction update', res)
+                            location.reload()
+                        })
+                    })
+                })
+            }
+        })
+        $('.sendBackToNewBtn').on('click', function () {
+            JSUTIL.callAJAXPut('/api/product-transactions/' + editTransactionData.id, JSON.stringify({ processStatus: "QA Returned" }), function (res) {
+                console.log('res', res)
+                location.reload()
+            })
+        })
+
+
+    });
+
+    /**
+     * Open the edit transaction panel and load transaction data
+     */
+    function openEditTransactionPanel(transactionId) {
+        if (!transactionId) {
+            console.error('Transaction ID is required');
+            return;
+        }
+
+        console.log('Opening transaction for edit:', transactionId);
+        JSUTIL.startSpinner();
+
+
+        editTransactionData = recordList.filter(v => v.id == transactionId)[0]
+        $('.ptnumber').empty()
+        $('.ptnumber').text(editTransactionData.number)
+        console.log('edit transaction data', editTransactionData, transactionId)
+        populateEditForm(editTransactionData);
+
+    }
+    $(document).on('click', '.editTransactionBtn', function () {
+        enableEditForm();
+    });
+    $(document).on('input', '.editTransaction[name="totalQuantity"]', function () {
+        var stockType = $('.editTransaction[name="stocktype"]').val();
+        var availableQty = $('#editTransactionPanel select[name="productlot.id"]').data('availableQty') || 0;
+
+        if (stockType === 'removestock' && this.value > availableQty) {
+            this.value = availableQty;
+        }
+    });
+    function populateEditForm(transaction) {
+        console.log('Populating edit form:', transaction);
+
+        // Hide other panels
+        $('#allTransactionPanel').hide();
+        $('#newTransactionPanel').hide();
+        $('#editTransactionPanel').show();
+
+        // Set basic fields
+        $('#editTransactionId').val(transaction.id);
+        $('#editReceiptNumber').val(transaction.name || '');
+        $('#editProcessStatus').val(transaction.processStatus || '');
+        $('.editTransaction[name="description"]').val(transaction.description || '');
+        $('.editTransaction[name="totalQuantity"]').val(transaction.quantityReceipt || transaction.quantityIssued || '');
+        $('.editTransaction[name="stocktype"]').val(transaction.changeReason || '').trigger('change');
+
+        // Handle product data
+        if (transaction.product && transaction.product.id) {
+            loadEditProductData(transaction.product.id, transaction.productLot);
+        } else {
+            JSUTIL.stopSpinner();
+        }
+
+        if (transaction.processStatus == 'New' || transaction.processStatus == 'QA Returned') {
+            $('.editTransactionBtn').show()
+            $('.saveEditTransaction').hide()
+            $('.sendToApprovalBtn').show()
+            $('.sendBackToNewBtn').hide()
+            $('.approveBtn').hide()
+        }
+        else if (transaction.processStatus == 'QA Review') {
+            $('.editTransactionBtn').hide()
+            $('.saveEditTransaction').hide()
+            $('.sendToApprovalBtn').hide()
+            $('.sendBackToNewBtn').show()
+            $('.approveBtn').show()
+        }
+        else {
+            $('.editTransactionBtn').hide()
+            $('.saveEditTransaction').hide()
+            $('.sendToApprovalBtn').hide()
+            $('.sendBackToNewBtn').hide()
+            $('.approveBtn').hide()
+        }
+        disableEditForm();
+    }
+
+    /**
+     * Load product data for edit form
+     */
+    function loadEditProductData(productId, productLot) {
+        $('#editProductId').val(productId);
+
+        // Fetch full product details
+        var productRequest = {
+            fields: "Name;Number;Uom;",
+            conditions: [`Id=${productId}`],
+            logic: "{0}"
+        };
+
+        JSUTIL.callAJAXGet('/api/products/' + productId, function (product) {
+            if (product) {
+                var productDisplay = `${product.name || ''} | ${product.number || ''}`;
+
+                $('#editProductSearchInput').val(productDisplay);
+                $('.editUomFromProduct').val(product.uom || '');
+
+                // Load batches for this product
+                loadEditBatchOptions(productId, productLot);
+            } else {
+                JSUTIL.stopSpinner();
+            }
+        });
+    }
+    $(document).on('change', '#editTransactionPanel select[name="productlot.id"]', function () {
+        var text = $(this).find('option:selected').text(); // e.g. B001 - 25
+        var qty = 0;
+
+        if (text && text.indexOf('-') !== -1) {
+            qty = parseFloat(text.split('-').pop().trim()) || 0;
+        }
+
+        $(this).data('availableQty', qty);
+    });
+
+    /**
+     * Load batch options for selected product in edit form
+     */
+    function loadEditBatchOptions(productId, selectedProductLot) {
+        console.log('Loading batch options for product ID:', productId, 'Selected batch:', selectedProductLot);
+        var batchRequest = {
+            fields: "Quantity;BatchNumber;",
+            conditions: [`Product.Id=${productId}`, `Quantity>0`],
+            logic: "{0} AND {1}"
+        };
+
+        JSUTIL.callAJAXGet('/api/product-lots/search?productId=' + encodeURIComponent(productId), function (batchRes) {
+            console.log('Edit - Loaded batches:', batchRes);
+            var list = [];
+            if (batchRes && Array.isArray(batchRes.data)) {
+                list = batchRes.data;
+            } else if (Array.isArray(batchRes)) {
+                list = batchRes;
+            }
+
+            var batchDropdown = $('#editTransactionPanel select[name="productlot.id"]');
+            batchDropdown.empty();
+
+            var html = '<option value="">--none--</option>';
+
+            $.each(list, function (i, batch) {
+                var isSelected = (selectedProductLot && selectedProductLot.id === batch.id) ? 'selected' : '';
+                html += `<option value="${batch.id}" ${isSelected}>${batch.batchNumber} - ${batch.quantity}</option>`;
+            });
+
+            batchDropdown.append(html).trigger('change');
+            JSUTIL.stopSpinner();
+        });
+    }
+
+    function handleEditProductChange(productId) {
+
+        var $panel = $('#editTransactionPanel');
+
+        $panel.find('select[name="productlot.id"]')
+            .empty()
+            .append('<option value="">--none--</option>');
+        $panel.find('.editUomFromProduct').val('');
+        const $batch = $('#editTransactionPanel select[name="productlot.id"]');
+
+        // 1️⃣ Clear selection FIRST
+        $batch.val(null).trigger('change.select2');
+
+        // 2️⃣ Remove old options
+        $batch.empty().append('<option value="">--none--</option>');
+
+        JSUTIL.startSpinner();
+
+        JSUTIL.callAJAXGet('/api/products/' + productId, function (res) {
+            if (res) {
+                $panel.find('.editUomFromProduct').val(res.uom || '');
+            }
+        });
+
+        JSUTIL.callAJAXGet('/api/product-lots/search?productId=' + encodeURIComponent(productId), function (res) {
+            var list = [];
+            if (res && Array.isArray(res.data)) {
+                list = res.data;
+            } else if (Array.isArray(res)) {
+                list = res;
+            }
+            var html = '<option value="">--none--</option>';
+            list.forEach(b =>
+                html += `<option value="${b.id}">${b.batchNumber} - ${b.quantity}</option>`
+            );
+
+            $panel.find('select[name="productlot.id"]').html(html);
+            JSUTIL.stopSpinner();
+        });
+    }
+
+
+    /**
+     * Validate edit form data
+     */
+    function validateEditForm() {
+        var errors = [];
+
+        var transactionId = $('#editTransactionId').val();
+        var productId = $('#editProductId').val();
+        var stockType = $('.editTransaction[name="stocktype"]').val();
+        var totalQuantity = parseFloat($('.editTransaction[name="totalQuantity"]').val());
+        var availableQty = $('#editTransactionPanel select[name="productlot.id"]').data('availableQty') || 0;
+
+        if (!transactionId) {
+            errors.push('Transaction ID is missing');
+        }
+
+        if (!productId) {
+            errors.push('Please select a product');
+        }
+
+        if (!stockType) {
+            errors.push('Please select entry type');
+        }
+
+        if (!totalQuantity || totalQuantity <= 0) {
+            errors.push('Please enter a valid quantity');
+        }
+
+        // 🔴 MAIN RULE
+        if (stockType === 'removestock' && totalQuantity > availableQty) {
+            errors.push(
+                'Remove Stock quantity cannot be greater than available batch quantity (' + availableQty + ')'
+            );
+        }
+
+        return errors;
+    }
+
+
+    /**
+     * Save edited transaction
+     */
+    function saveEditedTransaction() {
+        // Validate form
+        var errors = validateEditForm();
+
+        if (errors.length > 0) {
+            JSUTIL.buildErrorModal(errors.join('\n'));
+            return;
+        }
+
+        // Prepare update object
+        var updateObj = {
+            id: $('#editTransactionId').val(),
+            product: {
+                id: $('#editProductId').val()
+            },
+            productLot: {
+                id: $('#editTransactionPanel select[name="productlot.id"]').val()
+            },
+            description: $('.editTransaction[name="description"]').val() || '',
+            changeReason: $('.editTransaction[name="stocktype"]').val(),
+            transactionDate:new Date().toISOString()
+
+        };
+        if ($('.editTransaction[name="stocktype"]').val() == 'addstock') {
+            updateObj['quantityReceipt'] = Number($('.editTransaction[name="totalQuantity"]').val())
+            updateObj['quantityIssued'] = 0
+        }
+        if ($('.editTransaction[name="stocktype"]').val() == 'removestock') {
+            updateObj['quantityIssued'] = Number($('.editTransaction[name="totalQuantity"]').val())
+            updateObj['quantityReceipt'] = 0
+        }
+        console.log('Updating transaction:', updateObj);
+
+        JSUTIL.startSpinner();
+
+        JSUTIL.callAJAXPut('/api/product-transactions/' + editTransactionData.id, JSON.stringify(updateObj), function (response) {
+            console.log('Transaction update response:', response);
+            JSUTIL.stopSpinner();
+            location.reload()
+
+        }, function (error) {
+            JSUTIL.stopSpinner();
+            console.error('Update error:', error);
+            JSUTIL.buildErrorModal('Error updating transaction');
+        });
+    }
+
+    function closeEditTransactionPanel() {
+        // Show main panel
+        $('#allTransactionPanel').show();
+        $('#editTransactionPanel').hide();
+        $('#newTransactionPanel').hide();
+
+        // Clear form
+        clearEditForm();
+
+        // Clear stored data
+        editTransactionData = {};
+    }
+
+    /**
+     * Clear all edit form fields
+     */
+    function clearEditForm() {
+        $('#editTransactionId').val('');
+        $('#editReceiptNumber').val('');
+        $('#editProcessStatus').val('');
+        $('#editProductSearchInput').val('');
+        $('#editProductId').val('');
+        $('.editUomFromProduct').val('');
+        $('.editTransaction').val('').trigger('change');
+        $('#editTransactionPanel select[name="productlot.id"]').empty().append('<option value="">--none--</option>');
+    }
+
+    /**
+     * Initialize typeahead for edit product search
+     */
+    function initializeEditProductTypeahead() {
+        initializeStockAdjustmentProductSearch($('#editProductSearchInput'), $('#editProductId'), function (chosen) {
+            $('#editProductId').val(chosen && chosen.id ? chosen.id : '');
+            $('#editProductSearchInput').val(chosen ? chosen.text : '');
+            $('.editUomFromProduct').val(chosen && chosen.uom ? chosen.uom : '');
+        });
+    }
+
+    /**
+     * Load products for edit typeahead
+     */
+    function loadProductsForEdit(callback) {
+        // Check cache first
+        if (productSearchCacheByType && productSearchCacheByType['all']) {
+            if (typeof callback === 'function') {
+                callback(productSearchCacheByType['all']);
+            }
+            return;
+        }
+
+        var request = {
+            fields: 'Name;Type;Id;Uom;Number'
+        };
+
+        JSUTIL.callAJAXGet('/api/products', function (res) {
+            var list = [];
+            if (res && Array.isArray(res.data)) {
+                list = res.data;
+            } else if (Array.isArray(res)) {
+                list = res;
+            }
+            var mapped = (list || []).map(function (item) {
+                var id = item.Id || item.id;
+                var name = item.Name || item.name || '';
+                var type = item.Type || item.type || '';
+                var uom = item.Uom || item.uom || '';
+                var number = item.Number || item.number || '';
+                var nameLower = name.toLowerCase();
+                var numberLower = number.toLowerCase();
+                var searchTokens = [name, type, id, number].filter(Boolean).join(' ').toLowerCase();
+                var displayText = [name, "|", number].join(' ');
+
+                return {
+                    id: id,
+                    text: displayText,
+                    search: searchTokens,
+                    name: name,
+                    nameLower: nameLower,
+                    numberLower: numberLower,
+                    number: number,
+                    uom: uom,
+                    type: type
+                };
+            });
+
+            // Store in cache
+            if (!productSearchCacheByType) {
+                productSearchCacheByType = {};
+            }
+            productSearchCacheByType['all'] = mapped;
+
+            if (typeof callback === 'function') {
+                callback(mapped);
+            }
+        });
+    }
+
+    /**
+     * Utility: Get form data as object
+     */
+    function getEditFormData() {
+        return {
+            id: $('#editTransactionId').val(),
+            receiptNumber: $('#editReceiptNumber').val(),
+            processStatus: $('#editProcessStatus').val(),
+            productId: $('#editProductId').val(),
+            batchId: $('#editTransactionPanel select[name="productlot.id"]').val(),
+            stockType: $('.editTransaction[name="stocktype"]').val(),
+            quantity: $('.editTransaction[name="totalQuantity"]').val(),
+            description: $('.editTransaction[name="description"]').val(),
+            uom: $('.editUomFromProduct').val()
+        };
+    }
+    function disableEditForm() {
+        $('#editTransactionPanel')
+            .find('input, textarea, select')
+            .prop('disabled', true);
+
+    }
+
+    function enableEditForm() {
+        $('#editTransactionPanel')
+            .find('input, textarea, select')
+            .prop('disabled', false);
+
+        // still readonly
+        $('#editReceiptNumber, #editProcessStatus').prop('disabled', true);
+
+        $('.editTransactionBtn').hide();
+        $('.saveEditTransaction').show();
+    }
+
+
+
+
+    // editProductTransactionPanel.js   End
+</script>

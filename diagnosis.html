@@ -1,0 +1,444 @@
+<div id="printArea">
+<div class="container-fluid py-3 bg-white border-bottom">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <a
+        href="#"
+        onclick="goBackIPD()"
+        class="btn btn-outline-secondary btn-sm me-2"
+      >
+        <i class="ri-arrow-left-line"></i> Back
+      </a>
+      <!-- <span class="fs-4 fw-bold text-primary">ENT Diagnosis - IPD Patient</span> -->
+    </div>
+  </div>
+</div>
+
+<div class="card-body">
+  <!-- Patient Information -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light fw-semibold">
+      <span
+        ><i class="ri-user-heart-line text-primary"></i> Patient
+        Information</span
+      >
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">IPD Number</label>
+          <div id="ipdNumber" class="fw-semibold">--</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Patient ID</label>
+          <div id="patientId" class="fw-semibold">--</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Name</label>
+          <div id="patientName" class="fw-semibold">--</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Age / Gender</label>
+          <div>
+            <span id="patientAge">--</span> / <span id="patientGender">--</span>
+          </div>
+        </div>
+        <!-- <div class="col-md-3">
+          <label class="form-label">Ward / Bed</label>
+          <div id="wardBed" class="fw-semibold">--</div>
+        </div> -->
+        <div class="col-md-3">
+          <label class="form-label">Contact</label>
+          <div id="patientContact" class="fw-semibold">--</div>
+        </div>
+        
+        <div class="col-md-3">
+          <label class="form-label">Admit Date</label>
+          <div id="admissionDate" class="fw-semibold">--</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Relative Name</label>
+          <div id="relativeNameDiag" class="fw-semibold">--</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Relative Relation</label>
+          <div id="relativeRelationDiag" class="fw-semibold">--</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Relative Address</label>
+          <div id="relativeAddressDiag" class="fw-semibold">--</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Relative Contact</label>
+          <div id="relativeContactDiag" class="fw-semibold">--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vitals Table -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light fw-semibold">
+      <span><i class="ri-heart-pulse-line text-primary"></i> Vital Signs</span>
+    </div>
+    <div class="card-body">
+      <form
+        class="d-flex align-items-end flex-wrap gap-2 no-print"
+        id="vitalsForm"
+        onsubmit="createVitalForPatient(event)"
+      >
+        <div>
+          <label class="form-label">Time</label>
+          <input
+            type="time"
+            class="form-control"
+            id="vitalTime"
+            style="min-width: 130px"
+          />
+        </div>
+        <div>
+          <label class="form-label">Date</label>
+          <input
+            type="date"
+            class="form-control"
+            id="vitalDate"
+            style="min-width: 130px"
+          />
+        </div>
+        <div>
+          <label class="form-label">Blood Pressure</label>
+          <input
+            type="text"
+            class="form-control"
+            id="vitalBPInput"
+            required
+            style="min-width: 120px"
+          />
+        </div>
+        <div>
+          <label class="form-label">Temperature (°F)</label>
+          <input
+            type="text"
+            class="form-control"
+            id="vitalTempInput"
+            required
+            style="min-width: 120px"
+          />
+        </div>
+        <div>
+          <label class="form-label">Heart Rate (bpm)</label>
+          <input
+            type="text"
+            class="form-control"
+            id="vitalHRInput"
+            required
+            style="min-width: 120px"
+          />
+        </div>
+        <div>
+          <label class="form-label">Remarks</label>
+          <input
+            type="text"
+            class="form-control"
+            id="vitalRemarksInput"
+            required
+            style="min-width: 150px"
+          />
+        </div>
+        <div class="align-self-end">
+          <button type="submit" class="btn btn-primary">
+            Add Vitals
+          </button>
+        </div>
+      </form>
+      <div class="table-responsive mt-3">
+        <table class="table table-bordered" id="vitalsTable">
+          <thead class="table-light">
+            <tr>
+              <th>Time</th>
+              <th>Date</th>
+              <th>Blood Pressure</th>
+              <th>Temperature (°F)</th>
+              <th>Heart Rate (bpm)</th>
+              <th>Remarks</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Vitals rows will be added here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagnostic Tests Upload -->
+  <div class="card mb-4 shadow-sm no-print">
+    <div class="card-header bg-light fw-semibold">
+      <span
+        ><i class="ri-file-upload-line text-primary"></i> Diagnostic Tests &
+        Reports</span
+      >
+    </div>
+    <!-- File Upload Section -->
+      <div class="flex gap-3 items-end m-2">
+        <div class="flex-2">
+            <!-- <label class="block mb-2 font-medium text-sm text-gray-700">Select File</label> -->
+                <input
+                    type="file"
+                    id="testReportDiagnosis"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    class="hidden"
+                    multiple
+                    onchange="updateSelectedFilesDiagnosis(this)"
+                />
+                <label for="testReportDiagnosis" class="inline-block bg-blue-600 text-white px-4 py-2 rounded cursor-pointer transition hover:bg-blue-700">
+                    Choose File
+                </label>
+                <span id="fileNameDiagnosis" class="ml-2 text-gray-600 text-sm">No file chosen</span>
+        </div>
+        
+        <button class="btn btn-primary" onclick="uploadTestReportDiagnosis()" style="padding: 0.5rem 1.25rem; border-radius: 6px;">
+          <i class="ri-upload-2-line"></i> Upload
+        </button>
+      </div>
+      
+      <!-- Uploaded Files List -->
+      <div id="uploadedReportsListDiagnosis" class="mt-3 bg-white p-3 rounded-md border border-gray-200 hidden">
+        <p class="text-sm font-semibold mb-2">Uploaded Reports:</p>
+        <div id="reportFilesContainerDiagnosis"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diagnosis Summary -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light fw-semibold">
+      <span
+        ><i class="ri-file-text-line text-primary"></i> Diagnosis Summary</span
+      >
+    </div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label">Provisional Diagnosis</label>
+        <textarea
+          class="form-control"
+          id="provisionalDiagnosisIPD"
+          rows="3"
+          placeholder="Enter provisional diagnosis..."
+        ></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Final Diagnosis</label>
+        <textarea
+          class="form-control"
+          id="finalDiagnosisIPD"
+          rows="3"
+          placeholder="Enter confirmed final diagnosis..."
+        ></textarea>
+      </div>
+      <div>
+        <label class="form-label">Clinical Notes & Recommendations</label>
+        <textarea
+          class="form-control"
+          id="clinicalNotesIPD"
+          rows="3"
+          placeholder="Additional notes, treatment plan, follow-up recommendations..."
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charges -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-light fw-semibold">
+      <span
+        ><i class="ri-bill-line text-primary"></i> Charges </span
+      >
+    </div>
+
+     <div class="card-body">
+      <form
+        class="d-flex align-items-end flex-wrap gap-2 no-print"
+        id="chargesForm"
+        onsubmit="addChargesRow(event)"
+      >
+        <div>
+          <label class="form-label">Description</label>
+          <input
+            type="text"
+            class="form-control"
+            id="chargeDescription"
+            style="min-width: 500px"
+          />
+        </div>
+        <div>
+          <label class="form-label">Amount</label>
+          <input
+            type="number"
+            class="form-control"
+            id="chargeAmount"
+            style="min-width: 130px"
+          />
+        </div>
+      
+        <div class="align-self-end">
+          <button type="submit" class="btn btn-primary">
+            Add Charge
+          </button>
+        </div> 
+      </form>
+      <div class="table-responsive mt-3">
+        <table class="table table-bordered" id="chargesTable">
+          <thead class="table-light">
+            <tr>
+              <th>Sr</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Charges rows will be added here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4 shadow-sm">
+  <div class="card-header bg-light fw-semibold">
+    <span><i class="ri-archive-line text-primary"></i> Inventory</span>
+  </div>
+  <div class="card-body">
+    <form
+      class="d-flex align-items-end flex-wrap gap-2 no-print"
+      id="inventoryForm"
+      onsubmit="addInventoryRow(event)"
+    >
+      <div>
+        <label class="form-label">Description</label>
+        <input
+          type="text"
+          class="form-control"
+          id="inventoryDescription"
+          style="min-width: 200px"
+        />
+      </div>
+      <div>
+        <label class="form-label">Quantity</label>
+        <input
+          type="number"
+          class="form-control"
+          id="inventoryQuantity"
+          style="min-width: 100px"
+        />
+      </div>
+      <div>
+        <label class="form-label">Amount</label>
+        <input
+          type="number"
+          class="form-control"
+          id="inventoryAmount"
+          style="min-width: 100px"
+        />
+      </div>
+      <div>
+        <label class="form-label">Batch</label>
+        <input
+          type="text"
+          class="form-control"
+          id="inventoryBatch"
+          style="min-width: 120px"
+        />
+      </div>
+      <div>
+        <label class="form-label">Expiry Date</label>
+        <input
+          type="date"
+          class="form-control"
+          id="inventoryExpiry"
+          style="min-width: 140px"
+        />
+      </div>
+      <div class="align-self-end">
+        <button type="submit" class="btn btn-primary">
+          Add Inventory
+        </button>
+      </div>
+    </form>
+    <div class="table-responsive mt-3">
+      <table class="table table-bordered" id="inventoryTable">
+        <thead class="table-light">
+          <tr>
+            <th>Sr</th>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Amount</th>
+            <th>Batch</th>
+            <th>Expiry Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Inventory rows will be added here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4 shadow-sm">
+  <div class="card-header bg-light fw-semibold">
+    <span><i class="ri-calculator-line text-primary"></i> Bill Summary</span>
+  </div>
+  <div class="card-body">
+    <div class="row mb-2">
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Subtotal:</label>
+        <span id="summarySubtotal" class="ms-2">₹0.00</span>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Discount (%)</label>
+        <input
+          type="number"
+          class="form-control d-inline-block no-print"
+          id="summaryDiscount"
+          style="width: 100px; display: inline-block;"
+          min="0"
+          max="100"
+          value="0"
+          oninput="updateBillSummary()"
+        />
+        <span id="summaryDiscountPrint" class="print-only ms-2"></span>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold">Total:</label>
+        <span id="summaryTotal" class="ms-2 text-primary fw-bold">₹0.00</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Action Buttons -->
+  <div class="d-flex justify-content-end gap-2 mb-4 no-print">
+    <button class="btn btn-secondary" onclick="saveDiagnosisIPD()">
+      <i class="ri-save-line"></i> Save Diagnosis
+    </button>
+    <button class="btn btn-warning" onclick="createInvoiceFromIPD()">
+      <i class="ri-file-add-line"></i> Create Invoice
+    </button>
+    <button class="btn btn-default" onclick="dischargeIpdPatient()">
+      <i class="ri-logout-box-line"></i> Discharge
+    </button>
+     <button class="btn btn-primary" onclick="window.print()">
+          <i class="ri-printer-line"></i> Print
+    </button>
+     <button class="btn btn-default" onclick="goBackIPD()">
+          <i class="ri-close-line"></i> Close
+    </button>
+  </div>
+</div>
+</div>
+<script src="../assets/js/diagnosis.js"></script>
+<link rel="stylesheet" href="../assets/css/diagnosis.css" />

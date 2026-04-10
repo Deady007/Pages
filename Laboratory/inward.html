@@ -1,0 +1,3435 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<script src="pages/lib/math.min.js"></script>
+<!-- generateCoaPanel.html start -->
+<style>
+    /* ── Active nav-tab ── */
+    .nav-tabs .nav-link.active {
+        color: #337AB7 !important;
+        background-color: #fff !important;
+        
+    }
+    .nav-tabs .nav-link {
+        color: #337AB7;
+    }
+    /* ── Lucide icon sizing (all buttons) ── */
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    /* ── ibox-title: flex layout for all panels ── */
+    .qa-white-panel .ibox-title {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .qa-white-panel .ibox-title h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .qa-white-panel .ibox-tools {
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .qa-white-panel .ibox-content {
+        padding: 15px 20px;
+    }
+
+    /* ── Form group spacing ── */
+    .qa-white-panel .form-group {
+        margin-bottom: 15px;
+    }
+
+    /* ── All panel tables ── */
+    .qa-white-panel .table td {
+        vertical-align: middle;
+    }
+
+    /* ── Status badges ── */
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .status-new{
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    .status-submitted  { background: #dbeafe;
+        color: #1e40af; }
+    .status-completed  { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+    .danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    /* ── Readonly inputs ── */
+    .qa-white-panel .form-control[readonly] {
+        /* background-color: #f5f5f5; */
+        cursor: not-allowed;
+        opacity: 0.85;
+    }
+
+    /* ── DataTables search input ── */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    /* ── Main list table ── */
+    #allServiceRequestDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allServiceRequestDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #allServiceRequestDataTable th,
+    #allServiceRequestDataTable td {
+        text-align: left !important;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* ── Record link ── */
+    .qa-white-panel .selectRequestBtn {
+        color: #337ab7;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .qa-white-panel .selectRequestBtn:hover {
+        text-decoration: underline;
+    }
+
+    /* ── Dropdown — matches employees.html btn-light pattern ── */
+    .qa-white-panel .dropdown .btn-light {
+        background: #fff;
+        /* border: 1px solid #ced4da; */
+        color: #495057;
+        font-size: 14px;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    .qa-white-panel .dropdown .btn-light:focus,
+    .qa-white-panel .dropdown .btn-light:active {
+        /* box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); */
+        /* border-color: #80bdff; */
+        background-color: #fff;
+        color: #495057;
+    }
+
+    .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+    }
+
+    .qa-white-panel .dropdown .btn-light:disabled,
+    .qa-white-panel .dropdown .btn-light[disabled] {
+        /* background-color: #e9ecef; */
+        opacity: 1;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .qa-white-panel .dropdown-menu {
+        font-size: 14px;
+        /* border: 1px solid #ced4da; */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        border-radius: 4px;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 4px 0;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item {
+        padding: 7px 14px;
+        color: #495057;
+        font-size: 13px;
+        /* border-bottom: 1px solid #f0f0f0; */
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    /* .qa-white-panel .dropdown-menu .dropdown-item:hover,
+    .qa-white-panel .dropdown-menu .dropdown-item:focus {
+        background-color: #f0f4ff;
+        color: #1a6faf;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item.active {
+        background-color: #007bff;
+        color: #fff;
+    } */
+
+    /* ── Dark mode ── */
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light {
+        background-color: #2c2c2e;
+        /* border-color: #444; */
+        color: #c9d1d9;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #3a3a3c;
+        border-color: #666;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:disabled {
+        background-color: #1e1e1e;
+        color: #6c757d;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu {
+        background-color: #2b2b2b;
+        border-color: #444;
+    }
+
+     [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item {
+        color: #e0e0e0;
+        /* border-bottom-color: #3d3d3d; */
+        background-color: #2b2b2b;
+    } 
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item:hover {
+        background-color: #4d4d4e;
+        color: #fff;
+    } 
+
+    /* ── Dark mode: disabled inputs ── */
+    [data-bs-theme="dark"] .form-control:disabled,
+    [data-bs-theme="dark"] .form-control[readonly] {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+
+    /* ── Dark mode: status badges ── */
+    [data-bs-theme="dark"] .status-new       { background: #0d3349; color: #7ec8e3; border-color: #1a5a7a; }
+    [data-bs-theme="dark"] .status-submitted { background: #3a2e00; color: #f0c040; border-color: #6b5500; }
+    [data-bs-theme="dark"] .status-completed { background: #0d2e0d; color: #5cb85c; border-color: #1a5c1a; }
+
+    /* ── DataTables dark mode ── */
+    [data-bs-theme="dark"] div.dt-container .dt-search input {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: var(--bs-border-color) !important;
+    }
+
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] select,
+    [data-bs-theme="dark"] .dropdown .btn-light {
+        border: none !important;
+        box-shadow: none !important; /* Optional: removes any shadow */
+    }
+    /* ── Fix typeahead autocomplete dropdown clipping inside modal ── */
+    #allocateSampleModal .modal-content,
+    #allocateSampleModal .modal-body {
+        overflow: visible !important;
+    }
+    #allocateSampleModal .tt-menu,
+    #allocateSampleModal .typeahead,
+    #allocateSampleModal .tt-dropdown-menu {
+        z-index: 99999 !important;
+        position: absolute !important;
+        max-height: 200px;
+        overflow-y: auto;
+        width: 100%;
+    }
+
+    /* ── Sample table: lock checkboxes + inputs until Edit Sample is clicked ── */
+    #allSamplesTable .deleteItemCreatedEntryRow {
+        pointer-events: none !important;
+        opacity: 0.35 !important;
+        cursor: not-allowed !important;
+    }
+    #allSamplesTable.edit-mode-active .deleteItemCreatedEntryRow {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+        cursor: pointer !important;
+    }
+    #allSamplesTable .sampleInput:disabled,
+    #allSamplesTable .sampleInput[disabled] {
+        pointer-events: none !important;
+        background-color: #f5f5f5 !important;
+        cursor: default !important;
+        user-select: none !important;
+        -webkit-user-select: none !important;
+    }
+    [data-bs-theme="dark"] #allSamplesTable .sampleInput:disabled,
+    [data-bs-theme="dark"] #allSamplesTable .sampleInput[disabled] {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+    [data-bs-theme="dark"] #allSamplesTable .sampleInput:disabled + .select2-container .select2-selection,
+    [data-bs-theme="dark"] #allSamplesTable .select2-container--disabled .select2-selection {
+        background-color: #2c2c2e !important;
+        border-color: #444 !important;
+    }
+    [data-bs-theme="dark"] #allSamplesTable .select2-container--disabled .select2-selection__rendered {
+        color: #c9d1d9 !important;
+    }
+
+    .coa-preview {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .coa-header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #436482;
+        padding-bottom: 15px;
+    }
+
+    .coa-header .header-text {
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+
+    .coa-header h2 {
+        margin: 15px 0 10px;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #333;
+    }
+
+    .coa-header .subtitle {
+        font-size: 14px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    .coa-header .regulatory-tags {
+        font-size: 12px;
+        color: #777;
+        margin-top: 5px;
+    }
+
+    .coa-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin: 25px 0;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+
+    .coa-meta-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .coa-meta-item .label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 3px;
+    }
+
+    .coa-section {
+        margin-top: 25px;
+        page-break-inside: avoid;
+    }
+
+    .coa-section h4 {
+        font-size: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #436482;
+        border-bottom: 2px solid #436482;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+        letter-spacing: 1px;
+    }
+
+    .coa-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .coa-table thead {
+        background: #f3f4f6;
+    }
+
+    .coa-table th {
+        padding: 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+    }
+
+    .coa-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+    }
+
+    .coa-table tbody tr:nth-child(even) {
+        background: #fafafa;
+    }
+
+    .coa-footer {
+        margin-top: 40px;
+        padding-top: 15px;
+        border-top: 2px solid #ddd;
+        font-size: 11px;
+        text-align: center;
+        color: #666;
+        line-height: 1.6;
+    }
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] input[type="text"] {
+        border: 1px solid #bfc9da !important;   
+        background: #23272f !important;         
+        color: #eee !important;                 
+    }
+
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] input[type="text"]:focus {
+        border-color: #7ec8e3 !important;     
+        box-shadow: 0 0 0 2px rgba(126,200,227,0.2);
+    }
+    @media print {
+        .coa-preview {
+            box-shadow: none;
+            padding: 0;
+        }
+        .coa-section {
+            page-break-inside: avoid;
+        }
+    }
+    html[data-bs-theme="dark"] .daterangepicker,
+    html[data-bs-theme="dark"] .daterangepicker .drp-calendar,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table table {
+        background-color: #23272f !important;
+        border-color: #444 !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table td,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table th {
+        background-color: #23272f !important;
+        color: #bfc9da !important;
+        border-color: transparent !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table thead th {
+        color: #8b95a5 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.off,
+    html[data-bs-theme="dark"] .daterangepicker td.off.in-range,
+    html[data-bs-theme="dark"] .daterangepicker td.off.start-date,
+    html[data-bs-theme="dark"] .daterangepicker td.off.end-date {
+        background-color: #23272f !important;
+        color: #555b66 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.available:hover,
+    html[data-bs-theme="dark"] .daterangepicker th.available:hover {
+        background-color: #2d3139 !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.active,
+    html[data-bs-theme="dark"] .daterangepicker td.active:hover {
+        background-color: #2196f3 !important;
+        color: #fff !important;
+        border-radius: 4px;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.in-range {
+        background-color: #1e3a5f !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker select.monthselect,
+    html[data-bs-theme="dark"] .daterangepicker select.yearselect {
+        background-color: #1a1d23 !important;
+        color: #eee !important;
+        border: 1px solid #444 !important;
+    }
+
+    /* ── Fix: time picker hour/minute selects overflow outside picker ── */
+    .daterangepicker .calendar-time {
+        position: relative;
+        z-index: 1;
+        overflow: visible;
+    }
+    .daterangepicker .calendar-time select.hourselect,
+    .daterangepicker .calendar-time select.minuteselect,
+    .daterangepicker .calendar-time select.ampmselect {
+        /* Use size=1 native dropdown that opens inline — prevent tall scrollable list */
+        height: 28px !important;
+        width: 56px !important;
+        padding: 2px 4px !important;
+        font-size: 13px !important;
+        border-radius: 4px !important;
+        border: 1px solid #ced4da !important;
+        background-color: #fff !important;
+        cursor: pointer;
+        /* Prevent the select from growing taller than a single row */
+        overflow: hidden !important;
+        -webkit-appearance: auto !important;
+        appearance: auto !important;
+    }
+    html[data-bs-theme="dark"] .daterangepicker .calendar-time select.hourselect,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-time select.minuteselect,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-time select.ampmselect {
+        background-color: #1a1d23 !important;
+        color: #eee !important;
+        border: 1px solid #444 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .prev.available,
+    html[data-bs-theme="dark"] .daterangepicker .next.available {
+        background-color: #23272f !important;
+        color: #bfc9da !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .drp-buttons {
+        background-color: #23272f !important;
+        border-top: 1px solid #444 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .cancelBtn {
+        background-color: transparent !important;
+        border: 1px solid #444 !important;
+        color: #bfc9da !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .cancelBtn:hover {
+        background-color: #2d3139 !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .applyBtn {
+        background-color: #2196f3 !important;
+        border-color: #2196f3 !important;
+        color: #fff !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .applyBtn:hover {
+        background-color: #1976d2 !important;
+        border-color: #1976d2 !important;
+    }
+    html[data-bs-theme="dark"] .qa-white-panel table,
+html[data-bs-theme="dark"] .qa-white-panel thead,
+html[data-bs-theme="dark"] .qa-white-panel tbody,
+html[data-bs-theme="dark"] .qa-white-panel tr,
+html[data-bs-theme="dark"] .qa-white-panel th,
+html[data-bs-theme="dark"] .qa-white-panel td {
+    background-color: #18191d !important;
+    color: #e0e0e0 !important;
+    border-color: #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel th {
+    font-weight: 600;
+    color: #bfc7d5 !important;
+    background: #18191d !important;
+    border-bottom: 1px solid #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel td {
+    background: #18191d !important;
+    color: #e0e0e0 !important;
+    border-top: 1px solid #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel input[type="text"],
+html[data-bs-theme="dark"] .qa-white-panel input[type="number"],
+html[data-bs-theme="dark"] .qa-white-panel select,
+html[data-bs-theme="dark"] .qa-white-panel textarea {
+    background: #23242a !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #333 !important;
+    border-radius: 4px;
+    box-shadow: none !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel input[type="text"]:focus,
+html[data-bs-theme="dark"] .qa-white-panel input[type="number"]:focus,
+html[data-bs-theme="dark"] .qa-white-panel select:focus,
+html[data-bs-theme="dark"] .qa-white-panel textarea:focus {
+    background: #23242a !important;
+    color: #fff !important;
+    border-color: #4a90e2 !important;
+    outline: none;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel input[readonly],
+html[data-bs-theme="dark"] .qa-white-panel .form-control[readonly] {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    opacity: 1 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .btn,
+html[data-bs-theme="dark"] .qa-white-panel .btn:focus {
+    background: #23242a !important;
+    color: #e0e0e0 !important;
+    border: 1px solid #444 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .btn:hover {
+    background: #35363c !important;
+    color: #fff !important;
+    border-color: #4a90e2 !important;
+}
+[data-bs-theme="dark"] .qa-white-panel .form-control,
+[data-bs-theme="dark"] .qa-white-panel .form-control:disabled,
+[data-bs-theme="dark"] .qa-white-panel input[type="text"]:disabled,
+[data-bs-theme="dark"] .qa-white-panel input[type="number"]:disabled,
+[data-bs-theme="dark"] .qa-white-panel select:disabled {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    border: 1px solid #333 !important;
+    opacity: 1 !important;
+}
+[data-bs-theme="dark"] .select2-container--default .select2-selection--single,
+[data-bs-theme="dark"] .select2-container--default .select2-selection--single:disabled {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    border: 1px solid #333 !important;
+    opacity: 1 !important;
+}
+html[data-bs-theme="dark"] .qa-white-panel .form-control[readonly],
+html[data-bs-theme="dark"] .qa-white-panel input[readonly] {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+    opacity: 1 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel select option {
+    background: #23242a !important;
+    color: #bfc7d5 !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #bfc7d5 !important;
+    background: #23242a !important;
+}
+
+html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-selection--single .select2-selection__arrow {
+    background: #23242a !important;
+    border-left: 1px solid #333 !important;
+}
+</style>
+
+<div class="qa-white-panel">
+
+<!-- generateCoaPanel.html start -->
+<div class="row animated fadeInRight aasaanPanel" id="generateCoaPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5> Generate <small> COA </small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box showCoaTemplateCancel"><i data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm printCoaBtn"> Print </button>
+                    <button type="button" class="btn btn-secondary btn-sm exportPdfCoaBtn"> Export PDF</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                
+            </div>
+        </div>
+    </div>
+</div>
+<!-- generateCoaPanel.html end -->
+
+
+<!-- generateCoaPanel.js start -->
+<script>
+// Stub for parent framework's .datepicker()/.datetimepicker() if plugin not loaded
+if ($.fn && !$.fn.datepicker) {
+    $.fn.datepicker = function() { return this; };
+}
+if ($.fn && !$.fn.datetimepicker) {
+    $.fn.datetimepicker = function() { return this; };
+}
+    $(document).ready(function(){
+    $('.generateCoaBtn').on('click', function(){
+        var template = window.currentCoaTemplate || { name: 'Certificate of Analysis', header: 'QC Laboratory', footer: 'This is a system-generated Certificate of Analysis.', tags: 'GMP' };
+        generateCoaPreview(template);
+        $('#generateCoaPanel').show();
+        $('#editRequestPanel').hide();
+    });
+    
+    $('.showCoaTemplateCancel').on('click', function(){
+        $('#generateCoaPanel').hide();
+        $('#editReviewPanel2').show();
+        $('#editReviewPanel').show();
+        $('#editCoaTemplatePanel').show();
+        $('#editRequestPanel').show();
+    });
+    
+    $('.printCoaBtn').on('click', function(){
+        printCoa();
+    });
+    
+    $('.exportPdfCoaBtn').on('click', function(){
+        exportCoaToPdf();
+    });
+});
+
+function generateCoaPreview(template) {
+    var req = currentRequestData || {};
+    var today = new Date();
+    var formatDate = function(d) {
+        if (!d) return '-';
+        var dt = new Date(d);
+        return isNaN(dt.getTime()) ? '-' : dt.toISOString().slice(0, 10);
+    };
+
+    // Fetch test-request-items with testResult for the COA
+    JSUTIL.startSpinner();
+    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-request-items?requestId=' + currentTestRequestId), function(items) {
+        var lineItems = items || [];
+        var loaded = 0;
+
+        // Fetch individual item for testResult (list API doesn't return it)
+        function fetchNext() {
+            if (loaded >= lineItems.length) {
+                buildCoaHtml(template, req, lineItems, today, formatDate);
+                JSUTIL.stopSpinner();
+                return;
+            }
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-request-items/' + lineItems[loaded].id), function(fullItem) {
+                lineItems[loaded].testResult = fullItem.testResult || null;
+                loaded++;
+                fetchNext();
+            });
+        }
+        fetchNext();
+    });
+}
+
+function getTestResultDisplay(item) {
+    if (!item.testResult) return '-';
+    try {
+        var obj = typeof item.testResult === 'string' ? JSON.parse(item.testResult) : item.testResult;
+        var parts = [];
+        $.each(obj, function(k, v) { if (v) parts.push(v); });
+        return parts.length > 0 ? parts.join(', ') : '-';
+    } catch(e) {
+        return item.testResult;
+    }
+}
+
+function buildCoaHtml(template, req, lineItems, today, formatDate) {
+    var coaHtml = `
+        <div id="coaPreview" class="coa-preview">
+            <div class="coa-header">
+                <div class="header-text">${(template.header || 'QC Laboratory Header').replace(/\n/g, '<br>')}</div>
+                <h2>Certificate of Analysis</h2>
+                <div class="subtitle">${escapeHtml(template.name || 'COA Template')}</div>
+                <div class="regulatory-tags">Regulatory: ${escapeHtml(template.tags || 'GMP')}</div>
+            </div>
+
+            <div class="coa-meta-grid">
+                <div class="coa-meta-item">
+                    <span class="label">Sample ID:</span><span>${escapeHtml(req.sampleId || '-')}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Batch/Lot No.:</span><span>${escapeHtml(req.batchNumber || '-')}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Product:</span><span>${escapeHtml(req.sampleCondition || req.description || '-')}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Mfg. Date:</span><span>${formatDate(req.manufacturingDate)}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Exp. Date:</span><span>${formatDate(req.expiryDate)}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">COA Date:</span><span>${formatDate(today)}</span>
+                </div>
+            </div>
+
+            <div class="coa-section">
+                <h4>Test Results</h4>
+                <table class="coa-table">
+                    <thead>
+                        <tr>
+                            <th style="width:30%;">Parameter</th>
+                            <th style="width:30%;">Specification</th>
+                            <th style="width:20%;">Result</th>
+                            <th style="width:20%;">Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+    $.each(lineItems, function(idx, item) {
+        coaHtml += `
+                        <tr>
+                            <td>${escapeHtml(item.service ? item.service.name : '-')}</td>
+                            <td>${escapeHtml(item.service ? (item.service.description || '-') : '-')}</td>
+                            <td>${escapeHtml(getTestResultDisplay(item))}</td>
+                            <td>${escapeHtml(item.remarks || '-')}</td>
+                        </tr>`;
+    });
+
+    coaHtml += `
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="coa-section">
+                <h4>Sample Information</h4>
+                <table class="coa-table">
+                    <tr><td style="width:30%;font-weight:600;">Sample ID</td><td>${escapeHtml(req.sampleId || '-')}</td></tr>
+                    <tr><td style="font-weight:600;">Sample Name</td><td>${escapeHtml(req.sampleCondition || '-')}</td></tr>
+                    <tr><td style="font-weight:600;">Sample Type</td><td>${escapeHtml(req.sampleType || '-')}</td></tr>
+                    <tr><td style="font-weight:600;">Sample Quantity</td><td>${req.sampleQuantity || '-'} ${escapeHtml(req.sampleUnit || '')}</td></tr>
+                    <tr><td style="font-weight:600;">Received By</td><td>${escapeHtml(req.sampleDrawnBy || '-')}</td></tr>
+                </table>
+            </div>
+
+            <div class="coa-footer">
+                ${(template.footer || 'This is a system-generated Certificate of Analysis.').replace(/\n/g, '<br>')}
+            </div>
+        </div>
+    `;
+    $('#generateCoaPanel .ibox-content').html(coaHtml);
+}
+
+function escapeHtml(str) {
+    if (str == null) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function printCoa() {
+    const printContent = document.getElementById('coaPreview');
+    if (!printContent) {
+        toastr.warning('No COA to print');
+        return;
+    }
+    
+    const printWindow = window.open('', '', 'height=800,width=800');
+    printWindow.document.write('<html><head><title>Certificate of Analysis</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .coa-preview { background: white; padding: 20px; }
+        .coa-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .coa-header h2 { margin: 10px 0; text-transform: uppercase; letter-spacing: 2px; }
+        .coa-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; font-size: 13px; }
+        .coa-meta-item .label { font-weight: 600; margin-right: 5px; }
+        .coa-section { margin-top: 20px; page-break-inside: avoid; }
+        .coa-section h4 { font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .coa-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .coa-table th, .coa-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        .coa-table th { background: #f5f5f5; font-weight: 600; }
+        .coa-footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; text-align: center; color: #555; }
+    `);
+    printWindow.document.write('</style></head><body>');
+    printWindow.document.write(printContent.outerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+}
+
+function exportCoaToPdf() {
+    const element = document.getElementById('coaPreview');
+    if (!element) { toastr.warning('No COA to export'); return; }
+    if (typeof html2pdf === 'undefined') { toastr.error('PDF library not loaded. Please include html2pdf.js'); return; }
+    
+    const template = window.currentCoaTemplate;
+    const filename = 'COA-' + (template?.name || 'template') + '-' + new Date().getTime() + '.pdf';
+    const opt = {
+        margin: 10, filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+}
+</script>
+<!-- generateCoaPanel.js end -->
+
+
+<!-- newTestRequestPanel.html start -->
+<div class="row animated fadeInRight aasaanPanel" id="newRequestPanel" style="display:none;">
+  <div class="col-lg-12">
+    <div class="ibox float-e-margins">
+      <div class="ibox-title">
+          <h5>New <small>Sample Request</small></h5>
+          <div class="ibox-tools">
+              <button type="button" class="btn btn-default btn-sm showAllRequestsOnCancel"><i data-lucide="x"></i> Close</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="createRequestBtn"><i data-lucide="check"></i> Save</button>
+          </div>
+      </div>
+      <div class="ibox-content">
+        <form role="form" name="requestObj" action="#" method="post" id="newRequestForm">
+          <div class="row " id="layoutRenderer_form">
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Department</label>
+                  <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                        type="button" id="newDepartmentBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                    <div class="dropdown-menu w-100" id="newDepartmentDropdownMenu">
+                      <a class="dropdown-item new-department-item" href="#" data-value="">-- None --</a>
+                      <a class="dropdown-item new-department-item" href="#" data-value="Production">Production</a>
+                      <a class="dropdown-item new-department-item" href="#" data-value="Warehouse">Warehouse</a>
+                    </div>
+                  </div>
+                  <input type="hidden" name="description" id="newDescriptionInput" value="">
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Material Type</label>
+                  <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                        type="button" id="newMaterialTypeBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                    <div class="dropdown-menu w-100" id="newMaterialTypeDropdownMenu">
+                      <a class="dropdown-item new-materialtype-item" href="#" data-value="">-- None --</a>
+                      <a class="dropdown-item new-materialtype-item" href="#" data-value="Raw Material">Raw Material</a>
+                      <a class="dropdown-item new-materialtype-item" href="#" data-value="In-Process Material">In-Process Material</a>
+                      <a class="dropdown-item new-materialtype-item" href="#" data-value="Finished Goods">Finished Goods</a>
+                    </div>
+                  </div>
+                  <input type="hidden" name="sampleType" id="newSampleTypeInput" value="">
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Received By</label>
+                  <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                        type="button" id="newReceivedByBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                    <div class="dropdown-menu w-100" id="newReceivedByMenu"></div>
+                  </div>
+                  <input type="hidden" name="sampleDrawnBy" id="newSampleDrawnByInput" value="">
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Received Date</label>
+                  <input type="text" class="form-control" id="newReceivedDate" name="receivedDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Sample ID</label>
+                  <input type="text" class="form-control requestInputRequiredField" name="sampleId" placeholder="Enter Sample ID"/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Sample Name</label>
+                  <input type="text" class="form-control requestInputRequiredField" name="sampleCondition" placeholder="Enter Sample Name"/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Sample Quantity</label>
+                  <input type="number" class="form-control requestInputRequiredField" name="sampleQuantity" placeholder="Enter Sample Quantity"/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Sample Unit</label>
+                  <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                        type="button" id="newSampleUnitBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                    <div class="dropdown-menu w-100" id="newSampleUnitMenu"></div>
+                  </div>
+                  <input type="hidden" name="sampleUnit" id="newSampleUnitInput" value="">
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Manufacturing Date</label>
+                  <input type="text" class="form-control" id="newManufacturingDate" name="manufacturingDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Expiry Date</label>
+                  <input type="text" class="form-control" id="newExpiryDate" name="expiryDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Batch / Lot #</label>
+                  <input type="text" class="form-control requestInputRequiredField" name="batchNumber" placeholder="Enter Batch / Lot #"/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>STP / Specification</label>
+                  <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                        type="button" id="newStpBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                    <div class="dropdown-menu w-100" id="newStpDropdownMenu"></div>
+                  </div>
+                  <input type="hidden" id="newStpSelectionInput" name="testProcedure.id" value="">
+                </div>
+              </div>
+
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- newTestRequestPanel.html end -->
+
+
+<!-- newTestRequestPanel.js start -->
+<script>
+var sampleTestMap = {};
+var currentSampleRowIndex;
+function generateReferenceNumber(sequence) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); 
+    const seq = String(sequence).padStart(5, '0');
+    return `ARN/${year}/${month}/${seq}`;
+}
+
+function getNextSequenceFromReference(ref, year, month) {
+    if (!ref) return 1;
+    const parts = ref.split('/');
+    if (parts.length === 4 && parts[1] == year && parts[2] == month) {
+        return parseInt(parts[3], 10) + 1;
+    }
+    return 1;
+}
+function toISODate(ddmmyyyy) {
+    if (!ddmmyyyy) return null;
+    var parts = ddmmyyyy.split('/');
+    if (parts.length === 3) return parts[2] + '-' + parts[1] + '-' + parts[0];
+    return ddmmyyyy;
+}
+$(document).ready(function(){
+    // ── Dropdown handlers — exact employees.html pattern ──
+    // Each menu has its own handler; button text set directly (.text()), hidden input updated
+    $(document).on('click', '#newDepartmentDropdownMenu .new-department-item', function(e) {
+        e.preventDefault();
+        $('#newDepartmentBtn').text($(this).text());
+        $('#newDescriptionInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#newMaterialTypeDropdownMenu .new-materialtype-item', function(e) {
+        e.preventDefault();
+        $('#newMaterialTypeBtn').text($(this).text());
+        $('#newSampleTypeInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#newReceivedByMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#newReceivedByBtn').text($(this).text());
+        $('#newSampleDrawnByInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#newSampleUnitMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#newSampleUnitBtn').text($(this).text());
+        $('#newSampleUnitInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#newStpDropdownMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#newStpBtn').text($(this).text());
+        $('#newStpSelectionInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#editDepartmentDropdownMenu .edit-department-item', function(e) {
+        e.preventDefault();
+        $('#editDepartmentBtn').text($(this).text());
+        $('#editDepartmentDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#editMaterialTypeDropdownMenu .edit-materialtype-item', function(e) {
+        e.preventDefault();
+        $('#editMaterialTypeBtn').text($(this).text());
+        $('#editMaterialTypeDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#editReceivedByMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#editReceivedByBtn').text($(this).text());
+        $('#editReceivedByMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#editSampleUnitMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#editSampleUnitBtn').text($(this).text());
+        $('#editSampleUnitMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#editStpDropdownMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#editStpBtn').text($(this).text());
+        $('#editStpSelectionInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $('.showAllRequestsOnCancel').on('click', function() {
+        btnClicked = '';
+        $('#addWitnessItemRowsBtn').prop("disabled", true);
+        $('.recordEditBtn').hide();
+        $('#sampleAllocationBtn').hide();
+        $('.sendToQcBtn').hide();
+        $("#printAnalysisReportBtn").hide();
+        $('#horzontalLineTabs').hide();
+        $('#editRequestPanel').hide();
+        $('#newRequestPanel').hide();
+        $('#allRequestPanel').show();
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('id')) {
+            url.searchParams.delete('id');
+            history.replaceState(null, '', url.pathname + url.search);
+        }
+    });
+
+    $('#createRequestBtn').on('click', function() {
+        function toISODate(ddmmyyyy) {
+            if (!ddmmyyyy) return null;
+            var parts = ddmmyyyy.split('/');
+            if (parts.length === 3) return parts[2] + '-' + parts[1] + '-' + parts[0];
+            return ddmmyyyy;
+        }
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+
+        $.get(JSUTIL.getUrl('/api/test-requests'), function(data) {
+            // Find the highest sequence for current year/month across ALL requests
+            var maxSeq = 0;
+            if (data && data.length > 0) {
+                $.each(data, function(i, req) {
+                    if (req.referenceNumber) {
+                        var parts = req.referenceNumber.split('/');
+                        if (parts.length === 4 && parts[1] == year && parts[2] == month) {
+                            var seq = parseInt(parts[3], 10);
+                            if (seq > maxSeq) maxSeq = seq;
+                        }
+                    }
+                });
+            }
+            let nextSeq = maxSeq + 1;
+            let newRef = generateReferenceNumber(nextSeq);
+            var stpId = $('#newStpSelectionInput').val();
+
+            if (!stpId || stpId === '') {
+    JSUTIL.buildErrorModal('Please select STP Test');
+    JSUTIL.stopSpinner();
+    return;
+}
+
+            // Collect text/number inputs
+            var rawForm = {};
+            $('#newRequestForm input[type="text"], #newRequestForm input[type="number"]').each(function() {
+                if ($(this).attr('name')) rawForm[$(this).attr('name')] = $(this).val();
+            });
+            // Collect dropdown hidden inputs
+            rawForm['description']   = $('#newDescriptionInput').val();
+            rawForm['sampleType']    = $('#newSampleTypeInput').val();
+            rawForm['sampleDrawnBy'] = $('#newSampleDrawnByInput').val();
+            rawForm['sampleUnit']    = $('#newSampleUnitInput').val();
+
+            var requestObj = {
+                referenceNumber:   newRef,
+                sampleType:        rawForm.sampleType        || '',
+                type:              rawForm.description       || '',
+                description:       rawForm.description       || '',
+                receivedDate:      toISODate(rawForm.receivedDate)      || null,
+                manufacturingDate: toISODate(rawForm.manufacturingDate) || null,
+                expiryDate:        toISODate(rawForm.expiryDate)        || null,
+                sampleId:          rawForm.sampleId          || '',
+                sampleCondition:   rawForm.sampleCondition   || '',
+                sampleQuantity:    parseFloat(rawForm.sampleQuantity)   || 0,
+                sampleUnit:        rawForm.sampleUnit        || '',
+                batchNumber:       rawForm.batchNumber       || '',
+                sampleDrawnBy:     rawForm.sampleDrawnBy     || '',
+                requestStatus:     'New'
+            };
+
+            // if (stpId) {
+            //     requestObj['testProcedure'] = { 'id': Number(stpId) };
+            // }
+            if (stpId && stpId !== '') {
+                requestObj['testProcedure'] = { 'id': Number(stpId) };
+            } else {
+                requestObj['testProcedure'] = null;   
+            }
+            JSUTIL.startSpinner();
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/test-requests'), JSON.stringify(requestObj), saveSampleRequestCallback);
+        });
+    });
+});
+
+function saveSampleRequestCallback(response) {
+    console.log('Save response: ', response);
+    // JSUTIL.redirectTo('/app/pharma/test_request');
+    location.reload();
+}
+</script>
+<!-- newTestRequestPanel.js end -->
+
+
+<!-- editTestRequestPanel.html start -->
+<div class="row animated fadeInRight aasaanPanel" id="editRequestPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="editRequestTitle"></span>
+                    <span class="badge bg-secondary" style="float: none;margin-left: 10px;" id="editRequestStatus"></span>
+                    <span id="urlDisplay" class="badge bg-primary" style="margin-left: 10px;float: none;"></span>
+                </h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm showAllRequestsOnCancel"><i data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-default btn-sm" id="deleteRequestBtn"><i data-lucide="trash"></i> Cancel Request</button>
+                    <button type="button" class="btn btn-secondary btn-sm labControlBtn updateSampleRequestBtn" style="display:none;"><i data-lucide="check"></i> Save</button>
+                    <button type="button" class="btn btn-default btn-sm labControlBtn recordEditBtn" style="display:none;"><i data-lucide="pencil"></i> Edit</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="sampleAllocationBtn"><i data-lucide="user"></i> Allocate Sample</button>
+                    <button type="button" class="btn btn-secondary btn-sm labControlBtn" id="sendToQcBtn" style="display:none;"><i data-lucide="check-check"></i> Send to QC</button>
+                    <button type="button" class="btn btn-secondary btn-sm labControlBtn generateCoaBtn" style="display:none;"><i data-lucide="printer"></i> Print COA</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="printGenerateULRBtn" style="display:none;"><i data-lucide="lock"></i> Generate ULR</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="editRequestObj" action="#" method="post" id="editRequestForm">
+                    <div class="row " id="layoutRenderer_editForm">
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Department</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editDepartmentBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editDepartmentDropdownMenu">
+                                      <a class="dropdown-item edit-department-item" href="#" data-value="">-- None --</a>
+                                      <a class="dropdown-item edit-department-item" href="#" data-value="Production">Production</a>
+                                      <a class="dropdown-item edit-department-item" href="#" data-value="Warehouse">Warehouse</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden" name="description" value="">
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Material Type</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editMaterialTypeBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editMaterialTypeDropdownMenu">
+                                      <a class="dropdown-item edit-materialtype-item" href="#" data-value="">-- None --</a>
+                                      <a class="dropdown-item edit-materialtype-item" href="#" data-value="Raw Material">Raw Material</a>
+                                      <a class="dropdown-item edit-materialtype-item" href="#" data-value="Packaging Material">Packaging Material</a>
+                                      <a class="dropdown-item edit-materialtype-item" href="#" data-value="In-Process Material">In-Process Material</a>
+                                      <a class="dropdown-item edit-materialtype-item" href="#" data-value="Finished Goods">Finished Goods</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden" name="sampleType" value="" >
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Received By</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editReceivedByBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editReceivedByMenu"></div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden" name="sampleDrawnBy" value="">
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Received Date</label>
+                                <input type="text" class="form-control editRecordInput1" id="editReceivedDate" name="receivedDate" placeholder="DD/MM/YYYY" autocomplete="off" disabled/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Sample ID</label>
+                                <input type="text" class="form-control editRecordInput1" name="sampleId" placeholder="Enter Sample ID" readonly/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Sample Name</label>
+                                <input type="text" class="form-control editRecordInput" name="sampleCondition" placeholder="Enter Sample Name" readonly/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Sample Quantity</label>
+                                <input type="number" class="form-control editRecordInput" name="sampleQuantity" placeholder="Enter Sample Quantity" readonly/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Sample Unit</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editSampleUnitBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editSampleUnitMenu"></div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden" name="sampleUnit" value="">
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Manufacturing Date</label>
+                                <input type="text" class="form-control editRecordInput1" id="editManufacturingDate" name="manufacturingDate" placeholder="DD/MM/YYYY" autocomplete="off" disabled/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Expiry Date</label>
+                                <input type="text" class="form-control editRecordInput1" id="editExpiryDate" name="expiryDate" placeholder="DD/MM/YYYY" autocomplete="off" disabled/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>Batch / Lot #</label>
+                                <input type="text" class="form-control editRecordInput1" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
+                                <label>STP Test</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editStpBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" data-value="" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editStpDropdownMenu"></div>
+                                </div>
+                                <input type="hidden" id="editStpSelectionInput" name="testProcedure.id" value="">
+                                </div>
+                            </div>
+
+                    </div>
+                    <hr/>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Created</label>
+                                <input class="form-control inputNonEdit" id="createdDateInput" readonly>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Last Modified</label>
+                                <input class="form-control inputNonEdit" id="modifiedDateInput" readonly>
+                            </div>
+                        </div>
+                        <input type="hidden" id="editRequestId" name="Id" />
+                    </div>
+                    <!-- <hr/> -->
+                    <div class="tabs-container">
+                        <ul class="nav nav-tabs">
+                            <!-- <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tests" aria-expanded="false" id="horzontalLineTabs">Tests</a></li> -->
+                             <a class="nav-link" id="testTab" data-bs-toggle="tab" href="#testTabContent">Test</a>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="testTabContent" class="tab-pane active">
+                                <div class="panel-body">
+                                    <div class="table-responsive" id="allParametersTable">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Test</th>
+                                                    <th>Specification</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allParametersTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals (unchanged) -->
+<div class="modal fade" id="auditTrailModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Audit Trail</h5>
+                    <small class="font-bold">View all the changes done to this Request.</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="footable table table-stripped toggle-arrow-tiny">
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>Employee</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditTrailModalTable"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="sendEmailModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="row">
+                <div class="col-lg-12">
+                    <form role="form" name="email_modal_obj">
+                        <div class="mail-body">
+                            <div class="form-group row"><label class="col-sm-2 col-form-label">To:</label>
+                                <div class="col-sm-10"><input type="text" class="form-control emailModalInput" id="emailModalToAddress" name="toAddress" value="" placeholder="Enter Email Address" /></div>
+                            </div>
+                            <div class="form-group row"><label class="col-sm-2 col-form-label">Subject:</label>
+                                <div class="col-sm-10"><input type="text" class="form-control emailModalInput" name="subject" value="Analysis Report" placeholder="Enter Subject" /></div>
+                            </div>
+                        </div>
+                        <div class="mail-text h-200">
+                            <textarea class="form-control emailModalInput" rows="10" name="textBody">Your document is attached here.</textarea>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="mail-body text-left col-lg-6">
+                                <i data-lucide="file-text" style="width:30px;height:30px;"></i> Analysis Report.pdf
+                            </div>
+                            <div class="mail-body text-right tooltip-demo col-lg-6">
+                                <a href="javascript:void(0)" class="btn btn-secondary" data-bs-toggle="tooltip" data-placement="top" title="Discard email" data-bs-dismiss="modal"> Discard </a>
+                                <a href="javascript:void(0)" class="btn btn-secondary" data-bs-toggle="tooltip" data-placement="top" title="Send" id="emailModalSendBtn"> Send </a>
+                            </div>
+                        </div>
+                        <input type="hidden" id="emailModalFileName" value="Analysis Report.pdf" />
+                        <input type="hidden" id="emailModalAttachmentPath" value="" />
+                        <input type="hidden" id="emailModalUploadPath" value="" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="allocateSampleModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content" style="overflow: visible;">
+            <div class="modal-header">
+                <h5 class="modal-title">Sample Allocation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="overflow: visible;">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-group " style="position: relative;">
+                            <label>Allocate Analyst</label>
+                            <input type="text" placeholder="Search Analyst Name" name="AnalystName" class="typeahead_3 form-control selectSearchInputAutoCompleteStr" aria-description="search/employee" id="sampleAllocationEmployeeInput" autocomplete="off"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm btn-secondary" id="saveSampleAllocationBtn" disabled>Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Reusable Confirmation Modal ── -->
+<div class="modal fade" id="inwardConfirmModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" style="max-width:420px;">
+        <div class="modal-content">
+            <div class="modal-header" style="padding:14px 18px;">
+                <h5 class="modal-title" id="inwardConfirmModalTitle" style="font-size:15px;font-weight:600;"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding:16px 18px;">
+                <p id="inwardConfirmModalMessage" style="margin:0;font-size:14px;color:#444;"></p>
+            </div>
+            <div class="modal-footer" style="padding:10px 18px;gap:8px;">
+                <button type="button" class="btn btn-sm btn-default" id="inwardConfirmModalCancelBtn">No, Cancel</button>
+                <button type="button" class="btn btn-sm btn-danger" id="inwardConfirmModalOkBtn">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row animated fadeInRight aasaanPanel" id="newSamplePanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>New <small>Sample</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm showEditRequestOnCancel"><i data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="createSampleBtn"><i data-lucide="check"></i> Save</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="newSampleObj" id="newSampleForm">
+                    <div class="row ">
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Sample Type</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="newSampleTypeBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                                    <div class="dropdown-menu w-100" id="newSampleTypeMenu">
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="">-- None --</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Control">Control</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Finished Product">Finished Product</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Microbiological Sample">Microbiological Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Amt Sample">Amt Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="AMV Sample">AMV Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="NDBA Sample">NDBA Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="NDMA Sample">NDMA Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="NDSRI Sample">NDSRI Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Other sample">Other sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="QC- Regulatory Sample">QC- Regulatory Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="QC Samples">QC Samples</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Representatives">Representatives</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="RS Sample">RS Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Redressing Sample">Redressing Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Retention Sample">Retention Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Retest Sample">Retest Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Semi Finished Sample">Semi Finished Sample</a>
+                                        <a class="dropdown-item new-sampletype-item" href="#" data-value="Stability Sample">Stability Sample</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="type" id="newSampleTypeInput" value=""  >
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Sampling Location</label>
+                                <input type="text" class="form-control" name="samplingLocation" id="newSamplingLocation" placeholder="Enter Sampling Location">
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Drawn Date &amp; Time</label>
+                                <input type="text" class="form-control" id="newDrawnDate" name="drawnTime"
+                                    placeholder="DD/MM/YYYY HH:mm" autocomplete="off" readonly/>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Packaging</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="newPackagingBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                                    <div class="dropdown-menu w-100" id="newPackagingMenu">
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="">-- None --</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="Normal Bag">Normal Bag</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="Others">Others</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="Plastic Drums">Plastic Drums</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="PVC Cane">PVC Cane</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="PVC Drums">PVC Drums</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="Standard Cartons">Standard Cartons</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="Steel Drums">Steel Drums</a>
+                                        <a class="dropdown-item new-packaging-item" href="#" data-value="UN Drums">UN Drums</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="packaging" id="newPackagingInput" value="">
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Quantity</label>
+                                <input type="number" class="form-control" name="netWeight" id="newNetWeight" placeholder="Enter Quantity"/>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                                <label>Unit</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="newSampleUnitSampleBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                                    <div class="dropdown-menu w-100" id="newSampleUnitSampleMenu"></div>
+                                </div>
+                                <input type="hidden" name="unit" id="newSampleUnitSampleInput" value="">
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editTestRequestPanel.html end -->
+
+
+<!-- editTestRequestPanel.js start -->
+<script>
+var multipartFile = '';
+var selectedLabSampleId = '';
+var selectedFieldSampleId = '';
+var currentFieldParameterId = '';
+// emailAttachmentPath is now a function — currentTestRequestId is not available at parse time
+function getEmailAttachmentPath() {
+    return JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/report?type=report');
+}
+
+$(document).ready(function(){
+   $('#sampleAllocationEmployeeInput').on('input', function() {
+    var query = $(this).val().trim();
+    // Enable/disable Save button based on whether analyst is selected
+    $('#saveSampleAllocationBtn').prop('disabled', query.length === 0);
+    if (query.length < 2) {
+        return;
+    }
+        $.ajax({
+            url: '/api/employees/search',
+            method: 'GET',
+            data: { name: query },
+            success: function(data) {
+                // data should be an array of employee objects
+                // Show suggestions (basic example below)
+                var $list = $('#employeeSearchResults');
+                if ($list.length === 0) {
+                    $list = $('<ul id="employeeSearchResults" class="list-group position-absolute w-100"></ul>');
+                    $('#sampleAllocationEmployeeInput').after($list);
+                }
+                $list.empty();
+                if (data && data.length) {
+                    data.forEach(function(emp) {
+                        $list.append('<li class="list-group-item list-group-item-action">' + emp.firstName + ' ' + emp.lastName + '</li>');
+                    });
+                } else {
+                    $list.append('<li class="list-group-item disabled">No results</li>');
+                }
+                // Click to select
+                $list.find('li').not('.disabled').on('click', function() {
+                    $('#sampleAllocationEmployeeInput').val($(this).text());
+                    $list.remove();
+                });
+            }
+        });
+    });
+     $(document).on('click', function(e) {
+        if (!$(e.target).closest('#sampleAllocationEmployeeInput').length) {
+            $('#employeeSearchResults').remove();
+        }
+    });
+    // ── newSamplePanel dropdown handlers ──
+    $(document).on('click', '#newSampleTypeMenu .new-sampletype-item', function(e) {
+        e.preventDefault();
+        $('#newSampleTypeBtn').text($(this).text());
+        $('#newSampleTypeInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#newPackagingMenu .new-packaging-item', function(e) {
+        e.preventDefault();
+        $('#newPackagingBtn').text($(this).text());
+        $('#newPackagingInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    $(document).on('click', '#newSampleUnitSampleMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#newSampleUnitSampleBtn').text($(this).text());
+        $('#newSampleUnitSampleInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+    $('#deleteWitnessItemBtn').prop('disabled', true);
+    $('#deleteRequestBtn').on('click', function() {
+        showConfirmationModal('Cancel Confirmation', '', 'This will cancel the sample request and you won\'t be able to see it in the list. Proceed?', deleteSampleRequestCallback);
+    });
+    $('#printBtnGroup').on('click', '.printRequestBtn', function() {
+        var formatId = $(this).attr('id');
+        var formatName = $(this).text().toLowerCase();
+        var formatType = '';
+        if(formatName.includes('analysis') && formatName.includes('report')){ formatType = 'report'; }
+        else if(formatName.includes('jobcard')){ formatType = 'jobcard'; }
+        else { formatType = 'other'; }
+        JSUTIL.openInNewTab(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/report?reportId=' + formatId + '&type=' + formatType));
+    });
+    $('#printBtnGroup').on('click', '#printJobcardBtn', function(){
+        JSUTIL.openInNewTab(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/report?type=jobcard'));
+    });
+    $('#printBtnGroup').on('click', '#printRawDataSheetBtn', function(){
+        JSUTIL.openInNewTab(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/report?type=rds'));
+    });
+    $(document).on('click', '.recordEditBtn', function() {
+        btnClicked = 'recordEditBtn';
+        $('.updateSampleRequestBtn').show();
+        $('.recordEditBtn').hide();
+        // Enable all readonly editRecordInput fields inside the edit panel
+        // (sampleId, sampleCondition, sampleQuantity, batchNumber,
+        //  receivedDate, manufacturingDate, expiryDate)
+        $('#editRequestPanel .editRecordInput').removeAttr('readonly');
+
+        // Enable all disabled dropdown buttons in the edit panel
+      $('#editReceivedByBtn, #editStpBtn, #editSampleUnitBtn').removeAttr('disabled');
+
+        // Attach daterangepicker to the three date fields
+        initRequestDatePickers('#editRequestPanel');
+    });
+
+    $('.updateSampleRequestBtn').on('click', function() {
+        function toISODate(ddmmyyyy) {
+            if (!ddmmyyyy) return null;
+            var parts = ddmmyyyy.split('/');
+            if (parts.length === 3) return parts[2] + '-' + parts[1] + '-' + parts[0];
+            return ddmmyyyy;
+        }
+
+        var stpId = $('#editStpSelectionInput').val();
+        if (!stpId || stpId === '') {
+    JSUTIL.buildErrorModal('Please select STP Test');
+    return;
+}
+
+
+        // Collect text/number inputs — scoped to editRequestPanel to avoid newSampleForm collision
+        var rawForm = {};
+        $('#editRequestPanel input[type="text"], #editRequestPanel input[type="number"]').each(function() {
+            if ($(this).attr('name')) rawForm[$(this).attr('name')] = $(this).val();
+        });
+        // Collect dropdown hidden inputs
+        $('#editRequestPanel .inward-dropdown-hidden').each(function() {
+            if ($(this).attr('name')) rawForm[$(this).attr('name')] = $(this).val();
+        });
+
+        var requestObj = {
+            sampleType:        rawForm.sampleType        || '',
+            type:              rawForm.description       || '',
+            description:       rawForm.description       || '',
+            receivedDate:      toISODate(rawForm.receivedDate)      || null,
+            manufacturingDate: toISODate(rawForm.manufacturingDate) || null,
+            expiryDate:        toISODate(rawForm.expiryDate)        || null,
+            sampleId:          rawForm.sampleId          || '',
+            sampleCondition:   rawForm.sampleCondition   || '',
+            sampleQuantity:    parseFloat(rawForm.sampleQuantity)   || 0,
+            sampleUnit:        rawForm.sampleUnit        || '',
+            batchNumber:       rawForm.batchNumber       || '',
+            sampleDrawnBy:     rawForm.sampleDrawnBy     || ''
+        };
+
+       if (stpId && stpId !== '') {
+            requestObj['testProcedure'] = { 'id': Number(stpId) };
+        } else {
+            requestObj['testProcedure'] = null;  
+        }
+                JSUTIL.startSpinner();
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), saveSampleRequestUpdateCallback);
+    });
+    // $('#deleteRequestBtn').on('click', function() {
+    //     showConfirmationModal('Cancel Confirmation', '', 'This will cancel the sample request and you won\'t be able to see it in the list. Proceed?', hardDeleteSampleRequestCallback);
+    // });
+
+    $('#sampleAllocationBtn').on('click', function(){
+    $('#sampleAllocationEmployeeInput').val('');
+    $('#saveSampleAllocationBtn').prop('disabled', true);
+    var allocateModal = new bootstrap.Modal(document.getElementById('allocateSampleModal'));
+    allocateModal.show();
+});
+    $('#saveSampleAllocationBtn').on('click', function(){
+        var testRequestItems = [];
+        $.each(currentProcedureItems, function(i, val){
+            var jsobj = {
+                'service' : { 'id' : String(val.service.id) },
+                'request' : { 'id' : String(currentTestRequestId) },
+                'worksheet': val.instruction
+            };
+            testRequestItems.push(jsobj);
+        });
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/test-request-items/create_multiple'), JSON.stringify(testRequestItems), function(response){
+            var requestObj = {
+                'requestStatus': 'Sampling',
+                'samplingLocation': $('#sampleAllocationEmployeeInput').val()
+            };
+            console.log('Saving sample allocation for request ID ' + currentTestRequestId);
+            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), saveSampleRequestCallback);
+        });
+    });
+    $('#auditTrailBtn').on('click', function() {
+        var postUrl = JSUTIL.getUrl('/audit/trail?id=' + currentTestRequestId);
+        JSUTIL.callAJAXGet(postUrl, getAuditTrailCallback);
+    });
+    $('#sendToQcBtn').on('click', function () {
+        var requestObj = { 'requestStatus': 'QC Analysis' };
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), saveSampleRequestCallback);
+    });
+    $('#sendToQcAgainBtn').on('click', function () {
+        var requestObj = { 'requestStatus': 'QC Analysis' };
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), toQcCallback);
+    });
+    $('#printAnalysisReportBtn').on('click', function() {
+        JSUTIL.openInNewTab(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/report?type=report'));
+    });
+    $('#emailAnalysisReportBtn').on('click', function() {
+        $('#emailModalAttachmentPath').val(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/report?type=report'));
+        $('#emailModalToAddress').val(currentRequestCustomerEmail);
+        var emailModal = new bootstrap.Modal(document.getElementById('sendEmailModal'));
+        emailModal.show();
+    });
+    $('#createInvoiceBtn').on('click', function() {
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/invoices'), JSON.stringify({ requestId: currentTestRequestId }), createInvoiceCallback);
+    });
+    $('#createProformaInvoiceBtn').on('click', function() {
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/proforma-invoices'), JSON.stringify({ requestId: currentTestRequestId }), createProformaInvoiceCallback);
+    });
+    $('#printGenerateULRBtn').on('click', function() {
+        JSUTIL.startSpinner();
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/generate-ulr'), '{}', callbackAfterGenerateULR);
+    });
+    // ── Init daterangepicker on all drawnTime inputs in the sample table ──
+   
+
+    $(document).on('click', '#editSampleBtn', function() {
+        $(this).hide();
+
+        // Enable all disabled sampleInput fields (inputs + select2 selects)
+        $('#allSamplesTable .sampleInput').removeAttr('disabled');
+
+        // Re-init select2 on the newly enabled selects so they render correctly
+        if ($.fn.select2) {
+            $('#allSamplesTable .select2').select2();
+        }
+
+        // Init daterangepicker on all drawnTime inputs
+        initSampleRowDatepickers();
+
+        // Activate edit mode — unlocks checkboxes
+        $('#allSamplesTable').addClass('edit-mode-active');
+
+        $('#addSampleBtn').show();
+        $('#updateSampleBtn').show();
+        $('#deleteSampleBtn').show();
+    });
+    $('#addSampleBtn').on('click', function(){
+        // Reset all fields
+        $('#newSampleTypeBtn, #newPackagingBtn, #newSampleUnitSampleBtn').text('-- None --');
+        $('#newSampleTypeInput, #newPackagingInput, #newSampleUnitSampleInput').val('');
+        $('#newDrawnDate, #newSamplingLocation, #newNetWeight').val('');
+        $('#newSampleForm .dropdown-item').removeClass('active');
+
+        // Populate unit dropdown from uomList
+        var unitHtml = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+        $.each(uomList, function(i, val) {
+            unitHtml += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + ' (' + val.description + ')</a>';
+        });
+        $('#newSampleUnitSampleMenu').html(unitHtml);
+
+        // Init daterangepicker WITH timePicker on the drawn date field
+        if ($.fn.daterangepicker) {
+            var $drawnDate = $('#newDrawnDate');
+            if ($drawnDate.data('daterangepicker')) { $drawnDate.data('daterangepicker').remove(); }
+            $drawnDate.daterangepicker({
+                singleDatePicker : true,
+                showDropdowns    : true,
+                timePicker       : true,
+                timePicker24Hour : true,
+                autoUpdateInput  : false,
+                minYear          : 1901,
+                maxYear          : parseInt(moment().format('YYYY'), 10) + 10,
+                locale           : { format: 'DD/MM/YYYY HH:mm', cancelLabel: 'Clear' }
+            });
+            $drawnDate.off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('DD/MM/YYYY HH:mm'));
+            });
+            $drawnDate.off('cancel.daterangepicker').on('cancel.daterangepicker', function() {
+                $(this).val('');
+            });
+        }
+
+        $('#newSamplePanel').show();
+        $('#editRequestPanel').hide();
+    });
+
+    $("#createSampleBtn").on('click', function(){
+        JSUTIL.startSpinner();
+
+        var currentYear = new Date().getFullYear();
+
+        // Fetch the latest sample number for this year to determine next sequence
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-samples?sort=number,desc&limit=1'), function(response) {
+            // Parse the last sequence and increment
+            var nextSeq = 1;
+            if (response && response.length > 0) {
+                var lastNum = (response[0].number || response[0].Number || '');
+                var parts   = lastNum.split('/');
+                if (parts.length === 3) {
+                    var lastSeq = parseInt(parts[2], 10);
+                    if (!isNaN(lastSeq)) nextSeq = lastSeq + 1;
+                }
+            }
+            var generatedNumber = 'SMP/' + currentYear + '/' + String(nextSeq).padStart(5, '0');
+
+            // Convert DD/MM/YYYY HH:mm → ISO for API
+            var drawnRaw = $('#newDrawnDate').val();
+            var drawnISO = null;
+            if (drawnRaw) {
+                var m = moment(drawnRaw, 'DD/MM/YYYY HH:mm');
+                if (m.isValid()) drawnISO = m.format('YYYY-MM-DDTHH:mm:ss');
+            }
+
+            var sampleObj = {
+                number          : generatedNumber,
+                type            : $('#newSampleTypeInput').val(),
+                samplingLocation: $('#newSamplingLocation').val(),
+                drawnTime       : drawnISO,
+                packaging       : $('#newPackagingInput').val(),
+                netWeight       : Number($('#newNetWeight').val()) || 0,
+                unit            : $('#newSampleUnitSampleInput').val(),
+                request         : { id: Number(currentTestRequestId) }
+            };
+
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/test-samples'), JSON.stringify(sampleObj), function(res) {
+                location.reload();
+            });
+        });
+    });
+    $('#updateSampleBtn').on('click', function () {
+        let samples = [];
+        $('#allSamplesTable tr.sampleRow').each(function () {
+            var sampleId = $(this).data('id');
+            var drawnRaw = $(this).find('.sampleInput[name="drawnTime"]').val();
+            var drawnISO = null;
+            if (drawnRaw && drawnRaw.trim()) {
+                var m = moment(drawnRaw, 'DD/MM/YYYY HH:mm', true);
+                if (m.isValid()) {
+                    // Format to match API: "2026-03-26T00:00:00"
+                    drawnISO = m.format('YYYY-MM-DDTHH:mm:ss');
+                }
+            }
+            let sample = {
+                id: sampleId,
+                type: $(this).find('.sampleInput[name="type"]').val(),
+                samplingLocation: $(this).find('.sampleInput[name="samplingLocation"]').val(),
+                drawnTime: drawnISO,
+                packaging: $(this).find('.sampleInput[name="packaging"]').val(),
+                netWeight: Number($(this).find('.sampleInput[name="netWeight"]').val()),
+                unit: $(this).find('.sampleInput[name="unit"]').val(),
+            };
+            samples.push(sample);
+        });
+        var postUrl = JSUTIL.getUrl('/api/test-samples/bulk');
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(samples), function(res){
+            $('#addSampleBtn').hide();
+            $('#editSampleBtn').show();
+            $('#deleteSampleBtn').hide();
+            $('#updateSampleBtn').hide();
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-samples?requestId=' + currentTestRequestId), callbackAfterGetSamples);
+        });
+    });
+    $('#deleteSampleBtn').on('click', function(){
+        let jsObj = [];
+        $('.deleteItemCreatedEntryRow:checked').each(function() {
+            var sampleId = $(this).attr('name');
+            if(sampleId != ''){ jsObj.push(Number(sampleId)); }
+            else { $(this).closest('tr').remove(); return; }
+        });
+        if (jsObj.length > 0){
+            $.ajax({
+                url: JSUTIL.getUrl('/api/test-samples/delete-multiple'),
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(jsObj),
+                dataType: 'text',
+                complete: function(xhr) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-samples?requestId=' + currentTestRequestId), callbackAfterGetSamples);
+                    } else {
+                        console.error('Delete failed with status:', xhr.status);
+                    }
+                }
+            });
+        }
+    });
+    $('#allSamplesTable').on('change', '.deleteItemCreatedEntryRow', function () {
+        toggleDeleteButton('#allSamplesTable .deleteItemCreatedEntryRow', '#deleteSampleBtn');
+    });
+    $(document).on('click', '.showEditRequestOnCancel', function() {
+        $('#newSamplePanel').hide();
+        $('#editRequestPanel').show();
+    });
+    $("#emailModalSendBtn").click(function(){
+        JSUTIL.startSpinner();
+        if(uploadPath){
+            $('#emailModalAttachmentPath').val(null);
+            $('#emailModalUploadPath').val(uploadPath);
+        } else {
+            $('#emailModalAttachmentPath').val(getEmailAttachmentPath());
+            $('#emailModalUploadPath').val(null);
+        }
+        var postUrl = '/email/send_single';
+        var email_modal_obj = {};
+        email_modal_obj['toAddress']    = $('.emailModalInput[name="toAddress"]').val();
+        email_modal_obj['subject']      = $('.emailModalInput[name="subject"]').val();
+        email_modal_obj['textBody']     = $('.emailModalInput[name="textBody"]').val();
+        email_modal_obj['fileName']     = $('#emailModalFileName').val();
+        email_modal_obj['attachmentPath'] = $('#emailModalAttachmentPath').val();
+        email_modal_obj['uploadPath']   = $('#emailModalUploadPath').val();
+        var emailModalInst = bootstrap.Modal.getInstance(document.getElementById('sendEmailModal'));
+        if (emailModalInst) emailModalInst.hide();
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(email_modal_obj), email_modal_send_success);
+    });
+    $('#allAnalysisWitnessTable').on('change', '.deleteItemCreatedEntryRow', function () {
+        toggleDeleteButton('#allAnalysisWitnessTable .deleteItemCreatedEntryRow', '#deleteWitnessItemBtn');
+    });
+     $('#addParameterBtn').on('click', function() {
+        $('.serviceSelectInput').empty();
+        var innerHtml = '<option value="">--none--</option>';
+        $.each(testList, function(i, val){
+                innerHtml += `<option value="${val.id}">${val.name}</option>`;
+        });
+        $('.serviceSelectInput').append(innerHtml);
+        $('#newParameterPanel').show();
+        $('#allRequestPanel').hide();
+        $('#editRequestPanel').hide();
+        $('#newRequestPanel').hide();
+    });
+    $('#selectParametersBtn').on('click', function() {
+        $('#selectParameters_serviceSelectList').empty();
+        var innerHtml = '<option value="">--none--</option>';
+        $.each(testList, function(i, val){
+                innerHtml += `<option value="${val.id}">${val.name}</option>`;
+        });
+        $('#selectParameters_serviceSelectList').append(innerHtml);
+        $('#selectParameterPanel').show();
+        $('#allRequestPanel').hide();
+        $('#editRequestPanel').hide();
+        $('#newRequestPanel').hide();
+    });
+    $('#allParametersTable').on('click', '.deleteParameterSelect', function() {
+        currentRequestItemId = $(this).attr('name');
+        currentRequestItemPrice = $(this).parent().parent().find('.lbParametercharge').text();
+        showConfirmationModal('Delete Confirmation', '', 'Are you sure you want to delete this item?', deleteSampleRequestItemCallback);
+    });
+    $('#saveFieldParametersBtn').on('click', function(){
+        let requestObj = {};
+        requestObj['id'] = currentTestRequestId;
+        requestObj['lineItemList'] = [];
+        $.each(currentFieldData, function(i, val) {
+            $.each(val.requestItems, function(i, requestItem){
+                let lineItem = {};
+                lineItem['id'] = requestItem.id;
+                lineItem['testResult'] = '';
+                if(requestItem.parameter.numberOfReadings > 1){
+                    $('.fieldParameterInput[name="' + requestItem.parameter.number + '"]').each(function () {
+                        lineItem['testResult'] += $(this).val() + ';';
+                    });
+                    if(lineItem['testResult'].substring(lineItem['testResult'].length-1, lineItem['testResult'].length) === ';') {
+                        lineItem['testResult'] = lineItem['testResult'].substring(0, lineItem['testResult'].length-1) || 0;
+                    }
+                } else {
+                    lineItem['testResult'] = $('#requestLnItem_' + requestItem.parameter.id + '_TestResult').val();
+                }
+                lineItem['readings'] = [];
+                $('.fieldParameterItemRow_' + requestItem.parameter.id).each(function () {
+                    console.log($(this).attr('name'));
+                    let reading = {};
+                    reading['id'] = $('.fieldParameterItemInput[data-id="' + $(this).attr('name') + '"]').attr('id') ;
+                    reading['parameterItem'] = $(this).attr('name');
+                    reading['value'] = '';
+                    $('.fieldParameterItemInput[data-id="' + reading['parameterItem'] + '"]').each(function () {
+                        reading['value'] += $(this).val() + ';';
+                    });
+                    if(reading['value'].substring(reading['value'].length-1, reading['value'].length) === ';') {
+                        reading['value'] = reading['value'].substring(0, reading['value'].length-1) || 0;
+                    }
+                    lineItem['readings'].push(reading);
+                });
+                requestObj['lineItemList'].push(lineItem);
+            });
+        });
+        console.info(requestObj);
+        // Save each line item's testResult via PUT /api/test-request-items/{id} (same pattern as analysis.html)
+        var items = requestObj['lineItemList'] || [];
+        var idx = 0;
+        function saveNextFieldItem() {
+            if (idx >= items.length) {
+                toastr.success('Field data saved successfully');
+                JSUTIL.stopSpinner();
+                return;
+            }
+            var item = items[idx++];
+            var payload = { testResult: JSON.stringify(item.testResult || '') };
+            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-request-items/' + item.id), JSON.stringify(payload), saveNextFieldItem);
+        }
+        JSUTIL.startSpinner();
+        saveNextFieldItem();
+    });
+     $('#allFieldDataTableBody').on('click', '.deleteParameterSelect', function() {
+        currentRequestItemId = $(this).attr('name');
+        currentRequestItemPrice = $(this).parent().parent().find('.lbParametercharge').text();
+        showConfirmationModal('Delete Confirmation', '', 'Are you sure you want to delete this item?', deleteSampleRequestItemCallback);
+    });
+    $('#allFieldDataTableBody').on('click', '.expand-btn', function(){
+        currentFieldParameterId = $(this).attr('name');
+        currentRequestItemId = $(this).data('id');
+        $('.parameterItemRow_'+ currentFieldParameterId + '[name="' + selectedFieldSampleId + '"]').show();
+        $(this).hide();
+        $('#contractBtn_'+ currentFieldParameterId).show();
+    });
+    $('#allFieldDataTableBody').on('click', '.contract-btn', function(){
+        currentFieldParameterId = $(this).attr('name');
+        $('.parameterItemRow_'+ currentFieldParameterId + '[name="' + selectedFieldSampleId + '"]').hide();
+        $(this).hide();
+        $('#expandBtn_'+ currentFieldParameterId).show();
+    });
+    $('#addWitnessItemRowsBtn').on('click', function() {
+        var innerHtml = '<tr class="newItemEntry" name="">' +
+            '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow" name="" type="checkbox"><label></label></td>'+
+            '<td><input type="text" name="firstName" class="form-control newItemInput" placeholder="Enter First Name"/></td>' +
+            '<td><input type="text" name="lastName" class="form-control newItemInput" placeholder="Enter Last Name"/></td>' +
+            '<td><input type="text" name="designation" class="form-control newItemInput" placeholder="Enter Designation"/></td>' +
+            '</tr>';
+        $('#allAnalysisWitnessTable').append(innerHtml);
+    });
+    $('#editWitnessItemRowsBtn').on('click', function() {
+        $('.newItemInput').removeAttr('readonly');
+        $(this).hide();
+        $('#saveWitnessItemRowsBtn').show();
+        $('#addWitnessItemRowsBtn').removeAttr("disabled");
+    });
+    // $('#saveWitnessItemRowsBtn').on('click', function() {
+    //     let items = [];
+    //     $('#allAnalysisWitnessTable tr.newItemEntry').each(function () {
+    //         var witnessId = $(this).attr('name');
+    //         let item = {
+    //             id: witnessId,
+    //             firstName: $(this).find('.newItemInput[name="firstName"]').val(),
+    //             lastName: $(this).find('.newItemInput[name="lastName"]').val(),
+    //             designation: $(this).find('.newItemInput[name="designation"]').val(),
+    //             requestId: $('#editRequestId').val()
+    //         };
+    //         if (item['firstName'] !== '' && item['lastName'] !== '' && item['designation']){
+    //             items.push(item);
+    //         }
+    //     });
+    //     console.log(items);
+    //     var postUrl = ('/data/AnalysisWitness/upsert_multiple');
+    //     JSUTIL.callAJAXPost(postUrl, JSON.stringify(items), saveAnalysisWitnessesCallBack);
+    // });
+    // $('#deleteWitnessItemBtn').on('click', function(){
+    //     let jsObj = [];
+    //     let witnessId = '';
+    //     $('.deleteItemCreatedEntryRow:checked').each(function() {
+    //         witnessId = $(this).attr('name');
+    //         if(witnessId != ''){
+    //             jsObj.push(Number(witnessId));
+    //         } else{
+    //             $(this).closest('tr').remove();
+    //             return;
+    //         }
+    //     });
+    //     console.log(jsObj);
+    //     if (jsObj.length > 0){
+    //         JSUTIL.callAJAXPost('/data/AnalysisWitness/delete_multiple', JSON.stringify(jsObj), deleteRequestItemCompleteCallback);
+    //     }
+    // });
+    $('#allAnalysisWitnessTable').on('change', '.deleteItemCreatedEntryRow', function () {
+        toggleDeleteButton('#allAnalysisWitnessTable .deleteItemCreatedEntryRow', '#deleteWitnessItemBtn');
+    });
+    $('#fileInput').on('change', function (e) {
+        $('#fileNameText').text(e.target.files[0].name);
+        multipartFile = e.target.files[0];
+    });
+    $('#processBtn').on('click', function () {
+        $('#loadingError').hide();
+        $('#importResults').hide();
+        $('#insertedTable').empty();
+        var formData = new FormData();
+        formData.append('File', multipartFile);
+        var objectName = $('#permissionObjectName').val();
+        JSUTIL.callAJAXFilePost($('#fileForm').attr('action') + '&objectName=' + objectName, formData, afterCsvImportHandle, null);
+    });
+});
+function calculateParameter(parameterId, index, sampleId) {
+    $.each(currentFieldData, function (i, val) {
+        if(val.sample.sampleId === selectedFieldSampleId){
+            $.each(val.requestItems, function(i, requestItem){
+                if (requestItem.parameter.formula.indexOf(parameterId) >= 0) {
+                    recalculateParameterFormula(requestItem.parameter.formula, parameterId, requestItem.parameter.number, index, sampleId, requestItem.parameter.numberofDecimals);
+                    $.each(currentFieldData, function (i, val2) {
+                        if(val2.sample.sampleId === selectedFieldSampleId){
+                            $.each(val2.requestItems, function(i, requestItem2){
+                                if (requestItem2.parameter.formula.indexOf(requestItem.parameterNumber) >= 0) {
+                                    recalculateParameterFormula(requestItem2.parameter.formula, requestItem.parameter.number, requestItem2.parameter.number, index, sampleId), requestItem2.parameter.numberofDecimals;
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+function recalculateParameterFormula(formula, formulaInputField, formulaTargetfield, index, sampleId, numberOfDecimals) {
+    let formulaItems = [], regEx = /{([^}]+)}/g, text = '';
+    let averageString = [], inputFormulaArray = [];
+    let averageCount = 0;
+    while(text = regEx.exec(formula)) {
+        formulaItems.push(text[1]);
+    }
+    $.each(formulaItems, function (i, val) {
+        console.log('-->val: ', val);
+        let inputElementVal = '', inputElementArray = [];
+        let inputElement = '';
+        if(sampleId) {
+            inputElement = $('.fieldParameterInput[name="' + val + '"][aria-description="' + sampleId + '"]');
+            console.log('-->inputElement: ', inputElement);
+        } else {
+            inputElement = $('.fieldParameterInput[name="' + val + '"]');
+        }
+        if (inputElement && inputElement.length > 1) {
+            if(formula.indexOf('AVG(') >= 0 || formula.indexOf('MIN(') >= 0 || formula.indexOf('MAX(') >= 0 || formula.indexOf('SUM(') >= 0 || formula.indexOf('CUM(') >= 0) {
+                inputElementVal = '';
+                $.each(inputElement, function (x, ele) {
+                    if (ele.value) {
+                        if (inputElementVal.length > 0) {
+                            inputElementVal += ',';
+                        }
+                        inputElementVal += Number(ele.value);
+                        averageString.push(ele.value);
+                        averageCount++;
+                    }
+                });
+            } else if(!index && inputElement && inputElement.length > 1) {
+                $.each(inputElement, function (x, ele) {
+                    let currentInputVal = '';
+                    if(sampleId) {
+                        currentInputVal = $('.fieldParameterInput[name="' + val + '"][aria-description="' + sampleId + '"]').find('input[aria-deatils="' + x + '"]').val();
+                    } else {
+                        currentInputVal = $('.fieldParameterInput[name="' + val + '"]').find('input[aria-details="' + x + '"]').val();
+                    }
+                    inputElementArray.push(currentInputVal);
+                });
+                console.info(inputElementArray);
+            } else {
+                if(sampleId) {
+                    inputElementVal = $('.fieldParameterInput[name="' + val + '"][aria-description="' + sampleId + '"]').find('input[aria-details="' + index + '"]').val();
+                    console.log('-->inputElementVal: ', inputElementVal);
+                } else {
+                    inputElementVal = $('.fieldParameterInput[name="' + val + '"]').find('input[aria-details="' + index + '"]').val();
+                }
+            }
+        } else {
+            inputElementVal = inputElement.val();
+            console.log('-->inputElementVal: ', inputElementVal);
+            averageString.push(inputElementVal);
+            averageCount++;
+        }
+        if (inputElementVal) {
+            formula = formula.replaceAll('{' + val + '}', inputElementVal);
+            if(inputFormulaArray) {
+                let newArray = [];
+                $.each(inputFormulaArray, function (z, ele3) {
+                    ele3 = ele3.replaceAll('{' + val + '}', inputElementVal);
+                    newArray.push(ele3);
+                });
+                inputFormulaArray = newArray;
+            }
+        }
+        if(inputElementArray) {
+            $.each(inputElementArray, function (y, ele2) {
+                let f = formula.replaceAll('{' + val + '}', ele2);
+                inputFormulaArray.push(f);
+            });
+        }
+    });
+    evalOneToManyParameterFormula(formula, inputFormulaArray, averageString, formulaTargetfield, sampleId, index, numberOfDecimals);
+}
+function evalOneToManyParameterFormula (formula, inputFormulaArray, averageString, formulaTargetfield, sampleId, index, numberOfDecimals) {
+    console.info('-->formula: ', formula);
+    console.info('-->inputFormulaArray: ', inputFormulaArray);
+    let decimalValue = 2;
+    if(numberOfDecimals) { decimalValue = Number(numberOfDecimals); }
+    try {
+        let inputCalcVal = 0.00, inputCalcArray = [];
+        if(formula.indexOf('AVG(') >= 0 && averageString) {
+            if(averageString.length > 1) {
+                inputCalcVal = math.mean(averageString);
+            } else {
+                inputCalcVal = Number(averageString);
+            }
+        } else if(formula.indexOf('MIN(') >= 0 && averageString) {
+            inputCalcVal = math.min(averageString);
+        } else if(formula.indexOf('MAX(') >= 0 && averageString) {
+            inputCalcVal = math.max(averageString);
+        } else if(formula.indexOf('SUM(') >= 0 && averageString) {
+            inputCalcVal = math.sum(averageString);
+        } else if(formula.indexOf('CUM(') >= 0 && averageString) {
+            inputCalcVal = math.cumsum(averageString);
+        } else if(inputFormulaArray && inputFormulaArray.length > 1) {
+            $.each(inputFormulaArray, function (z, ele3) {
+                let calcVal = math.eval(ele3);
+                inputCalcArray.push(calcVal);
+            });
+        } else {
+            inputCalcVal = math.eval(formula);
+            console.info('-->inputCalcVal: ', inputCalcVal);
+        }
+        var targetEleArray = '';
+        if(sampleId) {
+            targetEleArray = $('.fieldParameterInput[name="' + formulaTargetfield + '"][aria-description="' + sampleId + '"]');
+        } else {
+            targetEleArray = $('.fieldParameterInput[name="' + formulaTargetfield + '"]');
+        }
+        if (inputCalcVal) {
+            if(targetEleArray && targetEleArray.length > 1) {
+                if(sampleId) {
+                    $('.fieldParameterInput[name="' + formulaTargetfield + '"][aria-description="' + sampleId + '"][aria-details="' + index + '"]').val(inputCalcVal.toFixed(2));
+                } else {
+                    $('.fieldParameterInput[name="' + formulaTargetfield + '"][aria-details="' + index + '"]').val(inputCalcVal.toFixed(decimalValue));
+                }
+            } else {
+                if(sampleId) {
+                    $('.fieldParameterInput[name="' + formulaTargetfield + '"][aria-description="' + sampleId + '"]').val(inputCalcVal.toFixed(decimalValue));
+                } else {
+                    $('.fieldParameterInput[name="' + formulaTargetfield + '"]').val(inputCalcVal.toFixed(decimalValue));
+                }
+            }
+        }
+        if (inputCalcArray) {
+            $.each(inputCalcArray, function (z, ele3) {
+                if (targetEleArray && targetEleArray.length > 1) {
+                    if (sampleId) {
+                        $('.fieldParameterInput[name="' + formulaTargetfield + '"][aria-description="' + sampleId + '"][aria-details="' + z + '"]').val(ele3.toFixed(decimalValue));
+                    } else {
+                        $('.fieldParameterInput[name="' + formulaTargetfield + '"][aria-details="' + z + '"]').val(ele3.toFixed(decimalValue));
+                    }
+                }
+            });
+        }
+    } catch (e) { console.debug(e); }
+}
+function populateFormulae(fieldUniqueName, index, currentVal) {
+    $.each(currentParameterItemList, function (i, val) {
+        if (val.formula && val.formula.indexOf(fieldUniqueName) >= 0) {
+            if(val.numberOfReadings && val.numberOfReadings > 1) {
+                recalculateFormulaMultiple(val.formula, val.number, val.testResult, val.numberOfDecimals, index);
+            } else {
+                recalculateFormula(val.formula, val.number, val.testResult, val.numberOfDecimals, val.parameter.numberOfDecimals);
+            }
+            $.each(currentParameterItemList, function (j, val2) {
+                if (val2.formula.indexOf(val.number) >= 0) {
+                    recalculateFormula(val2.formula, val2.number, val2.testResult, val.numberOfDecimals, val.parameter.numberOfDecimals);
+                    $.each(currentParameterItemList, function (k, val3) {
+                        if (val3.formula.indexOf(val2.number) >= 0) {
+                            recalculateFormula(val3.formula, val3.number, val3.testResult, val2.numberOfDecimals, val.parameter.numberOfDecimals);
+                            $.each(allParameterItemList, function (l, val4) {
+                                if (val4.formula.indexOf(val3.number) >= 0) {
+                                    recalculateFormula(val4.formula, val4.number, val4.testResult, val3.numberOfDecimals, val.parameter.numberOfDecimals);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        } else if(val.testResult && val.number && val.number.indexOf(fieldUniqueName) >= 0) {
+            populateTestResult(currentFieldParameterId, currentVal, val.numberOfDecimals);
+            $('.sampleTestResult').trigger('change');
+            $('.sampleTestResultMultiple').trigger('change');
+        }
+    });
+}
+function populateTestResult(currentFieldParameterId, inputCalcVal, numberOfDecimals) {
+    try {
+        console.info('-->currentFieldParameterId: ', currentFieldParameterId);
+        console.info('-->final val: ', parseFloat(inputCalcVal).toFixed(numberOfDecimals));
+        $('#requestLnItem_' + currentFieldParameterId + '_TestResult').val(parseFloat(inputCalcVal).toFixed(numberOfDecimals));
+    } catch (e) { console.info(e); }
+}
+function recalculateFormula(formula, formulaInputField, isTestResult, numberOfDecimals, parameterNumberOfDecimals) {
+    let formulaItems = [], regEx = /{([^}]+)}/g, text = '';
+    let averageString = [];
+    let averageCount = 0;
+    if(parameterNumberOfDecimals === ""){parameterNumberOfDecimals = 2};
+    while(text = regEx.exec(formula)) {
+        formulaItems.push(text[1]);
+    }
+    $.each(formulaItems, function (i, val) {
+        let inputElement = $('.fieldParameterItemInput[name="' + val + '"]');
+        if(inputElement.length === 0) {
+            inputElement = $('fieldParameterInput[name="' + val + '"]').find('.sampleTestResult');
+        }
+        if(inputElement && inputElement.length > 1) {
+            let inputVal = '';
+            $.each(inputElement, function (x, ele) {
+                if(ele.value) {
+                    if (inputVal.length > 0) {
+                        inputVal += ', ';
+                    }
+                    inputVal += ele.value.trim();
+                    averageString.push(ele.value.trim());
+                    averageCount++;
+                }
+            });
+            if (inputVal) {
+                formula = formula.replaceAll('{' + val + '}', inputVal);
+            }
+        } else {
+            let inputVal = $(inputElement).val();
+            if (!inputVal) {
+                inputVal = $('.fieldParameterItemInputCalc[name="' + val + '"]').val();
+            }
+            if (inputVal) {
+                inputVal = inputVal.replaceAll(";", "");
+                formula = formula.replaceAll('{' + val + '}', inputVal.trim());
+                averageString.push(inputVal.trim());
+                averageCount++;
+            }
+        }
+    });
+    console.info('-->Evaluated F: ', formula);
+    try {
+        let inputCalcVal = 0.00;
+        if(formula.indexOf('AVG(') >= 0 && averageString) {
+            inputCalcVal = math.mean(averageString);
+        } else if(formula.indexOf('MIN(') >= 0 && averageString) {
+            inputCalcVal = math.min(averageString);
+        } else if(formula.indexOf('MAX(') >= 0 && averageString) {
+            inputCalcVal = math.max(averageString);
+        } else if(formula.indexOf('SUM(') >= 0 && averageString) {
+            inputCalcVal = math.sum(averageString);
+        } else {
+            inputCalcVal = math.eval(formula);
+        }
+        console.info('-->inputCalcVal: ', inputCalcVal);
+        if (inputCalcVal || inputCalcVal === 0) {
+            let decimalValue = 2;
+            if(numberOfDecimals) { decimalValue = Number(numberOfDecimals); }
+            if(parameterNumberOfDecimals){parameterNumberOfDecimals = decimalValue};
+            $('.fieldParameterItemInputCalc[name="' + formulaInputField + '"]').val(inputCalcVal.toFixed(decimalValue));
+            if (isTestResult) {
+                $('#requestLnItem_' + currentFieldParameterId + '_TestResult').val(inputCalcVal.toFixed(parameterNumberOfDecimals));
+            }
+        }
+    } catch (e) { console.info(e); }
+}
+function recalculateFormulaMultiple(formula, formulaInputField, isTestResult, numberOfDecimals, index) {
+    let formulaItems = [], regEx = /{([^}]+)}/g, text = '';
+    let averageString = [];
+    let averageCount = 0;
+    while(text = regEx.exec(formula)) {
+        formulaItems.push(text[1]);
+    }
+    $.each(formulaItems, function (i, val) {
+        let inputArray = $('.fieldParameterItemInputEntry[name="' + val + '"]');
+        let inputElement = inputArray[index];
+        if(inputElement && inputElement.length > 1) {
+            let inputVal = '';
+            $.each(inputElement, function (x, ele) {
+                if(ele.value) {
+                    if (inputVal.length > 0) {
+                        inputVal += ', ';
+                    }
+                    inputVal += ele.value.trim();
+                    averageString.push(ele.value.trim());
+                    averageCount++;
+                }
+            });
+            if (inputVal) {
+                formula = formula.replaceAll('{' + val + '}', inputVal);
+            }
+        } else {
+            let inputVal = $(inputElement).val();
+            if (!inputVal) {
+                inputVal = $($('.fieldParameterItemInputCalc[name="' + val + '"]')[index]).val();
+            }
+            if (inputVal) {
+                formula = formula.replaceAll('{' + val + '}', inputVal.trim());
+                averageString.push(inputVal.trim());
+                averageCount++;
+            }
+        }
+    });
+    try {
+        let inputCalcVal = 0.00;
+        if(formula.indexOf('AVG(') >= 0 && averageString) {
+            inputCalcVal = math.mean(averageString);
+        } else if(formula.indexOf('MIN(') >= 0 && averageString) {
+            inputCalcVal = math.min(averageString);
+        } else if(formula.indexOf('MAX(') >= 0 && averageString) {
+            inputCalcVal = math.max(averageString);
+        } else if(formula.indexOf('SUM(') >= 0 && averageString) {
+            inputCalcVal = math.sum(averageString);
+        } else {
+            inputCalcVal = math.eval(formula);
+        }
+        if (inputCalcVal) {
+            let decimalValue = 2;
+            if(numberOfDecimals) { decimalValue = Number(numberOfDecimals); }
+            $($('.fieldParameterItemInputCalc[name="' + formulaInputField + '"]')[index]).val(inputCalcVal.toFixed(decimalValue));
+        }
+    } catch (e) { console.info(e); }
+}
+function calculateFormulaOnLoad(inputFormula, numberOfDecimals) {
+    let formulaItems = [], regEx = /{([^}]+)}/g, text = '';
+    let averageString = [];
+    let averageCount = 0;
+    if(!numberOfDecimals) {
+        numberOfDecimals = 2;
+    }
+    while(text = regEx.exec(inputFormula)) {
+        formulaItems.push(text[1]);
+    }
+    console.log(formulaItems);
+    $.each(formulaItems, function (i, val) {
+        $.each(currentFieldDataReadings, function (x, reading) {
+            if (reading.labParameterItem.number === val) {
+                inputFormula = inputFormula.replaceAll('{' + val + '}', reading.value);
+                if (reading.value.indexOf(';') >= 0) {
+                    let readingArray = reading.value.split(';');
+                    for (let i = 0; i < readingArray.length; i++) {
+                        averageString.push(readingArray[i]);
+                    }
+                } else {
+                    averageString.push(reading.value.trim());
+                }
+                averageCount++;
+            }
+        });
+    });
+    try {
+        inputFormula = inputFormula.replaceAll(';', '');
+        let inputCalcVal = 0.00;
+        if(inputFormula.indexOf('AVG(') >= 0 && averageString) {
+            inputCalcVal = math.mean(averageString);
+        } else if(inputFormula.indexOf('MIN(') >= 0 && averageString) {
+            inputCalcVal = math.min(averageString);
+        } else if(inputFormula.indexOf('MAX(') >= 0 && averageString) {
+            inputCalcVal = math.max(averageString);
+        } else if(inputFormula.indexOf('SUM(') >= 0 && averageString) {
+            inputCalcVal = math.sum(averageString);
+        } else {
+            inputCalcVal = math.eval(inputFormula);
+        }
+        if (inputCalcVal) {
+            let decimalValue = 2;
+            if(numberOfDecimals) { decimalValue = Number(numberOfDecimals); }
+            return inputCalcVal.toFixed(decimalValue);
+        }
+    } catch (e) { console.info(e); }
+}
+
+function toggleDeleteButton(checkboxSelector, buttonSelector) {
+    const isChecked = $(checkboxSelector).is(':checked');
+    $(buttonSelector).prop('disabled', !isChecked);
+}
+function deleteSampleRequestCallback() {
+    var jsobj = { 'requestStatus': "Cancelled" };
+    JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(jsobj), deleteRequestCompleteCallback);
+}
+function hardDeleteSampleRequestCallback() {
+    JSUTIL.callAJAXDelete(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), deleteRequestCompleteCallback);
+}
+function getAuditTrailCallback(response) {
+    $("#auditTrailModalTable").empty();
+    var innerHtml = '';
+    $.each(response, function(i, val) {
+        innerHtml += '<tr><td>' + JSUTIL.getDateTime(val.createdDate) + '</td><td>' + val.employee.name + '</td><td>Record ' + val.type + '</td></tr>';
+    });
+    $("#auditTrailModalTable").append(innerHtml);
+    var auditModal = new bootstrap.Modal(document.getElementById('auditTrailModal'));
+    auditModal.show();
+}
+function callbackAfterGenerateULR(response) {
+    if (response && response.ULR) {
+        $("#urlDisplay").text("ULR: " + response.ULR);
+        $('#printGenerateULRBtn').attr('disabled', 'disabled');
+    }
+    JSUTIL.stopSpinner();
+}
+function deleteRequestCompleteCallback() {
+    JSUTIL.startSpinner();
+    location.reload();
+    // JSUTIL.redirectTo('/app/pharma/test_request');
+}
+function toQcCallback() {
+    JSUTIL.startSpinner();
+    // JSUTIL.redirectTo('/app/pharma/test_request');
+}
+function createProformaInvoiceCallback(data) {
+    JSUTIL.startSpinner();
+    JSUTIL.redirectTo('/sales/proforma/invoice?id=' + data);
+}
+function deleteSampleRequestItemCallback() {
+    JSUTIL.callAJAXDelete(JSUTIL.getUrl('/api/test-request-items/' + currentRequestItemId), deleteRequestItemCompleteCallback);
+}
+function deleteRequestItemCompleteCallback(response) {
+    location.reload();
+}
+function saveSampleRequestUpdateCallback(response){
+    JSUTIL.startSpinner();
+    location.reload();
+}
+
+// ── Reusable confirmation modal (replaces MODALUTIL.confirmationModal) ──
+var _inwardConfirmCallback = null;
+var _inwardConfirmModalInstance = null;
+
+function _getConfirmModalInstance() {
+    var modalEl = document.getElementById('inwardConfirmModal');
+    if (!modalEl) return null;
+    // Always reuse the existing instance — never create duplicates
+    if (!_inwardConfirmModalInstance) {
+        _inwardConfirmModalInstance = new bootstrap.Modal(modalEl, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+        });
+        // On fully hidden: release body scroll, remove backdrop, clear callback
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            _inwardConfirmCallback = null;
+            // Ensure body scroll is always restored
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            // Remove any orphaned backdrops
+            $('.modal-backdrop').remove();
+        });
+    }
+    return _inwardConfirmModalInstance;
+}
+
+function showConfirmationModal(title, subtitle, message, onConfirm) {
+    $('#inwardConfirmModalTitle').text(title || 'Confirmation');
+    $('#inwardConfirmModalMessage').text(message || '');
+    _inwardConfirmCallback = (typeof onConfirm === 'function') ? onConfirm : null;
+
+    var isDanger = (title || '').toLowerCase().includes('cancel') || (title || '').toLowerCase().includes('delete');
+    $('#inwardConfirmModalOkBtn')
+        .removeClass('btn-danger btn-primary')
+        .addClass(isDanger ? 'btn-danger' : 'btn-primary')
+        .text(isDanger ? 'Yes, Proceed' : 'Confirm');
+
+    if (window.bootstrap && window.bootstrap.Modal) {
+        _getConfirmModalInstance().show();
+    } else {
+        if (window.confirm(message || 'Are you sure?')) {
+            if (_inwardConfirmCallback) {
+                var cb = _inwardConfirmCallback;
+                _inwardConfirmCallback = null;
+                cb();
+            }
+        }
+    }
+}
+
+// "Yes, Proceed" — hide modal first, then fire callback
+$(document).on('click', '#inwardConfirmModalOkBtn', function () {
+    var cb = _inwardConfirmCallback;
+    _inwardConfirmCallback = null;
+    var inst = _getConfirmModalInstance();
+    if (inst) {
+        var modalEl = document.getElementById('inwardConfirmModal');
+        // Fire callback only after modal is fully hidden (avoids aria-hidden conflict)
+        $(modalEl).one('hidden.bs.modal', function () {
+            if (cb) cb();
+        });
+        inst.hide();
+    } else {
+        if (cb) cb();
+    }
+});
+
+// "No, Cancel" — just hide, no callback
+$(document).on('click', '#inwardConfirmModalCancelBtn', function () {
+    _inwardConfirmCallback = null;
+    var inst = _getConfirmModalInstance();
+    if (inst) inst.hide();
+});
+</script>
+<!-- editTestRequestPanel.js end -->
+
+
+<!-- allTestRequestPanel.html start -->
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js"></script> -->
+<div class="row animated fadeInRight aasaanPanel" id="allRequestPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Inward <small>Laboratory</small></h5>
+                <div class="ibox-tools">
+                    <!-- Status filter inline in toolbar -->
+                    <div class="d-flex align-items-center me-2" style="gap:6px;">
+                        <label class="mb-0" style="font-size:13px;white-space:nowrap;">Status:</label>
+                        <div class="dropdown">
+                            <button class="btn btn-light dropdown-toggle d-flex align-items-center justify-content-between"
+                                type="button" id="statusFilterBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                style="min-width:160px; font-weight:400; border:1px solid #ced4da;">All</button>
+                            <div class="dropdown-menu" id="statusFilterMenu" style="min-width:160px;">
+                                <a class="dropdown-item status-filter-item active" href="#" data-value="">All</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="New">New</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="Sampling">Sampling</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="Test Allocation">Test Allocation</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="QC Analysis">QC Analysis</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="QC Worksheet Review">QC Worksheet Review</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="QC Result Recording">QC Result Recording</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="QC Review">QC Review</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="QA Review">QA Review</a>
+                                <a class="dropdown-item status-filter-item" href="#" data-value="Completed">Completed</a>
+                            </div>
+                        </div>
+                        <input type="hidden" id="sampleStatusFilter" value="">
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary newRequestBtn"><i data-lucide="plus"></i> New Request</button>
+                    <!-- <button type="button" class="btn btn-sm btn-secondary cloneFromRequestBtn"><i data-lucide="copy"></i> Clone</button> -->
+                    <!-- <button type="button" class="btn btn-sm btn-secondary viewAllRequestsBtn"><i data-lucide="search"></i> View All Requests</button>  -->
+                </div>
+            </div>
+            <div class="ibox-content m-b-sm border-bottom">
+                <div class="table-responsive">
+                    <table id="allServiceRequestDataTable" class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <th>ARN</th>
+                            <th>Department</th>
+                            <th>Material Type</th>
+                            <th>Sample ID</th>
+                            <th>Received Date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="allServiceRequestTable" class="dataTableRecordList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- allTestRequestPanel.html end -->
+
+</div><!-- end .qa-white-panel -->
+
+
+<!-- allTestRequestPanel.js start -->
+<script>
+var selectedRequests = [];
+var testList = [];
+var employeeList = [];
+var layoutFields = [];
+var currentProcedureItems = [];
+var currentPrintFormatList = [];
+var currentRequestItemList = [];
+var currentParameterItemList = [];
+var currentRequestData = {};
+var currentRequestId = '';
+var currentTestRequestId = '';
+var currentRequestItemId = '';
+var currentRequestCustomerEmail = '';
+var currentRequestItemPrice;
+var btnClicked = '';
+var currentRequestReferenceNumber = '';
+var uploadPath = '';
+var documentsList = [];
+var stpList = [];
+var recordList = [];
+// recordList is populated inside $(document).ready() to ensure DOM is available
+// ── Polyfill callAJAXDelete ──
+if (typeof JSUTIL !== 'undefined' && !JSUTIL.callAJAXDelete) {
+    JSUTIL.callAJAXDelete = function (url, successCallback, errorCallback) {
+        $.ajax({
+            url: url, type: 'DELETE', contentType: 'application/json',
+            success: function (res) { if (typeof successCallback === 'function') successCallback(res); },
+            error: function (err) { console.error('DELETE error:', err); if (typeof errorCallback === 'function') errorCallback(err); }
+        });
+    };
+}
+
+// ── daterangepicker init ──
+// Attaches to specific date inputs by ID — works regardless of readonly state
+function initRequestDatePickers(scope) {
+    if (!$.fn || !$.fn.daterangepicker) return;
+
+    var dateIds = scope === '#newRequestForm'
+        ? ['newReceivedDate', 'newManufacturingDate', 'newExpiryDate']
+        : ['editReceivedDate', 'editManufacturingDate', 'editExpiryDate'];
+
+    $.each(dateIds, function(i, id) {
+        var $input = $('#' + id);
+        if (!$input.length) return;
+        var existingVal = $input.val();
+        if ($input.data('daterangepicker')) { $input.data('daterangepicker').remove(); }
+        var opts = {
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: false,
+            minYear: 1901,
+            maxYear: parseInt(moment().format('YYYY'), 10) + 10,
+            locale: { cancelLabel: 'Clear' }
+        };
+        if (existingVal && /^\d{2}\/\d{2}\/\d{4}$/.test(existingVal)) {
+            opts.startDate = moment(existingVal, 'DD/MM/YYYY');
+        }
+        $input.daterangepicker(opts);
+        $input.off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('DD/MM/YYYY'));
+        });
+        $input.off('cancel.daterangepicker').on('cancel.daterangepicker', function() {
+            $(this).val('');
+        });
+    });
+}
+
+// ── Safe DataTable destroy/init ──
+function destroyRequestDataTable() {
+    if (!$.fn || !$.fn.DataTable) return;
+    if ($.fn.DataTable.isDataTable('#allServiceRequestDataTable')) {
+        $('#allServiceRequestDataTable').DataTable().clear().destroy();
+    }
+}
+function initRequestDataTable() {
+    if (!$.fn || !$.fn.DataTable) return;
+    if ($.fn.DataTable.isDataTable('#allServiceRequestDataTable')) return;
+    $('#allServiceRequestDataTable').DataTable({ order: [], destroy: true });
+
+    // Register status filter only once, right after DataTables is initialised
+    if (!$.fn.dataTable._statusFilterRegistered) {
+        $.fn.dataTable._statusFilterRegistered = true;
+        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+            var filterVal = $('#sampleStatusFilter').val();
+            var colVal    = data[6];
+            return (colVal === '' || filterVal === '' || colVal.indexOf(filterVal) >= 0);
+        });
+    }
+}
+
+// ── Dropdown population helpers — employees.html pattern ──
+// Menus are <div class="dropdown-menu">, items are plain <a> tags
+function populateEmployeeDropdown(btnId, menuId) {
+    var $menu = $(menuId);
+    var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+    $.each(employeeList, function (i, val) {
+        var name = val.firstName + ' ' + val.lastName;
+        html += '<a class="dropdown-item" href="#" data-value="' + name + '">' + name + '</a>';
+    });
+    $menu.html(html);
+}
+
+function populateUomDropdown(btnId, menuId) {
+    var $menu = $(menuId);
+    var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+    $.each(uomList, function (i, val) {
+        html += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + ' (' + val.description + ')</a>';
+    });
+    $menu.html(html);
+}
+
+function populateStpDropdown(menuId, btnId, hiddenId) {
+    var $menu = $(menuId);
+    var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+    $.each(stpList, function (i, val) {
+        html += '<a class="dropdown-item" href="#" data-value="' + val.id + '">' + val.number + '</a>';
+    });
+    $menu.html(html);
+}
+
+// Helper: set a dropdown value programmatically — employees.html style (.text() directly)
+function setDropdownValue(btnSelector, menuSelector, hiddenSelector, value, label) {
+    $(btnSelector).text(label || '-- None --');
+    if (hiddenSelector) $(hiddenSelector).val(value);
+    $(menuSelector + ' .dropdown-item').removeClass('active');
+    $(menuSelector + ' .dropdown-item[data-value="' + value + '"]').addClass('active');
+}
+
+function loadEmployeesAndPopulate() {
+    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/employees'), function (objList) {
+        employeeList = objList || [];
+        employeeList = employeeList.filter(v=>v.firstName&&v.lastName)
+        populateEmployeeDropdown('newReceivedByBtn', '#newReceivedByMenu');
+        populateEmployeeDropdown('editReceivedByBtn', '#editReceivedByMenu');
+        try { lucide.createIcons(); } catch(e) {}
+    });
+}
+function getRequestStatusBadge(status) {
+    var cls = 'status-submitted';
+    if (status === 'New') cls = 'status-new';
+    else if (status === 'Complete') cls = 'status-completed';
+    else if (status === 'QA Rejected' || status === 'Re-Test') return '<span class="badge bg-danger">' + (status || '-') + '</span>';
+    return '<span class="status-badge ' + cls + '">' + (status || '-') + '</span>';
+}
+function buildRequestTable() {
+    destroyRequestDataTable();
+    $('#allServiceRequestTable').empty();
+    var rows = '';
+    $.each(recordList, function (i, val) {
+        if(val.requestStatus === 'Complete') {
+            return;
+        }
+        var badge = '';
+        badge = getRequestStatusBadge(val.requestStatus);
+        rows +=
+            '<tr>' +
+            '<td style="text-align:center;"><input class="selectRequestChkbox" type="checkbox" name="' + val.id + '" style="width:16px;height:16px;cursor:pointer;"></td>' +
+            '<td class="itemNum"><a href="javascript:void(0)" class="selectRequestBtn" id="' + val.id + '">' + (val.referenceNumber || '') + '</a></td>' +
+            '<td>' + (val.description  || '') + '</td>' +
+            '<td>' + (val.sampleType   || '') + '</td>' +
+            '<td>' + (val.sampleId     || '') + '</td>' +
+            '<td>' + JSUTIL.getDate(val.receivedDate) + '</td>' +
+            '<td>' + badge + '</td>' +
+            '</tr>';
+    });
+    $('#allServiceRequestTable').append(rows);
+    initRequestDataTable();
+    try { lucide.createIcons(); } catch (e) {}
+}
+
+// ── Page-load API calls ──
+// JSUTIL.callAJAXGet(JSUTIL.getUrl('/lb/services/all'), callbackForGetTests);
+loadEmployeesAndPopulate();
+
+// JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/test-procedures'), JSON.stringify({
+//     fields: 'Number',
+//     conditions: ["ProcessStatus = 'Active'", "IsArchived = false"],
+//     logic: '{0} AND {1}'
+// }), function (objList) {
+//     stpList = objList || [];
+//     populateStpDropdown('#newStpDropdownMenu', '#newStpBtn', '#newStpSelectionInput');
+//     populateStpDropdown('#editStpDropdownMenu', '#editStpBtn', '#editStpSelectionInput');
+//     try { lucide.createIcons(); } catch(e) {}
+// });
+var url = JSUTIL.getUrl('/api/test-procedures/search?processStatus=Active&isArchived=false');
+JSUTIL.callAJAXGet(url, function (objList) {
+    stpList = objList || [];
+
+    populateStpDropdown('#newStpDropdownMenu', '#newStpBtn', '#newStpSelectionInput');
+    populateStpDropdown('#editStpDropdownMenu', '#editStpBtn', '#editStpSelectionInput');
+
+    try { lucide.createIcons(); } catch(e) {}
+});
+// JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/ReportTemplate/list'),
+//     JSON.stringify({ fields: 'Name;Version;Tags;Header;Footer;Fields;Number' }),
+//     callbackAfterGetReportTemplate);
+
+// buildRequestTable() is called inside $(document).ready() after data fetch
+
+$(document).ready(function () {
+    try { lucide.createIcons(); } catch (e) { console.error('lucide init:', e); }
+
+    // ── Fetch records then build the table once DOM is ready ──
+    $.get(JSUTIL.getUrl('/api/test-requests'), function (data) {
+        recordList = data || [];
+        buildRequestTable();
+
+        // Auto-open ?id= record after table is populated
+        var autoId = new URL(window.location.href).searchParams.get('id');
+        if (autoId) {
+            setTimeout(function () {
+                var $btn = $('#allServiceRequestTable .selectRequestBtn[id="' + autoId + '"]');
+                if ($btn.length) {
+                    populateUomDropdown('editSampleUnitBtn', '#editSampleUnitMenu');
+                    populateEmployeeDropdown('editReceivedByBtn', '#editReceivedByMenu');
+                    $btn.trigger('click');
+                }
+            }, 200);
+        }
+    });
+
+    // Populate UOM for edit form
+    populateUomDropdown('editSampleUnitBtn', '#editSampleUnitMenu');
+
+    // Status filter — employees.html style handler
+    $(document).on('click', '#statusFilterMenu .status-filter-item', function(e) {
+        e.preventDefault();
+        var val   = $(this).data('value');
+        var label = $(this).text().trim();
+        $('#statusFilterBtn').text(label);
+        $('#sampleStatusFilter').val(val);
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+        if ($.fn.DataTable && $.fn.DataTable.isDataTable('#allServiceRequestDataTable')) {
+            $('#allServiceRequestDataTable').DataTable().draw();
+        }
+    });
+
+    // ── NEW REQUEST BUTTON ──
+    $('.newRequestBtn').on('click', function () {
+        var url = new URL(window.location.href);
+        if (url.searchParams.has('id')) {
+            url.searchParams.delete('id');
+            history.replaceState(null, '', url.pathname + url.search);
+        }
+
+        // Reset text/number inputs
+        $('#newRequestForm input[type="text"], #newRequestForm input[type="number"]').val('');
+
+        // Reset dropdown buttons (employees.html style — set text directly)
+        $('#newDepartmentBtn, #newMaterialTypeBtn, #newReceivedByBtn, #newSampleUnitBtn, #newStpBtn').text('-- None --');
+
+        // Reset hidden inputs
+        $('#newDescriptionInput, #newSampleTypeInput, #newSampleDrawnByInput, #newSampleUnitInput, #newStpSelectionInput').val('');
+
+        // Reset active states
+        $('#newRequestForm .dropdown-item').removeClass('active');
+
+        // Populate dynamic dropdowns fresh
+        populateUomDropdown('newSampleUnitBtn', '#newSampleUnitMenu');
+        populateEmployeeDropdown('newReceivedByBtn', '#newReceivedByMenu');
+
+        // Init daterangepickers (employees.html style — readonly inputs)
+        initRequestDatePickers('#newRequestForm');
+
+        $('#newRequestPanel').show();
+        $('#editRequestPanel').hide();
+        $('#allRequestPanel').hide();
+        try { lucide.createIcons(); } catch (e) {}
+    });
+
+    $('#allServiceRequestTable').on('click', '.selectRequestChkbox', function () {
+        var currentId = $(this).attr('name');
+        if ($(this).is(':checked')) {
+            selectedRequests.push(currentId);
+        } else {
+            selectedRequests = selectedRequests.filter(function(v) { return v !== currentId; });
+        }
+    });
+
+    $('.cloneFromRequestBtn').on('click', function () {
+        if (selectedRequests.length == 0) { JSUTIL.buildErrorModal('Please select a request to clone.'); }
+        else if (selectedRequests.length > 1) { JSUTIL.buildErrorModal('Please select only one request.'); }
+        else {
+            var sourceId = selectedRequests[0];
+            var clonePayload = JSON.stringify({
+                cloneSamples: true,
+                cloneLineItems: true,
+                cloneReadings: true,
+                asRetest: true,
+                requestStatus: 'New'
+            });
+            JSUTIL.callAJAXPost(
+                JSUTIL.getUrl('/api/test-requests/' + sourceId + '/clone'),
+                clonePayload,
+                cloneRequestCallback
+            );
+        }
+    });
+
+    $('.createInvoiceFromRequestsBtn').on('click', function () {
+        if (selectedRequests.length == 0) { JSUTIL.buildErrorModal('Please select at least one request.'); }
+        else { JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/invoices/bulk'), JSON.stringify(selectedRequests), createInvoiceCallback); }
+    });
+
+    $('#allServiceRequestTable').on('click', '.selectRequestBtn', function () {
+        JSUTIL.startSpinner();
+        var currentId = $(this).attr('id');
+        currentTestRequestId = currentId;
+
+        // Populate edit dropdowns
+        populateEmployeeDropdown('editReceivedByBtn', '#editReceivedByMenu');
+        populateUomDropdown('editSampleUnitBtn', '#editSampleUnitMenu');
+
+        if (window.location.href.indexOf('?id=') === -1) {
+            window.history.pushState({}, '', window.location.href + '?id=' + currentId);
+        } else {
+            var newUrl = window.location.href.replace(/(\?id=)(\d+)/, '$1' + currentId);
+            window.history.pushState({}, '', newUrl);
+        }
+
+        $.each(recordList, function (i, val) {
+            if (currentId.indexOf(val.id) >= 0) {
+                populateRequestData(val);
+                if (val.requestStatus === 'New') {
+                    $('.recordEditBtn').show(); $('#sampleAllocationBtn').show();
+                    $('#sendToQcBtn').hide(); $(".generateCoaBtn").hide();
+                    $('#horzontalLineTabs').hide(); $('#editSampleBtn').show();
+                } else if (val.requestStatus === 'QA Rejected') {
+                    $('.recordEditBtn').hide(); $('#sampleAllocationBtn').hide();
+                    $(".generateCoaBtn").hide(); $('#sendToQcBtn').show();
+                    $('#horzontalLineTabs').show(); $('#editSampleBtn').show();
+                } else if (val.requestStatus === 'Complete') {
+                    $('#deleteRequestBtn').hide(); $(".generateCoaBtn").show();
+                    $('#horzontalLineTabs').show(); $('.recordEditBtn').hide();
+                    $('#sampleAllocationBtn').hide(); $('#sendToQcBtn').hide();
+                    $('#editSampleBtn').hide();
+                } else if (val.requestStatus === 'Sampling') {
+                    $('#horzontalLineTabs').hide(); $('.recordEditBtn').hide();
+                    $('#sampleAllocationBtn').hide(); $('#sendToQcBtn').hide();
+                    $(".generateCoaBtn").hide(); $('#editSampleBtn').hide();
+                } else {
+                    $('.recordEditBtn').hide(); $('#sampleAllocationBtn').hide();
+                    $('#sendToQcBtn').hide(); $(".generateCoaBtn").hide();
+                    $('#horzontalLineTabs').show(); $('#editSampleBtn').hide();
+                }
+                return;
+            }
+        });
+
+        $('#editRequestPanel').show();
+        $('#newRequestPanel').hide();
+        $('#allRequestPanel').hide();
+        try { lucide.createIcons(); } catch(e) {}
+        JSUTIL.stopSpinner();
+    });
+});
+
+function callbackForGetTests(response) {
+    testList = response;
+}
+function toggleTestTabVisibility(status) {
+    status = (status || '').toLowerCase().trim();
+
+    if (status === 'new' || status === 'sampling') {
+        $('#testTab').hide();          
+        $('#testTabContent').hide();   
+    } else {
+        $('#testTab').show();
+        $('#testTabContent').show();
+    }
+}
+function populateRequestData(objList) {
+    currentRequestData = objList;
+    $('#editRequestTitle').text('ARN - ' + objList.referenceNumber);
+    $('#editRequestStatus').text(objList.requestStatus);
+    toggleTestTabVisibility(objList.requestStatus);
+    // Department — employees.html style: set button text directly
+    var deptLabel = objList.description || '-- None --';
+    $('#editDepartmentBtn').text(deptLabel);
+    $('#editDepartmentDropdownMenu .dropdown-item').removeClass('active');
+    $('#editDepartmentDropdownMenu .dropdown-item[data-value="' + (objList.description || '') + '"]').addClass('active');
+    $('#editDepartmentDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.description || '');
+
+    // Material Type
+    var matLabel = objList.sampleType || '-- None --';
+    $('#editMaterialTypeBtn').text(matLabel);
+    $('#editMaterialTypeDropdownMenu .dropdown-item').removeClass('active');
+    $('#editMaterialTypeDropdownMenu .dropdown-item[data-value="' + (objList.sampleType || '') + '"]').addClass('active');
+    $('#editMaterialTypeDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleType || '');
+
+    // Received By
+    var drawnByLabel = objList.sampleDrawnBy || '-- None --';
+    $('#editReceivedByBtn').text(drawnByLabel);
+    $('#editReceivedByMenu .dropdown-item').removeClass('active');
+    $('#editReceivedByMenu .dropdown-item[data-value="' + (objList.sampleDrawnBy || '') + '"]').addClass('active');
+    $('#editReceivedByMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleDrawnBy || '');
+
+    // Date inputs — use named ids
+    $('#editReceivedDate').val(JSUTIL.getDate(objList.receivedDate));
+    $('#editManufacturingDate').val(JSUTIL.getDate(objList.manufacturingDate));
+    $('#editExpiryDate').val(JSUTIL.getDate(objList.expiryDate));
+
+    // Plain inputs
+    $('.editRecordInput1[name="sampleId"]').val(objList.sampleId);
+    $('.editRecordInput[name="sampleCondition"]').val(objList.sampleCondition);
+    $('.editRecordInput[name="sampleQuantity"]').val(objList.sampleQuantity);
+    $('.editRecordInput1[name="batchNumber"]').val(objList.batchNumber);
+
+    // Sample Unit
+    var unitLabel = '-- None --';
+    if (objList.sampleUnit) {
+        $.each(uomList, function(i, val) {
+            if (val.name === objList.sampleUnit) {
+                unitLabel = val.name + ' (' + val.description + ')';
+                return false;
+            }
+        });
+    }
+    $('#editSampleUnitBtn').text(unitLabel);
+    $('#editSampleUnitMenu .dropdown-item').removeClass('active');
+    $('#editSampleUnitMenu .dropdown-item[data-value="' + (objList.sampleUnit || '') + '"]').addClass('active');
+    $('#editSampleUnitMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleUnit || '');
+
+    // STP — set button text directly
+    if (objList.testProcedure && objList.testProcedure.id) {
+        $('#editStpBtn').text(objList.testProcedure.number || objList.testProcedure.id);
+        $('#editStpSelectionInput').val(objList.testProcedure.id);
+        $('#editStpDropdownMenu .dropdown-item').removeClass('active');
+        $('#editStpDropdownMenu .dropdown-item[data-value="' + objList.testProcedure.id + '"]').addClass('active');
+    } else {
+        $('#editStpBtn').text('-- None --');
+        // $('#editStpSelectionInput').val('');
+        $('#editStpSelectionInput').val($(this).data('value')); 
+    }
+
+    $('#createdDateInput').val(JSUTIL.getDateTime(objList.createdDate));
+    $('#modifiedDateInput').val(JSUTIL.getDateTime(objList.modifiedDate));
+    $('#editRequestId').val(objList.id);
+
+    // if (objList.testProcedure && objList.testProcedure != "") {
+    //     var testProcedureItemObj = {
+    //         'fields': 'Service.Id;Instruction',
+    //         'conditions': ['TestProcedure.Id = ' + objList.testProcedure.id],
+    //         'logic': '{0}'
+    //     };
+    //     JSUTIL.callAJAXPost('/data/TestProcedureItem/list', JSON.stringify(testProcedureItemObj), function(response){
+    //         currentProcedureItems = response.filter(item => item.service && item.service.id);
+    //     });
+    // }
+    if (objList.testProcedure && objList.testProcedure.id) {
+        var procedureId = objList.testProcedure.id;
+        JSUTIL.callAJAXGet('/api/test-procedures/' + procedureId + '/items', function(response) {
+            currentProcedureItems = response.filter(item => item.service && item.service.id);
+        });
+    }
+    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-request-items?requestId=' + currentTestRequestId), callbackAfterGetParameters);
+
+    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-samples?requestId=' + currentTestRequestId), callbackAfterGetSamples);
+}
+
+function callbackAfterGetParameters(objList) {
+    var inner = '';
+    objList.forEach(val => {
+        inner += `<tr><td>${val.service.name}</td><td>${val.service.description}</td></tr>`;
+    });
+    $('#allParametersTableBody').empty().append(inner);
+}
+
+function callbackAfterGetSamples(objList) {
+    var unitOptionsHtml = '<option value="">--none--</option>';
+    $.each(uomList, function (i, val) {
+        unitOptionsHtml += `<option value="${val.name}">${val.name} (${val.description})</option>`;
+    });
+    var packagingOptionsHtml = `
+        <option value="">--none--</option>
+        <option value="Normal Bag">Normal Bag</option>
+        <option value="Others">Others</option>
+        <option value="Plastic Drums">Plastic Drums</option>
+        <option value="PVC Cane">PVC Cane</option>
+        <option value="PVC Drums">PVC Drums</option>
+        <option value="Standard Cartons">Standard Cartons</option>
+        <option value="Steel Drums">Steel Drums</option>
+        <option value="UN Drums">UN Drums</option>`;
+    const sampleTypeOptions = `
+        <option value="">--none--</option>
+        <option value="Control">Control</option>
+        <option value="Finished Product">Finished Product</option>
+        <option value="Microbiological Sample">Microbiological Sample</option>
+        <option value="Amt Sample">Amt Sample</option>
+        <option value="AMV Sample">AMV Sample</option>
+        <option value="NDBA Sample">NDBA Sample</option>
+        <option value="NDMA Sample">NDMA Sample</option>
+        <option value="NDSRI Sample">NDSRI Sample</option>
+        <option value="Other sample">Other sample</option>
+        <option value="QC- Regulatory Sample">QC- Regulatory Sample</option>
+        <option value="QC Samples">QC Samples</option>
+        <option value="Representatives">Representatives</option>
+        <option value="RS Sample">RS Sample</option>
+        <option value="Redressing Sample">Redressing Sample</option>
+        <option value="Retention Sample">Retention Sample</option>
+        <option value="Retest Sample">Retest Sample</option>
+        <option value="Semi Finished Sample">Semi Finished Sample</option>
+        <option value="Stability Sample">Stability Sample</option>`;
+
+    $('#allSamplesTable').empty();
+    // Always reset edit mode when reloading samples
+    $('#allSamplesTable').removeClass('edit-mode-active');
+    $.each(objList, function (i, val) {
+        var rowHtml = `
+        <tr class="sampleRow" data-id="${val.id}">
+        <td style="text-align:center;"><input class="deleteItemCreatedEntryRow" name="${val.id}" type="checkbox" style="width:16px;height:16px;cursor:pointer;"></td>
+        <td>${val.number}</td>
+        <td><select name="type" class="select2 form-control sampleInput" disabled>${sampleTypeOptions}</select></td>
+        <td><input type="text" name="samplingLocation" class="form-control sampleInput" value="${val.samplingLocation || ''}" placeholder="Enter Location" disabled></td>
+        <td><input type="text" name="drawnTime" class="datetimepicker form-control sampleInput" value="${val.drawnTime ? moment(val.drawnTime).format('DD/MM/YYYY HH:mm') : ''}" placeholder="DD/MM/YYYY HH:mm" autocomplete="off" disabled></td>
+        <td><select name="packaging" class="select2 form-control sampleInput" disabled>${packagingOptionsHtml}</select></td>
+        <td><input type="number" name="netWeight" class="form-control sampleInput" value="${val.netWeight || ''}" placeholder="Enter Quantity" disabled></td>
+        <td><select name="unit" class="select2 form-control sampleInput" disabled>${unitOptionsHtml}</select></td>
+        </tr>`;
+        $('#allSamplesTable').append(rowHtml);
+        var $row = $('#allSamplesTable tr:last');
+        $row.find('[name="type"]').val(val.type);
+        $row.find('[name="packaging"]').val(val.packaging);
+        $row.find('[name="unit"]').val(val.unit);
+    });
+    if ($.fn.select2) { $('.select2').select2(); }
+    initSampleRowDatepickers();
+    JSUTIL.reinitializeInputTypes();
+    $('#addSampleBtn').hide();
+    $('#updateSampleBtn').hide();
+    $('#deleteSampleBtn').hide();
+    // Show editSampleBtn and enable checkboxes based on request status
+    if (currentRequestData && (currentRequestData.requestStatus === 'New' || currentRequestData.requestStatus === 'QA Rejected')) {
+        $('#editSampleBtn').show();
+        $('#allSamplesTable').addClass('edit-mode-active');
+    } else {
+        $('#editSampleBtn').hide();
+    }
+}
+
+function cloneRequestCallback(data) {
+    JSUTIL.startSpinner();
+    // New endpoint returns an object { id, referenceNumber, ... }
+    var newId = (data && data.id) ? data.id : data;
+    location.reload();
+}
+
+function createInvoiceCallback(data) {
+    JSUTIL.startSpinner();
+    JSUTIL.redirectTo('/sales/invoice?id=' + data);
+}
+function callbackAfterDocument3(response) {
+    console.log(response, "doc");
+    documentsList = response;
+    let document = response.find(doc => doc.type === 'Analysis Report');
+    if (!document) {
+        document = response.find(doc => doc.type === 'analysis_report');
+    }
+    if (document) {
+        uploadPath = document.path;
+    }
+    if (documentsList) {
+        var innerHtml4 = "";
+        $('#allDocumentsTable').empty();
+        $.each(documentsList, function (i, val4) {
+            innerHtml4 += `<tr><td><button type="button" class="btn btn-default deleteTrSelect deleteDocumentEntryRow" name="${val4.id}"><i data-lucide="trash"></i></button></td><td>${val4.name}</td><td>${val4.type}</td></tr>`
+        });
+        $('#allDocumentsTable').append(innerHtml4);
+    }
+
+}
+function getRetestingRequest(parentRequest){
+    var innerHtml = '';
+    $('#allRetestRequestTable').empty();
+    $.each(recordList, function(i, val){
+        if(val.referenceNumber.includes(parentRequest)){
+            if(val.referenceNumber != parentRequest){
+                $('#restestRequestingTab').show();
+                innerHtml += '<tr>' +
+                    '<td class="itemNum"><a href="javascript:void(0)" class="selectRetestRequestBtn" id="' + val.id + '">' + val.referenceNumber + '</a></td>' +
+                    '</tr>';
+            }
+        }
+    });
+    $('#allRetestRequestTable').append(innerHtml);
+}
+function callbackAfterGetReportTemplate(response) {
+    reportTemplateList = response;
+    $.each(response, function(i, val){
+        currentRequestId = val.id;
+        window.currentCoaTemplate = val;
+    });
+}
+ function initSampleRowDatepickers() {
+        if (!$.fn.daterangepicker) return;
+        $('#allSamplesTable .datetimepicker').each(function () {
+            var $input = $(this);
+            // Destroy existing instance first
+            if ($input.data('daterangepicker')) {
+                $input.data('daterangepicker').remove();
+            }
+            $input.daterangepicker({
+                singleDatePicker : true,
+                showDropdowns    : true,
+                timePicker       : true,
+                timePicker24Hour : true,
+                autoUpdateInput  : false,
+                minYear          : 1901,
+                maxYear          : parseInt(moment().format('YYYY'), 10) + 10,
+                drops            : 'auto',
+                locale           : { format: 'DD/MM/YYYY HH:mm', cancelLabel: 'Clear' }
+            });
+            $input.off('apply.daterangepicker').on('apply.daterangepicker', function (ev, picker) {
+                $(this).val(picker.startDate.format('DD/MM/YYYY HH:mm'));
+            });
+            $input.off('cancel.daterangepicker').on('cancel.daterangepicker', function () {
+                $(this).val('');
+            });
+        });
+    }
+</script>
+<!-- allTestRequestPanel.js end -->

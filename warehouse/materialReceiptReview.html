@@ -1,0 +1,4245 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- allInwardPanel.html    Start -->
+<style>
+    /* ── Lucide icon sizing ── */
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .expand-row-btn { padding: 2px 6px; line-height: 1; }
+    .expand-row-btn svg { width: 14px; height: 14px; display: inline-block; vertical-align: middle; }
+
+    /* ── Main list table ── */
+    #allInwardPanelTable1 thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allInwardPanelTable1 tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #allInwardPanelTable1 th,
+    #allInwardPanelTable1 td {
+        text-align: left !important;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* ── Receipt link ── */
+    .qa-white-panel .selectReceiptBtn {
+        color: #337ab7;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .qa-white-panel .selectReceiptBtn:hover {
+        text-decoration: underline;
+    }
+
+    /* ── DataTables layout ── */
+    .qa-white-panel .table-responsive { overflow: visible; }
+
+    .qa-white-panel .dt-layout-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .qa-white-panel .dt-layout-row:last-child {
+        margin-top: 8px;
+        margin-bottom: 0;
+    }
+
+    .qa-white-panel .dt-layout-start { flex: 1; }
+
+    .qa-white-panel .dt-layout-end {
+        flex: 1;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .qa-white-panel .dt-paging .dt-paging-button {
+        padding: 4px 8px;
+        border: 1px solid #dee2e6;
+        background: #fff;
+        cursor: pointer;
+        line-height: 1.5;
+    }
+
+    .qa-white-panel .dt-paging .dt-paging-button:hover:not(.disabled) { background: #e9ecef; }
+
+    .qa-white-panel .dt-paging .dt-paging-button.disabled {
+        color: #6c757d;
+        cursor: default;
+    }
+
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    /* ── ibox-title flex ── */
+    .qa-white-panel .ibox-title {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .qa-white-panel .ibox-title h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .qa-white-panel .ibox-tools {
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* ── ibox-content padding ── */
+    .qa-white-panel .ibox-content { padding: 15px 20px; }
+
+    /* ── Form group spacing ── */
+    .qa-white-panel .form-group { margin-bottom: 15px; }
+
+    /* ── Table td alignment ── */
+    .qa-white-panel .table td { vertical-align: middle; }
+
+    /* ── Readonly inputs ── */
+    .qa-white-panel .form-control[readonly] {
+        background-color: #f5f5f5;
+        cursor: default;
+        opacity: 1;
+    }
+
+    /* ── Status badges ── */
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .status-new        { background: #d9edf7; color: #31708f; border: 1px solid #bce8f1; }
+    .status-submitted  { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
+    .status-completed  { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+
+    /* ── Main/Detail row styles ── */
+    tr.main-row { cursor: pointer; transition: background-color 0.2s; }
+    tr.main-row:hover { background-color: #f0f0f0; }
+    tr.detail-row { background-color: #f8f9fa; }
+    tr.detail-row td { padding: 0 !important; }
+
+    .detail-row .detail-content {
+        padding: 15px;
+        background-color: #f8f9fa;
+    }
+
+    /* ── Custom dropdown ── */
+    .mi-search-dropdown {
+        position: absolute;
+        z-index: 1060;
+        background: #ffffff;
+        color: #333333;
+        border: 1px solid #cccccc;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 220px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        width: 100%;
+        top: 100%;
+        left: 0;
+        border-radius: 4px;
+    }
+
+    .mi-search-dropdown.fixed-dropdown {
+        position: fixed;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    .mi-search-dropdown li {
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #333333;
+        background: #ffffff;
+        border-bottom: 1px solid #eeeeee;
+        font-size: 13px;
+        transition: background 0.1s;
+    }
+
+    .mi-search-dropdown li:last-child { border-bottom: none; }
+
+    .mi-search-dropdown li:hover {
+        background: #e8f4fd !important;
+        color: #1a6faf !important;
+    }
+
+    body.skin-dark .mi-search-dropdown,
+    body.dark-mode .mi-search-dropdown,
+    [data-bs-theme="dark"] .mi-search-dropdown {
+        background: #2b2b2b !important;
+        color: #e0e0e0 !important;
+        border-color: #444444 !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    }
+
+    body.skin-dark .mi-search-dropdown li,
+    body.dark-mode .mi-search-dropdown li,
+    [data-bs-theme="dark"] .mi-search-dropdown li {
+        background: #2b2b2b !important;
+        color: #e0e0e0 !important;
+        border-bottom-color: #3d3d3d !important;
+    }
+
+    body.skin-dark .mi-search-dropdown li:hover,
+    body.dark-mode .mi-search-dropdown li:hover,
+    [data-bs-theme="dark"] .mi-search-dropdown li:hover {
+        background: #1a4a6b !important;
+        color: #ffffff !important;
+    }
+
+    .mi-search-dropdown.dark-dropdown {
+        background: #2b2b2b !important;
+        color: #e0e0e0 !important;
+        border-color: #444444 !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    }
+
+    .mi-search-dropdown.dark-dropdown li {
+        background: #2b2b2b !important;
+        color: #e0e0e0 !important;
+        border-bottom-color: #3d3d3d !important;
+    }
+
+    .mi-search-dropdown.dark-dropdown li:hover {
+        background: #1a4a6b !important;
+        color: #ffffff !important;
+    }
+
+    /* ── Dark mode: disabled & readonly inputs/selects ── */
+    body.skin-dark .form-control:disabled,
+    body.skin-dark .form-control[readonly],
+    body.skin-dark select.form-control:disabled,
+    body.dark-mode .form-control:disabled,
+    body.dark-mode .form-control[readonly],
+    [data-bs-theme="dark"] .form-control:disabled,
+    [data-bs-theme="dark"] .form-control[readonly],
+    [data-bs-theme="dark"] select.form-control:disabled,
+    [data-bs-theme="dark"] textarea.form-control[readonly] {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+
+    body.skin-dark .form-control:disabled::placeholder,
+    body.skin-dark .form-control[readonly]::placeholder,
+    body.dark-mode .form-control[readonly]::placeholder,
+    [data-bs-theme="dark"] .form-control:disabled::placeholder,
+    [data-bs-theme="dark"] .form-control[readonly]::placeholder {
+        color: #6c757d !important;
+    }
+
+
+    /* ── Select2 full dark mode (active + disabled) ── */
+    body.skin-dark .select2-container .select2-selection--single,
+    body.dark-mode .select2-container .select2-selection--single,
+    [data-bs-theme="dark"] .select2-container .select2-selection--single {
+        background-color: #2c2c2e !important;
+        border-color: #444 !important;
+        color: #c9d1d9 !important;
+    }
+
+    body.skin-dark .select2-container .select2-selection--single .select2-selection__rendered,
+    body.dark-mode .select2-container .select2-selection--single .select2-selection__rendered,
+    [data-bs-theme="dark"] .select2-container .select2-selection--single .select2-selection__rendered {
+        color: #c9d1d9 !important;
+    }
+
+    /* ── Dropdown arrow visible in dark mode ── */
+    body.skin-dark .select2-container .select2-selection--single .select2-selection__arrow b,
+    body.dark-mode .select2-container .select2-selection--single .select2-selection__arrow b,
+    [data-bs-theme="dark"] .select2-container .select2-selection--single .select2-selection__arrow b {
+        border-color: #c9d1d9 transparent transparent transparent !important;
+    }
+
+    body.skin-dark .select2-container--open .select2-selection--single .select2-selection__arrow b,
+    body.dark-mode .select2-container--open .select2-selection--single .select2-selection__arrow b,
+    [data-bs-theme="dark"] .select2-container--open .select2-selection--single .select2-selection__arrow b {
+        border-color: transparent transparent #c9d1d9 transparent !important;
+    }
+
+    /* ── Dropdown list dark mode ── */
+    body.skin-dark .select2-dropdown,
+    body.dark-mode .select2-dropdown,
+    [data-bs-theme="dark"] .select2-dropdown {
+        background-color: #2b2b2b !important;
+        border-color: #444 !important;
+        color: #c9d1d9 !important;
+    }
+
+    body.skin-dark .select2-results__option,
+    body.dark-mode .select2-results__option,
+    [data-bs-theme="dark"] .select2-results__option {
+        background-color: #2b2b2b !important;
+        color: #c9d1d9 !important;
+    }
+
+    body.skin-dark .select2-results__option--highlighted,
+    body.skin-dark .select2-results__option[aria-selected="true"],
+    body.dark-mode .select2-results__option--highlighted,
+    body.dark-mode .select2-results__option[aria-selected="true"],
+    [data-bs-theme="dark"] .select2-results__option--highlighted,
+    [data-bs-theme="dark"] .select2-results__option[aria-selected="true"] {
+        background-color: #1a4a6b !important;
+        color: #ffffff !important;
+    }
+
+    body.skin-dark .select2-search--dropdown .select2-search__field,
+    body.dark-mode .select2-search--dropdown .select2-search__field,
+    [data-bs-theme="dark"] .select2-search--dropdown .select2-search__field {
+        background-color: #1e1e1e !important;
+        border-color: #444 !important;
+        color: #c9d1d9 !important;
+    }
+
+    /* ── Native <select> dark mode ── */
+    body.skin-dark select.form-control,
+    body.dark-mode select.form-control,
+    [data-bs-theme="dark"] select.form-control {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+    }
+
+    body.skin-dark select.form-control option,
+    body.dark-mode select.form-control option,
+    [data-bs-theme="dark"] select.form-control option {
+        background-color: #2b2b2b !important;
+        color: #c9d1d9 !important;
+    }
+
+    /* ── Status badges dark mode ── */
+    body.skin-dark .status-new, [data-bs-theme="dark"] .status-new
+        { background: #0d3349 !important; color: #7ec8e3 !important; border-color: #1a5a7a !important; }
+    body.skin-dark .status-submitted, [data-bs-theme="dark"] .status-submitted
+        { background: #3a2e00 !important; color: #f0c040 !important; border-color: #6b5500 !important; }
+    body.skin-dark .status-completed, [data-bs-theme="dark"] .status-completed
+        { background: #0d2e0d !important; color: #5cb85c !important; border-color: #1a5c1a !important; }
+
+    /* ── Detail / expand row ── */
+    .detail-panel-grid {
+        padding: 12px 16px;
+        background-color: #f8f9fa;
+    }
+
+    body.skin-dark .detail-panel-grid,
+    body.dark-mode .detail-panel-grid,
+    [data-bs-theme="dark"] .detail-panel-grid {
+        background-color: #1e1e1e !important;
+    }
+
+    .detail-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 3px;
+        white-space: nowrap;
+    }
+
+    body.skin-dark .detail-label,
+    body.dark-mode .detail-label,
+    [data-bs-theme="dark"] .detail-label { color: #8a9bb0 !important; }
+
+    .detail-panel-grid .form-control-sm { font-size: 13px; }
+
+    tr.detail-row > td {
+        border-top: 2px solid !important;
+        background-color: #f8f9fa;
+    }
+
+    body.skin-dark tr.detail-row > td,
+    body.dark-mode tr.detail-row > td,
+    [data-bs-theme="dark"] tr.detail-row > td {
+        background-color: #1e1e1e !important;
+    }
+
+    /* detail-content (receipt review style) */
+    .detail-row .detail-content {
+        padding: 12px 16px;
+        background-color: #f8f9fa;
+    }
+
+    body.skin-dark .detail-row .detail-content,
+    body.dark-mode .detail-row .detail-content,
+    [data-bs-theme="dark"] .detail-row .detail-content {
+        background-color: #1e1e1e !important;
+    }
+
+    /* main-row hover dark mode */
+    body.skin-dark tr.main-row:hover,
+    body.dark-mode tr.main-row:hover,
+    [data-bs-theme="dark"] tr.main-row:hover {
+        background-color: #2a2a2a !important;
+    }
+
+    /* Questions panel dark mode */
+    body.skin-dark .questions-panel td,
+    body.dark-mode .questions-panel td,
+    [data-bs-theme="dark"] .questions-panel td {
+        background-color: #1e1e1e !important;
+        color: #c9d1d9 !important;
+    }
+
+    /* DataTables search dark mode */
+    body.skin-dark div.dt-container .dt-search input,
+    body.dark-mode div.dt-container .dt-search input,
+    [data-bs-theme="dark"] div.dt-container .dt-search input {
+        background-color: #2c2c2e;
+        color: #c9d1d9;
+        border-color: #444 !important;
+    }
+
+    /* ── Sub-tab labels: override Bootstrap default blue link color ── */
+    #productTabNav .nav-link {
+        color: #555555;
+    }
+
+    #productTabNav .nav-link:hover {
+        color: #333333;
+    }
+
+    #productTabNav .nav-link.active {
+        color: #333333;
+        font-weight: 600;
+    }
+
+    /* Dark mode */
+    [data-bs-theme="dark"] #productTabNav .nav-link,
+    body.skin-dark #productTabNav .nav-link,
+    body.dark-mode #productTabNav .nav-link {
+        color: #a0aabb !important;
+    }
+
+    [data-bs-theme="dark"] #productTabNav .nav-link:hover,
+    body.skin-dark #productTabNav .nav-link:hover,
+    body.dark-mode #productTabNav .nav-link:hover {
+        color: #e0e0e0 !important;
+    }
+
+    [data-bs-theme="dark"] #productTabNav .nav-link.active,
+    body.skin-dark #productTabNav .nav-link.active,
+    body.dark-mode #productTabNav .nav-link.active {
+        color: #ffffff !important;
+    }
+
+</style>
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="InwardPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>GIM Review <small>Warehouse</small></h5>
+                    <div class="ibox-tools">
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+
+                    <div class="table-responsive">
+                        <table id="allInwardPanelTable1" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Receipt #</th>
+                                    <th>Receipt Date</th>
+                                    <th>Purchase Order</th>
+                                    <th>Vendor</th>
+                                    <th>Process Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inwardTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal inmodal fade" id="receiveModal" tabindex="-1" role="dialog" aria-hidden="true"
+        style="display: none;">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Material Inward</h4>
+                    <small class="font-bold">Receive material against a Purchase Order</small>
+                </div>
+                <div class="modal-body">
+                    <form role="form" action="/inventory/inward/receive_po_json" method="post" id="poInwardSaveForm">
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <p><strong>Item</strong></p>
+                            </div>
+                            <div class="col-sm-2">
+                                <p><strong>Quantity</strong></p>
+                            </div>
+                            <div class="col-sm-2">
+                                <p><strong>Received</strong></p>
+                            </div>
+                        </div>
+                        <div class="row" id="poLineItemsElement"></div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="text" name="purchaseOrder.ReceivedDate"
+                                        class="form-control datepicker">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label>Notes</label>
+                                    <input type="text" name="purchaseOrder.Notes" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" id="recieveSaveBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal inmodal fade" id="inwardModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">New Material Inward</h4>
+                    <small class="font-bold">Receive material without a Purchase Order</small>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger" id="pageErrorPanel" style="display: none;"></div>
+                    <form role="form" id="materialInwardForm" action="/inventory/inward/receive_no_po" method="post">
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Product</label>
+                                    <input type="text" placeholder="search.."
+                                        class="typeahead_3 form-control selectSearchInputAutoComplete" />
+                                    <input type="hidden" name="product" id="materialInwardInput1"
+                                        class="selectSearchInputAutoCompleteId materialInwardInput"
+                                        aria-description="inventory/product/search" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Quantity</label>
+                                    <input type="number" class="form-control materialInwardInput" name="quantity"
+                                        id="materialInwardInput2">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Inward Date</label>
+                                    <input type="text" class="form-control materialInwardInput datepicker" name="date"
+                                        id="materialInwardInput3">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <input type="text" class="form-control materialInwardInput" name="description"
+                                        id="materialInwardInput4">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Total Values</label>
+                                    <input type="number" class="form-control materialInwardInput" name="overrideCost"
+                                        id="materialInwardInput5">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" id="inwardSaveBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ibox" id="productReceiptModal" style="display: none;">
+        <div class="ibox-title">
+            <h5><span id="productReceiptModalLabel">Product Receipt</span></h5>
+            <div class="ibox-tools">
+                <button type="button" class="btn btn-default btn-sm" id="productReceiptBackBtn">
+                    <i data-lucide="move-left"></i>Back
+                </button>
+            </div>
+        </div>
+
+        <div class="ibox-content">
+            <div class="alert alert-danger" id="pageErrorPanel1" style="display: none;"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group mb-3" style="position: relative;">
+                        <label>Gate Entry Search</label>
+                        <input type="text" placeholder="Search gate entry..." class="form-control"
+                            id="gateEntrySearchInput" />
+                        <input type="hidden" id="gateEntryId" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label>Purchase Order</label>
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                type="button" id="purchaseOrderSelectBtn" aria-haspopup="true" aria-expanded="false">
+                                <span>-- None --</span>
+                            </button>
+                            <div class="dropdown-menu w-100" id="purchaseOrderDropdownMenu">
+                                <a class="dropdown-item active" href="#" data-value="">-- None --</a>
+                            </div>
+                        </div>
+                        <input type="hidden" id="purchaseOrderSelect" value="">
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label>Vendor</label>
+                        <input type="text" id="poVendorName" class="form-control" readonly />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label>Manufacturer</label>
+                        <input type="text" id="poManufacturerName" class="form-control" readonly />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>Challan Date</label>
+                        <input type="date" id="challanDate" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>LR Number</label>
+                        <input type="text" id="lrNumber" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>LR Date</label>
+                        <input type="date" id="lrDate" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>Challan Number</label>
+                        <input type="text" id="challanNumber" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>Invoice Number</label>
+                        <input type="text" id="invoiceNumber" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>Invoice Date</label>
+                        <input type="date" id="invoiceDate" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>Delivery Vehicle Number</label>
+                        <input type="text" id="deliveryVehicle" class="form-control" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group mb-3">
+                        <label>Transport Company</label>
+                        <div class="dropdown">
+                            <button
+                                class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                type="button" id="transportCompanyBtn" aria-haspopup="true" aria-expanded="false">
+                                <span>-- Select Transporter --</span>
+                            </button>
+                            <div class="dropdown-menu w-100" id="transportCompanyDropdownMenu">
+                                <a class="dropdown-item active" href="#" data-value="">-- Select Transporter --</a>
+                            </div>
+                        </div>
+                        <input type="hidden" id="transportCompany" value="">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>Bill From</label>
+                        <input type="text" class="form-control editRecordInput" id="billFrom2" name="billingStreet"
+                            readonly>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>Bill From Address</label>
+                        <input type="text" class="form-control editRecordInput" id="billFromAddress2"
+                            name="billingStreet2" readonly>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>State/GSTIN</label>
+                        <input type="text" class="form-control editRecordInput" id="billFromStateGSTIN2"
+                            name="billingTaxId" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>Ship From</label>
+                        <input type="text" class="form-control editRecordInput" id="shipFrom2" name="shippedFromName"
+                            readonly>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>Ship From Address</label>
+                        <input type="text" class="form-control editRecordInput" id="shipFromAddress2"
+                            name="shippingStreet2" readonly>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>State/GSTIN</label>
+                        <input type="text" class="form-control editRecordInput" id="shipFromStateGSTIN2"
+                            name="shippingTaxId" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>Ship To</label>
+                        <input type="text" class="form-control editRecordInput" id="shipTo2" name="shippingStreet"
+                            readonly>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>Ship To Address</label>
+                        <input type="text" class="form-control editRecordInput" id="shipToAddress2" name="shippingCity"
+                            readonly>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group mb-3">
+                        <label>State/GSTIN</label>
+                        <input type="text" class="form-control editRecordInput" id="shipToStateGSTIN2"
+                            name="shippingPostalCode" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="row form-group">
+                <div class="col-sm-6">
+                    <label>Select Tax Type</label>
+                    <div class="dropdown">
+                        <button
+                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                            type="button" id="taxTypeSelectBtn" aria-haspopup="true" aria-expanded="false">
+                            <span>-- Select Tax Type --</span>
+                        </button>
+                        <div class="dropdown-menu w-100" id="taxTypeDropdownMenu">
+                            <a class="dropdown-item active" href="#" data-value="">-- Select Tax Type --</a>
+                            <a class="dropdown-item" href="#" data-value="IGST">IGST</a>
+                            <a class="dropdown-item" href="#" data-value="SGST-CGST">SGST-CGST</a>
+                        </div>
+                    </div>
+                    <input type="hidden" id="taxTypeSelect" value="">
+                </div>
+                <div class="col-sm-9">
+                    <label>Products</label>
+                    <div class="dropdown">
+                        <button
+                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                            type="button" id="productSelectBtn" aria-haspopup="true" aria-expanded="false" disabled>
+                            <span>-- Select Product --</span>
+                        </button>
+                        <div class="dropdown-menu w-100" id="productDropdownMenu">
+                            <a class="dropdown-item active" href="#" data-value="">-- Select Product --</a>
+                        </div>
+                    </div>
+                    <input type="hidden" id="productSelect" value="">
+                </div>
+                <div class="col-sm-1"></div>
+                <div class="col-sm-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-secondary w-100" id="addProductBtn"
+                        style="margin-top: 23px;"><i data-lucide="plus"></i>Add</button>
+                </div>
+            </div>
+
+            <div class="alert alert-danger" id="productTableError" style="display: none;"></div>
+
+            <div class="table-responsive mt-3">
+                <table class="table table-bordered" id="receiptTable">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Product</th>
+                            <th>Quantity Received</th>
+                            <th>Unit Price</th>
+                            <th>UOM</th>
+                            <th>Batch Number</th>
+                            <th>Manufacturer</th>
+                            <th>Manufactured Date</th>
+                            <th>Expiry Date</th>
+                            <th>Retest Date</th>
+                            <th>Actual Quantity</th>
+                            <th>Number Of Containers</th>
+                            <th>Material Value</th>
+                            <th class="taxable-col">Taxable Value</th>
+                            <th class="igst-col">IGST %</th>
+                            <th class="igst-col">IGST Amt</th>
+                            <th class="sgst-col">SGST %</th>
+                            <th class="sgst-col">SGST Amt</th>
+                            <th class="cgst-col">CGST %</th>
+                            <th class="cgst-col">CGST Amt</th>
+                            <th class="approx-col">Approx Weight</th>
+                            <th>Container Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="receiptNotes">Notes</label>
+                <textarea id="receiptNotes" class="form-control" rows="3" style="resize:none;"></textarea>
+            </div>
+
+            <div class="text-right" style="margin-top: 16px;">
+                <button type="button" class="btn btn-default" id="productReceiptCancelBtn"><i
+                        data-lucide="x"></i>Cancel</button>
+                <button type="button" class="btn btn-secondary" id="productReceiptSaveBtn"><i
+                        data-lucide="check"></i>Save</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- allInwardPanel.html   End -->
+
+
+
+
+
+
+
+
+    <!-- grnReviewPanel.html    Start -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="editInwardPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="receiptName">Receipt Details</span></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-outline-secondary btn-sm editInwardClose">
+                            <i class="fa fa-times"></i> Close
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="acceptBtn">
+                            <i class="fa fa-check"></i> Accept
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" id="rejectBtn">
+                            <i class="fa fa-times"></i> Reject
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ibox-content">
+                    <div class="row" style="margin-bottom: 15px;">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Receipt Notes</label>
+                                <textarea id="editReceiptNotes" class="form-control" rows="2" readonly
+                                    placeholder="Enter any notes for this receipt..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 10px;">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Challan Number</label>
+                                <input type="text" id="editChallanNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Challan Date</label>
+                                <input type="date" id="editChallanDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Receipt Date</label>
+                                <input type="date" id="editReceiptDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 10px;">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Invoice Number</label>
+                                <input type="text" id="editInvoiceNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Invoice Date</label>
+                                <input type="date" id="editInvoiceDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>LR Number</label>
+                                <input type="text" id="editLrNumber" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-bottom: 10px;">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>LR Date</label>
+                                <input type="date" id="editLrDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Delivery Vehicle Number</label>
+                                <input type="text" id="editDeliveryVehicle" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Transport Company</label>
+                                <input type="text" id="editTransportCompany" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="productTabNav">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#productsTab">Products</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#msdsTab">Documents</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#HistoryTab">History</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" style="margin-top: 15px;">
+                        <div id="productsTab" class="tab-pane fade show active">
+                            <div class="table-responsive">
+                                <table class="table  table-bordered table-hover" id="editInwardTableContainer">
+                                    <thead>
+                                        <tr>
+                                            <th width="5%"></th>
+                                            <th width="18%">Product</th>
+                                            <th width="10%">Qty Received</th>
+                                            <th width="10%">Qty Approved</th>
+                                            <th width="12%">Batch Number</th>
+                                            <th width="8%">Containers</th>
+                                            <!-- <th width="15%">Staging Location</th> -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="editInwardTable">
+                                        <tr>
+                                            <td colspan="7" class="text-center">Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="msdsTab" class="tab-pane fade">
+                            <div class="panel-body">
+                                <div id="uploadContainer" style="max-height: 76vh; overflow-y: auto;">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>Type</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allDocumentsTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="HistoryTab" class="tab-pane fade">
+                            <div class="panel-body">
+                                <div id="historyContainer" style="max-height: 76vh; overflow-y: auto;">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Action</th>
+                                                    <th>Performed By</th>
+                                                    <th>Date</th>
+                                                    <th>Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allHistoryTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Panel -->
+    <div id="containerPanel" class="aasaanPanel" style="display:none">
+        <div class="ibox">
+            <div class="ibox-title">
+                <h5>Product Containers</h5>
+                <div class="ibox-tools">
+                    <button class="btn btn-outline-secondary btn-sm" id="closeContainerPanel">
+                        <i class="fa fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <!-- PRODUCT ITEM DETAILS (READ ONLY) -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Product</label>
+                        <input id="cpProduct" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Batch No</label>
+                        <input id="cpBatch" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Qty Received</label>
+                        <input id="cpQty" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="">Number Of Containers</label>
+                        <input type="number" id="cpNOC" class="form-control" readonly>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- CONTAINER TABLE -->
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="containerTable">
+                        <thead>
+                            <tr>
+                                <th width="30%">No. of Containers</th>
+                                <th width="30%">Net Wt / Container</th>
+                                <th width="30%">UOM</th>
+                                <!-- <th width="10%"></th> -->
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- grnReviewPanel.html    End -->
+
+
+
+</div>
+<script>
+
+    // ── Dark mode helper for JS-built dropdowns ──
+    function isDarkMode() {
+        return document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
+               document.body.classList.contains('skin-dark') ||
+               document.body.classList.contains('dark-mode');
+    }
+    function applyDropdownDarkMode($el) {
+        if (isDarkMode()) $el.addClass('dark-dropdown');
+    }
+
+    lucide.createIcons();
+    // allInwardPanel.js    Start
+    // DataTable init handled in populateReceiptTable after data loads
+    function appendDropdownOption($menu, value, label) {
+        $menu.append(
+            $('<a class="dropdown-item" href="#">').attr('data-value', value).text(label)
+        );
+    }
+
+    function clearDropdownOptions($menu, placeholder) {
+        $menu.empty();
+        if (placeholder) appendDropdownOption($menu, '', placeholder);
+    }
+
+    function setDropdownValue(btnId, menuId, value, label) {
+        $(btnId + ' span').first().text(label || '--none--');
+        $(menuId + ' .dropdown-item').each(function () {
+            $(this).toggleClass('active', String($(this).data('value')) === String(value));
+        });
+    }
+
+    function getDropdownValue(hiddenInputId) {
+        return $(hiddenInputId).val() || '';
+    }
+    function updateTaxColumns() {
+        var taxType = $('#taxTypeSelect').val();
+        if (taxType === 'IGST') {
+            $('.igst-col').show();
+            $('.sgst-col, .cgst-col').hide();
+            // Also hide corresponding tbody columns
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.igst-col').show();
+                $(this).find('td.sgst-col, td.cgst-col').hide();
+            });
+        } else if (taxType === 'SGST-CGST') {
+            $('.igst-col').hide();
+            $('.sgst-col, .cgst-col').show();
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.igst-col').hide();
+                $(this).find('td.sgst-col, td.cgst-col').show();
+            });
+        } else {
+            // Show all if not selected
+            $('.igst-col, .sgst-col, .cgst-col').show();
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.igst-col, td.sgst-col, td.cgst-col').show();
+            });
+        }
+    }
+
+    // Toggle tax fields (selector + table columns) for gate entry types
+    function toggleTaxFieldsForEntry(entryType) {
+        var isLocalMaterial = entryType === 'localMaterial';
+        var $taxFieldContainer = $('#taxTypeSelect').closest('.col-sm-6');
+
+        if (isLocalMaterial) {
+            // Hide selector and all tax-related columns
+            $('#taxTypeSelect').val('');
+            setDropdownValue('#taxTypeSelectBtn', '#taxTypeDropdownMenu', '', '-- Select Tax Type --');
+            $taxFieldContainer.hide();
+            $('.igst-col, .sgst-col, .cgst-col').hide();
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.igst-col, td.sgst-col, td.cgst-col').hide();
+            });
+        } else {
+            $taxFieldContainer.show();
+            updateTaxColumns();
+        }
+    }
+
+    // Toggle taxable value column for gate entry types
+    function toggleTaxableForEntry(entryType) {
+        var isLocalMaterial = entryType === 'localMaterial';
+        if (isLocalMaterial) {
+            $('.taxable-col').hide();
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.taxable-col').hide();
+            });
+        } else {
+            $('.taxable-col').show();
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.taxable-col').show();
+            });
+        }
+    }
+
+    // Toggle approx weight column for gate entry types
+    function toggleApproxWeightForEntry(entryType) {
+        var isLocalMaterial = entryType === 'localMaterial';
+        if (isLocalMaterial) {
+            $('.approx-col').hide();
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.approx-col').hide();
+            });
+        } else {
+            $('.approx-col').show();
+            $('#receiptTable tbody tr').each(function () {
+                $(this).find('td.approx-col').show();
+            });
+        }
+    }
+
+    // Build currentProducts and dropdown options from gate entry items
+    function populateProductsFromGateEntryItems(gateEntryItems) {
+        if (!gateEntryItems || gateEntryItems.length === 0) return;
+
+        // Collect unique product IDs to fetch details
+        var productIds = gateEntryItems
+            .map(item => item.product && item.product.id)
+            .filter(Boolean);
+        productIds = [...new Set(productIds)];
+
+        // If nothing to fetch, bail
+        if (productIds.length === 0) return;
+
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products'), function (allProducts) {
+            var productDetails = (allProducts || []).filter(function(p) { return productIds.indexOf(p.id) !== -1; });
+            var productMap = {};
+            if (productDetails && productDetails.forEach) {
+                productDetails.forEach(p => { productMap[p.id] = p; });
+            }
+
+            currentProducts = [];
+            gateEntryItems.forEach(item => {
+                var p = productMap[item.product.id] || {};
+                var qtyReceivedGE = parseFloat(item.quantityReceived) || 0;
+                var qtyOrderedGE = parseFloat(item.quantityOrdered) || 0;
+                // For gate entry driven flow, cap receivable to the quantity received in the gate entry
+                var remainingForThisEntry = qtyReceivedGE > 0 ? qtyReceivedGE : qtyOrderedGE;
+                var unitPriceFromMap = poItemPriceMap[item.product.id];
+
+                var obj = {
+                    id: item.product.id,
+                    name: p.name || item.product.name || '',
+                    number: p.number || item.product.number || '',
+                    quantityOrdered: item.quantityOrdered || 0,
+                    unitPrice: (typeof unitPriceFromMap !== 'undefined') ? unitPriceFromMap : (item.unitPrice || 0),
+                    quantityReceived: item.quantityReceived || 0,
+                    numberOfContainers: item.numberOfContainers || 0,
+                    remainingQty: remainingForThisEntry,
+                    uom: p.uom || item.product.uom || 'Kgs',
+                    poLineItemId: item.id || null,
+                    manufacturerId: item.manufacturer ? item.manufacturer.id : '',
+                    manufacturerName: item.manufacturer ? item.manufacturer.name || '' : ''
+                };
+                currentProducts.push(obj);
+            });
+
+            clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+            $('#productSelectBtn span').first().text('-- Select Product --');
+            currentProducts.forEach(item => {
+                var received = typeof item.quantityReceived !== 'undefined' ? item.quantityReceived : '';
+                var containers = typeof item.numberOfContainers !== 'undefined' ? item.numberOfContainers : '';
+                var suffixParts = [];
+                if (received !== '') suffixParts.push(`Received:${received}`);
+                if (containers !== '') suffixParts.push(`Containers:${containers}`);
+                var suffix = suffixParts.length ? ` (${suffixParts.join(' | ')})` : '';
+                appendDropdownOption($('#productDropdownMenu'), item.id, `${item.name} - ${item.number || ''}${suffix}`);
+            });
+            $('#productSelectBtn').prop('disabled', false);
+        });
+    }
+
+    // Safely parse remarks JSON (stored as stringified text)
+    function parseGateEntryRemarks(remarks) {
+        if (!remarks) return null;
+        try {
+            return JSON.parse(remarks);
+        } catch (e) {
+            // Fallback: attempt with single quotes replaced
+            try {
+                return JSON.parse(remarks.replace(/'/g, '"'));
+            } catch (err) {
+                console.error('Failed to parse gate entry remarks:', err, remarks);
+                return null;
+            }
+        }
+    }
+
+    // Show/hide address header fields based on entry type
+    function toggleAddressFieldsForEntry(entryType) {
+        var hide = entryType === 'localMaterial';
+        var selectors = [
+            '#billFrom2',
+            '#billFromAddress2',
+            '#billFromStateGSTIN2',
+            '#shipFrom2',
+            '#shipFromAddress2',
+            '#shipFromStateGSTIN2',
+            '#shipTo2',
+            '#shipToAddress2',
+            '#shipToStateGSTIN2'
+        ];
+
+        selectors.forEach(function (sel) {
+            var $row = $(sel).closest('.row');
+            if (hide) {
+                $row.hide();
+            } else {
+                $row.show();
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        // Initial call for tax columns
+        updateTaxColumns();
+        // On change
+        $('#taxTypeSelect').on('change', updateTaxColumns);
+    });
+    var products = []
+    var manufacturers = []
+    var remarksdata = {}
+    var currentProducts
+    var stagingLocations
+    var transportCompanies = []
+    // Store the selected gate entry number for later use/logging
+    var selectedGateEntryNumber = ''
+    // Store the selected gate entry type for later use/logging
+    var selectedGateEntryType = ''
+    // Store gate entry vendor for fallback during save
+    var selectedGateEntryVendor = null
+    // When true, rely on gate entry items (not PO order items) for product dropdown
+    var useGateEntryProducts = false
+    // Store currently selected PO parties for reuse in rows
+    var selectedPoVendor = null
+    var selectedPoManufacturer = null
+    // Map of productId -> unit price from PO order items
+    var poItemPriceMap = {}
+    // Gate entry items waiting for PO price map
+    var pendingGateEntryItems = null
+    var recordList = []
+
+    // Compute material value for a given row based on unit price and actual qty
+    function updateRowMaterialValue($row) {
+        var price = parseFloat($row.find('.unitPriceCell').data('price')) || 0;
+        var qty = parseFloat($row.find('.receivedQtyInput').val()) || 0;
+        var val = price * qty;
+        $row.find('.materialValue').val(val ? val.toFixed(2) : '');
+    }
+
+    // Resolve account name (vendor/manufacturer) using available data
+    function resolveAccountName(accountObj) {
+        if (!accountObj) return '';
+        if (accountObj.name) return accountObj.name;
+        if (accountObj.Name) return accountObj.Name; // some endpoints return capitalized keys
+        if (accountObj.accountName) return accountObj.accountName;
+        if (accountObj.AccountName) return accountObj.AccountName;
+
+        // Fallback to locally cached accounts
+        var match = (manufacturers || []).find(a => a.id == accountObj.id);
+        if (match && match.name) return match.name;
+        if (match && match.Name) return match.Name;
+        return '';
+    }
+
+    function getAccountId(accountObj) {
+        if (!accountObj) return null;
+        return accountObj.id || accountObj.Id || null;
+    }
+
+    function fetchAccountNameById(id, $targetInput) {
+        if (!id || !$targetInput || $targetInput.length === 0) return;
+
+        var query = {
+            fields: "Id;Name;",
+            conditions: [`Id = ${id}`],
+            logic: '{0}'
+        };
+        JSUTIL.callAJAXPost('/data/Account/list', JSON.stringify(query), function (res) {
+            if (res && res.length > 0) {
+                var name = res[0].name || res[0].Name || '';
+                if (name) {
+                    $targetInput.val(name);
+                }
+            }
+        });
+    }
+
+    // Show PO vendor & manufacturer on header (read-only)
+    function setPoPartyHeader(poDetails) {
+        var vendorName = '';
+        var manufacturerName = '';
+        selectedPoVendor = null;
+        selectedPoManufacturer = null;
+        poItemPriceMap = {};
+        // reset pending items until we know prices
+        pendingGateEntryItems = pendingGateEntryItems || null;
+        if (poDetails) {
+            if (Array.isArray(poDetails)) {
+                poDetails = poDetails[0] || null;
+            }
+            // Preferred: structure seen in page_data => orderObj.vendor.name / orderObj.manufacturer.name
+            if (poDetails.orderObj) {
+                vendorName = (poDetails.orderObj.vendor && poDetails.orderObj.vendor.name) || '';
+                manufacturerName = (poDetails.orderObj.manufacturer && poDetails.orderObj.manufacturer.name) || '';
+                selectedPoVendor = poDetails.orderObj.vendor || null;
+                selectedPoManufacturer = poDetails.orderObj.manufacturer || null;
+                if (poDetails.orderItemList && poDetails.orderItemList.forEach) {
+                    poDetails.orderItemList.forEach(function (item) {
+                        if (item.product && item.product.id) {
+                            var price = item.itemPrice || item.price || item.unitPrice || 0;
+                            poItemPriceMap[item.product.id] = price;
+                        }
+                    });
+                }
+            } else if (poDetails.orderItemList && poDetails.orderItemList.forEach) {
+                poDetails.orderItemList.forEach(function (item) {
+                    if (item.product && item.product.id) {
+                        var price = item.itemPrice || item.price || item.unitPrice || 0;
+                        poItemPriceMap[item.product.id] = price;
+                    }
+                });
+            }
+
+            // Fallback to earlier resolution paths if names are still missing
+            if (!vendorName || !manufacturerName) {
+                var data = poDetails.purchaseOrder || poDetails;
+                var vendorObj =
+                    data.vendor ||
+                    data.Vendor ||
+                    (data.purchaseOrder && (data.purchaseOrder.vendor || data.purchaseOrder.Vendor)) ||
+                    (poDetails.vendor || poDetails.Vendor);
+                var manufacturerObj =
+                    data.manufacturer ||
+                    data.Manufacturer ||
+                    (data.purchaseOrder && (data.purchaseOrder.manufacturer || data.purchaseOrder.Manufacturer)) ||
+                    (poDetails.manufacturer || poDetails.Manufacturer);
+
+                if (!vendorName) {
+                    vendorName = resolveAccountName(vendorObj);
+                }
+                if (!manufacturerName) {
+                    manufacturerName = resolveAccountName(manufacturerObj);
+                }
+                if (!selectedPoVendor) selectedPoVendor = vendorObj || null;
+                if (!selectedPoManufacturer) selectedPoManufacturer = manufacturerObj || null;
+
+                // Fallback: fetch names by id if still blank
+                if (!vendorName) {
+                    var vId = getAccountId(vendorObj) || data.vendorId || data.VendorId;
+                    fetchAccountNameById(vId, $('#poVendorName'));
+                }
+                if (!manufacturerName) {
+                    var mId = getAccountId(manufacturerObj) || data.manufacturerId || data.ManufacturerId;
+                    fetchAccountNameById(mId, $('#poManufacturerName'));
+                }
+            }
+        }
+
+        $('#poVendorName').val(vendorName);
+        $('#poManufacturerName').val(manufacturerName);
+        applyUnitPricesFromMap();
+    }
+
+    // Apply PO unit prices to current product cache and visible rows
+    function applyUnitPricesFromMap() {
+        if (!poItemPriceMap) return;
+
+        if (currentProducts && currentProducts.forEach) {
+            currentProducts.forEach(function (p) {
+                if (poItemPriceMap.hasOwnProperty(p.id)) {
+                    p.unitPrice = poItemPriceMap[p.id];
+                }
+            });
+        }
+
+        $('#receiptTable tbody tr').each(function () {
+            var $row = $(this);
+            var pid = $row.find('input[name="Product.Id"]').val();
+            var price = poItemPriceMap[pid];
+            if (typeof price !== 'undefined') {
+                var $cell = $row.find('.unitPriceCell');
+                $cell.text(price);
+                $cell.data('price', price);
+                updateRowMaterialValue($row);
+            }
+        });
+    }
+
+    // Fetch PO details for header + (optionally) downstream processing
+    function fetchPoDetails(poId, callback) {
+        if (!poId) {
+            setPoPartyHeader(null);
+            if (typeof callback === 'function') callback(null);
+            return;
+        }
+
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/purchase/orders/' + poId), function (res) {
+            var order = res ? (res.order || res) : null;
+            var orderItems = res ? (res.items || []) : [];
+            var response = order ? { orderObj: order, orderItemList: orderItems } : null;
+            setPoPartyHeader(response || null);
+            populatePendingGateEntryItems();
+            if (typeof callback === 'function') callback(response);
+        }, function () {
+            setPoPartyHeader(null);
+            populatePendingGateEntryItems();
+            if (typeof callback === 'function') callback(null);
+        });
+    }
+
+    // Populate any stored gate entry items once PO prices are available
+    function populatePendingGateEntryItems() {
+        var pendingItems = $('#productReceiptModal').data('pendingGateEntryItems') || pendingGateEntryItems;
+        if (pendingItems && pendingItems.length > 0) {
+            // Clear table before populating fresh
+            $('#receiptTable tbody').empty();
+            populateProductsFromGateEntryItems(pendingItems);
+            var entryType = $('#productReceiptModal').data('entryType') || '';
+            if (entryType === 'contractmanufacturing') {
+                populateTableFromGateEntry(pendingItems);
+            }
+            pendingGateEntryItems = null;
+            $('#productReceiptModal').removeData('pendingGateEntryItems');
+            applyUnitPricesFromMap();
+        }
+    }
+
+    // Shared date helpers for dd/mm/yyyy enforcement
+    var DATE_FORMAT_REGEX = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/;
+
+    function parseDateFromDDMM(dateStr) {
+        if (!DATE_FORMAT_REGEX.test(dateStr)) return null;
+        var parts = dateStr.split('/').map(Number);
+        var day = parts[0], month = parts[1] - 1, year = parts[2];
+        var d = new Date(Date.UTC(year, month, day));
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function parseFlexibleDate(dateStr) {
+        if (!dateStr) return null;
+        if (DATE_FORMAT_REGEX.test(dateStr)) return parseDateFromDDMM(dateStr);
+        var d = new Date(dateStr);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    function formatDateForInput(dateStr) {
+        if (!dateStr) return '';
+        if (DATE_FORMAT_REGEX.test(dateStr)) return dateStr;
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return '';
+        var dd = String(d.getUTCDate()).padStart(2, '0');
+        var mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        var yyyy = d.getUTCFullYear();
+        return `${dd}/${mm}/${yyyy}`;
+    }
+
+    function toIsoDateOrEmpty(dateStr) {
+        var d = parseFlexibleDate(dateStr);
+        return d ? d.toISOString().slice(0, 10) : '';
+    }
+
+    function toUtcISOStringOrEmpty(dateStr) {
+        var d = parseFlexibleDate(dateStr);
+        return d ? d.toISOString().split('.')[0] + 'Z' : '';
+    }
+
+    function validateRowDates(row) {
+        var mfgStr = (row.find('.mfgDateInput').val() || '').trim();
+        var expStr = (row.find('.expDateInput').val() || '').trim();
+        var retestStr = (row.find('.retestDateInput').val() || '').trim();
+
+        if (!mfgStr) {
+            return { valid: false, message: "Please enter Manufacturing Date.", field: 'mfg' };
+        }
+
+        if (!DATE_FORMAT_REGEX.test(mfgStr)) {
+            return { valid: false, message: "Manufacturing Date must be in dd/mm/yyyy format.", field: 'mfg' };
+        }
+
+        var mfgDate = parseDateFromDDMM(mfgStr);
+        if (!mfgDate) {
+            return { valid: false, message: "Manufacturing Date is invalid.", field: 'mfg' };
+        }
+
+        if (expStr && retestStr) {
+            return { valid: false, message: "Enter either Expiry Date or Retest Date, not both.", field: 'both' };
+        }
+
+        // if (!expStr && !retestStr) {
+        //     return { valid: false, message: "Provide either Expiry Date or Retest Date in dd/mm/yyyy format.", field: 'either' };
+        // }
+
+        if (expStr) {
+            if (!DATE_FORMAT_REGEX.test(expStr)) {
+                return { valid: false, message: "Expiry Date must be in dd/mm/yyyy format.", field: 'exp' };
+            }
+            var expDate = parseDateFromDDMM(expStr);
+            if (!expDate || expDate <= mfgDate) {
+                return { valid: false, message: "Expiry date must be greater than Manufacturing date.", field: 'exp' };
+            }
+        }
+
+        if (retestStr) {
+            if (!DATE_FORMAT_REGEX.test(retestStr)) {
+                return { valid: false, message: "Retest Date must be in dd/mm/yyyy format.", field: 'retest' };
+            }
+            var retestDate = parseDateFromDDMM(retestStr);
+            if (!retestDate || retestDate <= mfgDate) {
+                return { valid: false, message: "Retest date must be greater than Manufacturing date.", field: 'retest' };
+            }
+        }
+
+        return { valid: true };
+    }
+
+    // Initialize datepickers for expiry/retest (and any other) date inputs within a scope
+    function initInwardDatePickers(scope) {
+        if (!$.fn || !$.fn.datepicker) return;
+        var $scope = scope ? $(scope) : $(document);
+        $scope.find('.mfgDateInput, .expDateInput, .retestDateInput').each(function () {
+            var $input = $(this);
+            if ($input.data('datepicker')) {
+                $input.datepicker('destroy');
+            }
+            $input.datepicker({
+                format: 'dd/mm/yyyy',
+                autoclose: true
+            });
+        });
+    }
+    // Create a ProductLot for a given row and return a promise that resolves with the lot id
+    // If productReceiptItemId is provided, the lot will link back to that receipt item (1:1)
+    function createProductLotForRow(row, prNumber, productReceiptItemId) {
+        return new Promise(function (resolve, reject) {
+            var productId = row.find('input[name="Product.Id"]').val();
+            var batchNumber = row.find('.batchNumberInput').val().trim();
+            var receivedQty = parseFloat(row.find('.receivedQtyInput').val()) || 0;
+            var numberOfContainers = parseInt(row.find('.containersInput').val()) || 0;
+            var mfgDate = row.find('.mfgDateInput').val();
+            var expDate = row.find('.expDateInput').val();
+            var retestDate = row.find('.retestDateInput').val();
+            var containerType = row.find('.containerTypeInput').val() || '';
+            var productUom = '';
+            var productObj = products.find(p => p.id == productId);
+            if (productObj && productObj.uom) productUom = productObj.uom;
+
+            if (receivedQty <= 0) {
+                reject('Received quantity is zero');
+                return;
+            }
+
+            var payload = {
+                product: { id: Number(productId) },
+                batchNumber: batchNumber,
+                lotNumber: batchNumber || prNumber || '',
+                quantity: receivedQty,
+                numberOfContainers: numberOfContainers,
+                manufacturingDate: toUtcISOStringOrEmpty(mfgDate),
+                expiryDate: toUtcISOStringOrEmpty(expDate),
+                retestDate: toUtcISOStringOrEmpty(retestDate),
+                processStatus: "Quarantine",
+                uom: productUom || ''
+            };
+
+            if (productReceiptItemId) {
+                payload.receiptItem = { id: Number(productReceiptItemId) };
+            }
+
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-lots'), JSON.stringify(payload), function (res) {
+                if (res && res.id) {
+                    resolve(res.id);
+                } else if (Array.isArray(res) && res[0] && res[0].id) {
+                    resolve(res[0].id);
+                } else {
+                    reject('Lot creation failed: ' + JSON.stringify(res));
+                }
+            }, function (err) {
+                reject(err && err.responseText ? err.responseText : err);
+            });
+        });
+    }
+    // Helper to show/hide inline table errors
+    function showTableError(message) {
+        $('#productTableError').text(message).show();
+        $('#productReceiptSaveBtn').prop('disabled', true);
+    }
+    function clearTableError() {
+        $('#productTableError').hide().text('');
+        $('#productReceiptSaveBtn').prop('disabled', false);
+    }
+    // Function to load staging locations
+    function loadStagingLocations() {
+        var locationObj = {
+            fields: "Id;Name;",
+            conditions: [],
+            logic: ''
+        };
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/storage-locations'), function (res) {
+            stagingLocations = res || [];
+            console.log('Staging locations loaded:', stagingLocations);
+        });
+    }
+
+    // Load transport companies (Accounts where Type = Transporter) and populate dropdown
+    // function loadTransportCompanies1() {
+    //     var postUrl = JSUTIL.getUrl('/data/Account/list');
+    //     var postData = {
+    //         fields: "Id;Type;Name",
+    //         conditions: ["Type = 'Transporter' "],
+    //         logic: "{0}"
+    //     };
+
+    //     JSUTIL.callAJAXPost(postUrl, JSON.stringify(postData), function (res) {
+    //         // Accept either array response or wrapped arrays (data/records)
+    //         console.log("transport :" , res)
+    //         transportCompanies = res
+    //         var $select = $('#transportCompany');
+    //         if (!$select.length) return;
+
+    //         $select.empty().append('<option value="">-- Select Transporter --</option>');
+
+    //         transportCompanies.forEach(function (company) {
+    //             var name = company.name || company.Name;
+    //             if (name) {
+    //                 $select.append('<option value="' + name + '">' + name + '</option>');
+    //             }
+    //         });
+
+    //         // Re-apply any pre-selected value stored before options loaded
+    //         // var preselected = $select.data('preselectedTransporter');
+    //         // if (preselected) {
+    //         //     setTransportCompanyValue(preselected);
+    //         //     $select.removeData('preselectedTransporter');
+    //         // }
+    //     });
+    // }
+    function loadTransportCompanies1() {
+        JSUTIL.callAJAXPost('/data/Account/list', JSON.stringify({ "fields": "Id;Name;Type" }), function (res) {
+            transportCompanies = (res || []).filter(function(c) {
+                return (c.type || c.Type || '').toLowerCase() === 'transporter';
+            });
+            clearDropdownOptions($('#transportCompanyDropdownMenu'), '-- Select Transporter --');
+            transportCompanies.forEach(function (company) {
+                var name = company.name || company.Name;
+                if (name) appendDropdownOption($('#transportCompanyDropdownMenu'), name, name);
+            });
+        });
+    }
+
+    // Ensure transport company select is select2-enhanced when available
+    function initTransportCompanySelect1() {
+        var $select = $('#transportCompany');
+        if (!$select.length) return;
+        if ($.fn.select2) {
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+            $select.select2({
+                placeholder: '-- Select Transporter --',
+                allowClear: true,
+                width: '100%'
+            });
+        }
+    }
+
+    // Helper to set transport company value safely, adding option if missing
+    // function setTransportCompanyValue(name) {
+    //     var $select = $('#transportCompany');
+    //     if (!$select.length) return;
+
+    //     if (!name) {
+    //         $select.val('').trigger('change.select2');
+    //         return;
+    //     }
+
+    //     var exists = $select.find('option').filter(function () {
+    //         return $(this).val() === name || $(this).text() === name;
+    //     }).length > 0;
+
+    //     if (!exists) {
+    //         $select.append('<option value="' + name + '">' + name + '</option>');
+    //     }
+
+    //     // If options not yet loaded, remember intended selection
+    //     if (!exists && (!transportCompanies || transportCompanies.length === 0)) {
+    //         $select.data('preselectedTransporter', name);
+    //     }
+
+    //     $select.val(name).trigger('change.select2');
+    // }
+
+    function setTransportCompanyValue(name) {
+        if (!name) {
+            $('#transportCompany').val('');
+            setDropdownValue('#transportCompanyBtn', '#transportCompanyDropdownMenu', '', '-- Select Transporter --');
+            return;
+        }
+        var exists = $('#transportCompanyDropdownMenu').find('[data-value="' + name + '"]').length > 0;
+        if (!exists) appendDropdownOption($('#transportCompanyDropdownMenu'), name, name);
+        $('#transportCompany').val(name);
+        setDropdownValue('#transportCompanyBtn', '#transportCompanyDropdownMenu', name, name);
+    }
+    $('.newInwardBtn').on('click', function () {
+        $('#inwardModal').modal('show');
+    });
+    $('.newInwardBtn').hide();
+    $('#inwardSaveBtn').on('click', function () {
+        if ($('#materialInwardInput3').val() == null || $('#materialInwardInput3').val() == '') {
+            $('#pageErrorPanel').text('Please select a Inward Date');
+            $('#pageErrorPanel').show().delay(5000).hide(0);
+            return;
+        }
+        var invObj = {};
+        invObj['product'] = $('#materialInwardInput1').val();
+        invObj['quantity'] = $('#materialInwardInput2').val();
+        invObj['date'] = $('#materialInwardInput3').val();
+        invObj['description'] = $('#materialInwardInput4').val();
+        invObj['overrideCost'] = $('#materialInwardInput5').val();
+        console.log(invObj)
+        JSUTIL.callAJAXPost('/inventory/inward/receive_no_po', JSON.stringify(invObj), afterInwardSaveHandle);
+    });
+
+    function afterInwardSaveHandle(data) {
+        console.log(data)
+        $('#materialInwardInput1').val('');
+        $('#materialInwardInput2').val('');
+        $('#materialInwardInput3').val('');
+        $('#materialInwardInput4').val('');
+        $('#materialInwardInput5').val('');
+        // location.reload();
+    }
+
+    // New Receipt button removed - review page is read-only
+
+    // Initialize gate entry search autocomplete manually
+    $(document).ready(function () {
+        // Setup autocomplete for gate entry search
+        $('#gateEntrySearchInput').on('keyup', function () {
+            var query = $(this).val();
+
+            // Only search if query is at least 2 characters
+            if (query.length >= 2) {
+                searchGateEntries(query);
+            } else {
+                // Clear dropdown if query is too short
+                $('#gateEntrySearchDropdown').remove();
+            }
+        });
+        loadStagingLocations()
+    });
+
+    // Debounce function to avoid too many API calls
+    var searchTimeout;
+    function searchGateEntries(query) {
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
+
+        // Set new timeout for debouncing (wait 300ms after user stops typing)
+        searchTimeout = setTimeout(function () {
+            // Build the search API URL
+            var searchUrl = JSUTIL.getUrl('/api/gate-entry/search?number=' + encodeURIComponent(query));
+            JSUTIL.callAJAXGet(searchUrl, function (results) {
+                displayGateEntryResults(Array.isArray(results) ? results : (results ? [results] : []));
+            });
+        }, 300);
+    }
+
+    function displayGateEntryResults(results) {
+        // Remove existing dropdown if any
+        $('#gateEntrySearchDropdown').remove();
+
+        if (!results || results.length === 0) {
+            return;
+        }
+
+        // Create dropdown HTML
+        var dropdownHtml = '<ul id="gateEntrySearchDropdown" class="mi-search-dropdown">';
+
+        results.forEach(function (gateEntry) {
+            var displayText = gateEntry.number;
+            if (gateEntry.vendor && gateEntry.vendor.name) {
+                displayText += ' - ' + gateEntry.vendor.name;
+            }
+
+            dropdownHtml += '<li class="gate-entry-option" data-id="' + gateEntry.id + '" ">' + displayText + '</li>';
+        });
+
+        dropdownHtml += '</ul>';
+
+        // Insert dropdown after the search input
+        $('#gateEntrySearchInput').parent().css('position', 'relative'); // Ensure parent has relative positioning
+        $('#gateEntrySearchInput').after(dropdownHtml);
+        applyDropdownDarkMode($('#gateEntrySearchDropdown'));
+
+        // No need for manual positioning with .offset() anymore
+
+        // Handle hover effect
+
+
+        // Handle click on dropdown item
+        $('.gate-entry-option').on('click', function () {
+            var gateEntryId = $(this).data('id');
+            var gateEntryText = $(this).text();
+
+            // Persist and log the selected gate entry number
+            selectedGateEntryNumber = gateEntryText.split(' - ')[0];
+            console.log('Gate entry selected:', selectedGateEntryNumber, 'ID:', gateEntryId);
+
+            $('#gateEntrySearchInput').val(gateEntryText);
+            $('#gateEntryId').val(gateEntryId);
+            $('#gateEntrySearchDropdown').remove();
+            $('#gateEntryId').trigger('change');
+        });
+    }
+
+    // Close dropdown when clicking outside
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#gateEntrySearchInput, #gateEntrySearchDropdown').length) {
+            $('#gateEntrySearchDropdown').remove();
+        }
+    });
+
+    // Listen for gate entry selection
+    $(document).on('change', '#gateEntryId', function () {
+        var gateEntryId = $(this).val();
+        if (gateEntryId) {
+            loadGateEntryDetails(gateEntryId);
+        }
+    });
+
+    // function loadGateEntryDetails(gateEntryId) {
+    //     // Fetch gate entry details with new fields
+    //     var gateEntryQuery = {
+    //         fields: "Id;Number;ChallanNumber;ChallanDate;LrNumber;LrDate;InvoiceNumber;InvoiceDate;InvoiceAmount;DeliveryVehicle;DeliveryDriver;TransportCompany;FreightCharges;ExchangeRate;Vendor.Id;ReceiptDate;Remarks;",
+    //         conditions: [`Id = ${gateEntryId}`],
+    //         logic: '{0}'
+    //     };
+
+    //     var gateEntryUrl = JSUTIL.getUrl('/data/GateEntry/list');
+    //     JSUTIL.callAJAXPost(gateEntryUrl, JSON.stringify(gateEntryQuery), function (gateEntries) {
+    //         console.log(gateEntries)
+    //         if (gateEntries && gateEntries.length > 0) {
+    //             var gateEntry = gateEntries[0];
+    //             console.log("Gate Entry Details:", gateEntry);
+
+    //             // Auto-fill all gate entry details into the form with new fields
+    //             $('#gateEntryNumber').val(gateEntry.number || '');
+    //             $('#deliveryVehicle').val(gateEntry.deliveryVehicle || '');
+    //             $('#deliveryDriver').val(gateEntry.deliveryDriver || '');
+    //             $('#transportCompany').val(gateEntry.transportCompany || '');
+    //             $('#freightCharges').val(gateEntry.freightCharges || '');
+
+    //             // New fields from GateEntry
+    //             $('#challanNumber').val(gateEntry.challanNumber || '');
+    //             if (gateEntry.challanDate) {
+    //                 $('#challanDate').val(new Date(gateEntry.challanDate).toISOString().split('T')[0]);
+    //             }
+
+    //             $('#lrNumber').val(gateEntry.lrNumber || '');
+    //             if (gateEntry.lrDate) {
+    //                 $('#lrDate').val(new Date(gateEntry.lrDate).toISOString().split('T')[0]);
+    //             }
+
+    //             $('#awbNumber').val(gateEntry.awbNumber || '');
+    //             $('#invoiceNumber').val(gateEntry.invoiceNumber || '');
+
+    //             if (gateEntry.invoiceDate) {
+    //                 $('#invoiceDate').val(new Date(gateEntry.invoiceDate).toISOString().split('T')[0]);
+    //             }
+
+    //             $('#invoiceAmount').val(gateEntry.invoiceAmount || '');
+    //             $('#exchangeRate').val(gateEntry.exchangeRate || '');
+    //             remarksdata = gateEntry.remarks;
+
+    //             // Store gate entry ID for later use when saving
+    //             $('#productReceiptModal').data('selectedGateEntryId', gateEntryId);
+
+    //             // IMPORTANT: Set the purchase order FIRST and wait for it to populate currentProducts
+    //             if (remarksdata) {
+    //                 var parsedRemarks = JSON.parse(remarksdata);
+    //                 var poId = parsedRemarks["purchaseOrder"]["id"];
+
+    //                 // Set the PO value and trigger change
+    //                 $('#purchaseOrderSelect').val(poId);
+
+    //                 // Store the gate entry items for later population
+    //                 $('#productReceiptModal').data('pendingGateEntryItems', parsedRemarks["gateEntryItems"]);
+
+    //                 // Manually trigger the change event which will populate currentProducts
+    //                 $('#purchaseOrderSelect').trigger('change');
+    //             }
+
+    //             // Search for product receipt associated with this gate entry
+    //             var prQuery = {
+    //                 fields: "Id;Number;ChallanNumber;ChallanDate;LRNumber;LRDate;AWBNumber;InvoiceNumber;InvoiceDate;InvoiceAmount;DeliveryVehicle;DeliveryDriver;TransportCompany;FreightCharges;ExchangeRate;Remarks;PurchaseOrder.Id;GateEntry.Id;",
+    //                 conditions: ["GateEntry.Id = '" + gateEntryId + "'"],
+    //                 logic: '{0}'
+    //             };
+
+    //             var prUrl = JSUTIL.getUrl('/data/ProductReceipt/list');
+    //             JSUTIL.callAJAXPost(prUrl, JSON.stringify(prQuery), function (productReceipts) {
+    //                 if (productReceipts && productReceipts.length > 0) {
+    //                     var receipt = productReceipts[0];
+    //                     console.log("Found Product Receipt:", receipt);
+
+    //                     // Override with product receipt values if they exist
+    //                     if (receipt.challanNumber) $('#challanNumber').val(receipt.challanNumber);
+    //                     if (receipt.challanDate) {
+    //                         $('#challanDate').val(new Date(receipt.challanDate).toISOString().split('T')[0]);
+    //                     }
+    //                     if (receipt.lrNumber) $('#lrNumber').val(receipt.lrNumber);
+    //                     if (receipt.lrDate) {
+    //                         $('#lrDate').val(new Date(receipt.lrDate).toISOString().split('T')[0]);
+    //                     }
+    //                     if (receipt.awbNumber) $('#awbNumber').val(receipt.awbNumber);
+    //                     if (receipt.invoiceNumber) $('#invoiceNumber').val(receipt.invoiceNumber);
+    //                     if (receipt.invoiceDate) {
+    //                         $('#invoiceDate').val(new Date(receipt.invoiceDate).toISOString().split('T')[0]);
+    //                     }
+    //                     if (receipt.invoiceAmount) $('#invoiceAmount').val(receipt.invoiceAmount);
+    //                     if (receipt.deliveryVehicle) $('#deliveryVehicle').val(receipt.deliveryVehicle);
+    //                     if (receipt.deliveryDriver) $('#deliveryDriver').val(receipt.deliveryDriver);
+    //                     if (receipt.transportCompany) $('#transportCompany').val(receipt.transportCompany);
+    //                     if (receipt.freightCharges) $('#freightCharges').val(receipt.freightCharges);
+    //                     if (receipt.exchangeRate) $('#exchangeRate').val(receipt.exchangeRate);
+
+    //                     console.log('Product receipt details loaded successfully');
+    //                 } else {
+    //                     console.log('No existing product receipt found for this gate entry - creating new one');
+    //                 }
+    //             });
+    //         }
+    //     });
+    // }
+    function loadGateEntryDetails(gateEntryId) {
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/gate-entry/' + gateEntryId), function (gateEntry) {
+            if (gateEntry) {
+                console.log("Gate Entry Details:", gateEntry);
+
+                // Persist and log entry type alongside the already stored number
+                selectedGateEntryType = gateEntry.entryType || '';
+                console.log('Gate entry type:', selectedGateEntryType);
+
+                // Check if this is contracted manufacturing
+                var isContractedManufacturing = handleEntryTypeDisplay(gateEntry.entryType);
+
+                // Auto-fill all gate entry details into the form
+                $('#gateEntryNumber').val(gateEntry.number || '');
+                $('#deliveryVehicle').val(gateEntry.deliveryVehicle || '');
+                $('#deliveryDriver').val(gateEntry.deliveryDriver || '');
+                setTransportCompanyValue(gateEntry.transportCompany || '');
+                $('#freightCharges').val(gateEntry.freightCharges || '');
+                $(".editRecordInput[name='billingStreet']").val(gateEntry.billingStreet || '');
+                $(".editRecordInput[name='billingStreet2']").val(gateEntry.billingStreet2 || '');
+                $(".editRecordInput[name='billingTaxId']").val(gateEntry.billingTaxId || '');
+                $(".editRecordInput[name='shippedFromName']").val(gateEntry.shippedFromName || '');
+                $(".editRecordInput[name='shippingStreet2']").val(gateEntry.shippingStreet2 || '');
+                $(".editRecordInput[name='shippingTaxId']").val(gateEntry.shippingTaxId || '');
+                $(".editRecordInput[name='shippingStreet']").val(gateEntry.shippingStreet || '');
+                $(".editRecordInput[name='shippingCity']").val(gateEntry.shippingCity || '');
+                $(".editRecordInput[name='shippingPostalCode']").val(gateEntry.shippingPostalCode || '');
+                selectedGateEntryVendor = gateEntry.vendor || null;
+
+                // New fields from GateEntry
+                $('#challanNumber').val(gateEntry.challanNumber || '');
+                if (gateEntry.challanDate) {
+                    $('#challanDate').val(new Date(gateEntry.challanDate).toISOString().split('T')[0]);
+                }
+
+                $('#lrNumber').val(gateEntry.lrNumber || '');
+                if (gateEntry.lrDate) {
+                    $('#lrDate').val(new Date(gateEntry.lrDate).toISOString().split('T')[0]);
+                }
+
+                $('#awbNumber').val(gateEntry.awbNumber || '');
+                $('#invoiceNumber').val(gateEntry.invoiceNumber || '');
+
+                if (gateEntry.invoiceDate) {
+                    $('#invoiceDate').val(new Date(gateEntry.invoiceDate).toISOString().split('T')[0]);
+                }
+
+                $('#invoiceAmount').val(gateEntry.invoiceAmount || '');
+                $('#exchangeRate').val(gateEntry.exchangeRate || '');
+                remarksdata = gateEntry.remarks;
+
+                // Store gate entry ID and entry type for later use
+                $('#productReceiptModal').data('selectedGateEntryId', gateEntryId);
+                $('#productReceiptModal').data('entryType', gateEntry.entryType);
+
+                // Hide tax controls for local material, otherwise show
+                toggleTaxFieldsForEntry(gateEntry.entryType);
+                toggleTaxableForEntry(gateEntry.entryType);
+                toggleApproxWeightForEntry(gateEntry.entryType);
+                toggleAddressFieldsForEntry(gateEntry.entryType);
+
+                // Handle Purchase Order selection based on entry type
+                if (remarksdata) {
+                    var parsedRemarks = parseGateEntryRemarks(remarksdata);
+
+                    // If PO is present in gate entry remarks, select and lock it
+                    if (parsedRemarks && parsedRemarks["purchaseOrder"] && parsedRemarks["purchaseOrder"]["id"]) {
+                        var poId = parsedRemarks["purchaseOrder"]["id"];
+                        $('#purchaseOrderSelect').val(poId);
+                        $('#purchaseOrderSelect').prop('disabled', true);
+                        // ensure downstream save receives this PO id even if no change event fires
+                        currentRecordId = poId;
+                        fetchPoDetails(poId);
+                    }
+
+                    // Always populate products from gate entry items
+                    if (parsedRemarks && parsedRemarks["gateEntryItems"]) {
+                        useGateEntryProducts = true;
+                        pendingGateEntryItems = parsedRemarks["gateEntryItems"];
+                        $('#productReceiptModal').data('pendingGateEntryItems', pendingGateEntryItems);
+                        // Clear table for fresh population after PO pricing arrives
+                        $('#receiptTable tbody').empty();
+                    }
+                }
+
+                // Search for product receipt associated with this gate entry
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-receipt-items'), function (allPRI) {
+                    var productReceipts = (allPRI || []).filter(function(r) { return r.gateEntry && r.gateEntry.id == gateEntryId; });
+                    if (productReceipts && productReceipts.length > 0) {
+                        var receipt = productReceipts[0];
+                        console.log("Found Product Receipt:", receipt);
+
+                        // Override with product receipt values if they exist
+                        if (receipt.challanNumber) $('#challanNumber').val(receipt.challanNumber);
+                        if (receipt.challanDate) {
+                            $('#challanDate').val(new Date(receipt.challanDate).toISOString().split('T')[0]);
+                        }
+                        if (receipt.lrNumber) $('#lrNumber').val(receipt.lrNumber);
+                        if (receipt.lrDate) {
+                            $('#lrDate').val(new Date(receipt.lrDate).toISOString().split('T')[0]);
+                        }
+                        if (receipt.awbNumber) $('#awbNumber').val(receipt.awbNumber);
+                        if (receipt.invoiceNumber) $('#invoiceNumber').val(receipt.invoiceNumber);
+                        if (receipt.invoiceDate) {
+                            $('#invoiceDate').val(new Date(receipt.invoiceDate).toISOString().split('T')[0]);
+                        }
+                        if (receipt.invoiceAmount) $('#invoiceAmount').val(receipt.invoiceAmount);
+                        if (receipt.deliveryVehicle) $('#deliveryVehicle').val(receipt.deliveryVehicle);
+                        if (receipt.deliveryDriver) $('#deliveryDriver').val(receipt.deliveryDriver);
+                        if (receipt.transportCompany) setTransportCompanyValue(receipt.transportCompany);
+                        if (receipt.freightCharges) $('#freightCharges').val(receipt.freightCharges);
+                        if (receipt.exchangeRate) $('#exchangeRate').val(receipt.exchangeRate);
+
+                        console.log('Product receipt details loaded successfully');
+                    } else {
+                        console.log('No existing product receipt found for this gate entry - creating new one');
+                    }
+                });
+            }
+        });
+    }
+
+    function handleEntryTypeDisplay(entryType) {
+        if (entryType === 'contractmanufacturing') {
+            $('#purchaseOrderSelect').closest('.col-md-6').hide();
+            $('#purchaseOrderSelect').val('');
+            // Load all products for contracted manufacturing
+            loadAllProductsForContractedMfg();
+            return true;
+        } else {
+            $('#purchaseOrderSelect').closest('.col-md-6').show();
+            return false;
+        }
+    }
+
+    // Function to load all products for contracted manufacturing
+    function loadAllProductsForContractedMfg() {
+        console.log('Loading all products for contracted manufacturing...');
+
+        var productQuery = {
+            fields: "Id;Name;Type;Uom;Number;",
+            conditions: [],
+            logic: ''
+        };
+
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products'), function (products) {
+            console.log('All products loaded for contracted manufacturing:', products);
+
+            // If gate entry should drive products, do not override the dropdown
+            if (useGateEntryProducts) {
+                return;
+            }
+
+            currentProducts = [];
+
+            // Build currentProducts array with all products
+            products.forEach(product => {
+                var obj = {
+                    id: product.id,
+                    name: product.name,
+                    quantityOrdered: 0, // No PO, so no ordered quantity
+                    unitPrice: 0,
+                    quantityReceived: 0,
+                    remainingQty: 999999, // Unlimited for contracted manufacturing
+                    uom: product.uom || 'Kgs',
+                    poLineItemId: null // No PO line item
+                };
+                currentProducts.push(obj);
+            });
+
+            // Populate dropdown
+            clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+            $('#productSelectBtn span').first().text('-- Select Product --');
+            products.forEach(product => {
+                appendDropdownOption($('#productDropdownMenu'), product.id, `${product.name} - ${product.number}`);
+            });
+            $('#productSelectBtn').prop('disabled', false);
+
+            console.log('Product dropdown populated with', products.length, 'products');
+        });
+    }
+    function resetProductReceiptView() {
+        // Clear all fields and dropdowns when panel is closed
+        $('#purchaseOrderSelect').val('');
+        $('#purchaseOrderSelectBtn span').first().text('-- None --');
+        $('#purchaseOrderSelectBtn').prop('disabled', false);
+        clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+        $('#productSelectBtn span').first().text('-- Select Product --');
+        $('#productSelectBtn').prop('disabled', true);
+        $('#receiptTable tbody').empty();
+        $('#receiptNotes').val('');
+        $('#gateEntrySearchInput').val('');
+        $('#gateEntryId').val('');
+        $('#productReceiptModal').removeData('selectedGateEntryId');
+        $('#productReceiptModal').removeData('entryType');
+        $('#productReceiptModal').removeData('pendingGateEntryItems');
+        useGateEntryProducts = false;
+        clearTableError();
+        selectedGateEntryVendor = null;
+        selectedPoVendor = null;
+        selectedPoManufacturer = null;
+        $('#gateEntryNumber').val('');
+        $('#challanNumber').val('');
+        $('#challanDate').val('');
+        $('#lrNumber').val('');
+        $('#lrDate').val('');
+        $('#awbNumber').val('');
+        $('#invoiceNumber').val('');
+        $('#invoiceDate').val('');
+        $('#invoiceAmount').val('');
+        $('#exchangeRate').val('');
+        $('#deliveryVehicle').val('');
+        $('#deliveryDriver').val('');
+        setTransportCompanyValue('');
+        $('#freightCharges').val('');
+        $('#poVendorName').val('');
+        $('#poManufacturerName').val('');
+        selectedPoVendor = null;
+        selectedPoManufacturer = null;
+        poItemPriceMap = {};
+        pendingGateEntryItems = null;
+        $('.editRecordInput[name="billingStreet"]').val('');
+        $('.editRecordInput[name="billingStreet2"]').val('');
+        $('.editRecordInput[name="billingTaxId"]').val('');
+        $('.editRecordInput[name="shippedFromName"]').val('');
+        $('.editRecordInput[name="shippingStreet2"]').val('');
+        $('.editRecordInput[name="shippingTaxId"]').val('');
+        $('.editRecordInput[name="shippingStreet"]').val('');
+        $('.editRecordInput[name="shippingCity"]').val('');
+        $('.editRecordInput[name="shippingPostalCode"]').val('');
+
+        // Ensure tax and approx weight controls are visible again for the next use
+        toggleTaxFieldsForEntry('');
+        toggleTaxableForEntry('');
+        toggleApproxWeightForEntry('');
+        toggleAddressFieldsForEntry('');
+    }
+
+    // open/close dropdowns
+    $(document).on('click', '#purchaseOrderSelectBtn, #productSelectBtn, #transportCompanyBtn, #taxTypeSelectBtn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $menu = $(this).next('.dropdown-menu');
+        $('.dropdown-menu').not($menu).removeClass('show');
+        $menu.toggleClass('show');
+    });
+
+    // close when clicking outside
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.dropdown').length) {
+            $('.dropdown-menu').removeClass('show');
+        }
+    });
+
+    // Purchase Order click
+    $(document).on('click', '#purchaseOrderSelectBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#purchaseOrderSelectBtn span').first().text($(this).text());
+        $('#purchaseOrderSelect').val(value).trigger('change');
+        $(this).addClass('active').siblings().removeClass('active');
+        $(this).closest('.dropdown-menu').removeClass('show');
+    });
+
+    // Product click
+    $(document).on('click', '#productSelectBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#productSelectBtn span').first().text($(this).text());
+        $('#productSelect').val(value);
+        $(this).addClass('active').siblings().removeClass('active');
+        $(this).closest('.dropdown-menu').removeClass('show');
+    });
+
+    // Transport Company click
+    $(document).on('click', '#transportCompanyBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#transportCompanyBtn span').first().text($(this).text());
+        $('#transportCompany').val(value);
+        $(this).addClass('active').siblings().removeClass('active');
+        $(this).closest('.dropdown-menu').removeClass('show');
+    });
+
+    // Tax Type click
+    $(document).on('click', '#taxTypeSelectBtn ~ .dropdown-menu .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#taxTypeSelectBtn span').first().text($(this).text());
+        $('#taxTypeSelect').val(value).trigger('change');
+        $(this).addClass('active').siblings().removeClass('active');
+        $(this).closest('.dropdown-menu').removeClass('show');
+    });
+    // Back / Cancel buttons for page view
+    $('#productReceiptCancelBtn, #productReceiptBackBtn').on('click', function () {
+        resetProductReceiptView();
+        $('#productReceiptModal').hide();
+        refreshReceiptList();
+        $('#InwardPanel').show();
+        $('html, body').animate({
+            scrollTop: $('#InwardPanel').offset().top - 20
+        }, 300);
+    });
+
+    var _refreshInFlight = false;
+
+    function refreshReceiptList() {
+        if (_refreshInFlight) return;
+        _refreshInFlight = true;
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-receipts'), function (res) {
+            _refreshInFlight = false;
+            recordList = res || [];
+            populateReceiptTable(recordList);
+        });
+    }
+
+    function populateReceiptTable(res) {
+        // Filter: GRN Review status only, exclude BM- numbers, sort latest first
+        var filtered = (res || []).filter(function(r) {
+            var num = r.number || '';
+            return !num.startsWith('BM-') && r.processStatus === 'GIM Review';
+        }).sort(function(a, b) {
+            return (b.id || 0) - (a.id || 0);
+        });
+
+        // Destroy existing DataTable before repopulating
+        if ($.fn.DataTable.isDataTable('#allInwardPanelTable1')) {
+            $('#allInwardPanelTable1').DataTable().destroy();
+        }
+
+        var tbody = $('#inwardTable');
+        tbody.empty();
+        filtered.forEach(function(receipt) {
+            tbody.append(
+                '<tr><td>' +
+                '<a href="javascript:void(0);" class="selectReceiptBtn" id="' + receipt.id + '">' + (receipt.number || '') + '</a></td>' +
+                '<td>' + (JSUTIL.getDate(receipt.receiptDate) || '') + '</td>' +
+                '<td>' + (receipt.purchaseOrder ? receipt.purchaseOrder.number : '') + '</td>' +
+                '<td>' + (receipt.vendor ? receipt.vendor.name : '') + '</td>' +
+                '<td>' + (receipt.processStatus || '') + '</td>' +
+                '</tr>'
+            );
+        });
+
+        $('#allInwardPanelTable1').DataTable({ order: [] });
+    }
+    // New function to populate table from gate entry items
+    function populateTableFromGateEntry(gateEntryItems) {
+        console.log('Populating table from gate entry items:', gateEntryItems);
+
+        // Clear the table first
+        $('#receiptTable tbody').empty();
+
+        // Iterate over the products
+        gateEntryItems.forEach(item => {
+            // Find the product name from products array
+            var productName = '';
+            var currentProduct = products.find(v => v.id == item.product.id);
+            if (currentProduct) {
+                productName = currentProduct.name;
+            }
+            var productCode = (item.product && item.product.number) || '';
+            if (!productCode && currentProduct && currentProduct.number) {
+                productCode = currentProduct.number;
+            }
+            var displayName = productName;
+            if (productCode) displayName += ` (${productCode})`;
+
+            // Find product data from currentProducts to get remaining qty
+            var productData = currentProducts.find(product => product.id == item.product.id);
+            if (!productData) {
+                console.warn('Product not found in currentProducts:', item.product.id);
+                return; // Skip this item
+            }
+            if (!productCode && productData.number) {
+                productCode = productData.number;
+                displayName = productName + (productCode ? ` (${productCode})` : '');
+            }
+
+            // Find the manufacturer name
+            var manufacturerName = '';
+            var manufacturerId = '';
+            if (selectedPoManufacturer) {
+                manufacturerName = selectedPoManufacturer.name || selectedPoManufacturer.Name || '';
+                manufacturerId = selectedPoManufacturer.id || selectedPoManufacturer.Id || '';
+            } else if (item.manufacturer && item.manufacturer.id) {
+                manufacturerId = item.manufacturer.id;
+                var manufacturer = manufacturers.find(v => v.id == item.manufacturer.id);
+                if (manufacturer) {
+                    manufacturerName = manufacturer.name || manufacturer.Name || '';
+                }
+            }
+
+            console.log('Adding row for product:', productName);
+
+            var uomVal = productData.uom || p.uom || item.product.uom || '';
+            var unitPriceVal = productData.unitPrice || item.unitPrice || 0;
+            var materialVal = unitPriceVal * (item.quantityReceived || 0);
+
+            $('#receiptTable tbody').append(`
+            <tr>
+                <td><button class="btn btn-sm deleteNewProduct form-control"><i class="ti ti-trash"></i></button></td>
+                <td>${displayName}
+                    <input type="hidden" name="Product.Id" value="${item.product.id}">
+                    <input type="hidden" class="remainingQty" value="${productData.remainingQty}">
+                </td>
+                <td>${item.quantityOrdered || 0}</td>
+                <td class="unitPriceCell" data-price="${unitPriceVal}">${unitPriceVal}</td>
+                <td>${uomVal}</td>
+                <td>
+                    <input type="text" class="form-control batchNumberInput" value="${item.batchNumber || ''}" required/>
+                </td>
+                <td style="position: relative;">
+                    <input type="text" class="form-control manufacturerSearchInput" placeholder="Search..." value="${manufacturerName}" required/>
+                    <input type="hidden" class="manufacturerId" value="${manufacturerId}"/>
+                </td>
+                <td>
+                    <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control mfgDateInput datepicker" value="${formatDateForInput(item.manufacturingDate) || ''}" required/>
+                </td>
+                <td>
+                    <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control expDateInput datepicker" value="${formatDateForInput(item.expiryDate) || ''}" />
+                </td>
+                <td>
+                    <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control retestDateInput datepicker" value="${formatDateForInput(item.retestDate) || ''}"/>
+                </td>
+                <td>
+                    <input type="number" class="form-control receivedQtyInput" min="0" max="${productData.remainingQty}" value="${item.quantityReceived || 0}" required>
+                </td>
+                <td>
+                    <input type="number" class="form-control containersInput" min="0" value="${item.numberOfContainers || 0}">
+                </td>
+                <td>
+                    <input type="number" class="form-control materialValue" style="min-width: 70px; width: 80px;"  min="0" value="${materialVal ? materialVal.toFixed(2) : ''}">
+                </td>
+                <td class="taxable-col">
+                    <input type="number" class="form-control taxableValue" style="min-width: 70px; width: 80px;"  min="0" value="">
+                </td>
+                <td class="igst-col">
+                    <input type="number" class="form-control igstPer" style="min-width: 40px; width: 50px;"  min="0" value="">
+                </td>
+                <td class="igst-col">
+                    <input type="number" class="form-control igstAmt" style="min-width: 70px; width: 80px;"  min="0" value="">
+                </td>
+                <td class="sgst-col">
+                    <input type="number" class="form-control sgstPer" style="min-width: 40px; width: 50px;"  min="0" value=""/>
+                </td>
+                <td class="sgst-col">
+                    <input type="number" class="form-control sgstAmt" style="min-width: 70px; width: 80px;"  min="0" value=""/>
+                </td>
+                <td class="cgst-col">
+                    <input type="number" class="form-control cgstPer" style="min-width: 40px; width: 50px;"  min="0" value=""/>
+                </td>
+                <td class="cgst-col">
+                    <input type="number" class="form-control cgstAmt" style="min-width: 70px; width: 80px;"  min="0" value=""/>
+                </td>
+                <td class="approx-col">
+                    <input type="text" class="form-control approxWeight" style="min-width: 70px; width: 80px;" value=""/>
+                </td>
+                <td>
+                    <select class="form-control containerTypeInput" required>
+                        <option value="">-- Select --</option>
+                        <option value="Bag" ${item.containerType == "Bag" ? 'selected' : ''}>Bag</option>
+                        <option value="Drum" ${item.containerType == "Drum" ? 'selected' : ''}>Drum</option>
+                    </select>
+                </td>
+            </tr>
+        `);
+            updateRowMaterialValue($('#receiptTable tbody tr').last());
+        });
+
+        initInwardDatePickers('#receiptTable');
+
+        $('#purchaseOrderSelect').prop('disabled', true);
+
+        // Update column visibility after table update based on entry type
+        updateTaxColumns();
+        var entryType = $('#productReceiptModal').data('entryType') || '';
+        toggleTaxFieldsForEntry(entryType);
+        toggleTaxableForEntry(entryType);
+        toggleApproxWeightForEntry(entryType);
+    }
+    $(document).ready(function () {
+        refreshReceiptList();
+        initInwardDatePickers();
+        loadTransportCompanies1();
+        initTransportCompanySelect1();
+
+        // Populate Purchase Order dropdown
+        var obj = {
+            fields: "Vendor;TotalAmount;Id;Number;Manufacturer.Id;Vendor.Id",
+            conditions: [`OrderStatus = 'Approved'`],
+            logic: '{0}'
+        }
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/purchase/orders'), function (res) {
+            (res || []).filter(function(po) { return po.orderStatus === 'Approved'; }).forEach(function(po) {
+                appendDropdownOption($('#purchaseOrderDropdownMenu'), po.id, po.number);
+            });
+        });
+
+        // let currentProducts = [];
+        var currentRecordId = ''
+        var selectedId = ''
+        var allPOLineItems = []; // Store all PO line items with received quantities
+
+        // On Purchase Order change
+        $("#purchaseOrderSelect").on("change", function () {
+            currentRecordId = $(this).val();
+            // Always populate header parties even if gate entry controls products
+            fetchPoDetails(currentRecordId);
+
+            // When gate entry dictates products, skip PO-driven population
+            if (useGateEntryProducts) {
+                return;
+            }
+            clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+            $('#productSelectBtn span').first().text('-- Select Product --');
+            console.log('on change po select')
+
+            if (currentRecordId) {
+                // Fetch PO details
+                fetchPoDetails(currentRecordId, function (response) {
+                    console.log("PO Page Data Response:", response);
+
+                    if (response && response.orderItemList) {
+                        currentProducts = [];
+
+                        // Fetch all ProductReceiptItems for this PO to calculate already received quantities
+                        var prItemQuery = {
+                            fields: "PurchaseOrderItem.Id;QuantityReceived;Product.Id;",
+                            conditions: [`PurchaseOrderItem.PurchaseOrder.Id = '${currentRecordId}'`],
+                            logic: '{0}'
+                        };
+
+                        JSUTIL.callAJAXGet(
+                            JSUTIL.getUrl('/api/product-receipt-items'),
+                            function (allReceivedItems) {
+                                var receivedItems = (allReceivedItems || []).filter(function(item) {
+                                    return item.purchaseOrderItem && item.purchaseOrderItem.purchaseOrder &&
+                                           item.purchaseOrderItem.purchaseOrder.id == currentRecordId;
+                                });
+                                console.log("Already received items:", receivedItems);
+
+                                // Calculate total received per product
+                                var receivedByProduct = {};
+                                receivedItems.forEach(item => {
+                                    var productId = item.product.id;
+                                    if (!receivedByProduct[productId]) {
+                                        receivedByProduct[productId] = 0;
+                                    }
+                                    receivedByProduct[productId] += parseFloat(item.quantityReceived) || 0;
+                                });
+
+                                // Build product list with remaining quantities
+                                response.orderItemList.forEach(product => {
+                                    var productId = product.product.id;
+                                    var quantityOrdered = parseFloat(product.quantity) || 0;
+                                    var alreadyReceived = receivedByProduct[productId] || 0;
+                                    var remainingQty = quantityOrdered - alreadyReceived;
+                                    var unitPriceFromMap = poItemPriceMap[productId];
+                                    var unitPriceValue = (typeof unitPriceFromMap !== 'undefined') ? unitPriceFromMap : product.itemPrice;
+
+                                    var obj = {
+                                        id: productId,
+                                        name: product.product.name,
+                                        number: product.product.number || '',
+                                        quantityOrdered: quantityOrdered,
+                                        unitPrice: unitPriceValue,
+                                        quantityReceived: alreadyReceived,
+                                        remainingQty: remainingQty,
+                                        uom: product.product.uom || ''
+                                    };
+                                    console.log('obj', obj)
+                                    currentProducts.push(obj);
+
+                                    // Only show products that still have quantity to receive
+                                    if (remainingQty > 0) {
+                                        var optionLabel = product.product.name;
+                                        if (product.product.number) {
+                                            optionLabel += ` (${product.product.number})`;
+                                        }
+                                        optionLabel += ` (Remaining: ${remainingQty})`;
+                                        appendDropdownOption($('#productDropdownMenu'), productId, optionLabel);
+                                    }
+                                });
+
+                                $('#productSelectBtn').prop('disabled', false);
+
+
+                                if (currentProducts.filter(p => p.remainingQty > 0).length === 0) {
+                                    $("#pageErrorPanel1").text("All items from this PO have been fully received!");
+                                    $("#pageErrorPanel1").show().delay(5000).hide(0);
+                                    $('#purchaseOrderSelect').val('');
+                                    clearDropdownOptions($('#productDropdownMenu'), '-- Select Product --');
+                                    $('#productSelectBtn span').first().text('-- Select Product --');
+                                    $('#productSelectBtn').prop('disabled', true);
+                                    $('#receiptTable tbody').empty();
+
+                                    // Clear Notes
+                                    $('#receiptNotes').val('');
+
+                                    // Clear Gate Entry Search Fields
+                                    $('#gateEntrySearchInput').val('');
+                                    $('#gateEntryId').val('');
+
+                                    // Clear stored gate entry ID
+                                    $('#productReceiptModal').removeData('selectedGateEntryId');
+
+                                    // Clear all new fields
+                                    $('#gateEntryNumber').val('');
+                                    $('#challanNumber').val('');
+                                    $('#challanDate').val('');
+                                    $('#lrNumber').val('');
+                                    $('#lrDate').val('');
+                                    $('#awbNumber').val('');
+                                    $('#invoiceNumber').val('');
+                                    $('#invoiceDate').val('');
+                                    $('#invoiceAmount').val('');
+                                    $('#exchangeRate').val('');
+                                    $('#deliveryVehicle').val('');
+                                    $('#deliveryDriver').val('');
+                                    setTransportCompanyValue('');
+                                    $('#freightCharges').val('');
+                                }
+
+                                // NOW populate the table if we have pending gate entry items
+                                var pendingItems = $('#productReceiptModal').data('pendingGateEntryItems');
+                                if (pendingItems && pendingItems.length > 0) {
+                                    populateTableFromGateEntry(pendingItems);
+
+
+                                    $('#productReceiptModal').removeData('pendingGateEntryItems');
+                                }
+                            }
+                        );
+                    }
+                });
+            } else {
+                console.log('current products empty')
+                $("#productSelect").prop("disabled", true);
+                // currentProducts = [];
+            }
+        });
+
+
+
+        // New function to populate table from gate entry items
+
+
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products'), function (res) { products = res || []; })
+        JSUTIL.callAJAXPost('/data/Account/list', JSON.stringify({ "fields": "Id;Name" }), function (res) { manufacturers = res || []; })
+        $(document).on('click', '.deleteNewProduct', function () {
+            $(this).closest('tr').remove();
+        });
+        // Prevent total received per product from exceeding gate entry allowance
+        $(document).on('input change', '.receivedQtyInput', function () {
+            clearTableError();
+            var $row = $(this).closest('tr');
+            var productId = $row.find('input[name="Product.Id"]').val();
+            var allowed = parseFloat($row.find('.remainingQty').val()) || 0;
+            var currentVal = parseFloat($(this).val()) || 0;
+            // auto compute material value
+            updateRowMaterialValue($row);
+
+            // Sum other rows for the same product
+            var otherTotal = 0;
+            $('#receiptTable tbody tr').each(function () {
+                var pid = $(this).find('input[name="Product.Id"]').val();
+                if (pid === productId) {
+                    var val = parseFloat($(this).find('.receivedQtyInput').val()) || 0;
+                    if (this !== $row[0]) {
+                        otherTotal += val;
+                    }
+                }
+            });
+
+            var maxAllowedForThisRow = Math.max(0, allowed - otherTotal);
+            if (currentVal > maxAllowedForThisRow) {
+                $(this).val(maxAllowedForThisRow);
+                showTableError("Total received cannot exceed gate entry received quantity (" + allowed + ").");
+                return;
+            }
+
+            if ((currentVal + otherTotal) < allowed) {
+                showTableError("Total received cannot be less than gate entry received quantity (" + allowed + ").");
+            } else {
+                clearTableError();
+            }
+        });
+        // On Add button click
+        $("#addProductBtn").on("click", function () {
+            selectedId = $("#productSelect").val();
+            $('#purchaseOrderSelect').prop('disabled', true)
+
+            if (!selectedId) return;
+
+            const product = currentProducts.filter(product => product.id == selectedId);
+            if (!product || product.length === 0) return;
+
+            var productData = product[0];
+            var productCode = productData.number || '';
+            var displayName = productData.name + (productCode ? ` (${productCode})` : '');
+
+            if (productData.remainingQty <= 0) {
+                JSUTIL.buildErrorModal("No remaining quantity to receive for this product!");
+                return;
+            }
+
+            // Append row to table with batch number field and new fields
+            $("#receiptTable tbody").append(`
+                <tr>
+                <td><button class="btn btn-sm deleteNewProduct form-control"><i class="ti ti-trash"></i></button></td>
+                    <td>${displayName}
+                    <input type="hidden" name="Product.Id" value="${productData.id}">
+                    <input type="hidden" class="remainingQty" value="${productData.remainingQty}"></td>
+                <td>${productData.quantityOrdered || 0}</td>
+                <td class="unitPriceCell" data-price="${productData.unitPrice || 0}">${productData.unitPrice || 0}</td>
+                <td>${productData.uom || ''}</td>
+                <td>
+                    <input type="text" class="form-control batchNumberInput" required/>
+                </td>
+                    <td style="position: relative;">
+                        <input type="text" class="form-control manufacturerSearchInput" placeholder="Search..." value="${(selectedPoManufacturer && (selectedPoManufacturer.name || selectedPoManufacturer.Name)) || productData.manufacturerName || ''}" required/>
+                        <input type="hidden" class="manufacturerId" value="${(selectedPoManufacturer && (selectedPoManufacturer.id || selectedPoManufacturer.Id)) || productData.manufacturerId || ''}" />
+                    </td>
+                    <td>
+                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class=" form-control mfgDateInput datepicker" required/>
+                    </td>
+                    <td>
+                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control expDateInput datepicker"/>
+                    </td>
+                    <td>
+                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class=" form-control retestDateInput datepicker"/>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control receivedQtyInput" min="0" max="${productData.remainingQty}" value="0" required>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control containersInput" min="0" value="0">
+                    </td>
+                <td>
+                    <input type="number" class="form-control materialValue"  min="0" value="">
+                </td>
+                <td class="taxable-col">
+                    <input type="number" class="form-control taxableValue" min="0" value="">
+                </td>
+                    <td class="igst-col">
+                        <input type="number" class="form-control igstPer" min="0" value="">
+                    </td>
+                    <td class="igst-col">
+                        <input type="number" class="form-control igstAmt" min="0" value="">
+                    </td>
+                    <td class="sgst-col">
+                        <input type="number" class="form-control sgstPer" min="0" value=""/>
+                    </td>
+                    <td class="sgst-col">
+                        <input type="number" class="form-control sgstAmt" min="0" value=""/>
+                    </td>
+                    <td class="cgst-col">
+                        <input type="number" class="form-control cgstPer" min="0" value=""/>
+                    </td>
+                <td class="cgst-col">
+                    <input type="number" class="form-control cgstAmt" min="0" value=""/>
+                </td>
+                <td class="approx-col">
+                    <input type="text" class="form-control approxWeight" value=""/>
+                </td>
+                <td>
+                    <select class="form-control containerTypeInput" required>
+                        <option value="">-- Select --</option>
+                            <option value="Bag">Bag</option>
+                            <option value="Drum">Drum</option>
+                        </select>
+                    </td>
+                </tr>
+                `);
+            updateRowMaterialValue($('#receiptTable tbody tr').last());
+            // Update column visibility to reflect current entry type
+            updateTaxColumns();
+            var entryType = $('#productReceiptModal').data('entryType') || '';
+            toggleTaxFieldsForEntry(entryType);
+            toggleTaxableForEntry(entryType);
+            toggleApproxWeightForEntry(entryType);
+            initInwardDatePickers('#receiptTable');
+        });
+
+
+        // Manufacturer search autocomplete
+        var manufacturerSearchTimeout;
+
+        $(document).on('keyup', '.manufacturerSearchInput', function () {
+            var $input = $(this);
+            var query = $input.val();
+
+            // Clear previous timeout
+            clearTimeout(manufacturerSearchTimeout);
+
+            // Remove existing dropdown
+            $('.manufacturer-dropdown').remove();
+
+            // Only search if query is at least 2 characters
+            if (query.length >= 2) {
+                manufacturerSearchTimeout = setTimeout(function () {
+                    searchManufacturers(query, $input);
+                }, 300);
+            }
+        });
+
+        function searchManufacturers(query, $input) {
+            var searchUrl = JSUTIL.getUrl('/search/generic?searchParam=' + encodeURIComponent(query) + '&dataObject=Account&field=Name');
+
+            JSUTIL.callAJAXGet(searchUrl, function (results) {
+                console.log('Manufacturer search results:', results);
+                displayManufacturerResults(results, $input);
+            });
+        }
+
+        function displayManufacturerResults(results, $input) {
+            // Remove existing dropdown
+            $('.manufacturer-dropdown').remove();
+
+            if (!results || results.length === 0) {
+                return;
+            }
+
+            // Create dropdown HTML
+            var dropdownHtml = '<ul class="manufacturer-dropdown mi-search-dropdown">';
+
+            results.forEach(function (manufacturer) {
+                dropdownHtml += '<li class="manufacturer-option" data-id="' + manufacturer.id + '" data-name="' + manufacturer.name + '" ">' + manufacturer.name + '</li>';
+            });
+
+            dropdownHtml += '</ul>';
+
+            // Insert dropdown after the search input
+            $input.parent().css('position', 'relative');
+            $input.after(dropdownHtml);
+            applyDropdownDarkMode($('.manufacturer-dropdown').last());
+
+            // Handle click on dropdown item
+            $('.manufacturer-option').on('click', function () {
+                var manufacturerId = $(this).data('id');
+                var manufacturerName = $(this).data('name');
+
+                var $row = $(this).closest('tr');
+                $row.find('.manufacturerSearchInput').val(manufacturerName);
+                $row.find('.manufacturerId').val(manufacturerId);
+                $('.manufacturer-dropdown').remove();
+            });
+        }
+
+        // Close manufacturer dropdown when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.manufacturerSearchInput, .manufacturer-dropdown').length) {
+                $('.manufacturer-dropdown').remove();
+            }
+        });
+
+        // Validate received quantity input
+        $(document).on("input", ".receivedQtyInput", function () {
+            const row = $(this).closest("tr");
+            const maxQty = parseFloat(row.find(".remainingQty").val()) || 0;
+            const enteredQty = parseFloat($(this).val()) || 0;
+
+            if (enteredQty > maxQty) {
+                JSUTIL.buildErrorModal(`Quantity received cannot exceed remaining quantity of ${maxQty}`);
+                $(this).val(maxQty);
+            }
+
+            if (enteredQty < 0) {
+                $(this).val(0);
+            }
+        });
+
+        var curr_Vendor = {}
+
+        // $('#productReceiptSaveBtn').on('click', function () {
+        //     // Validate that at least one product is added
+        //     if ($('#receiptTable tbody tr').length === 0) {
+        //         JSUTIL.buildErrorModal("Please add at least one product to receive!");
+        //         return;
+        //     }
+
+        //     // Validate all received quantities, batch numbers, and new required fields
+        //     var validationError = false;
+        //     var validationMessage = "";
+        //     $('#receiptTable tbody tr').each(function () {
+        //         var qty = parseFloat($(this).find('.receivedQtyInput').val()) || 0;
+        //         var batchNumber = $(this).find('.batchNumberInput').val().trim();
+        //         var manufacturerId = $(this).find('.manufacturerId').val();
+        //         var containerType = $(this).find('.containerTypeInput').val();
+
+        //         if (qty <= 0) {
+        //             validationError = true;
+        //             validationMessage = "Please enter valid quantities (greater than 0) for all products!";
+        //             return false;
+        //         }
+
+        //         if (!batchNumber) {
+        //             validationError = true;
+        //             validationMessage = "Please enter batch number for all products!";
+        //             return false;
+        //         }
+
+        //         if (!manufacturerId) {
+        //             validationError = true;
+        //             validationMessage = "Please select manufacturer for all products!";
+        //             return false;
+        //         }
+
+        //         if (!containerType) {
+        //             validationError = true;
+        //             validationMessage = "Please select container type for all products!";
+        //             return false;
+        //         }
+        //     });
+
+        //     if (validationError) {
+        //         JSUTIL.buildErrorModal(validationMessage);
+        //         return;
+        //     }
+
+        //     var obj = {
+        //         fields: "Vendor;TotalAmount;Id;Number;",
+        //         conditions: [`OrderStatus = 'Approved'`],
+        //         logic: '{0}'
+        //     }
+        //     var geturl = JSUTIL.getUrl('/api/purchase-orders/list')
+        //     JSUTIL.callAJAXPost(geturl, JSON.stringify(obj), function (res) {
+        //         console.log('res', res, currentRecordId)
+        //         const curr_po = res.filter(po => po.id == currentRecordId)
+        //         console.log(curr_po)
+        //         curr_Vendor = curr_po[0].vendor
+        //         console.log('current vendor is', curr_Vendor)
+
+        //         // Get the selected gate entry ID from the hidden input field
+        //         var selectedGateEntryId = $('#gateEntryId').val();
+
+        //         console.log('Selected Gate Entry ID:', selectedGateEntryId);
+
+        //         var postobj = []
+        //         var obj = {
+        //             vendor: { id: curr_Vendor.id },
+        //             purchaseOrder: { id: currentRecordId },
+        //             receiptDate: new Date().toISOString().split("T")[0],
+        //             remarks: $('#receiptNotes').val(),
+        //             processStatus: "New",
+
+        //             // New Fields from GateEntry
+        //             challanNumber: $('#challanNumber').val(),
+        //             challanDate: $('#challanDate').val(),
+        //             lrNumber: $('#lrNumber').val(),
+        //             lrDate: $('#lrDate').val(),
+        //             awbNumber: $('#awbNumber').val(),
+        //             invoiceNumber: $('#invoiceNumber').val(),
+        //             invoiceDate: $('#invoiceDate').val(),
+        //             invoiceAmount: $('#invoiceAmount').val() || 0,
+        //             exchangeRate: $('#exchangeRate').val() || 0,
+        //             deliveryVehicle: $('#deliveryVehicle').val(),
+        //             deliveryDriver: $('#deliveryDriver').val(),
+        //             transportCompany: $('#transportCompany').val(),
+        //             freightCharges: $('#freightCharges').val() || 0
+        //         }
+
+        //         // Add gate entry reference if one was selected
+        //         if (selectedGateEntryId && selectedGateEntryId !== '') {
+        //             obj.gateEntry = { id: Number(selectedGateEntryId) };
+        //             console.log('Adding gateEntry reference:', obj.gateEntry);
+        //         }
+
+        //         postobj.push(obj)
+        //         console.log('ProductReceipt object to save:', postobj)
+        //         console.log('Contains gateEntry?', obj.gateEntry ? 'Yes - ID: ' + obj.gateEntry.id : 'No')
+        //         var pourl = JSUTIL.getUrl('/data/ProductReceipt/create_multiple_with_sequence?field=Number')
+        //         JSUTIL.callAJAXPost(pourl, JSON.stringify(postobj), callbackAfterPRCreate)
+        //     })
+        // })
+
+        // Date validation
+
+
+        $('#productReceiptSaveBtn').on('click', function () {
+            // Validate that at least one product is added
+            if ($('#receiptTable tbody tr').length === 0) {
+                JSUTIL.buildErrorModal("Please add at least one product to receive!");
+                return;
+            }
+
+            // Validate all received quantities, batch numbers, and new required fields
+            var validationError = false;
+            var validationMessage = "";
+            $('#receiptTable tbody tr').each(function () {
+                clearTableError();
+                var qty = parseFloat($(this).find('.receivedQtyInput').val()) || 0;
+                var batchNumber = $(this).find('.batchNumberInput').val().trim();
+                var manufacturerId = $(this).find('.manufacturerId').val();
+                var containerType = $(this).find('.containerTypeInput').val();
+
+                var dateCheck = validateRowDates($(this));
+                if (!dateCheck.valid) {
+                    validationError = true;
+                    validationMessage = dateCheck.message;
+                    return false;
+                }
+
+                if (qty <= 0) {
+                    validationError = true;
+                    validationMessage = "Please enter valid quantities (greater than 0) for all products!";
+                    return false;
+                }
+
+                if (!batchNumber) {
+                    validationError = true;
+                    validationMessage = "Please enter batch number for all products!";
+                    return false;
+                }
+
+                if (!manufacturerId) {
+                    validationError = true;
+                    validationMessage = "Please select manufacturer for all products!";
+                    return false;
+                }
+
+                if (!containerType) {
+                    validationError = true;
+                    validationMessage = "Please select container type for all products!";
+                    return false;
+                }
+            });
+
+            if (validationError) {
+                JSUTIL.buildErrorModal(validationMessage);
+                return;
+            }
+
+            // Ensure total received per product matches gate entry allowed quantity
+            var totalByProduct = {};
+            var allowedByProduct = {};
+            $('#receiptTable tbody tr').each(function () {
+                var pid = $(this).find('input[name="Product.Id"]').val();
+                var qty = parseFloat($(this).find('.receivedQtyInput').val()) || 0;
+                totalByProduct[pid] = (totalByProduct[pid] || 0) + qty;
+            });
+
+            currentProducts.forEach(function (p) {
+                allowedByProduct[p.id] = p.remainingQty || 0;
+            });
+
+            for (var pid in totalByProduct) {
+                var allowed = allowedByProduct[pid];
+                if (typeof allowed === 'undefined') continue;
+                if (totalByProduct[pid] < allowed) {
+                    showTableError("Quantity received for product cannot be less than gate entry received quantity (" + allowed + ").");
+                    return;
+                }
+            }
+
+            // Check if this is contracted manufacturing
+            var entryType = $('#productReceiptModal').data('entryType');
+            var isContractedManufacturing = (entryType === 'contractmanufacturing');
+            var selectedGateEntryId = $('#gateEntryId').val();
+
+            // For contracted manufacturing, we need to get vendor from gate entry
+            if (isContractedManufacturing) {
+                // Fetch vendor from gate entry
+                var gateEntryQuery = {
+                    fields: "Vendor.Id;",
+                    conditions: [`Id = ${selectedGateEntryId}`],
+                    logic: '{0}'
+                };
+
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/gate-entry/' + selectedGateEntryId), function (gateEntry) {
+                    if (gateEntry && gateEntry.vendor) {
+                        saveProductReceipt(gateEntry.vendor, null, selectedGateEntryId, isContractedManufacturing);
+                    } else if (selectedGateEntryVendor) {
+                        saveProductReceipt(selectedGateEntryVendor, null, selectedGateEntryId, isContractedManufacturing);
+                    } else {
+                        JSUTIL.buildErrorModal("Vendor not found for this gate entry.");
+                    }
+                });
+            } else {
+                // Normal flow with PO
+                var obj = {
+                    fields: "Vendor;TotalAmount;Id;Number;",
+                    conditions: [`OrderStatus = 'Approved'`],
+                    logic: '{0}'
+                };
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/purchase/orders'), function (res) {
+                    res = (res || []).filter(function(po) { return po.orderStatus === 'Approved'; });
+                    const curr_po = res.filter(po => po.id == currentRecordId);
+                    var vendor = curr_po && curr_po.length > 0 ? curr_po[0].vendor : null;
+
+                    // Fallback to gate entry vendor when PO vendor missing (e.g., localMaterial with disabled PO)
+                    if (!vendor && selectedGateEntryVendor) {
+                        vendor = selectedGateEntryVendor;
+                    }
+
+                    if (!vendor) {
+                        JSUTIL.buildErrorModal("Vendor not found for this receipt. Please check Gate Entry or PO.");
+                        return;
+                    }
+
+                    saveProductReceipt(vendor, currentRecordId, selectedGateEntryId, isContractedManufacturing);
+                });
+            }
+        });
+
+
+
+
+        $(document).on("change", ".mfgDateInput, .expDateInput, .retestDateInput", function () {
+            const row = $(this).closest("tr");
+            const result = validateRowDates(row);
+            if (!result.valid) {
+                JSUTIL.buildErrorModal(result.message);
+                if (result.field === 'exp') row.find(".expDateInput").val("");
+                if (result.field === 'retest') row.find(".retestDateInput").val("");
+                if (result.field === 'both') {
+                    row.find(".expDateInput").val("");
+                    row.find(".retestDateInput").val("");
+                }
+            }
+        });
+
+
+    });
+    function saveProductReceipt(vendor, purchaseOrderId, gateEntryId, isContractedManufacturing) {
+        // Fallback: ensure we carry the PO id even when the dropdown was disabled or caller passed null
+        var purchaseOrderId = $('#purchaseOrderSelect').val();
+
+        var postobj = [];
+        var obj = {
+            vendor: { id: vendor.id },
+            receiptDate: new Date().toISOString().split("T")[0],
+            remarks: $('#receiptNotes').val(),
+            processStatus: "New",
+
+            // New Fields from GateEntry
+            challanNumber: $('#challanNumber').val(),
+            challanDate: $('#challanDate').val(),
+            lrNumber: $('#lrNumber').val(),
+            lrDate: $('#lrDate').val(),
+            awbNumber: $('#awbNumber').val(),
+            invoiceNumber: $('#invoiceNumber').val(),
+            invoiceDate: $('#invoiceDate').val(),
+            invoiceAmount: $('#invoiceAmount').val() || 0,
+            exchangeRate: $('#exchangeRate').val() || 0,
+            deliveryVehicle: $('#deliveryVehicle').val(),
+            deliveryDriver: $('#deliveryDriver').val(),
+            transportCompany: $('#transportCompany').val(),
+            freightCharges: $('#freightCharges').val() || 0
+        };
+
+        // Add PO if present (including when sourced from Gate Entry)
+        if (purchaseOrderId) {
+            obj.purchaseOrder = { id: Number(purchaseOrderId) };
+        }
+
+        // Add gate entry reference if one was selected
+        if (gateEntryId && gateEntryId !== '') {
+            obj.gateEntry = { id: Number(gateEntryId) };
+            console.log('Adding gateEntry reference:', obj.gateEntry);
+        }
+
+        postobj.push(obj);
+        console.log('ProductReceipt object to save:', postobj);
+        console.log('Is Contracted Manufacturing?', isContractedManufacturing);
+
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-receipts'), JSON.stringify(postobj[0]), function (res) {
+            callbackAfterPRCreate([res], isContractedManufacturing, purchaseOrderId);
+        });
+    }
+
+    // Modified callback to handle contracted manufacturing
+    function callbackAfterPRCreate(res, isContractedManufacturing, purchaseOrderId) {
+        console.log("ProductReceipt created:", res);
+
+        var newPR = res[0];
+        var prId = newPR.id;
+        var prNumber = newPR.number || '';
+
+        // Get selected tax type
+        var taxType = $('#taxTypeSelect').val();
+
+        if (isContractedManufacturing) {
+            // For contracted manufacturing, save items without PO line items
+            var itemsToSave = [];
+            var rowsForLots = [];
+
+            $('#receiptTable tbody tr').each(function () {
+                var row = $(this);
+                rowsForLots.push(row);
+
+                var productid = row.find('input[name="Product.Id"]').val();
+                var receivedQty = parseFloat(row.find('.receivedQtyInput').val()) || 0;
+                var batchNumber = row.find('.batchNumberInput').val().trim();
+                var numberOfContainers = parseInt(row.find('.containersInput').val()) || 0;
+                var manufacturerId = row.find('.manufacturerId').val();
+                var retestDate = row.find('.retestDateInput').val();
+                var containerType = row.find('.containerTypeInput').val();
+
+                // Tax fields
+                var igstPer = parseFloat(row.find('.igstPer').val()) || 0;
+                var igstAmt = parseFloat(row.find('.igstAmt').val()) || 0;
+                var sgstPer = parseFloat(row.find('.sgstPer').val()) || 0;
+                var sgstAmt = parseFloat(row.find('.sgstAmt').val()) || 0;
+                var cgstPer = parseFloat(row.find('.cgstPer').val()) || 0;
+                var cgstAmt = parseFloat(row.find('.cgstAmt').val()) || 0;
+
+                var taxPercent1 = 0, taxAmount1 = 0, taxPercent2 = 0, taxAmount2 = 0;
+                if (taxType === 'IGST') {
+                    taxPercent1 = igstPer;
+                    taxAmount1 = igstAmt;
+                    taxPercent2 = 0;
+                    taxAmount2 = 0;
+                } else {
+                    // SGST-CGST
+                    taxPercent1 = sgstPer;
+                    taxAmount1 = sgstAmt;
+                    taxPercent2 = cgstPer;
+                    taxAmount2 = cgstAmt;
+                }
+
+                var itemObj = {
+                    productReceipt: { id: prId },
+                    product: { id: Number(productid) },
+                    quantityExpected: row.find('td:eq(2)').text() || 0,
+                    quantityReceived: receivedQty,
+                    remarks: '',
+                    stagingLocation: '',
+                    batchNumber: batchNumber,
+                    manufacturingDate: toIsoDateOrEmpty(row.find('.mfgDateInput').val()),
+                    expiryDate: toIsoDateOrEmpty(row.find('.expDateInput').val()),
+                    numberOfContainers: numberOfContainers,
+                    manufacturer: manufacturerId ? { id: Number(manufacturerId) } : null,
+                    retestDate: toIsoDateOrEmpty(retestDate),
+                    containerType: containerType,
+                    materialValue: parseFloat(row.find('.materialValue').val()) || 0,
+                    taxableValue: parseFloat(row.find('.taxableValue').val()) || 0,
+                    taxAmount1: taxAmount1,
+                    taxPercent1: taxPercent1,
+                    taxAmount2: taxAmount2,
+                    taxPercent2: taxPercent2,
+                    weightVerification: row.find('.approxWeight').val() || ''
+                };
+
+                // Note: No purchaseOrderItem for contracted manufacturing
+                console.log("Built itemObj (Contracted Mfg):", itemObj);
+                itemsToSave.push(itemObj);
+            });
+
+            if (itemsToSave.length === 0) {
+                JSUTIL.buildErrorModal("No valid items to save!");
+                return;
+            }
+
+            console.log("Posting ProductReceiptItems (Contracted Mfg):", itemsToSave);
+
+            var _cmIdx = 0; var _cmResults = [];
+            function _saveItemCM() {
+                if (_cmIdx >= itemsToSave.length) {
+                    var itemRes = _cmResults;
+                    console.log("ProductReceiptItems created:", itemRes);
+                    var lotPromises = [];
+                    itemRes.forEach(function (createdItem, i) {
+                        var row = rowsForLots[i];
+                        if (!row || !createdItem.id) return;
+                        lotPromises.push(createProductLotForRow(row, prNumber, createdItem.id));
+                    });
+                    Promise.all(lotPromises).then(function () { 
+                        location.reload(); 
+                    })
+                        .catch(function (err) { JSUTIL.buildErrorModal('Failed to create product lot: ' + err); });
+                    return;
+                }
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-receipt-items'), JSON.stringify(itemsToSave[_cmIdx]), function(r) {
+                    _cmResults.push(r); _cmIdx++; _saveItemCM();
+                });
+            }
+            _saveItemCM();
+        } else {
+            // Normal flow with PO line items
+            JSUTIL.callAJAXGet(
+                JSUTIL.getUrl('/api/purchase/orders/' + purchaseOrderId + '/items'),
+                function (poLineItems) {
+                    var itemsToSave = [];
+                    var rowsForLots = [];
+
+                    $('#receiptTable tbody tr').each(function () {
+                        var row = $(this);
+                        rowsForLots.push(row);
+                        var productid = row.find('input[name="Product.Id"]').val();
+                        var poitemid = null;
+
+                        $.each(poLineItems, function (i, val) {
+                            if (val.product.id == productid && val.purchaseOrder.id == currentRecordId) {
+                                poitemid = val.id;
+                                return false;
+                            }
+                        });
+
+                        var receivedQty = parseFloat(row.find('.receivedQtyInput').val()) || 0;
+                        var batchNumber = row.find('.batchNumberInput').val().trim();
+                        var numberOfContainers = parseInt(row.find('.containersInput').val()) || 0;
+                        var manufacturerId = row.find('.manufacturerId').val();
+                        var retestDate = row.find('.retestDateInput').val();
+                        var containerType = row.find('.containerTypeInput').val();
+
+                        // Tax fields
+                        var igstPer = parseFloat(row.find('.igstPer').val()) || 0;
+                        var igstAmt = parseFloat(row.find('.igstAmt').val()) || 0;
+                        var sgstPer = parseFloat(row.find('.sgstPer').val()) || 0;
+                        var sgstAmt = parseFloat(row.find('.sgstAmt').val()) || 0;
+                        var cgstPer = parseFloat(row.find('.cgstPer').val()) || 0;
+                        var cgstAmt = parseFloat(row.find('.cgstAmt').val()) || 0;
+
+                        var taxPercent1 = 0, taxAmount1 = 0, taxPercent2 = 0, taxAmount2 = 0;
+                        if (taxType === 'IGST') {
+                            taxPercent1 = igstPer;
+                            taxAmount1 = igstAmt;
+                            taxPercent2 = 0;
+                            taxAmount2 = 0;
+                        } else {
+                            // SGST-CGST
+                            taxPercent1 = sgstPer;
+                            taxAmount1 = sgstAmt;
+                            taxPercent2 = cgstPer;
+                            taxAmount2 = cgstAmt;
+                        }
+
+                        var itemObj = {
+                            productReceipt: { id: prId },
+                            // purchaseOrderItem: { id: Number(poitemid) },
+                            product: { id: Number(productid) },
+                            quantityExpected: row.find('td:eq(2)').text() || 0,
+                            quantityReceived: receivedQty,
+                            remarks: '',
+                            stagingLocation: '',
+                            batchNumber: batchNumber,
+                            manufacturingDate: toIsoDateOrEmpty(row.find('.mfgDateInput').val()),
+                            expiryDate: toIsoDateOrEmpty(row.find('.expDateInput').val()),
+                            numberOfContainers: numberOfContainers,
+                            manufacturer: manufacturerId ? { id: Number(manufacturerId) } : null,
+                            retestDate: toIsoDateOrEmpty(retestDate),
+                            containerType: containerType,
+                            materialValue: parseFloat(row.find('.materialValue').val()) || 0,
+                            taxableValue: parseFloat(row.find('.taxableValue').val()) || 0,
+                            taxAmount1: taxAmount1,
+                            taxPercent1: taxPercent1,
+                            taxAmount2: taxAmount2,
+                            taxPercent2: taxPercent2,
+                            weightVerification: row.find('.approxWeight').val() || ''
+                        };
+
+                        console.log("Built itemObj:", itemObj);
+                        itemsToSave.push(itemObj);
+                    });
+
+                    if (itemsToSave.length === 0) {
+                        JSUTIL.buildErrorModal("No valid items to save!");
+                        return;
+                    }
+
+                    console.log("Posting ProductReceiptItems:", itemsToSave);
+
+                    var _idx2 = 0; var _results2 = [];
+                    function _saveItem2() {
+                        if (_idx2 >= itemsToSave.length) {
+                            var itemRes = _results2;
+                            var lotPromises = [];
+                            itemRes.forEach(function (createdItem, idx) {
+                                var row = rowsForLots[idx];
+                                if (!row || !createdItem.id) return;
+                                lotPromises.push(createProductLotForRow(row, prNumber, createdItem.id));
+                            });
+                            Promise.all(lotPromises).then(function() { 
+                                location.reload(); 
+                            }).catch(function(err) { JSUTIL.buildErrorModal('Failed to create product lot: ' + err); });
+                            return;
+                        }
+                        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-receipt-items'), JSON.stringify(itemsToSave[_idx2]), function(r) { _results2.push(r); _idx2++; _saveItem2(); });
+                    }
+                    _saveItem2();
+                }
+            );
+        }
+    }
+
+    // allInwardPanel.js    End
+
+
+
+
+
+
+    // grnReviewPanel.js    Start
+    var currentRecordId = '';
+    var currentReceiptData = {};
+    var currentProductsDetails = [];
+    var stagingLocations = [];
+
+    function loadHistory(receiptId) {
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + receiptId), function (res) {
+            res = (res || []).sort((a, b) => b.id - a.id);
+            $('#allHistoryTable').empty();
+            var innerHtml = '';
+            if (res.length > 0) {
+                $.each(res, function (i, val) {
+                    var pb = val.performedBy;
+                    var performedBy = pb
+                        ? ((pb.firstName || '') + ' ' + (pb.lastName || '')).trim() || pb.number || pb.email || '-'
+                        : '-';
+                    var date = val.startDate ? JSUTIL.getDate(val.startDate) : '-';
+                    var notes = val.notes || '';
+                    innerHtml += '<tr>' +
+                        '<td>' + (val.name || '') + '</td>' +
+                        '<td>' + performedBy + '</td>' +
+                        '<td>' + date + '</td>' +
+                        '<td>' + notes + '</td>' +
+                        '</tr>';
+                });
+            } else {
+                innerHtml = '<tr><td colspan="4" class="text-center text-muted">No history found.</td></tr>';
+            }
+            $('#allHistoryTable').append(innerHtml);
+        });
+    }
+
+    // Open edit panel
+    $('#InwardPanel tbody').on('click', '.selectReceiptBtn', function () {
+        $('.newInwardBtn').hide();
+        $('.editInwardClose').show();
+        $('#editInwardPanel').show();
+        $('#InwardPanel').hide();
+
+        currentRecordId = Number($(this).attr('id').trim());
+
+        var currentReceipt = recordList.find(r => r.id === currentRecordId);
+
+        if (!currentReceipt) {
+            console.error('Could not find receipt in recordList with ID:', currentRecordId);
+            closeEditPanel();
+            return;
+        }
+
+        // Show/hide buttons based on status
+        if (currentReceipt.processStatus !== 'GIM Review') {
+            $('#acceptBtn').hide();
+            $('#rejectBtn').hide();
+        } else {
+            $('#acceptBtn').show();
+            $('#rejectBtn').show();
+        }
+
+        currentReceiptData = currentReceipt;
+        loadHistory(currentRecordId);
+        $('#receiptName').text('Receipt: ' + currentReceipt.number + ` (${currentReceipt.processStatus})`);
+        $('#editReceiptNotes').val(currentReceipt.remarks || '');
+
+        // Populate logistics fields
+        $('#editChallanNumber').val(currentReceipt.challanNumber || '');
+        if (currentReceipt.challanDate) {
+            $('#editChallanDate').val(new Date(currentReceipt.challanDate).toISOString().split('T')[0]);
+        }
+
+        $('#editLrNumber').val(currentReceipt.lrNumber || '');
+        if (currentReceipt.lrDate) {
+            $('#editLrDate').val(new Date(currentReceipt.lrDate).toISOString().split('T')[0]);
+        }
+
+        $('#editInvoiceNumber').val(currentReceipt.invoiceNumber || '');
+        if (currentReceipt.invoiceDate) {
+            $('#editInvoiceDate').val(new Date(currentReceipt.invoiceDate).toISOString().split('T')[0]);
+        }
+
+        if (currentReceipt.receiptDate) {
+            $('#editReceiptDate').val(new Date(currentReceipt.receiptDate).toISOString().split('T')[0]);
+        }
+
+        $('#editDeliveryVehicle').val(currentReceipt.deliveryVehicle || '');
+        $('#editTransportCompany').val(currentReceipt.transportCompany || '');
+
+        // Load staging locations
+        loadStagingLocations();
+
+        // Load Product Receipt Items
+        var itemObj = {
+            fields: "Number;ProductReceipt;QuantityReceived;QuantityApproved;Product;Remarks;InspectionResult;ManufacturingDate;ExpiryDate;BatchNumber;NumberOfContainers;StagingLocation;RetestDate;ContainerType;PurchaseOrderItem.Id",
+            conditions: [`ProductReceipt.Id = '${currentRecordId}'`],
+            logic: '{0}'
+        };
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-receipt-items'), function(allItems) {
+            var filteredItems = (allItems || []).filter(function(item) {
+                return item.productReceipt && item.productReceipt.id == currentRecordId;
+            });
+            getDetailsCallback(filteredItems);
+        });
+
+        // Load documents
+        loadReceiptDocuments(currentRecordId);
+    });
+
+    // Function to load staging locations
+    function loadStagingLocations() {
+        var locationObj = {
+            fields: "Id;Name;",
+            conditions: [],
+            logic: ''
+        };
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/storage-locations'), function (res) {
+            stagingLocations = res || [];
+            console.log('Staging locations loaded:', stagingLocations);
+        });
+    }
+
+    $('.editInwardClose').on('click', function () {
+        closeEditPanel();
+    });
+
+    function closeEditPanel() {
+        $('.editInwardClose').hide();
+        $('#editInwardPanel').hide();
+        refreshReceiptList();
+        $('#InwardPanel').show();
+        currentRecordId = '';
+        currentProductsDetails = [];
+        stagingLocations = [];
+        resetEditForm();
+    }
+
+    function resetEditForm() {
+        $('#editReceiptNotes').val('');
+        $('#editChallanNumber').val('');
+        $('#editChallanDate').val('');
+        $('#editLrNumber').val('');
+        $('#editLrDate').val('');
+        $('#editInvoiceNumber').val('');
+        $('#editInvoiceDate').val('');
+        $('#editReceiptDate').val('');
+        $('#editDeliveryVehicle').val('');
+        $('#editTransportCompany').val('');
+        $('#editInwardTable').empty();
+        $('#acceptBtn').hide();
+        $('#rejectBtn').hide();
+    }
+
+    function getDetailsCallback(response) {
+        console.log("ProductReceiptItem", response);
+        var innerHtml = '';
+
+        currentProductsDetails = response;
+
+        $.each(response, function (i, val) {
+            // Skip rejected items
+            if (val.inspectionResult === 'Rejected') {
+                return true;
+            }
+
+            // Build staging location dropdown
+            var locationDropdownHtml = '<select class="form-control staging-location-select" data-original="' + (val.stagingLocation || '') + '" disabled>';
+            locationDropdownHtml += '<option value="">-- Select Location --</option>';
+            stagingLocations.forEach(loc => {
+                var selected = (val.stagingLocation && val.stagingLocation === loc.name) ? 'selected' : '';
+                locationDropdownHtml += `<option value="${loc.name}" ${selected}>${loc.name}</option>`;
+            });
+            locationDropdownHtml += '</select>';
+
+            // Main Row
+            innerHtml += `
+            <tr class="main-row" data-item-id="${val.id}" data-product-id="${val.product.id}">
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-secondary expand-row-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </td>
+                <td>${val.product.name}${val.product.number ? ' <small class="text-muted">(' + val.product.number + ')</small>' : ''}</td>
+                <td>
+                    <input type="number" class="form-control" 
+                           value="${val.quantityReceived}" 
+                           readonly style="width: 100%;">
+                </td>
+                <td>
+                    <input type="number" class="form-control" 
+                           value="${val.quantityApproved || 0}" 
+                           readonly style="width: 100%;">
+                </td>
+                <td>
+                    <input type="text" class="form-control" 
+                           value="${val.batchNumber || 'NA'}"
+                           readonly style="width: 100%;">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-info view-containers-btn" 
+                            data-item-id="${val.id}"
+                            data-product-name="${val.product.name}"
+                            data-batch="${val.batchNumber || ''}"
+                            data-qty="${val.quantityReceived}"
+                            data-noc="${val.numberOfContainers || 0}">
+                        <i class="fa fa-cube"></i> View (${val.numberOfContainers || 0})
+                    </button>
+                </td>
+                
+            </tr>`;
+
+            // Detail Row
+            innerHtml += `
+            <tr class="detail-row" style="display: none;" data-parent-id="${val.id}">
+                <td colspan="7" style="padding: 0;">
+                    <div class="detail-content">
+                        <table class="table table-bordered" style="margin-bottom: 0;">
+                            <tr>
+                                <td style="width: 20%;"><strong>Manufacturer:</strong></td>
+                                <td style="width: 30%;">
+                                    <input type="text" class="form-control" 
+                                           value="${val.manufacturer && val.manufacturer.name ? val.manufacturer.name : 'NA'}"
+                                           readonly>
+                                </td>
+                                <td style="width: 20%;"><strong>Manufacturing Date:</strong></td>
+                                <td style="width: 30%;">
+                                    <input type="text" class="form-control" 
+                                           value="${val.manufacturingDate ? val.manufacturingDate.slice(0, 10) : 'NA'}"
+                                           readonly>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Expiry Date:</strong></td>
+                                <td>
+                                    <input type="text" class="form-control" 
+                                           value="${val.expiryDate ? val.expiryDate.slice(0, 10) : 'NA'}"
+                                           readonly>
+                                </td>
+                                <td><strong>Retest Date:</strong></td>
+                                <td>
+                                    <input type="text" class="form-control" 
+                                           value="${val.retestDate ? val.retestDate.slice(0, 10) : 'NA'}"
+                                           readonly>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>No. Containers:</strong></td>
+                                <td>
+                                    <input type="text" class="form-control" 
+                                           value="${val.numberOfContainers != null && val.numberOfContainers !== '' ? val.numberOfContainers : 'NA'}"
+                                           readonly>
+                                </td>
+                                <td><strong>Container Type:</strong></td>
+                                <td>
+                                    <input type="text" class="form-control"
+                                           value="${val.containerType || 'NA'}"
+                                           readonly>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>`;
+        });
+
+        // Remove DataTables initialization - just set the HTML
+        $('#editInwardTable').html(innerHtml);
+
+        // Add expand/collapse handlers
+        addExpandCollapseHandlers();
+    }
+
+    // Function to add expand/collapse handlers
+    function addExpandCollapseHandlers() {
+        // Remove any existing handlers to prevent duplicates
+        $('#editInwardTable').off('click', '.expand-row-btn');
+        $('#editInwardTable').off('click', '.main-row');
+        $('#editInwardTable').off('click', '.view-containers-btn');
+
+        // Expand/collapse handler
+        $('#editInwardTable').on('click', '.expand-row-btn', function (e) {
+            e.stopPropagation();
+            var $btn = $(this);
+            var itemId = $btn.closest('.main-row').data('item-id');
+            var $detailRow = $('.detail-row[data-parent-id="' + itemId + '"]');
+            var isExpanded = $btn.hasClass('expanded');
+            $detailRow.toggle(!isExpanded);
+            $btn.toggleClass('expanded', !isExpanded);
+            $btn.html(isExpanded
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>'
+            );
+        });
+
+        // Click entire row to toggle (skip inputs/buttons)
+        $('#editInwardTable').on('click', '.main-row', function (e) {
+            if ($(e.target).is('input, button, select') || $(e.target).closest('button').length) return;
+            $(this).find('.expand-row-btn').trigger('click');
+        });
+
+        // Add click handler for view containers button
+        $('#editInwardTable').on('click', '.view-containers-btn', function (e) {
+            e.stopPropagation();
+
+            var itemId = $(this).data('item-id');
+            var productName = $(this).data('product-name');
+            var batch = $(this).data('batch');
+            var qty = $(this).data('qty');
+            var noc = $(this).data('noc');
+
+            openContainerPanel(itemId, productName, batch, qty, noc);
+        });
+    }
+
+    // Accept button click
+    // Accept button click
+    $('#acceptBtn').on('click', function () {
+        if (!confirm('Are you sure you want to accept this GIM?')) {
+            return;
+        }
+
+        var receiptUpdateData = {
+            processStatus: 'GIM Approved'
+        };
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
+            console.log('Receipt status updated to GRN Approved:', receiptRes);
+
+            // Step 1: Update ProductLot ARN field from ProductReceiptItem.number
+            updateProductLotArnFromReceiptItems(currentProductsDetails, function () {
+                console.log('[Accept] ARN fields updated. Proceeding to create transactions...');
+
+                // Step 2: Build approved items list (no conditions/filtering)
+                var approvedItems = currentProductsDetails;
+
+                if (approvedItems.length === 0) {
+                    alert('GIM has been approved successfully!');
+                    location.reload();
+                    return;
+                }
+
+                // Step 3: Fetch PO line item prices if applicable
+                var itemsWithPO = approvedItems.filter(function (item) {
+                    return item.purchaseOrderItem && item.purchaseOrderItem.id;
+                });
+
+                if (itemsWithPO.length > 0) {
+                    var poItemIds = itemsWithPO.map(function (item) { return item.purchaseOrderItem.id; });
+                    var poItemQuery = {
+                        fields: "Id;ItemPrice;Product.Id;",
+                        conditions: poItemIds.map(function (id) { return "Id = '" + id + "'"; }),
+                        logic: poItemIds.map(function (_, index) { return "{" + index + "}"; }).join(' OR ')
+                    };
+
+                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/purchase/orders/' + (currentReceiptData.purchaseOrder ? currentReceiptData.purchaseOrder.id : 0) + '/items'), function (allPoItems) {
+                        var poItems = (allPoItems || []).filter(function(i) { return poItemIds.indexOf(i.id) !== -1; });
+                        var poItemPriceMap = {};
+                        poItems.forEach(function (poItem) {
+                            poItemPriceMap[poItem.id] = parseFloat(poItem.itemPrice) || 0;
+                        });
+                        createProductTransactions(approvedItems, poItemPriceMap);
+                    });
+                } else {
+                    createProductTransactions(approvedItems, {});
+                }
+            });
+        });
+    });
+
+    /**
+     * Create ProductTransactions for each approved item, then update product inventory.
+     * ARN is taken directly from ProductReceiptItem.number
+     */
+    function createProductTransactions(approvedItems, poItemPriceMap) {
+        var productTransactionsToCreate = [];
+        var transactionDate = new Date().toISOString();
+
+        approvedItems.forEach(function (item) {
+            if (item.product && item.product.id) {
+                var qtyApproved = parseFloat(item.quantityReceived) || 0;
+
+                var transactionAmount = 0;
+                if (item.purchaseOrderItem && item.purchaseOrderItem.id) {
+                    transactionAmount = item.purchaseOrderItem.lineTotal || 0;
+                }
+
+                productTransactionsToCreate.push({
+                    quantityReceipt: qtyApproved,
+                    transactionDate: transactionDate,
+                    product: { id: item.product.id },
+                    batchNumber: item.batchNumber || '',
+                    transactionAmount: transactionAmount,
+                    arn: item.number || '',          // ← directly from ProductReceiptItem.number
+                    docNumber: currentReceiptData.number || ''
+                });
+            }
+        });
+
+        console.log('[createProductTransactions] Transactions to create:', productTransactionsToCreate);
+
+        var _txIdx = 0;
+        function _saveTx() {
+            if (_txIdx >= productTransactionsToCreate.length) { updateProductInventory(approvedItems); return; }
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-transactions'), JSON.stringify(productTransactionsToCreate[_txIdx]), function() { _txIdx++; _saveTx(); });
+        }
+        _saveTx();
+    }
+    /**
+     * For each ProductReceiptItem that has a number, fetch its linked ProductLot(s)
+     * and update the ARN field with that item's number value.
+     */
+    function updateProductLotArnFromReceiptItems(receiptItems, onComplete) {
+        var itemsToProcess = (receiptItems || []).filter(function (item) {
+            return item.number;
+        });
+
+        if (itemsToProcess.length === 0) {
+            console.log('[updateProductLotArnFromReceiptItems] No items with a number field found.');
+            if (typeof onComplete === 'function') onComplete();
+            return;
+        }
+
+        console.log('[updateProductLotArnFromReceiptItems] Processing', itemsToProcess.length, 'items');
+
+        // Fetch all lots once, then update matching ones sequentially
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-lots'), function (allLotsResp) {
+            var allLots = [];
+            if (Array.isArray(allLotsResp)) {
+                allLots = allLotsResp;
+            } else if (allLotsResp && typeof allLotsResp === 'object') {
+                if (Array.isArray(allLotsResp.data)) {
+                    allLots = allLotsResp.data;
+                } else if (Array.isArray(allLotsResp.items)) {
+                    allLots = allLotsResp.items;
+                } else if (Array.isArray(allLotsResp.content)) {
+                    allLots = allLotsResp.content;
+                } else if (Array.isArray(allLotsResp.results)) {
+                    allLots = allLotsResp.results;
+                } else {
+                    // Supports object responses keyed by index/id instead of JSON arrays.
+                    allLots = Object.keys(allLotsResp).map(function (k) { return allLotsResp[k]; }).filter(function (v) {
+                        return v && typeof v === 'object';
+                    });
+                }
+            }
+
+            if (!Array.isArray(allLots) || allLots.length === 0) {
+                console.log('[updateProductLotArnFromReceiptItems] No lots returned from /api/product-lots');
+                if (typeof onComplete === 'function') onComplete();
+                return;
+            }
+
+            var updates = [];
+            itemsToProcess.forEach(function (item) {
+                var itemId = Number(item.id);
+                var itemProductId = item.product && item.product.id ? Number(item.product.id) : null;
+                var itemBatch = (item.batchNumber || '').trim();
+
+                var lots = allLots.filter(function (l) {
+                    var linkedId = null;
+
+                    if (l && l.receiptItem && l.receiptItem.id != null) linkedId = Number(l.receiptItem.id);
+                    else if (l && l.productReceiptItem && l.productReceiptItem.id != null) linkedId = Number(l.productReceiptItem.id);
+                    else if (l && l.receiptItemId != null) linkedId = Number(l.receiptItemId);
+                    else if (l && l.productReceiptItemId != null) linkedId = Number(l.productReceiptItemId);
+
+                    if (linkedId != null && linkedId === itemId) return true;
+
+                    // Fallback when API does not expose direct receipt-item relation on lot.
+                    var lotProductId = l && l.product && l.product.id != null ? Number(l.product.id) : null;
+                    var lotBatch = (l && (l.batchNumber || l.lotNumber) ? (l.batchNumber || l.lotNumber) : '').trim();
+                    return itemProductId != null && lotProductId != null && itemProductId === lotProductId && itemBatch && lotBatch && itemBatch === lotBatch;
+                });
+
+                if (lots.length === 0) {
+                    console.log('[updateProductLotArnFromReceiptItems] No matching lot for item:', {
+                        itemId: item.id,
+                        itemNumber: item.number,
+                        productId: itemProductId,
+                        batchNumber: itemBatch
+                    });
+                }
+
+                lots.forEach(function(lot) {
+                    updates.push({ lotId: lot.id, arn: item.number });
+                });
+            });
+
+            if (updates.length === 0) {
+                console.log('[updateProductLotArnFromReceiptItems] No lot updates prepared.');
+                if (typeof onComplete === 'function') onComplete();
+                return;
+            }
+
+            console.log('[updateProductLotArnFromReceiptItems] Updating lot ARNs:', updates);
+
+            var _idx = 0;
+            function _nextUpdate() {
+                if (_idx >= updates.length) { if (typeof onComplete === 'function') onComplete(); return; }
+                var u = updates[_idx++];
+                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-lots/' + u.lotId), JSON.stringify({ arn: u.arn }), _nextUpdate);
+            }
+            _nextUpdate();
+        });
+    }
+
+    /**
+     * Create ProductTransactions for each approved item, then update product inventory.
+     */
+    function createProductTransactions(approvedItems, arnMap, poItemPriceMap) {
+        var productTransactionsToCreate = [];
+        var transactionDate = new Date().toISOString();
+
+        approvedItems.forEach(function (item) {
+            if (item.product && item.product.id) {
+                var qtyApproved = parseFloat(item.quantityReceived) || 0;
+
+                productTransactionsToCreate.push({
+                    quantityReceipt: qtyApproved,
+                    transactionDate: transactionDate,
+                    product: { id: item.product.id },
+                    batchNumber: item.batchNumber || '',
+                    transactionAmount: item.product.unitPrice * item.quantityReceived,
+                    arn: item.number,
+                    docNumber: currentReceiptData.number || ''
+                });
+            }
+        });
+
+        console.log('[createProductTransactions] Transactions to create:', productTransactionsToCreate);
+
+        var _txIdx2 = 0;
+        function _saveTx2() {
+            if (_txIdx2 >= productTransactionsToCreate.length) { updateProductInventory(approvedItems); return; }
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-transactions'), JSON.stringify(productTransactionsToCreate[_txIdx2]), function() { _txIdx2++; _saveTx2(); });
+        }
+        _saveTx2();
+    }
+
+    /**
+     * Update product inventory quantities after transactions are created.
+     */
+    function updateProductInventory(approvedItems) {
+        var productQuantities = {};
+        var productDataMap = {};
+        var category = '';
+        var oldReservedQty = {};
+
+        approvedItems.forEach(function (item) {
+            if (item.product && item.product.id) {
+                var productId = item.product.id;
+                var qtyApproved = parseFloat(item.quantityApproved) || 0;
+
+                if (!productQuantities[productId]) {
+                    productQuantities[productId] = 0;
+                    productDataMap[productId] = item.product;
+                }
+
+                if (!oldReservedQty[productId]) {
+                    oldReservedQty[productId] = parseFloat(item.product.quantityReserved) || 0;
+                }
+
+                category = item.product.Category;
+                productQuantities[productId] += qtyApproved;
+            }
+        });
+
+        console.log('[updateProductInventory] Product quantities to add:', productQuantities);
+
+        var productsToUpdate = [];
+        var productIds = Object.keys(productQuantities);
+
+        if (productIds.length === 0) {
+            alert('GIM approved. No valid products found to update inventory.');
+            location.reload();
+            return;
+        }
+
+        productIds.forEach(function (productId) {
+            var product = productDataMap[productId];
+            var currentQty = parseFloat(product.quantityOnHand) || 0;
+            var currentQtyOnOrder = parseFloat(product.quantityOnOrder) || 0;
+            var qtyToAdd = productQuantities[productId];
+            var reservedQty = 0;
+
+            if (category === 'Blending Material') {
+                reservedQty = qtyToAdd + oldReservedQty[productId];
+            }
+
+            var newQty = currentQty + qtyToAdd;
+            var newQtyOnOrder = currentQtyOnOrder;
+            if (currentReceiptData.purchaseOrder) {
+                newQtyOnOrder = Math.max(0, currentQtyOnOrder - qtyToAdd);
+            }
+
+            productsToUpdate.push({
+                id: productId,
+                quantityOnHand: newQty,
+                quantityOnOrder: newQtyOnOrder,
+                quantityReserved: reservedQty
+            });
+        });
+
+        console.log('[updateProductInventory] Products to update:', productsToUpdate);
+
+        var _pIdx = 0;
+        function _saveProduct() {
+            if (_pIdx >= productsToUpdate.length) { alert('GIM has been approved and processed successfully!'); 
+            location.reload(); 
+            return; }
+            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/products/' + productsToUpdate[_pIdx].id), JSON.stringify(productsToUpdate[_pIdx]), function() { _pIdx++; _saveProduct(); });
+        }
+        _saveProduct();
+    }
+
+    // Reject button click
+    $('#rejectBtn').on('click', function () {
+        if (!confirm('Are you sure you want to reject this GIM?')) {
+            return;
+        }
+
+        var receiptUpdateData = {
+            processStatus: 'GIM Rejected'
+        };
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
+            console.log('Receipt rejected:', receiptRes);
+            alert('GIM has been rejected.');
+            location.reload();
+        });
+    });
+
+    function loadReceiptDocuments(receiptId) {
+        var url = JSUTIL.getUrl('/api/files?patient=' + receiptId + '&folder=GIM');
+        JSUTIL.callAJAXGet(url, function(res) { callbackAfterGetDocuments(res || []); });
+    }
+
+    function callbackAfterGetDocuments(objList) {
+        $('#allDocumentsTable').empty();
+        var innerHtml = '';
+
+        if (!objList || objList.length === 0) {
+            innerHtml = '<tr><td colspan="4" class="text-center">No Data available</td></tr>';
+        } else {
+            $.each(objList, function (i, val) {
+                innerHtml += '<tr><td style="width: 12%;">';
+                innerHtml += '<button type="button" class="btn btn-outline btn-success viewDocumentBtn" id="' + val.path + '" name="' + val.contentType + '"><i class="fa fa-eye"></i></button>' +
+                    '</td>' +
+                    '<td>' + (val.name || '') + '</td>' +
+                    '<td>' + (val.url || '') + '</td>' +
+                    '<td>' + JSUTIL.getDate(val.createdDate) + '</td>' +
+                    '</tr>';
+            });
+        }
+
+        $('#allDocumentsTable').append(innerHtml);
+
+        $('.viewDocumentBtn').on('click', function () {
+            var fileId = $(this).data('id') || $(this).attr('id');
+            window.open(JSUTIL.getUrl('/api/files/download/' + fileId), '_blank');
+        });
+    }
+
+    function getDocumentViewCallback(response) {
+        console.log(response);
+        window.open(response.data, '_blank');
+    }
+
+    // Container Panel Variables
+    var currentPRIId = '';
+    var canEditContainers = false;
+
+    // Function to open container panel
+    function openContainerPanel(itemId, productName, batch, qty, noc) {
+        currentPRIId = itemId;
+        canEditContainers = false; // Read-only for GRN Review
+
+        // Set header info
+        $('#cpProduct').val(productName);
+        $('#cpBatch').val(batch);
+        $('#cpQty').val(qty);
+        $('#cpNOC').val(noc);
+
+        // Hide edit panel, show container panel
+        $('#editInwardPanel').hide();
+        $('#containerPanel').show();
+
+        // Load containers
+        loadContainers();
+    }
+
+    // Function to load containers
+    function loadContainers() {
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-containers'), function(all) {
+            var list = (all || []).filter(function(c) { return c.productReceiptItem && c.productReceiptItem.id == currentPRIId; });
+            renderContainers(list);
+        });
+    }
+
+    // Function to render containers
+    function renderContainers(list) {
+        console.log('res', list)
+        let html = '';
+
+        var qtyReceived = parseFloat($('#cpQty').val()) || 0;
+        var numberOfContainers = parseInt($('#cpNOC').val()) || 0;
+        var defaultNetWeight = numberOfContainers > 0 ? (qtyReceived / numberOfContainers).toFixed(3) : 0;
+
+        // If no containers exist, create one default row
+        if (!list || list.length === 0) {
+            html += containerRow({
+                quantity: numberOfContainers || 1,
+                netweight: defaultNetWeight,
+                uom: ''
+            });
+        } else {
+            // Display existing containers
+            list.forEach((c, index) => {
+                html += containerRow({
+                    id: c.id,
+                    quantity: c.quantity,
+                    netweight: c.netWeight,
+                    uom: c.uom
+                }, index + 1, list.length);
+            });
+        }
+
+        $('#containerTable tbody').html(html);
+
+    }
+
+    // Function to create container row HTML
+ function containerRow(c = {}, containerNumber = 1, totalContainers = 1) {
+    var isDisabled = !canEditContainers || 
+        (currentReceiptData.processStatus != 'New' && 
+         currentReceiptData.processStatus != 'GIM Rejected');
+
+    var uomValue = c.uom || '';
+
+    return `
+<tr data-id="${c.id || ''}">
+    <td><input class="form-control quantity-input" type="number" step="1" min="1" 
+               value="${c.quantity || ''}" placeholder="Enter quantity" 
+               ${isDisabled ? 'readonly' : ''}></td>
+    <td><input class="form-control netweight-input" type="number" step="0.001" 
+               value="${c.netweight || ''}" placeholder="Enter net weight" 
+               ${isDisabled ? 'readonly' : ''}></td>
+    <td><input class="form-control" type="text" value="${uomValue}" readonly></td>
+</tr>`;
+}
+
+    // Function to calculate and display total net weight
+    function updateTotalNetWeight() {
+        var total = 0;
+        $('#containerTable tbody tr').each(function () {
+            var netWeight = parseFloat($(this).find('.nw').val()) || 0;
+            total += netWeight;
+        });
+
+        var qtyReceived = parseFloat($('#cpQty').val()) || 0;
+        var difference = Math.abs(total - qtyReceived);
+
+        // Update or create total display
+        var $totalRow = $('#containerTable tfoot tr.total-row');
+        if ($totalRow.length === 0) {
+            $('#containerTable tfoot').remove();
+            $('#containerTable').append('<tfoot></tfoot>');
+            $totalRow = $('<tr class="total-row"></tr>');
+            $('#containerTable tfoot').append($totalRow);
+        }
+
+        var statusClass = difference < 0.01 ? 'text-success' : 'text-danger';
+        var statusIcon = difference < 0.01 ? '<i class="fa fa-check-circle"></i>' : '<i class="fa fa-exclamation-triangle"></i>';
+
+        $totalRow.html(`
+        <td colspan="3" class="text-right"><strong>Total Net Weight:</strong></td>
+        <td><strong class="${statusClass}">${total.toFixed(3)}</strong></td>
+        <td colspan="4" class="${statusClass}">
+            ${statusIcon} Expected: ${qtyReceived.toFixed(3)} | Difference: ${difference.toFixed(3)}
+        </td>
+    `);
+    }
+
+    // Close container panel button
+    $('#closeContainerPanel').on('click', function () {
+        $('#containerPanel').hide();
+        $('#editInwardPanel').show();
+    });
+
+    //grnReviewPanel.js    End
+
+
+</script>

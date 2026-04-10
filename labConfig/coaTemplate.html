@@ -1,0 +1,1837 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<script src="pages/lib/html2pdf.bundle.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!--allCoaTemplatePanel.html start-->
+<script src=https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js></script>
+<style>
+    #allCoaPanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #allCoaPanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    #allCoaPanelTable th:nth-child(2),
+    #allCoaPanelTable td:nth-child(2) {
+        text-align: left !important;
+    }
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    .selectCoaBtn,
+    .selectRequestBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+</style>
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allCoaTemplatePanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>COA Templates <small>Report</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary newCoaBtn"><i data-lucide="plus"></i>New COA</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <table id="allCoaPanelTable" class="table table-hover table-bordered dataTables">
+                        <thead>
+                        <th>Name</th>
+                        <th>Version</th>
+                        <th>Tags</th>
+                        </thead>
+                        <tbody class="dataTableRecordList" id="allCoaTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--allCoaTemplatePanel.html end-->
+
+    <!--editCoaTemplatePanel.html start-->
+    <style>
+        /* Progress Card */
+        .progress-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            color: inherit;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .progress-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-head strong {
+            font-size: 16px;
+            color: inherit;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .progressbar {
+            position: relative;
+            height: 14px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progressbar>i {
+            display: block;
+            height: 100%;
+            width: var(--p, 0%);
+            background: #3e51fd;
+            transition: width 0.4s ease;
+        }
+
+        /* Section Title - Blue Background */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            padding: 14px 16px;
+            background: #436482;
+            border: 1px solid #436482;
+            border-radius: 10px;
+            margin: 20px 0 12px 0;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .section-title:hover {
+            background: #364f68;
+            border-color: #364f68;
+        }
+
+        .section-title::after {
+            content: '▼';
+            margin-left: auto;
+            font-size: 12px;
+            transition: transform 0.3s;
+            color: white;
+        }
+
+        .section-title.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+
+        /* Section Badges */
+        .section-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .section-badge.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .section-badge.incomplete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .section-badge.partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Section Card */
+        .section-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 10px;
+        }
+
+        .details-subtitle {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            color: #2563eb;
+            border-left: 3px solid #2563eb;
+            padding-left: 8px;
+        }
+
+        .toggle-icon {
+            color: #2563eb;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .section-card.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-body {
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            max-height: 1500px;
+            opacity: 1;
+        }
+
+        .section-card.collapsed .section-body {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+        }
+
+        /* Form row styles */
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: flex-end;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .section-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+
+        .section-list li {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .section-list li:hover {
+            background: #f3f4f6;
+            border-color: #2563eb;
+        }
+
+        .section-list li.active {
+            background: #eff6ff;
+            border-color: #2563eb;
+            font-weight: 600;
+        }
+
+        .section-list li button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .section-list li button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        /* Fields Table Styling - Full Width */
+        .fields-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 12px;
+        }
+
+        .fields-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .fields-table thead {
+            background: #f9fafb;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .fields-table thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .fields-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+
+        .fields-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .fields-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .fields-table tbody td {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .fields-table .align-right {
+            text-align: right;
+        }
+
+        .fields-table button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .fields-table button.btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .fields-table button.btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+        }
+
+        .fields-table button:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Subsection Title */
+        .subsection-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin: 20px 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .mt-8 {
+            margin-top: 8px;
+        }
+
+        .mt-12 {
+            margin-top: 12px;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .align-right {
+            text-align: right;
+        }
+
+        /* Disabled state styling */
+        input[readonly], textarea[readonly], select[disabled] {
+            background-color: #f3f4f6 !important;
+            cursor: not-allowed;
+            color: #6b7280;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+    <div class="row animated fadeInRight aasaanPanel" id="editCoaTemplatePanel" style="display: none">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRequestTitle">COA Template Editor</span><small> COA </small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showAllRequestsOnCancel">
+                            <i data-lucide="x"></i> Close
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm generateCoaBtn"> Generate COA
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm editRequestBtn"><i data-lucide="pencil"></i> Edit </button>
+                        <button type="button" class="btn btn-default btn-sm" id="saveUpdateTestingBtn" style="display: none;">
+                            <i data-lucide="check"></i> Save
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form id="newEquipmentForm">
+                        <div class="row">
+                            <!-- LEFT PANEL: Template Details (col-lg-6) -->
+                            <div class="col-lg-6">
+                                <div class="section-card collapsible-section">
+                                    <div class="section-header" onclick="toggleStandardSection(this)">
+                                        <h6 class="details-subtitle">Template Details</h6>
+                                        <i data-lucide="chevron-down" class="toggle-icon"></i>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Template Name</label>
+                                                    <input type="text" class="form-control newCoaInput" name="name" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Version</label>
+                                                    <input type="text" class="form-control newCoaInput" name="version" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label>Regulatory Tags</label>
+                                                    <input type="text" class="form-control newCoaInput" name="tags" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <label>Header</label>
+                                                    <textarea name="header" class="form-control newCoaInput" rows="4"></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <label>Footer</label>
+                                                    <textarea name="footer" class="form-control newCoaInput" rows="4"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT PANEL: Sections & Fields (col-lg-6) -->
+                            <div class="col-lg-6">
+                                <div class="section-card collapsible-section">
+                                    <div class="section-header" onclick="toggleStandardSection(this)">
+                                        <h6 class="details-subtitle">Sections & Fields</h6>
+                                        <i data-lucide="chevron-down" class="toggle-icon"></i>
+                                    </div>
+                                    <div class="section-body">
+                                        <div class="subsection-title">Manage Sections</div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>New Section Name</label>
+                                                <input id="sectionNameInput" class="form-control" type="text" placeholder="e.g. Sample Details / Test Results" />
+                                            </div>
+                                            <div class="form-group" style="flex: 0 0 auto; margin-top: 18px;">
+                                                <button type="button" id="addSectionBtn" class="btn btn-secondary">+ Add</button>
+                                            </div>
+                                        </div>
+
+                                        <ul id="sectionList" class="section-list">
+                                        </ul>
+
+                                        <div class="subsection-title">Manage Fields</div>
+                                        <small id="fieldsSectionHint" class="mb-12" style="display:block; color: #6b7280;">Select a section above to add fields.</small>
+
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Field Label</label>
+                                                <input id="fieldLabelInput" class="form-control" type="text" placeholder="e.g. Test Name, Result" />
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="fieldTypeSelect">Field Type</label>
+                                                <select id="fieldTypeSelect" class="select2 form-control">
+                                                    <option value="text">Text</option>
+                                                    <option value="number">Number</option>
+                                                    <option value="date">Date</option>
+                                                    <option value="passfail">Result: Pass / Fail</option>
+                                                    <option value="numeric_unit">Result: Numeric + Unit</option>
+                                                    <option value="spec_text">Specification Text</option>
+                                                    <option value="method_ref">Method / SOP Reference</option>
+                                                    <option value="limit_nmt">Limit: NMT (Not More Than)</option>
+                                                    <option value="limit_nlt">Limit: NLT (Not Less Than)</option>
+                                                    <option value="compliance">Compliance: Complies / Does Not Comply</option>
+                                                    <option value="signature_block">Signature Block (Name + Role)</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="fieldUnitInput">Unit (optional)</label>
+                                                <input id="fieldUnitInput" type="text" class="form-control" placeholder="e.g. mg/L, %" />
+                                            </div>
+                                        </div>
+
+                                        <div class="form-row">
+                                            <button type="button" id="addFieldBtn" class="btn btn-secondary">+ Add Field</button>
+                                        </div>
+
+                                        <div class="fields-table-wrapper">
+                                            <table class="fields-table">
+                                                <thead>
+                                                <tr>
+                                                    <th style="width:40%;">Label</th>
+                                                    <th style="width:25%;">Type</th>
+                                                    <th style="width:20%;">Unit</th>
+                                                    <th class="align-right" style="width:15%;">Actions</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="fieldsTableBody">
+                                                <!-- Fields will be populated here -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--editCoaTemplatePanel.html end-->
+
+    <!--generateCoaPanel.html start-->
+    <style>
+        .coa-preview {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .coa-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #436482;
+            padding-bottom: 15px;
+        }
+
+        .coa-header .header-text {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .coa-header h2 {
+            margin: 15px 0 10px;
+            font-size: 24px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #333;
+        }
+
+        .coa-header .subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .coa-header .regulatory-tags {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        .coa-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .coa-meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .coa-meta-item .label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .coa-section {
+            margin-top: 25px;
+            page-break-inside: avoid;
+        }
+
+        .coa-section h4 {
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #436482;
+            border-bottom: 2px solid #436482;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .coa-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .coa-table thead {
+            background: #f3f4f6;
+        }
+
+        .coa-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .coa-table td {
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+        }
+
+        .coa-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .coa-footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 2px solid #ddd;
+            font-size: 11px;
+            text-align: center;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @media print {
+            .coa-preview {
+                box-shadow: none;
+                padding: 0;
+            }
+            .coa-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+    <div class="row animated fadeInRight aasaanPanel" id="generateCoaPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5> Generate <small> COA </small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showCoaTemplateCancel"><i data-lucide="x"></i> Close</button>
+                        <button type="button" class="btn btn-default btn-sm printCoaBtn"> Print </button>
+                        <button type="button" class="btn btn-default btn-sm exportPdfCoaBtn"> Export PDF</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--generateCoaPanel.html end-->
+
+    <!--newCoaTemplatePanel.html start-->
+    <style>
+        /* Progress Card */
+        .progress-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            color: inherit;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .progress-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-head strong {
+            font-size: 16px;
+            color: inherit;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .progressbar {
+            position: relative;
+            height: 14px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .progressbar>i {
+            display: block;
+            height: 100%;
+            width: var(--p, 0%);
+            background: #3e51fd;
+            transition: width 0.4s ease;
+        }
+
+        /* Updated Section Title - Blue Background */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            padding: 14px 16px;
+            background: #436482;
+            border: 1px solid #436482;
+            border-radius: 10px;
+            margin: 20px 0 12px 0;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        .section-title:hover {
+            background: #364f68;
+            border-color: #364f68;
+        }
+
+        .section-title::after {
+            content: '▼';
+            margin-left: auto;
+            font-size: 12px;
+            transition: transform 0.3s;
+            color: white;
+        }
+
+        .section-title.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+
+        .col-sm-4 {
+            flex: 0 0 calc(33.333% - 11px);
+        }
+
+        .col-sm-6 {
+            flex: 0 0 calc(50% - 8px);
+        }
+
+        .col-xs-5 {
+            flex: 0 0 calc(41.667% - 8px);
+        }
+
+        .col-xs-7 {
+            flex: 0 0 calc(58.333% - 8px);
+        }
+
+        @media (max-width: 768px) {}
+
+        .d-flex {
+            display: flex;
+        }
+
+        .justify-content-between {
+            justify-content: space-between;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--subtext);
+            margin-bottom: 6px;
+        }
+
+        .pr-0 {
+            padding-right: 0;
+        }
+
+        .pl-1 {
+            padding-left: 4px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed var(--border);
+            margin: 24px 0;
+        }
+
+        /* Section Completion Badges */
+        .section-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .section-badge.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .section-badge.incomplete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .section-badge.partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* Frequency Row */
+        .frequency-row .row {
+            align-items: flex-start;
+        }
+        .section-card {
+            background: #fff;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 10px;
+        }
+
+        .details-subtitle {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            color: #2563eb;
+            border-left: 3px solid #2563eb;
+            padding-left: 8px;
+        }
+
+        .toggle-icon {
+            color: #2563eb;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .section-card.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-body {
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            max-height: 1500px;
+            opacity: 1;
+        }
+
+        .section-card.collapsed .section-body {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+        }
+
+    </style>
+    <div class="row animated fadeInRight aasaanPanel" id="newCoaTemplatePanel" style="display: none">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small> COA </small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box showAllRequestsOnCancel">
+                            <i data-lucide="x"></i> Close
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm" id="updateTestingBtn">
+                            <i data-lucide="check"></i> Save
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form id="newEquipmentForm">
+                        <div class="section-card collapsible-section">
+                            <div class="section-header" onclick="toggleStandardSection(this)">
+                                <h6 class="details-subtitle">Template Details</h6>
+                                <i data-lucide="chevron-down" class="toggle-icon"></i>
+                            </div>
+                            <div class="section-body">
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Template Name</label>
+                                            <input type="text" class="form-control newCoaInput" name="name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Version</label>
+                                            <input type="text" class="form-control newCoaInput" name="version" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Regulatory Tags</label>
+                                            <input type="text" class="form-control newCoaInput" name="tags" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Header</label>
+                                            <textarea name="header" class="form-control newCoaInput" rows="4"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Footer</label>
+                                            <textarea name="footer" class="form-control newCoaInput" rows="4"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--newCoaTemplatePanel.html end-->
+
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // ================================================================
+    // State
+    // ================================================================
+    var recordList = [];
+    var currentRequestId = '';
+    let sections = [];
+    let selectedSectionIndex = null;
+    let isEditMode = false;
+
+    // ================================================================
+    // Common helpers (matching departments.html pattern)
+    // ================================================================
+    function showError(message) {
+        if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') {
+            JSUTIL.buildErrorModal(message);
+        } else {
+            alert(message);
+        }
+    }
+
+    function notifyUser(message, type) {
+        var level = type || 'warning';
+        if (typeof toastr !== 'undefined' && toastr && typeof toastr[level] === 'function') {
+            toastr[level](message);
+            return;
+        }
+        if (level === 'error' || level === 'warning') {
+            showError(message);
+            return;
+        }
+        alert(message);
+    }
+
+    function getCsrfHeaders() {
+        var token = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = {};
+        if (token && header) {
+            headers[header] = token;
+        }
+        return headers;
+    }
+
+    function requestJson(url, method, payload) {
+        var options = {
+            method: method || 'GET',
+            headers: Object.assign({}, getCsrfHeaders())
+        };
+        if (payload !== undefined) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(payload);
+        }
+        return fetch(url, options).then(async function (response) {
+            if (!response.ok) {
+                var text = await response.text();
+                throw new Error(text || ('HTTP ' + response.status));
+            }
+            var textBody = await response.text();
+            if (!textBody) return null;
+            try {
+                return JSON.parse(textBody);
+            } catch (e) {
+                return textBody;
+            }
+        });
+    }
+
+    function buildSerializedFieldsFromSections() {
+        var fieldsArray = [];
+        $.each(sections, function(i, section) {
+            var sectionName = (section && section.name) ? section.name : '';
+            var sectionFields = (section && Array.isArray(section.fields)) ? section.fields : [];
+
+            // Keep empty sections by saving a lightweight marker row.
+            if (!sectionFields.length) {
+                fieldsArray.push({
+                    section: sectionName,
+                    fieldLabel: '__SECTION_ONLY__',
+                    fieldType: 'section_marker',
+                    unit: ''
+                });
+                return;
+            }
+
+            $.each(sectionFields, function(j, field) {
+                fieldsArray.push({
+                    section: sectionName,
+                    fieldLabel: field.label,
+                    fieldType: field.type,
+                    unit: field.unit
+                });
+            });
+        });
+        return fieldsArray;
+    }
+
+    // ================================================================
+    // View management
+    // ================================================================
+    function setView(viewName) {
+        $('#allCoaTemplatePanel').hide();
+        $('#editCoaTemplatePanel').hide();
+        $('#newCoaTemplatePanel').hide();
+        $('#generateCoaPanel').hide();
+        if (viewName === 'all') $('#allCoaTemplatePanel').show();
+        if (viewName === 'edit') $('#editCoaTemplatePanel').show();
+        if (viewName === 'new') $('#newCoaTemplatePanel').show();
+        if (viewName === 'generate') $('#generateCoaPanel').show();
+        lucide.createIcons();
+    }
+
+    // ================================================================
+    // Render COA table
+    // ================================================================
+    function renderCoaTable() {
+        if ($.fn && $.fn.DataTable) {
+            if ($.fn.DataTable.isDataTable('#allCoaPanelTable')) {
+                var dtInstance = $('#allCoaPanelTable').DataTable();
+                dtInstance.clear();
+                dtInstance.destroy();
+            }
+        }
+
+        var innerHtml = '';
+        $.each(recordList, function(i, val) {
+            if (val.referenceNumber && val.referenceNumber.match(/-\d+$/)) {
+                return;
+            }
+            innerHtml += '<tr>' +
+                '<td class="itemNum"><a href="javascript:void(0)" class="selectRequestBtn" data-id="' + val.id + '">' + (val.name || '') + '</a></td>' +
+                '<td>' + (val.version || val.number || '') + '</td>' +
+                '<td>' + (val.tags || '') + '</td>' +
+                '</tr>';
+        });
+        $('#allCoaTable').html(innerHtml);
+
+        if ($.fn && $.fn.DataTable) {
+            $('#allCoaPanelTable').DataTable({ order: [], pageLength: 25 });
+        }
+    }
+
+    // ================================================================
+    // Load all report templates from API
+    // ================================================================
+    async function loadReportTemplates() {
+        try {
+            var apiResponse = await requestJson('/api/report-templates', 'GET');
+            recordList = Array.isArray(apiResponse) ? apiResponse : [];
+        } catch (apiErr) {
+            console.error(apiErr);
+            recordList = [];
+        }
+        renderCoaTable();
+        setView('all');
+    }
+
+    // ================================================================
+    // CRUD: Create report template
+    // ================================================================
+    async function createReportTemplate() {
+        var payload = {};
+        $('#newCoaTemplatePanel .newCoaInput').each(function() {
+            var name = $(this).attr('name');
+            if (name) {
+                payload[name] = ($(this).val() || '').trim();
+            }
+        });
+
+        // Build fields array from sections for create flow as well.
+        payload.fields = JSON.stringify(buildSerializedFieldsFromSections());
+
+        if (!payload.name) {
+            showError('Template name is required.');
+            return;
+        }
+
+        try {
+            await requestJson('/api/report-templates', 'POST', payload);
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to create template.');
+            return;
+        }
+
+        $('#newCoaTemplatePanel form')[0].reset();
+        await loadReportTemplates();
+    }
+
+    // ================================================================
+    // CRUD: Update report template
+    // ================================================================
+    async function updateReportTemplate() {
+        if (!currentRequestId) {
+            showError('Template id is missing.');
+            return;
+        }
+
+        var payload = {};
+        $('#editCoaTemplatePanel .newCoaInput').each(function() {
+            var name = $(this).attr('name');
+            if (name) {
+                payload[name] = ($(this).val() || '').trim();
+            }
+        });
+
+        // Build fields array from sections
+        payload.fields = JSON.stringify(buildSerializedFieldsFromSections());
+
+        try {
+            await requestJson('/api/report-templates/' + currentRequestId, 'PUT', payload);
+        } catch (apiErr) {
+            console.error(apiErr);
+            showError('Unable to update template.');
+            return;
+        }
+
+        isEditMode = false;
+        setReadOnlyMode();
+        $('#saveUpdateTestingBtn').hide();
+        $('.editRequestBtn').show();
+
+        // Reload to refresh list data
+        await loadReportTemplates();
+    }
+
+    // ================================================================
+    // newCoaTemplatePanel.js
+    // ================================================================
+    $(document).ready(function(){
+        // Load data and show allCoaTemplatePanel on load
+        loadReportTemplates();
+
+        $('.newCoaBtn').on('click', function(){
+            // Ensure new template form is always editable.
+            $('#newCoaTemplatePanel .newCoaInput').prop('readonly', false).prop('disabled', false);
+            // Clear any stale values copied from previously opened records.
+            var $newForm = $('#newCoaTemplatePanel form');
+            if ($newForm.length && $newForm[0]) {
+                $newForm[0].reset();
+            }
+            // Start new template with a clean sections/fields state.
+            sections = [];
+            selectedSectionIndex = null;
+            renderSections();
+            renderFields();
+            setView('new');
+        });
+
+        $('#updateTestingBtn').on('click', function(){
+            createReportTemplate();
+        });
+    });
+
+    // ================================================================
+    // generateCoaPanel.js
+    // ================================================================
+    $(document).ready(function(){
+        $('.generateCoaBtn').on('click', function(){
+            if (!currentRequestId || !window.currentCoaTemplate) {
+                notifyUser('Please select a COA template first', 'warning');
+                return;
+            }
+            generateCoaPreview(window.currentCoaTemplate);
+            setView('generate');
+        });
+
+        $('.showCoaTemplateCancel').on('click', function(){
+            setView('edit');
+        });
+
+        $('.printCoaBtn').on('click', function(){
+            printCoa();
+        });
+
+        $('.exportPdfCoaBtn').on('click', function(){
+            exportCoaToPdf();
+        });
+    });
+
+    // Function to generate COA preview with dummy data
+    function generateCoaPreview(template) {
+        const today = new Date();
+        const formatDate = (d) => d.toISOString().slice(0, 10);
+
+        // Generate dummy data
+        const sampleId = 'S-' + today.getFullYear().toString().slice(2) +
+            (today.getMonth() + 1).toString().padStart(2, '0') +
+            today.getDate().toString().padStart(2, '0') + '-' +
+            Math.floor(Math.random() * 900 + 100);
+
+        const batchNo = 'BATCH-' + Math.floor(Math.random() * 900000 + 100000);
+        const productName = template.name || 'Finished Pharmaceutical Product';
+        const mfgDate = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate());
+        const expDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+
+        // Parse sections and fields
+        let fieldsData = [];
+        if (template.fields) {
+            try {
+                fieldsData = typeof template.fields === 'string' ? JSON.parse(template.fields) : template.fields;
+            } catch (e) {
+                console.error('Error parsing fields:', e);
+            }
+        }
+
+        // Group fields by section
+        const sectionMap = {};
+        $.each(fieldsData, function(idx, field) {
+            if (field.fieldType === 'section_marker' || field.fieldLabel === '__SECTION_ONLY__') {
+                return;
+            }
+            if (!sectionMap[field.section]) {
+                sectionMap[field.section] = [];
+            }
+            sectionMap[field.section].push({
+                label: field.fieldLabel,
+                type: field.fieldType,
+                unit: field.unit
+            });
+        });
+
+        // Build COA HTML
+        let coaHtml = `
+        <div id="coaPreview" class="coa-preview">
+            <div class="coa-header">
+                <div class="header-text">${(template.header || 'QC Laboratory Header').replace(/\n/g, '<br>')}</div>
+                <h2>Certificate of Analysis</h2>
+                <div class="subtitle">${escapeHtml(template.name || 'COA Template')}</div>
+                <div class="regulatory-tags">Regulatory: ${escapeHtml(template.tags || 'GMP')}</div>
+            </div>
+
+            <div class="coa-meta-grid">
+                <div class="coa-meta-item">
+                    <span class="label">Sample ID:</span><span>${sampleId}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Batch/Lot No.:</span><span>${batchNo}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Product:</span><span>${productName}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Mfg. Date:</span><span>${formatDate(mfgDate)}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Exp. Date:</span><span>${formatDate(expDate)}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">COA Date:</span><span>${formatDate(today)}</span>
+                </div>
+            </div>
+    `;
+
+        // Generate sections
+        $.each(sectionMap, function(sectionName, fields) {
+            const isResultSection = /result/i.test(sectionName) || /test/i.test(sectionName);
+
+            coaHtml += `<div class="coa-section">
+            <h4>${escapeHtml(sectionName)}</h4>`;
+
+            if (isResultSection) {
+                // Result table layout
+                coaHtml += `<table class="coa-table">
+                <thead>
+                    <tr>
+                        <th style="width:30%;">Parameter</th>
+                        <th style="width:30%;">Specification</th>
+                        <th style="width:20%;">Result</th>
+                        <th style="width:20%;">Remark</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+                $.each(fields, function(idx, field) {
+                    const dummy = generateDummyValue(field);
+                    const spec = generateDummySpecification(field);
+                    const remark = generateDummyRemark(field, dummy);
+
+                    coaHtml += `
+                    <tr>
+                        <td>${escapeHtml(field.label || '')}</td>
+                        <td>${escapeHtml(spec)}</td>
+                        <td>${escapeHtml(dummy)}</td>
+                        <td>${escapeHtml(remark)}</td>
+                    </tr>`;
+                });
+
+                coaHtml += `</tbody></table>`;
+            } else {
+                // Metadata layout
+                coaHtml += `<table class="coa-table">`;
+
+                $.each(fields, function(idx, field) {
+                    const dummy = generateDummyValue(field);
+                    coaHtml += `
+                    <tr>
+                        <td style="width:30%;font-weight:600;">${escapeHtml(field.label || '')}</td>
+                        <td style="width:70%;">${escapeHtml(dummy)}</td>
+                    </tr>`;
+                });
+
+                coaHtml += `</table>`;
+            }
+
+            coaHtml += `</div>`;
+        });
+
+        // Footer
+        coaHtml += `
+            <div class="coa-footer">
+                ${(template.footer || 'This is a system-generated COA with dummy data for template validation purposes only.').replace(/\n/g, '<br>')}
+            </div>
+        </div>
+    `;
+        console.log(coaHtml);
+        // Inject into panel
+        $('#generateCoaPanel .ibox-content').html(coaHtml);
+    }
+
+    // Helper function to generate dummy values
+    function generateDummyValue(field) {
+        const type = field.type || 'text';
+        const label = (field.label || '').toLowerCase();
+        const unit = field.unit || '';
+
+        switch (type) {
+            case 'text':
+                if (/batch/.test(label)) return 'BATCH-' + Math.floor(Math.random() * 900000 + 100000);
+                if (/customer/.test(label)) return 'ABC Pharma Pvt. Ltd.';
+                if (/product/.test(label)) return 'Paracetamol Tablets 500 mg';
+                if (/description/.test(label)) return 'White, round tablets, free from visible defects.';
+                if (/remarks?/.test(label)) return 'Sample received intact and tested as per SOP.';
+                return 'Dummy text value';
+            case 'number':
+                return (Math.random() * 100).toFixed(2);
+            case 'date': {
+                const d = new Date();
+                return d.toISOString().slice(0, 10);
+            }
+            case 'passfail':
+                return Math.random() > 0.05 ? 'Pass' : 'Fail';
+            case 'numeric_unit': {
+                const val = (95 + Math.random() * 5).toFixed(2);
+                return val + (unit ? ' ' + unit : '');
+            }
+            case 'spec_text':
+                return 'As per approved specification';
+            case 'method_ref':
+                return 'SOP-QC-012 / BP 2024, Monograph 123';
+            case 'limit_nmt': {
+                const val = (0.1 + Math.random() * 0.9).toFixed(2);
+                return 'NMT ' + val + (unit ? ' ' + unit : '');
+            }
+            case 'limit_nlt': {
+                const val = (80 + Math.random() * 10).toFixed(1);
+                return 'NLT ' + val + (unit ? ' ' + unit : '');
+            }
+            case 'compliance':
+                return Math.random() > 0.05 ? 'Complies' : 'Does Not Comply';
+            case 'signature_block': {
+                const today = new Date().toISOString().slice(0, 10);
+                return 'Signed electronically by Dr. A. Analyst (QC Analyst) on ' + today;
+            }
+            default:
+                return '—';
+        }
+    }
+
+    // Helper function to generate dummy specifications
+    function generateDummySpecification(field) {
+        const label = (field.label || '').toLowerCase();
+        const type = field.type || '';
+
+        if (type === 'limit_nmt') {
+            const val = (0.1 + Math.random() * 0.9).toFixed(2);
+            return 'NMT ' + val + (field.unit ? ' ' + field.unit : '');
+        }
+        if (type === 'limit_nlt') {
+            const val = (80 + Math.random() * 10).toFixed(1);
+            return 'NLT ' + val + (field.unit ? ' ' + field.unit : '');
+        }
+
+        if (label.includes('assay')) return '95.0 – 105.0 % of label claim';
+        if (label.includes('dissolution')) return 'NLT 80 % in 30 minutes';
+        if (label.includes('identification')) return 'Conforms to reference standard';
+        if (label.includes('loss on drying')) return 'NMT 2.0 % w/w';
+        if (label.includes('related substances')) return 'NMT 0.5 % individual, 1.0 % total';
+        if (label.includes('description')) return 'Should comply with appearance requirement';
+        return 'As per approved specification';
+    }
+
+    // Helper function to generate dummy remarks
+    function generateDummyRemark(field, dummyValue) {
+        const type = field.type || 'text';
+        if (type === 'passfail') return dummyValue === 'Pass' ? 'Meets requirement' : 'Does not meet requirement';
+        if (type === 'numeric_unit') return 'Within limits';
+        if (type === 'limit_nmt' || type === 'limit_nlt') return 'Within specified limit';
+        if (type === 'compliance') return dummyValue === 'Complies' ? 'Accept' : 'Investigate';
+        if (type === 'signature_block') return 'Authorized signatory';
+        return 'Complies';
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(str) {
+        if (str == null) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // Print COA function
+    function printCoa() {
+        const printContent = document.getElementById('coaPreview');
+        if (!printContent) {
+            notifyUser('No COA to print', 'warning');
+            return;
+        }
+
+        const originalContents = document.body.innerHTML;
+        const printWindow = window.open('', '', 'height=800,width=800');
+
+        printWindow.document.write('<html><head><title>Certificate of Analysis</title>');
+        printWindow.document.write('<style>');
+        printWindow.document.write(`
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .coa-preview { background: white; padding: 20px; }
+        .coa-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .coa-header h2 { margin: 10px 0; text-transform: uppercase; letter-spacing: 2px; }
+        .coa-header .subtitle { font-size: 14px; color: #555; }
+        .coa-header .regulatory-tags { font-size: 12px; color: #555; margin-top: 5px; }
+        .coa-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; font-size: 13px; }
+        .coa-meta-item .label { font-weight: 600; margin-right: 5px; }
+        .coa-section { margin-top: 20px; page-break-inside: avoid; }
+        .coa-section h4 { font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .coa-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .coa-table th, .coa-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+        .coa-table th { background: #f5f5f5; font-weight: 600; }
+        .coa-footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; text-align: center; color: #555; }
+        @media print {
+            body { margin: 0; }
+            .coa-section { page-break-inside: avoid; }
+        }
+    `);
+        printWindow.document.write('</style></head><body>');
+        printWindow.document.write(printContent.outerHTML);
+        printWindow.document.write('</body></html>');
+
+        printWindow.document.close();
+        printWindow.focus();
+
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 250);
+    }
+
+    // Export COA to PDF function
+    function exportCoaToPdf() {
+        const element = document.getElementById('coaPreview');
+        if (!element) {
+            notifyUser('No COA to export', 'warning');
+            return;
+        }
+
+        // Check if html2pdf is loaded
+        if (typeof html2pdf === 'undefined') {
+            notifyUser('PDF library not loaded. Please include html2pdf.js', 'error');
+            return;
+        }
+
+        const template = window.currentCoaTemplate;
+        const filename = 'COA-' + (template?.name || 'template') + '-' + new Date().getTime() + '.pdf';
+
+        const opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save();
+    }
+    // generateCoaPanel.js end
+
+
+    // editCoaTemplatePanel.js start
+    $(document).ready(function(){
+        setReadOnlyMode();
+        $('.editRequestBtn').on('click', function() {
+            isEditMode = true;
+            setEditMode();
+            $('.editRequestBtn').hide();
+            $('#saveUpdateTestingBtn').show();
+        });
+        $('#addSectionBtn').on('click',function(){
+            const input = document.getElementById('sectionNameInput');
+            const sectionName = input.value.trim();
+
+            if (sectionName) {
+                sections.push({
+                    name: sectionName,
+                    fields: []
+                });
+                selectedSectionIndex = sections.length - 1;
+                renderSections();
+                renderFields();
+                input.value = '';
+            }
+        });
+        $('#addFieldBtn').on('click', function() {
+            if (selectedSectionIndex === null) {
+                notifyUser('Please select a section first', 'warning');
+                return;
+            }
+
+            const label = $('#fieldLabelInput').val().trim();
+            const type = $('#fieldTypeSelect').val();
+            const unit = $('#fieldUnitInput').val().trim();
+
+            if (label) {
+                sections[selectedSectionIndex].fields.push({
+                    label: label,
+                    type: type,
+                    unit: unit || '-'
+                });
+                renderSections();
+                renderFields();
+
+                $('#fieldLabelInput').val('');
+                $('#fieldUnitInput').val('');
+                $('#fieldTypeSelect').val('text').trigger('change');
+            }
+        });
+        $('#saveUpdateTestingBtn').on('click', function() {
+            updateReportTemplate();
+        });
+
+        $('.showAllRequestsOnCancel').on('click', function() {
+            if(isEditMode) {
+                isEditMode = false;
+                setReadOnlyMode();
+                $('#saveUpdateTestingBtn').hide();
+                $('.editRequestBtn').show();
+            }
+            setView('all');
+        });
+
+        $('#allCoaTable').on('click', '.selectRequestBtn', function() {
+            var currentId = String($(this).data('id') || $(this).attr('id'));
+            currentRequestId = currentId;
+            window.currentRequestId = currentId;
+            isEditMode = false;
+
+            var match = recordList.find(function(item) { return String(item.id) === currentId; });
+            if (!match) return;
+
+            window.currentCoaTemplate = match;
+            $('#editCoaTemplatePanel input[name="name"]').val(match.name || '');
+            $('#editCoaTemplatePanel input[name="version"]').val(match.version || '');
+            $('#editCoaTemplatePanel input[name="tags"]').val(match.tags || '');
+            $('#editCoaTemplatePanel textarea[name="header"]').val(match.header || '');
+            $('#editCoaTemplatePanel textarea[name="footer"]').val(match.footer || '');
+
+            // Parse and load existing fields
+            sections = [];
+            selectedSectionIndex = null;
+
+            if(match.fields) {
+                try {
+                    var fieldsData = typeof match.fields === 'string' ? JSON.parse(match.fields) : match.fields;
+
+                    var sectionMap = {};
+                    $.each(fieldsData, function(idx, field) {
+                        if(!sectionMap[field.section]) {
+                            sectionMap[field.section] = [];
+                        }
+
+                        if (field.fieldType === 'section_marker' || field.fieldLabel === '__SECTION_ONLY__') {
+                            return;
+                        }
+
+                        sectionMap[field.section].push({
+                            label: field.fieldLabel,
+                            type: field.fieldType,
+                            unit: field.unit
+                        });
+                    });
+
+                    $.each(sectionMap, function(sectionName, fields) {
+                        sections.push({
+                            name: sectionName,
+                            fields: fields
+                        });
+                    });
+
+                    if (sections.length > 0) {
+                        selectedSectionIndex = 0;
+                    }
+
+                    renderSections();
+                    renderFields();
+                } catch(e) {
+                    console.error('Error parsing fields:', e);
+                }
+            }
+
+            setReadOnlyMode();
+            $('#saveUpdateTestingBtn').hide();
+            $('.editRequestBtn').show();
+
+            setView('edit');
+        });
+    });
+    function setEditMode() {
+        $('#editCoaTemplatePanel .newCoaInput').prop('readonly', false).prop('disabled', false);
+        $('#editCoaTemplatePanel #sectionNameInput').prop('readonly', false).prop('disabled', false);
+        $('#editCoaTemplatePanel #fieldLabelInput').prop('readonly', false).prop('disabled', false);
+        $('#editCoaTemplatePanel #fieldTypeSelect').prop('disabled', false);
+        $('#editCoaTemplatePanel #fieldUnitInput').prop('readonly', false).prop('disabled', false);
+        $('#editCoaTemplatePanel #addSectionBtn').prop('disabled', false);
+        $('#editCoaTemplatePanel #addFieldBtn').prop('disabled', false);
+        $('#editCoaTemplatePanel .section-list button').prop('disabled', false);
+        $('#editCoaTemplatePanel #fieldsTableBody button').prop('disabled', false);
+        $('#editCoaTemplatePanel .section-list li').css('pointer-events', 'auto');
+    }
+    function setReadOnlyMode() {
+        $('#editCoaTemplatePanel .newCoaInput').prop('readonly', true);
+        $('#editCoaTemplatePanel #sectionNameInput').prop('readonly', true);
+        $('#editCoaTemplatePanel #fieldLabelInput').prop('readonly', true);
+        $('#editCoaTemplatePanel #fieldTypeSelect').prop('disabled', true);
+        $('#editCoaTemplatePanel #fieldUnitInput').prop('readonly', true);
+        $('#editCoaTemplatePanel #addSectionBtn').prop('disabled', true);
+        $('#editCoaTemplatePanel #addFieldBtn').prop('disabled', true);
+        $('#editCoaTemplatePanel .section-list button').prop('disabled', true);
+        $('#editCoaTemplatePanel #fieldsTableBody button').prop('disabled', true);
+        $('#editCoaTemplatePanel .section-list li').css('pointer-events', 'auto');
+    }
+    function renderSections() {
+        const list = $('#sectionList');
+        list.empty();
+        $.each(sections, function(index, section) {
+            const li = $('<li></li>');
+            li.addClass(selectedSectionIndex === index ? 'active' : '');
+            li.html(`
+            <span>${section.name} (${section.fields.length} fields)</span>
+            <button class="delete-section-btn" data-index="${index}" ${!isEditMode ? 'disabled' : ''}>Delete</button>
+        `);
+            li.on('click', function(e) {
+                if ($(e.target).hasClass('delete-section-btn')) {
+                    return;
+                }
+                selectSection(index);
+            });
+            list.append(li);
+        });
+        $('.delete-section-btn').on('click', function(e) {
+            e.stopPropagation();
+            if(isEditMode) {
+                deleteSection($(this).data('index'));
+            }
+        });
+        if (selectedSectionIndex !== null && sections[selectedSectionIndex]) {
+            $('#fieldsSectionHint').text(`Adding fields to: ${sections[selectedSectionIndex].name}`);
+        } else {
+            $('#fieldsSectionHint').text('Select a section above to add fields.');
+        }
+        $('.section-list li').css('pointer-events', 'auto');
+    }
+    function selectSection(index) {
+        selectedSectionIndex = index;
+        renderSections();
+        renderFields();
+    }
+    function renderFields() {
+        const tbody = $('#fieldsTableBody');
+        tbody.empty();
+
+        if (selectedSectionIndex !== null && sections[selectedSectionIndex]) {
+            $.each(sections[selectedSectionIndex].fields, function(index, field) {
+                const tr = $('<tr></tr>');
+                tr.html(`
+                <td>${field.label}</td>
+                <td>${field.type}</td>
+                <td>${field.unit || '-'}</td>
+                <td class="align-right">
+                    <button class="btn btn-sm btn-danger delete-field-btn" data-index="${index}" ${!isEditMode ? 'disabled' : ''}>Delete</button>
+                </td>
+            `);
+                tbody.append(tr);
+            });
+            $('.delete-field-btn').on('click', function() {
+                if(isEditMode) {
+                    deleteField($(this).data('index'));
+                }
+            });
+        }
+    }
+    function deleteSection(index) {
+        if(!isEditMode) return;
+        sections.splice(index, 1);
+        if (selectedSectionIndex === index) {
+            selectedSectionIndex = null;
+        } else if (selectedSectionIndex > index) {
+            selectedSectionIndex--;
+        }
+        renderSections();
+        renderFields();
+    }
+    function deleteField(index) {
+        if(!isEditMode) return;
+        sections[selectedSectionIndex].fields.splice(index, 1);
+        renderSections();
+        renderFields();
+    }
+    window.deleteSection = deleteSection;
+    window.deleteField = deleteField;
+    function toggleStandardSection(element) {
+        const card = $(element).closest('.section-card');
+        card.toggleClass('collapsed');
+    }
+    // editCoaTemplatePanel.js end
+</script>

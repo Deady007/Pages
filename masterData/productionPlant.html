@@ -1,0 +1,389 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #allPlantTableDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #allPlantTableDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    .qa-white-panel .selectRecordBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    /* Ensure the DataTables search input has a visible border */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-draft { background: #f3f4f6; color: #6b7280; }
+    .status-under-review { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fecaca; color: #991b1b; }
+</style>
+<!-- allPlantPanel.html     Start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allPlantPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Production Plant <small>Master Data</small></h5>
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;">
+                        <button type="button" class="btn btn-sm btn-secondary newPlantBtn"><i data-lucide="plus"></i> New Plant</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px;">
+                        <i class="ti ti-loader ti-spin fs-22"></i>
+                        <div style="margin-top: 10px;">Loading categories...</div>
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+                    <div id="debugInfo" style="display: none; padding: 10px; background: #f8f9fa; margin: 10px 0;">
+                        <pre></pre>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover dataTables" id="allPlantTableDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allPlantTable"></tbody>
+                        </table>
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- allPlantPanel.html     End -->
+
+
+
+
+
+
+<!-- editPlantPanel.html    Start -->
+ <div class="row animated fadeInRight aasaanPanel" id="editPlantPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Edit <small>Plant</small></h5>
+                
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box editPlantCancelBtn">
+                        <i data-lucide="x"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm editPlantEditBtn">
+                        <i data-lucide="pencil"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm savePlantBtn" style="display:none;">
+                        <i data-lucide="check"></i> Save
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm submitForApprovalBtn" style="display:none;">
+                        <i data-lucide="send"></i> Submit For Approval
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm approvePlantBtn" style="display:none;">
+                        <i data-lucide="check-check"></i> Approve
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm rejectPlantBtn" style="display:none;">
+                        <i data-lucide="x-circle"></i> Reject
+                    </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="editPlantObj">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control editPlantInput" name="name" placeholder="Enter Name" disabled required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Status</label>
+                                <div id="editPlantStatus"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="editPlantId" name="id" class="editPlantInput"/>
+                        <input type="hidden" id="editPlantProcessStatus" value=""/>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- editPlantPanel.html    End -->
+
+
+
+
+
+
+<!-- newPlantPanel.html     Start -->
+ <div class="row animated fadeInRight aasaanPanel" id="AddPlant" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>New <small>Plant</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i data-lucide="x"></i> Close </button>
+                    <button type="button" class="btn btn-secondary btn-sm newPlantSaveBtn"><i data-lucide="check"></i> Save </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="stObj" >
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control plantInput"  name="name" placeholder="Enter Name" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- newPlantPanel.html     End -->
+
+<!--rejectModal-->
+<div class="modal fade" id="rejectPlantModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Plant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label>Rejection Comments <span style="color: red;">*</span></label>
+                    <textarea class="form-control" id="rejectPlantComments" rows="3" placeholder="Please provide the reason for rejection..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="confirmRejectPlantBtn">Confirm Rejection</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+<script>
+
+lucide.createIcons();
+var recordList = [];
+
+function getStatusBadge(status) {
+    var s = status || 'Draft';
+    var cls = 'status-draft';
+    if (s === 'Under Review') cls = 'status-under-review';
+    else if (s === 'Approved') cls = 'status-approved';
+    else if (s === 'Rejected') cls = 'status-rejected';
+    return '<span class="status-badge ' + cls + '">' + s + '</span>';
+}
+
+function renderPlantTable() {
+    if ($.fn.DataTable.isDataTable('#allPlantTableDataTable')) {
+        $('#allPlantTableDataTable').DataTable().destroy();
+    }
+    var tableBody = document.getElementById('allPlantTable');
+    tableBody.innerHTML = '';
+
+    recordList.forEach(function (plant) {
+        var row = document.createElement('tr');
+        row.innerHTML =
+            '<td><a href="javascript:void(0);" class="selectRecordBtn" data-id="' + plant.id + '">' + (plant.name || '') + '</a></td>' +
+            '<td>' + getStatusBadge(plant.processStatus || plant.ProcessStatus) + '</td>';
+        tableBody.appendChild(row);
+    });
+
+    new DataTable('#allPlantTableDataTable');
+}
+
+function loadPlantRecords() {
+    var request = { fields: 'Id;Name;ProcessStatus', conditions: [], logic: '' };
+    var postUrl = JSUTIL.getUrl('/data/Plant/list');
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(request), function (response) {
+        recordList = Array.isArray(response) ? response : [];
+        renderPlantTable();
+    }, function () {
+        recordList = [];
+        renderPlantTable();
+    });
+}
+
+// ── allPlantPanel ──────────────────────────────────────────────────────────
+
+$(document).ready(function () {
+    $('#allPlantPanel').show();
+    loadPlantRecords();
+});
+
+$(document).on('click', '.newPlantBtn', function () {
+    $('#AddPlant').show();
+    $('#allPlantPanel').hide();
+    lucide.createIcons();
+});
+
+// ── newPlantPanel ──────────────────────────────────────────────────────────
+
+$(document).on('click', '.newPlantSaveBtn', function () {
+    var name = $('input.plantInput[name="name"]').val().trim();
+    if (!name) { JSUTIL.buildErrorModal('Plant name is required.'); return; }
+    var postUrl = JSUTIL.getUrl('/data/Plant/create');
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify({ name: name }), function (response) {
+        console.log('Plant created:', response);
+        location.reload();
+    });
+});
+
+$(document).on('click', '.newRecordCancelBtn', function () {
+    $('#AddPlant').hide();
+    $('#allPlantPanel').show();
+});
+
+// ── editPlantPanel ─────────────────────────────────────────────────────────
+
+var currentRecordId = '';
+
+function updateEditPanelButtons(status) {
+    var s = status || 'Draft';
+    $('#editPlantProcessStatus').val(s);
+    $('#editPlantStatus').html(getStatusBadge(s));
+
+    $('.editPlantEditBtn, .savePlantBtn, .submitForApprovalBtn, .approvePlantBtn, .rejectPlantBtn').hide();
+
+    if (s === 'Draft' || s === 'Rejected') {
+        $('.editPlantEditBtn').show();
+        $('.submitForApprovalBtn').show();
+    } else if (s === 'Under Review') {
+        $('.approvePlantBtn').show();
+        $('.rejectPlantBtn').show();
+    }
+    // Approved → only Close shown
+    $('.editPlantInput').prop('disabled', true);
+    lucide.createIcons();
+}
+
+// Open edit panel
+$(document).on('click', '#allPlantTable .selectRecordBtn', function () {
+    currentRecordId = $(this).data('id');
+    var plant = recordList.find(function (p) { return String(p.id) === String(currentRecordId); });
+    if (!plant) return;
+    $('.editPlantInput[name="name"]').val(plant.name || '');
+    $('#plantName').text(plant.name || '');
+    updateEditPanelButtons(plant.processStatus || plant.ProcessStatus);
+    $('#allPlantPanel').hide();
+    $('#editPlantPanel').show();
+});
+
+// Enable editing
+$(document).on('click', '.editPlantEditBtn', function () {
+    var status = $('#editPlantProcessStatus').val();
+    if (status === 'Under Review' || status === 'Approved') return;
+    $('.editPlantInput').prop('disabled', false);
+    $('.savePlantBtn').show();
+    $('.editPlantEditBtn').hide();
+});
+
+// Save
+$(document).on('click', '.savePlantBtn', function () {
+    var name = $('.editPlantInput[name="name"]').val().trim();
+    if (!name) { JSUTIL.buildErrorModal('Plant name is required.'); return; }
+    var payload = { id: Number(currentRecordId), name: name };
+    var postUrl = JSUTIL.getUrl('/data/Plant/update/' + currentRecordId);
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (response) {
+        console.log('Plant updated:', response);
+        location.reload();
+    });
+});
+
+// Close
+$(document).on('click', '.editPlantCancelBtn', function () {
+    $('#editPlantPanel').hide();
+    $('#allPlantPanel').show();
+});
+
+// Submit For Approval
+$(document).on('click', '.submitForApprovalBtn', function () {
+    var payload = { id: Number(currentRecordId), processStatus: 'Under Review' };
+    var postUrl = JSUTIL.getUrl('/data/Plant/update/' + currentRecordId);
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function () {
+        location.reload();
+    });
+});
+
+// Approve
+$(document).on('click', '.approvePlantBtn', function () {
+    var payload = { id: Number(currentRecordId), processStatus: 'Approved' };
+    var postUrl = JSUTIL.getUrl('/data/Plant/update/' + currentRecordId);
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function () {
+        location.reload();
+    });
+});
+
+// Reject — open modal
+$(document).on('click', '.rejectPlantBtn', function () {
+    $('#rejectPlantComments').val('');
+    var modal = new bootstrap.Modal(document.getElementById('rejectPlantModal'));
+    modal.show();
+});
+
+// Confirm rejection
+$(document).on('click', '#confirmRejectPlantBtn', function () {
+    var comments = $('#rejectPlantComments').val().trim();
+    if (!comments) { JSUTIL.buildErrorModal('Rejection comments are mandatory.'); return; }
+    var payload = { id: Number(currentRecordId), processStatus: 'Rejected', remarks: comments };
+    var postUrl = JSUTIL.getUrl('/data/Plant/update/' + currentRecordId);
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function () {
+        var modal = bootstrap.Modal.getInstance(document.getElementById('rejectPlantModal'));
+        if (modal) modal.hide();
+        location.reload();
+    });
+});
+
+// Delete
+$(document).on('click', '.editPlantDeleteBtn', function () {
+    var postUrl = JSUTIL.getUrl('/data/Plant/delete?id=' + currentRecordId);
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify({}), function (response) {
+        console.log('Plant deleted:', response);
+        location.reload();
+    });
+});
+
+// editPlantPanel.js    End
+
+</script>

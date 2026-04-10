@@ -1,0 +1,861 @@
+<div class="patients-page">
+  <div class="page-section" id="view-patient-page">
+    <div class="card">
+      <div class="card-header flex justify-between items-center">
+        <div>
+          <h3 id="patientNameDisplay" style="margin-bottom: 5px">John Doe</h3>
+          <span class="text-gray-500 text-sm">
+            Patient ID:
+            <span id="patientIdDisplay" class="text-gray-500 text-sm"></span>
+          </span>
+        </div>
+        <button class="btn btn-outline" onclick="backToPatients()">
+          ← Back
+        </button>
+      </div>
+      <div class="card-body">
+        <!-- Tabs -->
+        <div class="tab-buttons">
+          <button class="tab-btn active" onclick="switchPatientTab('info')">
+            Basic Info
+          </button>
+          <button class="tab-btn" onclick="switchPatientTab('medical')">
+            Medical History
+          </button>
+          <button class="tab-btn" onclick="switchPatientTab('labs')">
+            Lab Reports
+          </button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div class="tab-content active" id="info-patient-tab">
+          <table class="table">
+            <tbody>
+              <tr>
+                <td class="w-3xs font-semibold">Age</td>
+                <td id="patientAgeDisplay">35 years</td>
+              </tr>
+              <tr>
+                <td class="w-3xs font-semibold">Gender</td>
+                <td id="patientGenderDisplay">Male</td>
+              </tr>
+              <tr>
+                <td class="w-3xs font-semibold">Weight</td>
+                <td id="patientWeightDisplay"></td>
+              </tr>
+              <tr>
+                <td class="font-semibold">Phone</td>
+                <td id="patientPhoneDisplay">9876543210</td>
+              </tr>
+              <tr>
+                <td class="font-semibold">Address</td>
+                <td id="patientAddressDisplay">123 Main Street, Ahmedabad</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tab-content" id="medical-patient-tab">
+          <div id="medicalHistoryList"></div>
+        </div>
+        <div class="tab-content" id="labs-patient-tab">
+          <table class="table">
+            <tbody id="labReportsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Patient Section -->
+  <div class="page-section" id="edit-patient-page">
+    <div class="card">
+      <div class="card-header flex justify-between items-center">
+        <h3>Edit Patient Details</h3>
+        <button class="btn btn-outline" onclick="backToPatients()">
+          ← Back
+        </button>
+      </div>
+      <div class="card-body">
+        <form id="editPatientForm" onsubmit="saveEditedPatient(event)">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="font-semibold mb-2">Patient Name</label>
+              <input
+                type="text"
+                id="editPatientName"
+                class="input"
+                required
+                placeholder="Enter full name"
+              />
+            </div>
+            <div>
+              <label class="font-semibold mb-2">Age</label>
+              <input
+                type="number"
+                id="editPatientAge"
+                class="input"
+                required
+                placeholder="Enter age"
+              />
+            </div>
+            <div>
+              <label class="font-semibold mb-2">Gender</label>
+              <select id="editPatientGender" class="input">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-semibold mb-2">Phone</label>
+              <input
+                type="text"
+                id="editPatientPhone"
+                class="input"
+                required
+                placeholder="Enter phone number"
+              />
+            </div>
+            <div>
+              <label class="font-semibold mb-2">Weight</label>
+              <input
+                type="number"
+                id="editPatientWeight"
+                class="input"
+                placeholder="Enter weight"
+              />
+            </div>
+            <div>
+              <label class="font-semibold mb-2">Email</label>
+              <input
+                type="email"
+                id="editPatientEmail"
+                class="input"
+                placeholder="Enter email"
+              />
+            </div>
+            <div class="col-span-2">
+              <label class="font-semibold mb-2">Address</label>
+              <textarea
+                id="editPatientAddress"
+                class="input"
+                placeholder="Enter address"
+              ></textarea>
+            </div>
+            <div class="col-span-2">
+              <label class="font-semibold mb-2">Complain</label>
+              <div class="flex gap-2">
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" name="editComplain" value="Ear" /> Ear
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" name="editComplain" value="Nose" /> Nose
+                </label>
+                <label class="flex items-center gap-2">
+                  <input type="checkbox" name="editComplain" value="Throat" /> Throat
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 flex justify-end gap-3">
+            <button
+              type="button"
+              class="btn btn-outline"
+              onclick="backToPatients()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Patients Page -->
+  <div class="page-content" id="patients-page">
+    <!-- Search Bar -->
+    <div class="search-bar">
+      <div class="search-container">
+        <input
+          type="text"
+          placeholder="Search Patient Name, ID or Phone..."
+          id="patientSearch"
+          oninput="searchPatients()"
+        />
+      </div>
+      <button class="btn btn-primary hide" onclick="searchPatientById()">
+        Search
+      </button>
+    </div>
+
+    <div class="display-grid">
+      <!-- Add Patient Form and Bills Table in one column -->
+      <div class="flex flex-col flex-1">
+        <div class="card fixed-height-card">
+          <div class="card-header">
+            <h3 class="card-header-title">Add Patient Queue</h3>
+          </div>
+          <div class="card-body flex-1">
+            <!-- Patient form fields same as before -->
+            <div class="form-row">
+              <div class="form-group">
+                <label>Patient Name</label>
+                <input type="text" id="addPatientQueueName" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Age</label>
+                <input type="number" id="addPatientQueueAge" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Weight</label>
+                <input type="number" id="addPatientQueueWeight" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Sex</label>
+                <select id="addPatientQueueSex" required>
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Phone</label>
+                <input
+                type="tel"
+                id="addPatientQueuePhone"
+                required
+                pattern="^\d{10}$"
+                maxlength="10"
+                placeholder="" 
+                title="Enter 10 digit phone number (digits only)"
+            />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="addPatientQueueEmail" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Address</label>
+                <textarea rows="2" id="addPatientQueueAddress"></textarea>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Complain</label>
+                <div class="flex gap-2">
+                  <label class="flex items-center gap-2">
+                    <input type="checkbox" name="complain" value="Ear" /> Ear
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input type="checkbox" name="complain" value="Nose" /> Nose
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <input type="checkbox" name="complain" value="Throat" />
+                    Throat
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pl-4 pb-4">
+            <button
+              class="btn btn-outline"
+              onclick="resetAddPatientQueueForm()"
+            >
+              Clear
+            </button>
+            <button class="btn btn-primary" onclick="savePatientOnlyAPI()">
+              Save
+            </button>
+            <button class="btn btn-secondary" onclick="savePatientToQueueAPI()">
+              Save &amp; Add to Queue
+            </button>
+          </div>
+        </div>
+        <div class="card mt-2">
+          <div class="card-header">
+            <h3 class="card-title">Bills</h3>
+          </div>
+          <div class="search-bar mt-2 mx-2">
+            <div class="search-container">
+              <input
+                type="text"
+                placeholder="Search bills..."
+                id="billSearch"
+                oninput="searchBills()"
+              />
+              <span class="clear-icon" onclick="clearBillSearch()"
+                >&#10006;</span
+              >
+            </div>
+            <select
+              id="billStatusFilter"
+              class="select-filter"
+              onchange="filterBillsByStatus()"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="partial">Partial</option>
+            </select>
+            <button class="btn btn-secondary" onclick="openNewBillModal()">
+              + Create Bill
+            </button>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Bill ID</th>
+                  <th>Patient</th>
+                  <th>Date</th>
+                  <th>Total</th>
+                  <th>Paid</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="billsTable">
+                <!-- Dynamic content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Patient Tables (right column) -->
+      <div class="pb-4 pl-4 pr-4 flex-col flex-1">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Patient In Queue</h3>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patientsInQueueTable">
+                <!-- Dynamic content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card mt-2">
+          <div class="card-header">
+            <h3 class="card-title">Today's Invoice</h3>
+          </div>
+          <div class="card-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patientsTodaysInvoiceTable">
+                <!-- Dynamic content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card mt-2">
+          <div class="card-header">
+            <h3 class="card-title">Appointments</h3>
+          </div>
+          <div class="card-body">
+            <!-- Appointments Page -->
+            <div class="search-bar">
+              <input type="date" id="appointmentDate" />
+              <button class="btn btn-primary" onclick="filterAppointments()">
+                Filter
+              </button>
+              <button
+                class="btn btn-secondary"
+                onclick="openAddAppointmentModal()"
+              >
+                + New Appointment
+              </button>
+            </div>
+
+            <div class="card-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Patient</th>
+                    <!-- <th>Doctor</th>
+                      <th>Type</th> -->
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="appointmentsTable">
+                  <!-- Dynamic content -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- View Appointment Modal -->
+          <div class="modal" id="viewAppointmentModal">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3>Appointment Details</h3>
+                <button
+                  class="close-btn"
+                  onclick="closeModal('viewAppointmentModal')"
+                >
+                  <i class="ri-close-line"></i>
+                </button>
+              </div>
+              <!-- the appointment details will be injected here-->
+              <div class="modal-body" id="viewAppointmentModalBody"></div>
+              <div class="modal-footer">
+                <button
+                  class="btn btn-outline"
+                  onclick="closeModal('viewAppointmentModal')"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add Appointment Modal -->
+          <div class="modal" id="addAppointmentModal">
+            <div
+              class="modal-content"
+              style="
+                width: 90%;
+                max-width: 1300px;
+                min-width: 640px;
+                margin: 1.5rem auto;
+              "
+            >
+              <div class="modal-header">
+                <h3>Schedule Appointment</h3>
+                <button
+                  class="close-btn"
+                  onclick="closeModal('addAppointmentModal')"
+                >
+                  <i class="ri-close-line"></i>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label>Patient</label>
+                  <select id="appointmentPatient">
+                    <option>Select Patient</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <!-- <div class="form-group">
+                    <label>Doctor</label>
+                    <select id="appointmentDoctor">
+                      <option>Dr. Smith - General</option>
+                      <option>Dr. Jones - Cardiology</option>
+                      <option>Dr. Williams - Pediatrics</option>
+                    </select>
+                  </div> -->
+                  <div class="form-group">
+                    <label>Department</label>
+                    <select id="appointmentDepartment">
+                      <option>General Medicine</option>
+                      <option>Cardiology</option>
+                      <option>Pediatrics</option>
+                      <option>Orthopedics</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Date and Time</label>
+                    <input
+                      type="datetime-local"
+                      id="appointmentDateInput"
+                      value="2025-06-01T08:30"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Type</label>
+                    <select id="appointmentType">
+                      <option>Consultation</option>
+                      <option>Follow-up</option>
+                      <option>Emergency</option>
+                    </select>
+                  </div>
+                </div>
+                <!-- <form>
+                <label for="appointment-time">Choose an appointment time: </label>
+                <input id="appointment-time" type="time" name="appointment-time" step="2" />
+              </form> -->
+                <div class="form-group">
+                  <label>Notes</label>
+                  <textarea id="appointmentNotes" rows="3"></textarea>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button
+                  class="btn btn-outline"
+                  onclick="closeModal('addAppointmentModal')"
+                >
+                  Cancel
+                </button>
+                <button class="btn btn-primary" onclick="saveAppointment()">
+                  Schedule Appointment
+                </button>
+              </div>
+            </div>
+          </div>
+    <!-- Edit appointment Modal -->
+         <!-- Edit Appointment Modal -->
+        <div class="modal" id="editAppointmentModal">
+          <div
+            class="modal-content"
+            style="
+              width: 90%;
+              max-width: 1300px;
+              min-width: 640px;
+              margin: 1.5rem auto;
+            "
+          >
+            <div class="modal-header">
+              <h3 id="editAppointmentModalTitle">Edit Appointment</h3>
+              <button
+                class="close-btn"
+                onclick="closeModal('editAppointmentModal')"
+              >
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" id="editAppointmentId" value="">
+              <div class="form-group">
+                <label>Patient</label>
+                <input
+                    type="text"
+                    id="editAppointmentPatient"
+                    placeholder="Enter patient name"
+                  />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Department</label>
+                  <input
+                    type="text"
+                    id="editAppointmentDepartment"
+                    placeholder="Enter department"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Date and Time</label>
+                  <input
+                    type="datetime-local"
+                    id="editAppointmentDateInput"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Type</label>
+                  <input
+                    type="text"
+                    id="editAppointmentType"
+                    placeholder="Enter type (e.g. Consultation)"
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Notes</label>
+                <textarea id="editAppointmentNotes" rows="3"></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                class="btn btn-outline"
+                onclick="closeModal('editAppointmentModal')"
+              >
+                Cancel
+              </button>
+              <button class="btn btn-primary" onclick="saveEditedAppointment()">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+<!-- Edit appointment Modal ends here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Billing details for patient Page -->
+<div class="page-section" id="view-billing-page">
+  <div class="card" style="min-height: 95vh">
+    <div class="card-header flex justify-between items-center">
+      <!-- <div>
+        <h3 id="patientNameDisplayBilling" style="margin-bottom: 5px">
+          Patient Name
+        </h3>
+        <span class="text-gray-500 text-sm">
+          Patient ID:
+          <span id="patientIdDisplayBilling" class="font-medium"></span>
+        </span>
+        <span class="text-gray-500 text-sm ml-4">
+          Invoice ID:
+          <span id="invoiceIdDisplayBilling" class="font-medium"></span>
+        </span>
+      </div> -->
+      <button class="btn btn-outline" onclick="backToBillings()" style="border: 1px solid #2563eb; color: #2563eb; background-color: transparent;">← Back</button>
+    </div>
+
+    <div class="card-body">
+      <!-- Bill Details Section -->
+      <div class="mb-6">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-400">
+          <i class="ri-file-list-3-line"></i> Bill Details
+        </h4>
+        <p class="text-sm text-gray-500 mb-2">
+          Date: <span id="billDateDisplay" class="font-medium"></span>
+        </p>
+      </div>
+
+      <div class="patient-details">
+      <div class="patient-info-grid-bill">
+
+        <!-- LEFT COLUMN -->
+        <div class="patient-col">
+          <div><strong>Patient Name:</strong> <span id="billPatientName"></span></div>
+          <div><strong>Address:</strong> <span id="billPatientAddress"></span></div>
+          <div><strong>Age:</strong> <span id="billPatientAge"></span></div>
+          <div><strong>Contact:</strong> <span id="billPatientPhone"></span></div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="patient-col">
+          <div><strong>Date:</strong> <span id="billDate"></span></div>
+          <div><strong>Patient ID:</strong> <span id="billPatientId"></span></div>
+          <div><strong>Invoice No:</strong> <span id="billInvoiceId"></span></div>
+          <div><strong>Weight:</strong> <span id="billPatientWeight"></span></div>
+        </div>
+
+      </div>
+    </div>
+
+
+      <!-- Charge Breakdown -->
+      <div class="mb-6 p-4 bg-gray-50 rounded-md">
+        <h4 class="text-md font-semibold mb-3 pb-2 border-b-2 border-blue-400">
+          Charge Breakdown
+        </h4>
+
+        <!-- Procedures List -->
+        <div id="billProceduresBreakdown" class="mb-3"></div>
+
+        <!-- Medicines List -->
+        <div id="billMedicinesBreakdown" class="mb-3"></div>
+
+        <!-- Consultation Charge -->
+        <div id="billConsultationBreakdown" class="mb-3"></div>
+
+        <hr class="my-3 border-gray-300" />
+
+        <!-- Total Amount -->
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-bold">Subtotal:</span>
+          <span id="billTotalAmount" class="text-xl text-blue-600 font-bold">₹0.00</span>
+        </div>
+        
+      <div class="flex justify-between items-center mt-2" style="font-size: 14px;">
+          <span class="font-bold">
+            Discount / Remarks
+            <span id="billDiscountPercentLabel" class="font-normal">(0%)</span>
+          </span>
+
+          <div style="display: flex; align-items: center;">
+            <input id="billDiscountRemarksInput" class="input font-normal" 
+            type="text" placeholder="Enter discount" style="width: 60px; font-size: 14px;" oninput="updateBillTotalWithDiscount()" />
+          </div>
+
+          <!-- Print-only -->
+          <span
+            id="billDiscountRemarks"
+            class="font-normal"
+            style="display:none; font-size: 14px;"
+          ></span>
+        </div>
+      
+          <!-- Total Amount -->
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-bold">Total:</span>
+          <span id="billTotal" class="text-xl text-blue-600 font-bold">₹0.00</span>
+        </div>
+
+      <!-- Payment Options Section -->
+      <div class="mb-6 p-4 bg-white border border-gray-200 rounded-md">
+        <h4 class="text-md font-semibold mb-4 pb-2 border-b-2 border-blue-400">
+          <i class="ri-bank-card-line"></i> Payment Options
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <!-- Payment Method -->
+          <div>
+            <label class="block font-medium mb-1">Payment Method</label>
+            <select
+              id="billingPaymentMethod"
+              class="w-full border rounded-md p-2"
+              onchange="toggleBillingPaymentFields()"
+            >
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="upi">UPI</option>
+              <option value="credit">Credit</option>
+              <option value="installment">Installment</option>
+            </select>
+          </div>
+
+          <!-- Payment Status -->
+          <div>
+            <label class="block font-medium mb-1">Payment Status</label>
+            <select
+              id="billingPaymentStatus"
+              class="w-full border rounded-md p-2"
+              onchange="toggleBillingPaidAmount()"
+            >
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="partial">Partially Paid</option>
+            </select>
+          </div>
+
+          <!-- Paid Amount (Shown only if status is partial) -->
+          <div id="billingPaidAmountContainer" class="hidden">
+            <label class="block font-medium mb-1">Paid Amount (₹)</label>
+            <input
+              type="number"
+              id="billingPaidAmount"
+              class="w-full border rounded-md p-2"
+              placeholder="Enter paid amount"
+              oninput="calculateBillingBalance()"
+            />
+          </div>
+
+          <!-- Balance Amount -->
+          <div id="billingBalanceContainer" class="hidden">
+            <label class="block font-medium mb-1">Balance Amount</label>
+            <input
+              type="text"
+              id="billingBalanceAmount"
+              class="w-full border rounded-md p-2 bg-gray-100 text-red-600 font-medium"
+              readonly
+            />
+          </div>
+
+          <!-- Credit Fields -->
+          <div id="billingCreditContainer" class="hidden">
+            <label class="block font-medium mb-1">Credit Due Date</label>
+            <input
+              type="date"
+              id="billingCreditDueDate"
+              class="w-full border rounded-md p-2"
+            />
+          </div>
+
+          <!-- Installment Fields -->
+          <div id="billingInstallmentContainer" class="hidden">
+            <label class="block font-medium mb-1">No. of Installments</label>
+            <input
+              type="number"
+              id="billingInstallments"
+              class="w-full border rounded-md p-2"
+              placeholder="Enter number of installments"
+              min="2"
+              max="12"
+              oninput="calculateInstallmentDetails()"
+            />
+          </div>
+
+          <div id="billingInstallmentAmountContainer" class="hidden">
+            <label class="block font-medium mb-1">Amount per Installment</label>
+            <input
+              type="text"
+              id="billingInstallmentAmount"
+              class="w-full border rounded-md p-2 bg-gray-100"
+              readonly
+            />
+          </div>
+
+          <div id="billingDueDateContainer" class="hidden">
+            <label class="block font-medium mb-1">First Due Date</label>
+            <input
+              type="date"
+              id="billingFirstDueDate"
+              class="w-full border rounded-md p-2"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Summary -->
+      <div class="mb-2 mt-2 p-2 bg-blue-50 rounded-md">
+        <h4 class="text-md font-semibold mb-0">Payment Summary</h4>
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p class="text-sm text-gray-600 mb-0">Total Amount</p>
+            <p id="summaryTotalAmount" class="text-lg font-bold text-blue-600">
+              ₹0.00
+            </p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-0">Paid Amount</p>
+            <p id="summaryPaidAmount" class="text-lg font-bold text-green-600">
+              ₹0.00
+            </p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-600 mb-0">Balance</p>
+            <p id="summaryBalanceAmount" class="text-lg font-bold text-red-600">
+              ₹0.00
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end gap-2">
+        <!-- <button class="btn btn-outline" onclick="printBillReceipt()">
+                    <i class="ri-printer-line"></i> Print Receipt
+                </button> -->
+        <button class="btn btn-primary" onclick="savePaymentDetails()">
+          <i class="ri-save-line"></i> Save Payment
+        </button>
+        <button class="btn btn-secondary" onclick="window.print()">
+           <i class="ri-printer-line"></i> Print
+          </button>
+      </div>
+    </div>
+  </div>
+</div>

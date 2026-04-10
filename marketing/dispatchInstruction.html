@@ -1,0 +1,1423 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/bootstrap3-typeahead.min.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+
+<style>
+    .qa-white-panel .ibox-title {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .qa-white-panel .ibox-title h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .qa-white-panel .ibox-tools {
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .qa-white-panel .ibox-content {
+        padding: 15px 20px;
+    }
+
+    /* Main dispatch list table */
+    #allDispatchInstructionPanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allDispatchInstructionPanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #allDispatchInstructionPanelTable th,
+    #allDispatchInstructionPanelTable td,
+    #releaseItemsTable th,
+    #releaseItemsTable td,
+    #editReleaseItemsTable th,
+    #editReleaseItemsTable td {
+        text-align: left !important;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* Number link style */
+    .qa-white-panel .selectDispatchInstruction {
+        color: #337ab7;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .qa-white-panel .selectDispatchInstruction:hover {
+        text-decoration: underline;
+    }
+
+    /* DataTables search input */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    /* Dark mode support */
+    [data-bs-theme="dark"] .qa-white-panel .table,
+    body.skin-dark .qa-white-panel .table,
+    body.dark-mode .qa-white-panel .table {
+        color: #c9d1d9;
+        border-color: #3a3f44;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .table> :not(caption)>*>*,
+    body.skin-dark .qa-white-panel .table> :not(caption)>*>*,
+    body.dark-mode .qa-white-panel .table> :not(caption)>*>* {
+        border-color: #3a3f44 !important;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .table thead th,
+    body.skin-dark .qa-white-panel .table thead th,
+    body.dark-mode .qa-white-panel .table thead th {
+        /* background-color: #22272b; */
+        color: #d8dee4;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .table-hover>tbody>tr:hover>*,
+    body.skin-dark .qa-white-panel .table-hover>tbody>tr:hover>*,
+    body.dark-mode .qa-white-panel .table-hover>tbody>tr:hover>* {
+        background-color: #2b3036;
+        color: #ffffff;
+    }
+
+    [data-bs-theme="dark"] div.dt-container .dt-search input,
+    body.skin-dark div.dt-container .dt-search input,
+    body.dark-mode div.dt-container .dt-search input {
+        background-color: #2c2c2e;
+        color: #c9d1d9;
+        border-color: #444 !important;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .text-muted,
+    body.skin-dark .qa-white-panel .text-muted,
+    body.dark-mode .qa-white-panel .text-muted {
+        color: #8b949e !important;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .form-control:disabled,
+    [data-bs-theme="dark"] .qa-white-panel .form-control[readonly],
+    [data-bs-theme="dark"] .qa-white-panel textarea.form-control[readonly],
+    body.skin-dark .qa-white-panel .form-control:disabled,
+    body.skin-dark .qa-white-panel .form-control[readonly],
+    body.skin-dark .qa-white-panel textarea.form-control[readonly],
+    body.dark-mode .qa-white-panel .form-control:disabled,
+    body.dark-mode .qa-white-panel .form-control[readonly],
+    body.dark-mode .qa-white-panel textarea.form-control[readonly] {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .form-control:disabled::placeholder,
+    [data-bs-theme="dark"] .qa-white-panel .form-control[readonly]::placeholder,
+    body.skin-dark .qa-white-panel .form-control:disabled::placeholder,
+    body.skin-dark .qa-white-panel .form-control[readonly]::placeholder,
+    body.dark-mode .qa-white-panel .form-control:disabled::placeholder,
+    body.dark-mode .qa-white-panel .form-control[readonly]::placeholder {
+        color: #6c757d !important;
+    }
+
+    [data-bs-theme="dark"] div.dt-container .dt-length select,
+    body.skin-dark div.dt-container .dt-length select,
+    body.dark-mode div.dt-container .dt-length select {
+        background-color: #2c2c2e;
+        color: #c9d1d9;
+        border-color: #444 !important;
+    }
+
+    [data-bs-theme="dark"] div.dt-container .dt-length,
+    [data-bs-theme="dark"] div.dt-container .dt-search,
+    [data-bs-theme="dark"] div.dt-container .dt-info,
+    [data-bs-theme="dark"] div.dt-container .dt-paging .dt-paging-button,
+    body.skin-dark div.dt-container .dt-length,
+    body.skin-dark div.dt-container .dt-search,
+    body.skin-dark div.dt-container .dt-info,
+    body.skin-dark div.dt-container .dt-paging .dt-paging-button,
+    body.dark-mode div.dt-container .dt-length,
+    body.dark-mode div.dt-container .dt-search,
+    body.dark-mode div.dt-container .dt-info,
+    body.dark-mode div.dt-container .dt-paging .dt-paging-button {
+        color: #c9d1d9 !important;
+    }
+
+    [data-bs-theme="dark"] div.dt-container .dt-paging .dt-paging-button.current,
+    [data-bs-theme="dark"] div.dt-container .dt-paging .dt-paging-button.current:hover,
+    body.skin-dark div.dt-container .dt-paging .dt-paging-button.current,
+    body.skin-dark div.dt-container .dt-paging .dt-paging-button.current:hover,
+    body.dark-mode div.dt-container .dt-paging .dt-paging-button.current,
+    body.dark-mode div.dt-container .dt-paging .dt-paging-button.current:hover {
+        background: #2b3036 !important;
+        border-color: #444 !important;
+        color: #ffffff !important;
+    }
+
+    [data-bs-theme="dark"] div.dt-container .dt-paging .dt-paging-button:hover,
+    body.skin-dark div.dt-container .dt-paging .dt-paging-button:hover,
+    body.dark-mode div.dt-container .dt-paging .dt-paging-button:hover {
+        background: #2b3036 !important;
+        border-color: #444 !important;
+        color: #ffffff !important;
+    }
+</style>
+
+<!-- allDispatchInstruction.html Start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allDispatchInstruction">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Dispatch Instructions <small>Marketing</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary newDispatchInstructionBtn">
+                            <i class="ti ti-plus me-1"></i> New Dispatch Instruction
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="table-responsive">
+                        <table id="allDispatchInstructionPanelTable" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Packing List Number</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allDispatchInstructionTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- allDispatchInstruction.html End -->
+
+
+    <!-- newDispatchInstruction.html Start -->
+
+    <div class="row aasaanpanel" id="newDispatchInstruction" style="display: none;">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header justify-content-between">
+                    <h4 class="card-title">New Dispatch Instruction</h4>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-default closeNewDispatchInstruction">
+                            <i class="ti ti-x me-1"></i>Close
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary saveNewDispatchInstruction">
+                            <i class="ti ti-check me-1"></i>Save
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form action="">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Product Release</label>
+                                    <input type="text" id="productReleaseSearch" class="form-control"
+                                        placeholder="Search by number..." autocomplete="off">
+                                    <input type="hidden" id="selectedProductReleaseId" name="productRelease.id"
+                                        class="newDispatchInstructionInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Dispatch Instruction Date</label>
+                                    <input type="text" class="form-control newDispatchInstructionInput1 datepicker"
+                                        name="dispatchDate">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">LR Number</label>
+                                    <input type="text" name="lrNumber" class="form-control newDispatchInstructionInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">LR Date</label>
+                                    <input type="text" name="lrDate"
+                                        class="form-control newDispatchInstructionInput1 datepicker">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Transporter</label>
+                                    <input type="text" class="form-control newDispatchInstructionInput"
+                                        name="transporter">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Vehicle Number</label>
+                                    <input type="text" class="form-control newDispatchInstructionInput"
+                                        name="vehicleNumber">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Customer</label>
+                                    <input type="text" class="form-control customerInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Consignee</label>
+                                    <input type="text" class="form-control consigneeInput" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Country</label>
+                                    <input type="text" class="form-control countryInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Destination Port</label>
+                                    <input type="text" class="form-control destiPortInput" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">EPO Number</label>
+                                    <input type="text" class="form-control epoNumber" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">EPO Date</label>
+                                    <input type="text" class="form-control epoDate" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Product</label>
+                                    <input type="text" class="form-control product" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="text" class="form-control quantity" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="mb-3">
+                                    <label class="form-label">UOM</label>
+                                    <input type="text" class="form-control uom" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pack Size</label>
+                                    <input type="text" class="form-control packsize" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Unit / FOB</label>
+                                    <input type="text" class="form-control unit_fob" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Total FOB In Rs.</label>
+                                    <input type="text" class="form-control totalFob" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Scheme</label>
+                                    <input type="text" class="form-control scheme" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Shipping Marks</label>
+                                    <textarea name="shippingMarks"
+                                        class="form-control newDispatchInstructionInput"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Instructions</label>
+                                    <textarea name="specialInstructions"
+                                        class="form-control newDispatchInstructionInput"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" id="releaseItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Batch Number</th>
+                                        <th>Mfg Date</th>
+                                        <th>Retest Date</th>
+                                        <th>Drum No.</th>
+                                        <th>Gross Wt</th>
+                                        <th>Tare Wt</th>
+                                        <th>Net Wt</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="releaseItemsTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">No items added yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- newDispatchInstruction.html End -->
+
+
+    <!-- editDispatchInstruction.html Start -->
+
+    <div class="row aasaanpanel" id="editDispatchInstruction" style="display: none;">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header justify-content-between">
+                    <h4 class="card-title">Edit Dispatch Instruction</h4>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-default closeEditDispatchInstruction">
+                            <i class="ti ti-x me-1"></i>Close
+                        </button>
+                        <button type="button" class="btn btn-sm btn-default editDispatchInstruction">
+                            <i class="ti ti-pencil me-1"></i>Edit
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary saveEditDispatchInstruction"
+                            style="display:none;">
+                            <i class="ti ti-check me-1"></i>Save
+                        </button>
+                        <button type="button" class="btn btn-sm btn-secondary sendToInvoiceCreation">
+                            <i class="ti ti-send me-1"></i>Send to Invoice Creation
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form action="">
+                        <input type="hidden" id="editDispatchInstructionId" name="id"
+                            class="editDispatchInstructionInput">
+                        <input type="hidden" id="oldProductReleaseId" name="oldProductReleaseId">
+
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Product Release</label>
+                                    <input type="text" id="editProductReleaseSearch" class="form-control"
+                                        placeholder="Search by number..." autocomplete="off">
+                                    <input type="hidden" id="editSelectedProductReleaseId" name="productRelease.id"
+                                        class="editDispatchInstructionInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Dispatch Instruction Date</label>
+                                    <input type="text" class="form-control editDispatchInstructionInput1 datepicker"
+                                        name="dispatchDate">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">LR Number</label>
+                                    <input type="text" name="lrNumber"
+                                        class="form-control editDispatchInstructionInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">LR Date</label>
+                                    <input type="text" name="lrDate"
+                                        class="form-control editDispatchInstructionInput1 datepicker">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Transporter</label>
+                                    <input type="text" class="form-control editDispatchInstructionInput"
+                                        name="transporter">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Vehicle Number</label>
+                                    <input type="text" class="form-control editDispatchInstructionInput"
+                                        name="vehicleNumber">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Customer</label>
+                                    <input type="text" class="form-control editCustomerInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Consignee</label>
+                                    <input type="text" class="form-control editConsigneeInput" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Country</label>
+                                    <input type="text" class="form-control editCountryInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Destination Port</label>
+                                    <input type="text" class="form-control editDestiPortInput" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">EPO Number</label>
+                                    <input type="text" class="form-control editEpoNumber" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">EPO Date</label>
+                                    <input type="text" class="form-control editEpoDate" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Product</label>
+                                    <input type="text" class="form-control editProduct" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Quantity</label>
+                                    <input type="text" class="form-control editQuantity" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <div class="mb-3">
+                                    <label class="form-label">UOM</label>
+                                    <input type="text" class="form-control editUom" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Pack Size</label>
+                                    <input type="text" class="form-control editPacksize" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Unit / FOB</label>
+                                    <input type="text" class="form-control editUnit_fob" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Total FOB In Rs.</label>
+                                    <input type="text" class="form-control editTotalFob" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Scheme</label>
+                                    <input type="text" class="form-control editScheme" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Shipping Marks</label>
+                                    <textarea name="shippingMarks"
+                                        class="form-control editDispatchInstructionInput"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-sm-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Special Instructions</label>
+                                    <textarea name="specialInstructions"
+                                        class="form-control editDispatchInstructionInput"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" id="editReleaseItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Batch Number</th>
+                                        <th>Mfg Date</th>
+                                        <th>Retest Date</th>
+                                        <th>Drum No.</th>
+                                        <th>Gross Wt</th>
+                                        <th>Tare Wt</th>
+                                        <th>Net Wt</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="editReleaseItemsTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">No items added yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- editDispatchInstruction.html End -->
+
+
+<script>
+    function initializeDispatchDatepickers($scope) {
+        if (!($scope && $scope.length)) {
+            $scope = $(document);
+        }
+
+        if (!($.fn && typeof $.fn.daterangepicker === 'function')) {
+            console.warn('daterangepicker plugin not found. Datepicker fields will remain plain text inputs.');
+            return;
+        }
+
+        var $inputs = $scope.find('.datepicker');
+        $inputs.each(function () {
+            var $input = $(this);
+
+            $input.off('.dispatchDatepicker');
+            if ($input.data('daterangepicker')) {
+                $input.data('daterangepicker').remove();
+            }
+
+            $input.daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                autoUpdateInput: false,
+                locale: { format: 'DD/MM/YYYY' },
+                opens: 'right'
+            });
+
+            $input.on('apply.daterangepicker.dispatchDatepicker', function (ev, picker) {
+                $(this).val(picker.startDate.format('DD/MM/YYYY'));
+            });
+
+            $input.on('cancel.daterangepicker.dispatchDatepicker', function () {
+                $(this).val('');
+            });
+        });
+    }
+
+    // allDispatchInstruction.js Start
+
+    $(document).ready(function () {
+        initializeDispatchDatepickers($(document));
+
+        $('.newDispatchInstructionBtn').on('click', function () {
+            $('#allDispatchInstruction').hide()
+            $('#newDispatchInstruction').show()
+            $('#editDispatchInstruction').hide()
+            initializeDispatchDatepickers($('#newDispatchInstruction'));
+        })
+        $('#allDispatchInstructionTable').empty()
+
+        JSUTIL.callAJAXGet("/api/dispatch-instructions", function (res) {
+            recordList = res || []
+            var innerhtml = ''
+            var dispatchRecordList = (typeof recordList !== 'undefined' && Array.isArray(recordList)) ? recordList : []
+            $.each(dispatchRecordList, function (i, val) {
+                var number = val.number || ''
+                var packingListNumber = (val.productRelease && val.productRelease.number) ? val.productRelease.number : ''
+                var processStatus = val.processStatus || ''
+                innerhtml += `<tr>
+            <td><a href="javascript:void(0)" class="selectDispatchInstruction">${number}</a></td><td>${packingListNumber}</td><td>${processStatus}</td>
+        </tr>`
+            })
+            $('#allDispatchInstructionTable').append(innerhtml)
+
+            var $diTable = $('#allDispatchInstructionPanelTable');
+            if ($.fn && $.fn.DataTable && $.fn.DataTable.isDataTable($diTable)) {
+                $diTable.DataTable().destroy();
+            }
+            if ($.fn && $.fn.DataTable) {
+                $diTable.DataTable({
+                    order: [],
+                    pageLength: 10
+                });
+            }
+        })
+    })
+
+    // allDispatchInstruction.js End
+
+
+    // newDispatchInstruction.js Start
+
+    // Global ProductRelease cache for search
+    var productReleaseSearchCache = null;
+
+    $(document).ready(function () {
+        // Initialize ProductRelease search
+        initializeProductReleaseSearch();
+
+        // Close panel
+        $('.closeNewDispatchInstruction').on('click', function () {
+            $('#newDispatchInstruction').hide();
+            $('#allDispatchInstruction').show();
+        });
+
+        // Save dispatch instruction
+        $('.saveNewDispatchInstruction').on('click', function () {
+            var obj = JSUTIL.buildFormDataJSON('newDispatchInstructionInput');
+            obj['processStatus'] = 'New'
+            obj['preparedBy'] = { id: FOX.employeeId }
+            obj['dispatchDate'] = toISOZ($('.newDispatchInstructionInput1[name="dispatchDate"]').val())
+            obj['lrDate'] = toISOZ($('.newDispatchInstructionInput1[name="lrDate"]').val())
+
+            JSUTIL.callAJAXGet('/api/dispatch-instructions', function (dispatchInstructionList) {
+                obj['number'] = generateNextDispatchInstructionNumber(dispatchInstructionList || []);
+
+                console.log('Dispatch Instruction obj', obj);
+
+                JSUTIL.callAJAXPost('/api/dispatch-instructions', JSON.stringify(obj), function (res) {
+                    console.log('res', res);
+                    JSUTIL.callAJAXPut('/api/product-releases/' + obj.productRelease.id, JSON.stringify({ processStatus: "Dispatch Instruction Created" }), function (res) {
+                        console.log('res', res)
+                        location.reload()
+                    })
+                });
+            }, function (error) {
+                console.error('Error fetching dispatch instructions for number generation:', error);
+            });
+        });
+    });
+
+    function toISOZ(dateStr) {
+        if (!dateStr) return null;
+
+        try {
+            const [day, month, year] = dateStr.split('/');
+            const date = new Date(Date.UTC(year, month - 1, day));
+            return date.toISOString().replace('.000', '');
+        } catch (e) {
+            console.error('Error converting date:', e);
+            return null;
+        }
+    }
+
+    function getCurrentYearSuffix() {
+        return String(new Date().getFullYear()).slice(-2);
+    }
+
+    function generateNextDispatchInstructionNumber(dispatchInstructions) {
+        var yearSuffix = getCurrentYearSuffix();
+        var pattern = new RegExp('^DI-' + yearSuffix + '-(\\d{4})$');
+        var maxSequence = 0;
+
+        (dispatchInstructions || []).forEach(function (item) {
+            var number = (item && (item.number || item.Number)) ? (item.number || item.Number) : '';
+            var match = number.match(pattern);
+
+            if (match && match[1]) {
+                var parsedSequence = parseInt(match[1], 10);
+                if (!isNaN(parsedSequence) && parsedSequence > maxSequence) {
+                    maxSequence = parsedSequence;
+                }
+            }
+        });
+
+        var nextSequence = maxSequence + 1;
+        return 'DI-' + yearSuffix + '-' + String(nextSequence).padStart(4, '0');
+    }
+
+    function initializeProductReleaseSearchInput($input, productReleases, onSelect) {
+        if (!$input || !$input.length) return;
+
+        $input.off('.dispatchSearch');
+
+        var findByText = function (text, allowSinglePartialMatch) {
+            var query = (text || '').toLowerCase().trim();
+            if (!query) return null;
+
+            var exact = productReleases.find(function (item) {
+                return item.displayLabel.toLowerCase() === query || item.numberLower === query;
+            });
+            if (exact) return exact;
+
+            if (!allowSinglePartialMatch) return null;
+
+            var partialMatches = productReleases.filter(function (item) {
+                return item.numberLower.indexOf(query) !== -1 || item.search.indexOf(query) !== -1;
+            });
+
+            return partialMatches.length === 1 ? partialMatches[0] : null;
+        };
+
+        if ($.fn && typeof $.fn.typeahead === 'function') {
+            try {
+                $input.typeahead('destroy');
+            } catch (e) { }
+
+            $input.typeahead({
+                source: function (query, process) {
+                    query = (query || '').toLowerCase();
+                    var filtered = productReleases.filter(function (item) {
+                        if (!query) return true;
+                        return item.numberLower.indexOf(query) !== -1 ||
+                            item.search.indexOf(query) !== -1;
+                    }).map(function (item) {
+                        return item.displayLabel;
+                    });
+
+                    process(filtered);
+                },
+                afterSelect: function (selectedText) {
+                    var productRelease = productReleases.find(function (p) {
+                        return p.displayLabel === selectedText;
+                    });
+                    if (productRelease && typeof onSelect === 'function') {
+                        onSelect(productRelease);
+                    }
+                },
+                minLength: 0,
+                items: 10,
+                autoSelect: true
+            });
+
+            $input.on('focus.dispatchSearch', function () {
+                $(this).trigger('keyup');
+            });
+
+            return;
+        }
+
+        console.warn('Typeahead plugin not found. Using fallback selection behavior.');
+
+        $input.on('input.dispatchSearch change.dispatchSearch', function () {
+            var selected = findByText($(this).val(), true);
+            if (selected && typeof onSelect === 'function') {
+                onSelect(selected);
+            }
+        });
+
+        $input.on('blur.dispatchSearch', function () {
+            var selected = findByText($(this).val(), false);
+            if (selected && typeof onSelect === 'function') {
+                onSelect(selected);
+            }
+        });
+    }
+
+    // Initialize ProductRelease search with typeahead
+    function initializeProductReleaseSearch() {
+        loadProductReleasesForSearch(function (productReleases) {
+            initializeProductReleaseSearchInput(
+                $('#productReleaseSearch'),
+                productReleases,
+                populateProductReleaseFields
+            );
+        });
+    }
+
+    // Load ProductReleases for search
+    function loadProductReleasesForSearch(callback) {
+        console.log('Loading ProductReleases for search...');
+
+        if (productReleaseSearchCache) {
+            if (typeof callback === 'function') {
+                callback(productReleaseSearchCache);
+            }
+            return;
+        }
+
+        var request = {
+            fields: 'Number;Instructions;TrackingNumber;Invoice.Id;TransportCompany;ExpectedPickupDate;ProductionRequest.Id;PickupArrangedBy;ReturnDate;GateEntryNumber;GateEntryTime;DeliveryVehicle;DeliveryDriver;FreightCharges;Remarks;ProcessStatus;Account.Id;ProcessStatus;EpoNumber;EpoDate;ContainerSize;PackingType;InnerPackingLabelCode;ProductionRequest.Customer.Name;ProductionRequest.Consignee.Name;ProductionRequest.DestinationCountry;ProductionRequest.DestinationPort;ProductionRequest.EpoDate;ProductionRequest.Number;ProductionRequest.Product.Name;ProductionRequest.Quantity;ProductionRequest.Uom;ProductionRequest.PackSize;ProductionRequest.PriceFob;ProductionRequest.TotalCost;ProductionRequest.SchemeInstructions',
+            conditions: [`ProcessStatus='Dispatch Instruction'`],
+            logic: "{0}"
+        };
+
+        JSUTIL.callAJAXGet('/api/product-releases?processStatus=Dispatch Instruction', function (res) {
+            console.log('ProductRelease API Response:', res);
+            console.log('Response length:', (res || []).length);
+
+            var mapped = (res || []).map(function (item) {
+                var id = item.Id || item.id;
+                var number = item.Number || item.number || '';
+                var numberLower = number.toLowerCase();
+                var displayLabel = number;
+                var searchTokens = [number, id].filter(Boolean).join(' ').toLowerCase();
+
+                console.log('Mapped item:', { id: id, number: number, displayLabel: displayLabel });
+
+                return {
+                    id: id,
+                    number: number,
+                    numberLower: numberLower,
+                    displayLabel: displayLabel,
+                    search: searchTokens,
+                    productionRequest: item.productionRequest,
+                    epoNumber: item.EpoNumber || item.epoNumber,
+                    epoDate: item.EpoDate || item.epoDate,
+                    fullData: item
+                };
+            });
+
+            productReleaseSearchCache = mapped;
+            console.log('ProductRelease cache loaded:', mapped.length, 'items');
+
+            if (typeof callback === 'function') {
+                callback(mapped);
+            }
+        }, function (error) {
+            console.error('Error loading ProductReleases:', error);
+        });
+    }
+
+    // Populate ProductRelease fields after selection
+    function populateProductReleaseFields(productRelease) {
+        console.log('Populating fields for product release:', productRelease);
+
+        $('#selectedProductReleaseId').val(productRelease.id);
+        $('#productReleaseSearch').val(productRelease.displayLabel);
+
+        var pr = productRelease.productionRequest || {};
+
+        $('.customerInput').val(pr.customer && pr.customer.name ? pr.customer.name : '');
+        $('.consigneeInput').val(pr.consignee && pr.consignee.name ? pr.consignee.name : '');
+        $('.countryInput').val(pr.destinationCountry || '');
+        $('.destiPortInput').val(pr.destinationPort || '');
+        $('.epoNumber').val(pr.number || '');
+        $('.epoDate').val(pr.epoDate || '');
+        $('.product').val(pr.product && pr.product.name ? pr.product.name : '');
+        $('.quantity').val(pr.quantity || '');
+        $('.uom').val(pr.uom || '');
+        $('.packsize').val(pr.packSize || '');
+        $('.unit_fob').val(pr.priceFob || '');
+        $('.totalFob').val(pr.totalCost || '');
+        $('.scheme').val(pr.applicationScheme || '');
+        if (pr.shippingMarks) {
+            $('.newDispatchInstructionInput[name="shippingMarks"]').val(pr.shippingMarks)
+        }
+        if (pr.specialInstructions) {
+            $('.newDispatchInstructionInput[name="specialInstructions"]').val(pr.specialInstructions)
+        }
+        populateProductReleaseItem(productRelease.id);
+    }
+
+    // Populate ProductReleaseItem table
+    function populateProductReleaseItem(productReleaseId) {
+        var obj = {
+            fields: "ProductRelease.Id;ProductLot.Id;ProductLot.BatchNumber;ManufacturingDate;RetestDate;ContainerNumber;GrossWeight;TareWeight;NetWeight;ProductLot.Product.Name",
+            conditions: [`ProductRelease.Id = '${productReleaseId}'`],
+            logic: '{0}'
+        };
+
+        var postUrl = JSUTIL.getUrl('/api/product-release-items?productReleaseId=' + productReleaseId);
+        JSUTIL.callAJAXGet(postUrl, function (response) {
+            console.log('ProductReleaseItems:', response);
+
+            var tbody = $('#releaseItemsTableBody');
+            tbody.empty();
+
+            if (!response || response.length === 0) {
+                tbody.append('<tr><td colspan="8" class="text-center text-muted">No items found</td></tr>');
+                return;
+            }
+
+            response.forEach(function (item, index) {
+                var productName = '';
+                if (item.productLot && item.productLot.product && item.productLot.product.name) {
+                    productName = item.productLot.product.name;
+                }
+
+                var batchNumber = '';
+                if (item.productLot && item.productLot.batchNumber) {
+                    batchNumber = item.productLot.batchNumber;
+                }
+
+                var mfgDate = item.manufacturingDate || item.ManufacturingDate || '';
+                var retestDate = item.retestDate || item.RetestDate || '';
+                var drumNo = item.containerNumber || item.ContainerNumber || '';
+                var grossWt = item.grossWeight || item.GrossWeight || '';
+                var tareWt = item.tareWeight || item.TareWeight || '';
+                var netWt = item.netWeight || item.NetWeight || '';
+
+                var row = '<tr>' +
+                    '<td>' + productName + '</td>' +
+                    '<td>' + batchNumber + '</td>' +
+                    '<td>' + mfgDate + '</td>' +
+                    '<td>' + retestDate + '</td>' +
+                    '<td>' + drumNo + '</td>' +
+                    '<td>' + grossWt + '</td>' +
+                    '<td>' + tareWt + '</td>' +
+                    '<td>' + netWt + '</td>' +
+                    '</tr>';
+
+                tbody.append(row);
+            });
+
+            window.currentReleaseItems = response;
+        }, function (error) {
+            console.error('Error loading ProductReleaseItems:', error);
+            $('#releaseItemsTableBody').html('<tr><td colspan="8" class="text-center text-danger">Error loading items</td></tr>');
+        });
+    }
+
+    // Remove an item from the table
+    function removeReleaseItem(index) {
+        if (window.currentReleaseItems && window.currentReleaseItems.length > index) {
+            window.currentReleaseItems.splice(index, 1);
+            var tbody = $('#releaseItemsTableBody');
+            tbody.empty();
+
+            if (window.currentReleaseItems.length === 0) {
+                tbody.append('<tr><td colspan="8" class="text-center text-muted">No items added yet</td></tr>');
+            } else {
+                window.currentReleaseItems.forEach(function (item, idx) {
+                    var productName = '';
+                    if (item.productLot && item.productLot.product && item.productLot.product.name) {
+                        productName = item.productLot.product.name;
+                    }
+
+                    var batchNumber = '';
+                    if (item.productLot && item.productLot.batchNumber) {
+                        batchNumber = item.productLot.batchNumber;
+                    }
+
+                    var mfgDate = item.manufacturingDate || item.ManufacturingDate || '';
+                    var retestDate = item.retestDate || item.RetestDate || '';
+                    var drumNo = item.containerNumber || item.ContainerNumber || '';
+                    var grossWt = item.grossWeight || item.GrossWeight || '';
+                    var tareWt = item.tareWeight || item.TareWeight || '';
+                    var netWt = item.netWeight || item.NetWeight || '';
+
+                    var row = '<tr>' +
+                        '<td>' + productName + '</td>' +
+                        '<td>' + batchNumber + '</td>' +
+                        '<td>' + mfgDate + '</td>' +
+                        '<td>' + retestDate + '</td>' +
+                        '<td>' + drumNo + '</td>' +
+                        '<td>' + grossWt + '</td>' +
+                        '<td>' + tareWt + '</td>' +
+                        '<td>' + netWt + '</td>' +
+                        '<td><button type="button" class="btn btn-xs btn-soft-danger" onclick="removeReleaseItem(' + idx + ')"><i class="ti ti-trash"></i></button></td>' +
+                        '</tr>';
+
+                    tbody.append(row);
+                });
+            }
+        }
+    }
+
+    // newDispatchInstruction.js End
+
+
+    // editDispatchInstruction.js Start
+
+    var editProductReleaseSearchCache = null;
+    var currentEditDispatchInstruction = null;
+
+    $(document).ready(function () {
+        initializeEditProductReleaseSearch();
+
+        $('.closeEditDispatchInstruction').on('click', function () {
+            $('#editDispatchInstruction').hide();
+            $('#allDispatchInstruction').show();
+            clearEditForm();
+        });
+
+        $('.saveEditDispatchInstruction').on('click', function () {
+            saveEditedDispatchInstruction();
+        });
+
+        $(document).on('click', '.selectDispatchInstruction', function () {
+            var number = $(this).text().trim();
+            loadDispatchInstructionForEdit(number);
+        });
+
+        $('.editDispatchInstruction').on('click', function () {
+            setEditMode(true);
+            $(this).hide()
+            $('.saveEditDispatchInstruction').show()
+        });
+
+        $('.sendToInvoiceCreation').on('click', function () {
+            JSUTIL.callAJAXPut('/api/dispatch-instructions/' + currentEditDispatchInstruction.id, JSON.stringify({ processStatus: "Invoice Creation In Progress" }), function (res) {
+                console.log('res', res)
+                JSUTIL.callAJAXPut('/api/product-releases/' + currentEditDispatchInstruction.productRelease.id, JSON.stringify({ processStatus: "Finalized", transportCompany: currentEditDispatchInstruction.transporter, deliveryVehicle: currentEditDispatchInstruction.vehicleNumber }), function (res) {
+                    console.log('res', res)
+                    location.reload()
+                })
+            })
+        })
+    });
+
+    function loadDispatchInstructionForEdit(number) {
+        var obj = {
+            fields: 'Id;Number;DispatchDate;LrNumber;LrDate;Transporter;VehicleNumber;ShippingMarks;SpecialInstructions;ProcessStatus;ProductRelease.Id;ProductRelease.Number;ProductRelease.EpoNumber;ProductRelease.EpoDate;ProductRelease.ProductionRequest.Id;ProductRelease.ProductionRequest.Customer.Name;ProductRelease.ProductionRequest.Consignee.Name;ProductRelease.ProductionRequest.DestinationCountry;ProductRelease.ProductionRequest.DestinationPort;ProductRelease.ProductionRequest.Number;ProductRelease.ProductionRequest.Product.Name;ProductRelease.ProductionRequest.Quantity;ProductRelease.ProductionRequest.Uom;ProductRelease.ProductionRequest.PackSize;ProductRelease.ProductionRequest.PriceFob;ProductRelease.ProductionRequest.TotalCost;ProductRelease.ProductionRequest.ApplicationScheme;ProductRelease.ProductionRequest.ShippingMarks;ProductRelease.ProductionRequest.SpecialInstructions',
+            conditions: [`Number = '${number}'`],
+            logic: '{0}'
+        };
+
+        JSUTIL.callAJAXGet('/api/dispatch-instructions/number/' + encodeURIComponent(number), function (response) {
+            var selectedDispatchInstruction = null;
+
+            if (Array.isArray(response) && response.length > 0) {
+                selectedDispatchInstruction = response[0];
+            } else if (response && typeof response === 'object') {
+                selectedDispatchInstruction = response;
+            }
+
+            if (selectedDispatchInstruction) {
+                currentEditDispatchInstruction = selectedDispatchInstruction;
+                populateEditForm(currentEditDispatchInstruction);
+                $('#allDispatchInstruction').hide();
+                $('#newDispatchInstruction').hide();
+                $('#editDispatchInstruction').show();
+                initializeDispatchDatepickers($('#editDispatchInstruction'));
+            }
+        }, function (error) {
+            console.error('Error loading dispatch instruction:', error);
+        });
+    }
+
+    function populateEditForm(dispatchInstruction) {
+        console.log('Populating edit form with:', dispatchInstruction);
+
+        $('#editDispatchInstructionId').val(dispatchInstruction.id || dispatchInstruction.Id);
+        $('#oldProductReleaseId').val(dispatchInstruction.productRelease.id || dispatchInstruction.productRelease.Id);
+        $('#editSelectedProductReleaseId').val(dispatchInstruction.productRelease.id || dispatchInstruction.productRelease.Id);
+        $('#editProductReleaseSearch').val(dispatchInstruction.productRelease.number || dispatchInstruction.productRelease.Number || '');
+
+        if (dispatchInstruction.dispatchDate || dispatchInstruction.DispatchDate) {
+            var dispatchDate = new Date(dispatchInstruction.dispatchDate || dispatchInstruction.DispatchDate);
+            $('.editDispatchInstructionInput1[name="dispatchDate"]').val(formatDateForDisplay(dispatchDate));
+        }
+
+        if (dispatchInstruction.lrDate || dispatchInstruction.LrDate) {
+            var lrDate = new Date(dispatchInstruction.lrDate || dispatchInstruction.LrDate);
+            $('.editDispatchInstructionInput1[name="lrDate"]').val(formatDateForDisplay(lrDate));
+        }
+
+        $('.editDispatchInstructionInput[name="lrNumber"]').val(dispatchInstruction.lrNumber || dispatchInstruction.LrNumber || '');
+        $('.editDispatchInstructionInput[name="transporter"]').val(dispatchInstruction.transporter || dispatchInstruction.Transporter || '');
+        $('.editDispatchInstructionInput[name="vehicleNumber"]').val(dispatchInstruction.vehicleNumber || dispatchInstruction.VehicleNumber || '');
+        $('.editDispatchInstructionInput[name="shippingMarks"]').val(dispatchInstruction.shippingMarks || dispatchInstruction.ShippingMarks || '');
+        $('.editDispatchInstructionInput[name="specialInstructions"]').val(dispatchInstruction.specialInstructions || dispatchInstruction.SpecialInstructions || '');
+
+        var pr = dispatchInstruction.productRelease.productionRequest || dispatchInstruction.productRelease.ProductionRequest || {};
+
+        $('.editCustomerInput').val(pr.customer?.name || pr.Customer?.Name || '');
+        $('.editConsigneeInput').val(pr.consignee?.name || pr.Consignee?.Name || '');
+        $('.editCountryInput').val(pr.destinationCountry || pr.DestinationCountry || '');
+        $('.editDestiPortInput').val(pr.destinationPort || pr.DestinationPort || '');
+        $('.editEpoNumber').val(pr.number || pr.Number || '');
+        $('.editEpoDate').val(pr.epoDate || pr.EpoDate || '');
+        $('.editProduct').val(pr.product?.name || pr.Product?.Name || '');
+        $('.editQuantity').val(pr.quantity || pr.Quantity || '');
+        $('.editUom').val(pr.uom || pr.Uom || '');
+        $('.editPacksize').val(pr.packSize || pr.PackSize || '');
+        $('.editUnit_fob').val(pr.priceFob || pr.PriceFob || '');
+        $('.editTotalFob').val(pr.totalCost || pr.TotalCost || '');
+        $('.editScheme').val(pr.applicationScheme || pr.ApplicationScheme || '');
+
+        if (currentEditDispatchInstruction.processStatus != 'New') {
+            $('.editDispatchInstruction').hide()
+            $('.saveEditDispatchInstruction').hide()
+            $('.sendToInvoiceCreation').hide()
+            setEditMode(false)
+        }
+        else {
+            $('.editDispatchInstruction').show()
+            $('.saveEditDispatchInstruction').hide()
+            $('.sendToInvoiceCreation').show()
+            setEditMode(false)
+        }
+
+        populateEditProductReleaseItems(dispatchInstruction.productRelease.id || dispatchInstruction.productRelease.Id);
+    }
+
+    function formatDateForDisplay(date) {
+        if (!date) return '';
+        var d = new Date(date);
+        var day = ('0' + d.getDate()).slice(-2);
+        var month = ('0' + (d.getMonth() + 1)).slice(-2);
+        var year = d.getFullYear();
+        return day + '/' + month + '/' + year;
+    }
+
+    function saveEditedDispatchInstruction() {
+        var dispatchInstructionId = $('#editDispatchInstructionId').val();
+        var oldProductReleaseId = $('#oldProductReleaseId').val();
+        var newProductReleaseId = $('#editSelectedProductReleaseId').val();
+
+        var obj = JSUTIL.buildFormDataJSON('editDispatchInstructionInput');
+        obj['dispatchDate'] = toISOZ($('.editDispatchInstructionInput1[name="dispatchDate"]').val());
+        obj['lrDate'] = toISOZ($('.editDispatchInstructionInput1[name="lrDate"]').val());
+
+        console.log('Updating Dispatch Instruction:', obj);
+
+        var productReleaseChanged = oldProductReleaseId !== newProductReleaseId;
+
+        JSUTIL.callAJAXPut('/api/dispatch-instructions/' + dispatchInstructionId, JSON.stringify(obj), function (res) {
+            console.log('Dispatch instruction updated:', res);
+
+            if (productReleaseChanged) {
+                JSUTIL.callAJAXPut('/api/product-releases/' + oldProductReleaseId,
+                    JSON.stringify({ processStatus: "Dispatch Instruction" }),
+                    function (res1) {
+                        console.log('Old product release status updated to "Dispatch Instruction":', res1);
+                        JSUTIL.callAJAXPut('/api/product-releases/' + newProductReleaseId,
+                            JSON.stringify({ processStatus: "Dispatch Instruction Created" }),
+                            function (res2) {
+                                console.log('New product release status updated to "Dispatch Instruction Created":', res2);
+                                location.reload();
+                            },
+                            function (err2) {
+                                console.error('Error updating new product release status:', err2);
+                                location.reload();
+                            }
+                        );
+                    },
+                    function (err1) {
+                        console.error('Error updating old product release status:', err1);
+                        location.reload();
+                    }
+                );
+            } else {
+                location.reload();
+            }
+        }, function (error) {
+            console.error('Error updating dispatch instruction:', error);
+        });
+    }
+
+    function initializeEditProductReleaseSearch() {
+        loadProductReleasesForEditSearch(function (productReleases) {
+            initializeProductReleaseSearchInput(
+                $('#editProductReleaseSearch'),
+                productReleases,
+                populateEditProductReleaseFields
+            );
+        });
+    }
+
+    function loadProductReleasesForEditSearch(callback) {
+        console.log('Loading ProductReleases for edit search...');
+
+        if (editProductReleaseSearchCache) {
+            if (typeof callback === 'function') {
+                callback(editProductReleaseSearchCache);
+            }
+            return;
+        }
+
+        var request = {
+            fields: 'Number;Instructions;TrackingNumber;Invoice.Id;TransportCompany;ExpectedPickupDate;ProductionRequest.Id;PickupArrangedBy;ReturnDate;GateEntryNumber;GateEntryTime;DeliveryVehicle;DeliveryDriver;FreightCharges;Remarks;ProcessStatus;Account.Id;ProcessStatus;EpoNumber;EpoDate;ContainerSize;PackingType;InnerPackingLabelCode;ProductionRequest.Customer.Name;ProductionRequest.Consignee.Name;ProductionRequest.DestinationCountry;ProductionRequest.DestinationPort;ProductionRequest.EpoDate;ProductionRequest.Number;ProductionRequest.Product.Name;ProductionRequest.Quantity;ProductionRequest.Uom;ProductionRequest.PackSize;ProductionRequest.PriceFob;ProductionRequest.TotalCost;ProductionRequest.SchemeInstructions;ProductionRequest.ShippingMarks;ProductionRequest.SpecialInstructions',
+            conditions: [`ProcessStatus='Dispatch Instruction'`],
+            logic: "{0}"
+        };
+
+        JSUTIL.callAJAXGet('/api/product-releases?processStatus=Dispatch Instruction', function (res) {
+            console.log('Edit ProductRelease API Response:', res);
+
+            var mapped = (res || []).map(function (item) {
+                var id = item.Id || item.id;
+                var number = item.Number || item.number || '';
+                var numberLower = number.toLowerCase();
+                var displayLabel = number;
+                var searchTokens = [number, id].filter(Boolean).join(' ').toLowerCase();
+
+                return {
+                    id: id,
+                    number: number,
+                    numberLower: numberLower,
+                    displayLabel: displayLabel,
+                    search: searchTokens,
+                    productionRequest: item.productionRequest || item.ProductionRequest,
+                    epoNumber: item.EpoNumber || item.epoNumber,
+                    epoDate: item.EpoDate || item.epoDate,
+                    fullData: item
+                };
+            });
+
+            editProductReleaseSearchCache = mapped;
+            console.log('Edit ProductRelease cache loaded:', mapped.length, 'items');
+
+            if (typeof callback === 'function') {
+                callback(mapped);
+            }
+        }, function (error) {
+            console.error('Error loading ProductReleases for edit:', error);
+        });
+    }
+
+    function populateEditProductReleaseFields(productRelease) {
+        console.log('Populating edit fields for product release:', productRelease);
+
+        $('#editSelectedProductReleaseId').val(productRelease.id);
+        $('#editProductReleaseSearch').val(productRelease.displayLabel);
+
+        var pr = productRelease.productionRequest || {};
+
+        $('.editCustomerInput').val(pr.customer?.name || '');
+        $('.editConsigneeInput').val(pr.consignee?.name || '');
+        $('.editCountryInput').val(pr.destinationCountry || '');
+        $('.editDestiPortInput').val(pr.destinationPort || '');
+        $('.editEpoNumber').val(pr.number || '');
+        $('.editEpoDate').val(pr.epoDate || '');
+        $('.editProduct').val(pr.product?.name || '');
+        $('.editQuantity').val(pr.quantity || '');
+        $('.editUom').val(pr.uom || '');
+        $('.editPacksize').val(pr.packSize || '');
+        $('.editUnit_fob').val(pr.priceFob || '');
+        $('.editTotalFob').val(pr.totalCost || '');
+        $('.editScheme').val(pr.applicationScheme || '');
+
+        if (pr.shippingMarks) {
+            $('.editDispatchInstructionInput[name="shippingMarks"]').val(pr.shippingMarks);
+        }
+        if (pr.specialInstructions) {
+            $('.editDispatchInstructionInput[name="specialInstructions"]').val(pr.specialInstructions);
+        }
+
+        populateEditProductReleaseItems(productRelease.id);
+    }
+
+    function populateEditProductReleaseItems(productReleaseId) {
+        var obj = {
+            fields: "ProductRelease.Id;ProductLot.Id;ProductLot.BatchNumber;ManufacturingDate;RetestDate;ContainerNumber;GrossWeight;TareWeight;NetWeight;ProductLot.Product.Name",
+            conditions: [`ProductRelease.Id = '${productReleaseId}'`],
+            logic: '{0}'
+        };
+
+        var postUrl = JSUTIL.getUrl('api/product-release-items?productReleaseId=' + productReleaseId);
+        JSUTIL.callAJAXGet(postUrl, function (response) {
+            console.log('Edit ProductReleaseItems:', response);
+
+            var tbody = $('#editReleaseItemsTableBody');
+            tbody.empty();
+
+            if (!response || response.length === 0) {
+                tbody.append('<tr><td colspan="8" class="text-center text-muted">No items found</td></tr>');
+                return;
+            }
+
+            response.forEach(function (item, index) {
+                var productName = item.productLot?.product?.name || item.ProductLot?.Product?.Name || '';
+                var batchNumber = item.productLot?.batchNumber || item.ProductLot?.BatchNumber || '';
+                var mfgDate = item.manufacturingDate || item.ManufacturingDate || '';
+                var retestDate = item.retestDate || item.RetestDate || '';
+                var drumNo = item.containerNumber || item.ContainerNumber || '';
+                var grossWt = item.grossWeight || item.GrossWeight || '';
+                var tareWt = item.tareWeight || item.TareWeight || '';
+                var netWt = item.netWeight || item.NetWeight || '';
+
+                var row = '<tr>' +
+                    '<td>' + productName + '</td>' +
+                    '<td>' + batchNumber + '</td>' +
+                    '<td>' + mfgDate + '</td>' +
+                    '<td>' + retestDate + '</td>' +
+                    '<td>' + drumNo + '</td>' +
+                    '<td>' + grossWt + '</td>' +
+                    '<td>' + tareWt + '</td>' +
+                    '<td>' + netWt + '</td>' +
+                    '</tr>';
+
+                tbody.append(row);
+            });
+
+            window.currentEditReleaseItems = response;
+        }, function (error) {
+            console.error('Error loading edit ProductReleaseItems:', error);
+            $('#editReleaseItemsTableBody').html('<tr><td colspan="8" class="text-center text-danger">Error loading items</td></tr>');
+        });
+    }
+
+    function clearEditForm() {
+        $('#editDispatchInstructionId').val('');
+        $('#oldProductReleaseId').val('');
+        $('#editSelectedProductReleaseId').val('');
+        $('#editProductReleaseSearch').val('');
+        $('.editDispatchInstructionInput').val('');
+        $('.editDispatchInstructionInput1').val('');
+        $('.editCustomerInput, .editConsigneeInput, .editCountryInput, .editDestiPortInput, .editEpoNumber, .editEpoDate, .editProduct, .editQuantity, .editUom, .editPacksize, .editUnit_fob, .editTotalFob, .editScheme').val('');
+        $('#editReleaseItemsTableBody').html('<tr><td colspan="8" class="text-center text-muted">No items added yet</td></tr>');
+        currentEditDispatchInstruction = null;
+    }
+
+    function setEditMode(enabled) {
+        $('.editDispatchInstructionInput, .editDispatchInstructionInput1')
+            .prop('disabled', !enabled);
+        $('#editProductReleaseSearch').prop('disabled', !enabled);
+    }
+
+    // editDispatchInstruction.js End
+</script>

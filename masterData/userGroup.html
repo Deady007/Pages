@@ -1,0 +1,605 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- userGroup.html Start -->
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #userGroupTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #userGroupTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    .user-list-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+
+    .user-list-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    .user-list-item.selected {
+        background-color: #e3f2fd;
+    }
+
+    .selected-users-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .selected-user-tag {
+        display: inline-flex;
+        align-items: center;
+        background-color: #e3f2fd;
+        border: 1px solid #90caf9;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 4px;
+        font-size: 12px;
+    }
+
+    .selected-user-tag .remove-user {
+        margin-left: 6px;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .selected-user-tag .remove-user:hover {
+        color: #f44336;
+    }
+
+    .member-count-badge {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+</style>
+<div class="qa-white-panel">
+
+    <div class="row animated fadeInRight aasaanPanel" id="userGroupPage">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>User Group <small>Master Data</small></h5>
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;">
+                        <button type="button" class="btn btn-sm btn-secondary newUserGroupBtn"><i
+                                data-lucide="plus"></i>
+                            New User Group</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px;">
+                        <i class="ti ti-loader ti-spin fa-2x"></i>
+                        <div style="margin-top: 10px;">Loading user groups...</div>
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+                    <div class="table-responsive">
+                        <table id="userGroupTable" class="table table-bordered table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Unique Name</th>
+                                    <th>Status</th>
+                                    <th>Members</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allUserGroupTable">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Group Modal -->
+    <div class="modal inmodal fade" id="addUserGroupModal" tabindex="-1" role="dialog"
+        aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div style="width: 100%; text-align: center;">
+                        <h4 class="modal-title" id="modalTitle" style="margin: 0;">Add User Group</h4>
+                        <small class="font-bold" style="display: block; margin-top: 4px;">Enter user group details and assign members</small>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <form id="userGroupForm">
+                        <input type="hidden" id="userGroupId" value="">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="groupName">Group Name <span class="text-danger">*</span></label>
+                                    <input type="text" placeholder="Enter group name..." 
+                                        name="groupName" class="form-control" id="groupName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="uniqueName">Unique Name <span class="text-danger">*</span></label>
+                                    <input type="text" placeholder="Enter unique name..." 
+                                        name="uniqueName" class="form-control" id="uniqueName" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>
+                                        <input type="checkbox" id="isActive" checked> Active
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Assign Users <small>(Click to add users to this group)</small></label>
+                                    <div class="input-group">
+                                        <input type="text" id="userSearch" class="form-control" 
+                                            placeholder="Search users by name or username...">
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-default" id="searchUsersBtn">
+                                                <i class="ti ti-search"></i> Search
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Available Users</label>
+                                    <div id="availableUsersList" class="selected-users-list" 
+                                        style="border: 1px solid #ddd; min-height: 150px; max-height: 250px; overflow-y: auto;">
+                                        <div style="padding: 20px; text-align: center; color: #999;">
+                                            Search for users to see available options
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Selected Users <span id="selectedCount">(0)</span></label>
+                                    <div id="selectedUsersList" class="selected-users-list" 
+                                        style="border: 1px solid #ddd; min-height: 150px; max-height: 250px; overflow-y: auto;">
+                                        <div style="padding: 20px; text-align: center; color: #999;">
+                                            No users selected
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveUserGroup">Save User Group</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Members Modal -->
+    <div class="modal inmodal fade" id="viewMembersModal" tabindex="-1" role="dialog"
+        aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div style="width: 100%; text-align: center;">
+                        <h4 class="modal-title" id="membersModalTitle" style="margin: 0;">Group Members</h4>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="membersList" class="selected-users-list" 
+                        style="border: 1px solid #ddd; min-height: 150px; max-height: 300px; overflow-y: auto;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- userGroup.html End -->
+
+<script>
+    lucide.createIcons();
+    
+    var userGroupDt = null;
+    var availableUsers = [];
+    var selectedUsers = [];
+    var currentEditGroupId = null;
+
+    function initUserGroupTable() {
+        var $table = $('#userGroupTable');
+        if (!$table.length) return;
+        
+        // Destroy existing DataTable if it exists
+        if ($.fn.DataTable.isDataTable('#userGroupTable')) {
+            $('#userGroupTable').DataTable().destroy();
+        }
+        
+        try {
+            userGroupDt = $('#userGroupTable').DataTable({
+                responsive: true,
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50, 100],
+                language: {
+                    search: '',
+                    searchPlaceholder: 'Search...',
+                    lengthMenu: 'Show _MENU_ entries'
+                }
+            });
+        } catch (e) {
+            console.error('Error initializing DataTable:', e);
+        }
+    }
+
+    function loadUserGroups() {
+        $('#loadingIndicator').show();
+        var getUrl = JSUTIL.getUrl('/api/user-groups');
+        JSUTIL.callAJAXGet(getUrl, function (response) {
+            console.log('User Groups:', response);
+            $('#loadingIndicator').hide();
+            
+            if (!response || response.length === 0) {
+                $('#allUserGroupTable').html('<tr><td colspan="5" style="text-align:center;">No user groups found</td></tr>');
+                initUserGroupTable();
+                return;
+            }
+            
+            var innerhtml = '';
+            $.each(response, function (i, val) {
+                var statusBadge = val.isActive ? 
+                    '<span class="label label-success">Active</span>' : 
+                    '<span class="label label-default">Inactive</span>';
+                
+                innerhtml += '<tr>';
+                innerhtml += '<td>' + (val.name || '') + '</td>';
+                innerhtml += '<td>' + (val.uniqueName || '') + '</td>';
+                innerhtml += '<td>' + statusBadge + '</td>';
+                innerhtml += '<td><span class="member-count-badge" style="cursor: pointer;" onclick="viewMembers(' + val.id + ', \'' + (val.name || '') + '\')">View Members</span></td>';
+                innerhtml += '<td>';
+                innerhtml += '<button class="btn btn-xs btn-primary" onclick="editUserGroup(' + val.id + ', \'' + (val.name || '') + '\', \'' + (val.uniqueName || '') + '\', ' + val.isActive + ')">';
+                innerhtml += '<i class="ti ti-pencil"></i> Edit';
+                innerhtml += '</button>';
+                innerhtml += '<button class="btn btn-xs btn-danger" onclick="deleteUserGroup(' + val.id + ')" style="margin-left:5px;">';
+                innerhtml += '<i class="ti ti-trash"></i> Delete';
+                innerhtml += '</button>';
+                innerhtml += '</td>';
+                innerhtml += '</tr>';
+            });
+            $('#allUserGroupTable').html(innerhtml);
+            initUserGroupTable();
+        }, function(error) {
+            console.error('Error loading user groups:', error);
+            $('#loadingIndicator').hide();
+            $('#errorMessage').text('Error loading user groups: ' + error).show();
+        });
+    }
+
+    function loadUsers() {
+        var getUrl = JSUTIL.getUrl('/api/users');
+        JSUTIL.callAJAXGet(getUrl, function (response) {
+            console.log('Users:', response);
+            availableUsers = response || [];
+            renderAvailableUsers('');
+        });
+    }
+
+    function renderAvailableUsers(searchTerm) {
+        var filtered = availableUsers.filter(function(u) {
+            var searchLower = searchTerm.toLowerCase();
+            var matchesSearch = searchTerm === '' || 
+                (u.displayName && u.displayName.toLowerCase().includes(searchLower)) ||
+                (u.username && u.username.toLowerCase().includes(searchLower));
+            var notSelected = !selectedUsers.some(function(su) { return su.id === u.id; });
+            return matchesSearch && notSelected;
+        });
+
+        if (filtered.length === 0) {
+            $('#availableUsersList').html('<div style="padding: 20px; text-align: center; color: #999;">No users found</div>');
+            return;
+        }
+
+        var html = '';
+        $.each(filtered, function(i, user) {
+            html += '<div class="user-list-item" onclick="addUserToSelection(' + user.id + ')">';
+            html += '<strong>' + (user.displayName || user.username) + '</strong>';
+            html += '<br><small style="color: #666;">@' + user.username + ' - ' + (user.role || 'No role') + '</small>';
+            html += '</div>';
+        });
+        $('#availableUsersList').html(html);
+    }
+
+    function renderSelectedUsers() {
+        if (selectedUsers.length === 0) {
+            $('#selectedUsersList').html('<div style="padding: 20px; text-align: center; color: #999;">No users selected</div>');
+            $('#selectedCount').text('(0)');
+            return;
+        }
+
+        var html = '';
+        $.each(selectedUsers, function(i, user) {
+            html += '<div class="selected-user-tag">';
+            html += '<span>' + (user.displayName || user.username) + '</span>';
+            html += '<span class="remove-user" onclick="removeUserFromSelection(' + user.id + ')">';
+            html += '<i class="ti ti-x"></i>';
+            html += '</span>';
+            html += '</div>';
+        });
+        $('#selectedUsersList').html(html);
+        $('#selectedCount').text('(' + selectedUsers.length + ')');
+    }
+
+    function addUserToSelection(userId) {
+        var user = availableUsers.find(function(u) { return u.id === userId; });
+        if (user && !selectedUsers.some(function(su) { return su.id === userId; })) {
+            selectedUsers.push(user);
+            renderSelectedUsers();
+            var searchTerm = $('#userSearch').val() || '';
+            renderAvailableUsers(searchTerm);
+        }
+    }
+
+    function removeUserFromSelection(userId) {
+        selectedUsers = selectedUsers.filter(function(u) { return u.id !== userId; });
+        renderSelectedUsers();
+        var searchTerm = $('#userSearch').val() || '';
+        renderAvailableUsers(searchTerm);
+    }
+
+    function loadGroupMembers(groupId, callback) {
+        var getUrl = JSUTIL.getUrl('/api/user-group-members/group/' + groupId);
+        JSUTIL.callAJAXGet(getUrl, function (response) {
+            callback(response);
+        });
+    }
+
+    function viewMembers(groupId, groupName) {
+        $('#membersModalTitle').text('Members - ' + groupName);
+        loadGroupMembers(groupId, function(members) {
+            if (!members || members.length === 0) {
+                $('#membersList').html('<div style="padding: 20px; text-align: center; color: #999;">No members in this group</div>');
+            } else {
+                var html = '';
+                $.each(members, function(i, member) {
+                    var userName = member.user ? (member.user.displayName || member.user.username || 'Unknown') : 'Unknown';
+                    html += '<div class="user-list-item">';
+                    html += '<strong>' + userName + '</strong>';
+                    html += '</div>';
+                });
+                $('#membersList').html(html);
+            }
+            var modal = new bootstrap.Modal($('#viewMembersModal')[0]);
+            modal.show();
+        });
+    }
+
+    function openAddModal() {
+        currentEditGroupId = null;
+        $('#modalTitle').text('Add User Group');
+        $('#userGroupId').val('');
+        $('#groupName').val('');
+        $('#uniqueName').val('');
+        $('#isActive').prop('checked', true);
+        selectedUsers = [];
+        renderSelectedUsers();
+        renderAvailableUsers('');
+        var modal = new bootstrap.Modal($('#addUserGroupModal')[0]);
+        modal.show();
+    }
+
+    function editUserGroup(id, name, uniqueName, isActive) {
+        currentEditGroupId = id;
+        $('#modalTitle').text('Edit User Group');
+        $('#userGroupId').val(id);
+        $('#groupName').val(name);
+        $('#uniqueName').val(uniqueName);
+        $('#isActive').prop('checked', isActive);
+        
+        // Load existing members
+        loadGroupMembers(id, function(members) {
+            selectedUsers = [];
+            if (members && members.length > 0) {
+                $.each(members, function(i, member) {
+                    if (member.user) {
+                        selectedUsers.push({
+                            id: member.user.id,
+                            username: member.user.username,
+                            displayName: member.user.displayName
+                        });
+                    }
+                });
+            }
+            renderSelectedUsers();
+            var searchTerm = $('#userSearch').val() || '';
+            renderAvailableUsers(searchTerm);
+        });
+
+        var modal = new bootstrap.Modal($('#addUserGroupModal')[0]);
+        modal.show();
+    }
+
+    function deleteUserGroup(id) {
+        if (confirm('Are you sure you want to delete this user group?')) {
+            var deleteUrl = JSUTIL.getUrl('/api/user-groups/' + id);
+            $.ajax({
+                url: deleteUrl,
+                type: 'DELETE',
+                success: function(response) {
+                    loadUserGroups();
+                },
+                error: function(xhr, status, error) {
+                    alert('Error deleting user group: ' + error);
+                }
+            });
+        }
+    }
+
+    function saveUserGroup() {
+        var groupName = $('#groupName').val().trim();
+        var uniqueName = $('#uniqueName').val().trim();
+        var isActive = $('#isActive').is(':checked');
+
+        if (groupName === '' || uniqueName === '') {
+            alert('Please enter group name and unique name');
+            return;
+        }
+
+        var userGroupData = {
+            name: groupName,
+            uniqueName: uniqueName,
+            isActive: isActive
+        };
+
+        var saveUrl = JSUTIL.getUrl('/api/user-groups');
+        var method = 'POST';
+
+        if (currentEditGroupId) {
+            saveUrl = JSUTIL.getUrl('/api/user-groups/' + currentEditGroupId);
+            method = 'PUT';
+        }
+
+        $.ajax({
+            url: saveUrl,
+            type: method,
+            contentType: 'application/json',
+            data: JSON.stringify(userGroupData),
+            success: function(response) {
+                console.log('User group saved:', response);
+                var groupId = response.id;
+                
+                // Save members if there are selected users
+                if (selectedUsers.length > 0) {
+                    saveGroupMembers(groupId, function() {
+                        $('#addUserGroupModal').modal('hide');
+                        loadUserGroups();
+                    });
+                } else {
+                    $('#addUserGroupModal').modal('hide');
+                    loadUserGroups();
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Error saving user group: ' + error);
+            }
+        });
+    }
+
+    function saveGroupMembers(groupId, callback) {
+        // First, delete all existing members for this group
+        loadGroupMembers(groupId, function(existingMembers) {
+            var deletePromises = [];
+            
+            if (existingMembers && existingMembers.length > 0) {
+                $.each(existingMembers, function(i, member) {
+                    var deleteUrl = JSUTIL.getUrl('/api/user-group-members/' + member.id);
+                    deletePromises.push($.ajax({
+                        url: deleteUrl,
+                        type: 'DELETE'
+                    }));
+                });
+                
+                $.when.apply($, deletePromises).then(function() {
+                    createGroupMembers(groupId, callback);
+                }).fail(function(error) {
+                    console.error('Error deleting existing members:', error);
+                    alert('Error saving user group members');
+                });
+            } else {
+                createGroupMembers(groupId, callback);
+            }
+        });
+    }
+
+    function createGroupMembers(groupId, callback) {
+        var createPromises = [];
+        
+        $.each(selectedUsers, function(i, user) {
+            var memberData = {
+                name: user.displayName || user.username,
+                group: { id: groupId },
+                user: { id: user.id }
+            };
+            
+            var createUrl = JSUTIL.getUrl('/api/user-group-members');
+            createPromises.push($.ajax({
+                url: createUrl,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(memberData)
+            }));
+        });
+        
+        $.when.apply($, createPromises).then(function() {
+            callback();
+        }).fail(function(error) {
+            console.error('Error creating members:', error);
+            alert('Error saving user group members');
+        });
+    }
+
+    // Event Listeners
+    $(document).ready(function () {
+        loadUserGroups();
+        loadUsers();
+        
+        // New User Group button
+        $('.newUserGroupBtn').on('click', function() {
+            openAddModal();
+        });
+        
+        // Save User Group button
+        $('#saveUserGroup').on('click', function() {
+            saveUserGroup();
+        });
+        
+        // Search users button
+        $('#searchUsersBtn').on('click', function() {
+            var searchTerm = $('#userSearch').val() || '';
+            renderAvailableUsers(searchTerm);
+        });
+        
+        // Search on enter key
+        $('#userSearch').on('keyup', function(e) {
+            if (e.key === 'Enter') {
+                var searchTerm = $(this).val() || '';
+                renderAvailableUsers(searchTerm);
+            }
+        });
+    });
+</script>

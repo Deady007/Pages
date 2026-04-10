@@ -1,0 +1,809 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #allQuestionGroupTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #allQuestionGroupTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    .qa-white-panel .selectRecordBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+    .qa-white-panel .selectQuestionGroupBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+    .btn .lucide {
+        width: 17px;           
+        height: 17px;          
+        stroke-width: 4;       
+        vertical-align: middle;
+        margin-right: 5px;    
+        padding: 2px;          
+    }
+    /* Ensure the DataTables search input has a visible border (including top) */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    /* Force table text to align left so content doesn't appear shifted right */
+    #allQuestionGroupTable th,
+    #allQuestionGroupTable td {
+        text-align: left !important;
+    }
+</style>
+<!-- allQuestionGroupPanel.html     Start -->
+<div class="qa-white-panel">
+ <div class="row animated fadeInRight aasaanPanel" id="allQuestionGrouPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>CheckPoint <small>Master Data</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-secondary newQuestionGroupBtn"><i data-lucide="plus"></i> New Question Group</button>
+                </div>
+            </div>
+            <div class="ibox-content m-b-sm border-bottom">
+                <div class="table-responsive">
+                    <table id="allQuestionGroupTable" class="table table-bordered table-hover dataTables" >
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Version</th>
+                            <th>Sequence</th>
+                        </tr>
+                        </thead>
+                        <tbody class="dataTableRecordList" id="allQuestionGroupDataTable"></tbody>
+                        
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- allQuestionGroupPanel.html    End -->
+
+
+
+
+
+
+<!-- editEngagementProcedurePanel.html     Start -->
+ <div class="row animated fadeInRight aasaanPanel " id="editEngagementProcedurePanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Edit Item</h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box editEngagementProcedureCancelBtn"><i data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-default btn-sm editEngagementProcedureEditBtn"><i data-lucide="pencil"></i> Edit</button>
+                    <button type="button" class="btn btn-secondary btn-sm editEngagementProcedureSaveBtn" style="display: none;"><i data-lucide="check"></i> Save</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form type="form"  name="editEngagementProcedureForm" id="editEngagementProcedureForm">
+                    <div class="row" id="layoutRenderer_form">
+                        <div class="col-sm-6">
+                            <div  class="form-group">
+                                <label>Name </label>
+                                <input type="text" name="body" placeholder="Enter Name" class="form-control editEngagementProcedureInput" required disabled>
+                            </div>
+                            <div class="form-group">
+                                <label >Sequence</label>
+                                <input type="number" class="form-control editEngagementProcedureInput" name="sequence" placeholder="Enter Sequence" disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select class="form-control editEngagementProcedureInput" name="type" id="editTypeofQuestion" required disabled>
+                                    <option value="">--none--</option>
+                                    <option value="Yes/No">Yes/No</option>
+                                    <option value="Attachment">Attachment</option> 
+                                </select> 
+                            </div>
+                            <div class="form-group" id="editOption" style="display: none;">
+                                <label>Option</label>
+                                <input type="text" class="form-control editEngagementProcedureInput" name="options" placeholder="Yes;No;NA" disabled> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="layoutRenderer_form">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Required</label>
+                                <input type="checkbox" class="small-checkbox editEngagementProcedureInput" name="required" value="false" onchange="updateCheckboxValue(this)" required disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Enable Comment</label>
+                                <input type="checkbox" class="small-checkbox editEngagementProcedureInput" name="enableComment" value="false" onchange="updateCheckboxValue(this)" required disabled>
+                            </div>
+                        </div>
+                        <input type="hidden" name="group.id" class="editEngagementProcedureInput" id="editEngagementProcedureId">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editEngagementPanel.html   End -->
+
+
+
+
+
+
+<!-- editQuestionGroupPanel.html    Start -->
+ <div class="row animated fadeInRight aasaanPanel " id="editQuestionGroupPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5 id="editQuestionGroupTitle"></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box editQuestionGroupCancelBtn"><i data-lucide="x"></i> Close</button>
+                    <!-- <button type="button" class="btn btn-default btn-sm editQuestionGroupEditBtn"><i data-lucide="pencil"></i> Edit</button> -->
+                    <button type="button" class="btn btn-secondary btn-sm editQuestionGroupSaveBtn" style="display: none;"><i data-lucide="check"></i> Publish</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form type="form" name="editQuestionGroupForm" id="editQuestionGroupForm">
+                    <div class="row" id="layoutRenderer_form">
+                        <div class="col-sm-6">
+                            <div  class="form-group">
+                                <label>Name of the Question Group</label>
+                                <input type="text" name="name" placeholder="Enter Name of Question Group" class="form-control editQuestionGroupInput" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Sequence</label>
+                                <input type="number" name="sequence" placeholder="Enter Sequence" class="form-control editQuestionGroupInput" disabled> 
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Version</label>
+                                <input type="number" name="version" placeholder="Enter Version" class="form-control editQuestionGroupInput" disabled>
+                            </div>
+                        </div>
+                        <input type="hidden" id="editQuestionGroupId" name="id">
+                    </div>
+                </form>
+                <hr>
+                <div class="tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="false">Items</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="tab-1" class="tab-pane active">
+                            <div class="panel-body">
+                                <div class="row" style="padding-bottom: 10px;">
+                                    <div class="col-sm-6"></div>
+                                    <div class="col-sm-6" align="right">
+                                            <button type="button" class="btn btn-default btn-sm AddQuestionsBtn"><i class="ti ti-plus"></i> Add Item</button>
+                                            <button type="button" class="btn btn-default btn-sm" id="deleteEngagementProcedures" disabled><i class="ti ti-trash"></i> Delete</button>
+                                        </div>
+                                </div>    
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Type</th>
+                                                <th>Name</th>
+                                                <th>Sequence</th>
+                                                <th>Required</th>
+                                                <th>Comment</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="EngagementProcedureDataTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editQuestionGroupPanel.html    End -->
+
+
+
+
+
+
+
+<!-- newEngagementProcedurePanel.html   Start -->
+ <div class="row animated fadeInRight aasaanPanel " id="newEngagementProcedurePanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>New Item</h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box newEngagementProcedureCancelBtn"><i data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm newEngagementProcedureSaveBtn"><i data-lucide="check"></i> Save</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form type="form"  name="newEngagementProcedureForm" id="newEngagementProcedureForm">
+                    <div class="row" id="layoutRenderer_form">
+                        <div class="col-sm-6">
+                            <div  class="form-group">
+                                <label>Name </label>
+                                <input type="text" name="body" class="form-control newEngagementProcedureInput"  placeholder="Enter name" required>
+                            </div>
+                            <div class="form-group">
+                                <label >Sequence</label>
+                                <input type="number" class="form-control newEngagementProcedureInput" name="sequence" placeholder="Enter sequence">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Type </label>
+                                <select class="form-control newEngagementProcedureInput" name="type" id="typeofQuestion" required>
+                                    <option value="">--none--</option>
+                                    <option value="Yes/No">Yes/No</option>
+                                    <option value="Attachment">Attachment</option> 
+                                </select> 
+                            </div>
+                            <div class="form-group" id="option" style="display: none;">
+                                <label>Option</label>
+                                <input type="text" class="form-control newEngagementProcedureInput" name="options" placeholder="Yes;No;NA"> 
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="layoutRenderer_form">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Required</label>
+                                <input type="checkbox" class="small-checkbox newEngagementProcedureInput" name="required" value="false" onchange="updateCheckboxValue(this)" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Enable Comment</label>
+                                <input type="checkbox" class="small-checkbox newEngagementProcedureInput" name="enableComment" value="false" onchange="updateCheckboxValue(this)" required>
+                            </div>
+                        </div>
+                        <input type="hidden" name="group.id" class="newEngagementProcedureInput" id="newEngagementProcedureId">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- newEngagementProcedurePanel.html   End -->
+
+
+
+
+
+<!-- newQuestionGroupPanel.html     Start -->
+
+<div class="row animated fadeInRight aasaanPanel " id="newQuestionGroupPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Question Group</h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box newQuestionGroupCancelBtn"><i data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm newQuestionGroupSaveBtn"><i data-lucide="check"></i> Save</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form type="form"  name="newQuestionGroupForm" id="newQuestionGroupForm">
+                    <div class="row" id="layoutRenderer_form">
+                        <div class="col-sm-6">
+                            <div  class="form-group">
+                                <label>Name of the Question Group</label>
+                                <input type="text" name="name" class="form-control newQuestionGroupInput" placeholder="Enter Name of Question Group">
+                            </div>
+                            <div class="form-group">
+                                <label>Sequence</label>
+                                <input type="number" name="sequence" class="form-control newQuestionGroupInput" placeholder="Enter Sequence">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Version</label>
+                                <input type="number" name="version" class="form-control newQuestionGroupInput" placeholder="Enter Version">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- newQuestionGroupPanel.html     End -->
+
+
+
+</div>
+
+<script>
+    // Polyfill select2 when the library is not loaded to avoid runtime errors in JSUTIL.buildFormDataJSON.
+    if (window.jQuery && window.jQuery.fn && !window.jQuery.fn.select2) {
+        window.jQuery.fn.select2 = function (arg) {
+            if (arg === 'val') {
+                return this.val();
+            }
+            return this;
+        };
+    }
+
+
+lucide.createIcons();
+
+// allQuestionGroupPanel.js     Start
+
+var recordList = [];
+function loadQuestionGroups() {
+    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/question-groups'), function (response) {
+        recordList = Array.isArray(response) ? response : [];
+        renderQuestionGroupTable(recordList);
+    }, function () {
+        recordList = [];
+        renderQuestionGroupTable([]);
+    });
+}
+function renderQuestionGroupTable(list) {
+    var innerHtml = '';
+    $.each(list, function (i, val) {
+        innerHtml += '<tr>' +
+            '<td class="itemNum"><a href="javascript:void(0);" class="selectQuestionGroupBtn" id="' + val.id + '">' + (val.name || '') + '</a></td>' +
+            '<td>' + (val.version || '') + '</td>' +
+            '<td>' + (val.sequence || '') + '</td>' +
+            '</tr>';
+    });
+    $('#allQuestionGroupDataTable').empty().append(innerHtml);
+    new DataTable('#allQuestionGroupTable');
+}
+$(document).ready(function () {
+    $('#allQuestionGrouPanel').show();
+    loadQuestionGroups();
+});
+// allQuestionGroupPanel.js     End
+
+
+
+
+
+
+    // newQuestionGroupPanel.js     Start
+
+    $(document).ready(function () {
+    $('.newQuestionGroupCancelBtn').on('click', function () {
+        $('#allQuestionGrouPanel').show();
+        $('#newQuestionGroupPanel').hide();
+    });
+
+    $('.newQuestionGroupSaveBtn').on('click', function () {
+        const newQuestionGroupPayload = JSUTIL.buildFormDataJSON('newQuestionGroupInput') || {};
+        createQuestionGroupWithDefaults(newQuestionGroupPayload);
+    });
+
+    $('.newQuestionGroupBtn').on('click', function () {
+        resetQuestionForm();
+        $('#newQuestionGroupPanel').show();
+        $('#allQuestionGrouPanel').hide();
+        $('#editQuestionGroupPanel').hide();
+        $('#newEngagementProcedurePanel').hide();
+        $('#editEngagementProcedurePanel').hide();
+    });
+});
+
+function createQuestionGroupWithDefaults(groupPayload) {
+    var postUrl = JSUTIL.getUrl('/api/question-groups');
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(groupPayload), function (response) {
+        handleQuestionGroupCreated(response, groupPayload);
+    }, function () {
+        notifyQuestionGroup('error', 'Unable to create question group. Please try again.');
+    });
+}
+
+function handleQuestionGroupCreated(response, requestPayload) {
+    var createdGroup = normalizeQuestionGroupResponse(response, requestPayload);
+    if (!createdGroup.id) {
+        notifyQuestionGroup('error', 'Question group created but no identifier returned. Reloading to refresh data.');
+        location.reload();
+        return;
+    }
+
+    notifyQuestionGroup('info', 'Adding default checklist questions...');
+    createDefaultQuestionsForGroup(createdGroup, function (wasSuccessful) {
+        if (!wasSuccessful) {
+            notifyQuestionGroup('warning', 'Default questions could not be added automatically. Please review them in the editor.');
+        } else {
+            notifyQuestionGroup('success', 'Question group and default questions created.');
+        }
+        openQuestionGroupEditor(createdGroup);
+    });
+}
+
+function createDefaultQuestionsForGroup(group, done) {
+    var defaults = getQaDefaultQuestions();
+    if (!defaults.length) {
+        done(false);
+        return;
+    }
+    var questions = defaults.map(function (item, index) {
+        return buildQuestionPayload(item, index, group.id);
+    });
+    var promises = questions.map(function (q) {
+        return $.ajax({
+            url: JSUTIL.getUrl('/api/questions'),
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(q)
+        });
+    });
+    $.when.apply($, promises).then(function () {
+        done(true);
+    }, function () {
+        done(false);
+    });
+}
+
+function openQuestionGroupEditor(group) {
+    if (Array.isArray(window.recordList)) {
+        var alreadyAdded = window.recordList.some(function (item) {
+            return String(item.id) === String(group.id);
+        });
+        if (!alreadyAdded) {
+            window.recordList.push(group);
+        }
+    }
+
+    if (typeof populateQuestionGroupDetail === 'function') {
+        questionGroupId = group.id;
+        populateQuestionGroupDetail(group);
+        $('#editQuestionGroupPanel').show();
+        $('#newQuestionGroupPanel').hide();
+        $('#allQuestionGrouPanel').hide();
+    } else {
+        location.reload();
+    }
+}
+
+function normalizeQuestionGroupResponse(response, fallbackPayload) {
+    var group = response && response.data ? response.data : (response || {});
+    var fallback = fallbackPayload || {};
+    return {
+        id: group.id || group.Id,
+        name: group.name || group.Name || fallback.name || '',
+        sequence: group.sequence || group.Sequence || fallback.sequence || '',
+        version: group.version || group.Version || fallback.version || ''
+    };
+}
+
+function buildQuestionPayload(questionTemplate, index, groupId) {
+    return {
+        id: questionTemplate.id || null,
+        body: questionTemplate.body,
+        options: questionTemplate.options || '',
+        type: questionTemplate.type || 'Text',
+        sequence: questionTemplate.sequence || (index + 1),
+        required: !!questionTemplate.required,
+        enableComment: questionTemplate.enableComment !== false,
+        group: { id: groupId },
+        helpText: questionTemplate.helpText || '',
+        status: questionTemplate.status || '',
+        category: questionTemplate.category || '',
+        name: '' // leave empty so remark starts blank
+    };
+}
+
+function getQaDefaultQuestions() {
+    if (typeof window.getDefaultQaChecklistQuestions === 'function') {
+        return window.getDefaultQaChecklistQuestions();
+    }
+    return [
+        { sequence: 1, body: 'QA review status of BPCR.', options: 'OK;Not OK', type: 'Yes/No' },
+        { sequence: 2, body: 'Deviation reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+        { sequence: 3, body: 'If Yes, Deviation No.:', type: 'Text' },
+        { sequence: 4, body: 'Final fate of the batch as per deviation:', type: 'Text' },
+        { sequence: 5, body: 'TCCP/CCP reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+        { sequence: 6, body: 'If Yes, TCCP/CCP No.:', type: 'Text' },
+        { sequence: 7, body: 'Final fate of the batch as per TCCP/CCP:', type: 'Text' },
+        { sequence: 8, body: 'OOS/ODT/Lab incident reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+        { sequence: 9, body: 'If Yes, OOS/ODT/Lab incident No.:', type: 'Text' },
+        { sequence: 10, body: 'Final fate of the batch as per OOS/ODT:', type: 'Text' },
+        { sequence: 11, body: 'Batch is Reprocessed/Reworked:', options: 'Yes;No', type: 'Yes/No' },
+        { sequence: 12, body: 'If Yes, Reprocessed/Reworked No.:', type: 'Text' },
+        { sequence: 13, body: 'Evaluation of Reprocessed/Reworked:', type: 'Text' },
+        { sequence: 14, body: 'Extraneous matter disc filter', options: 'OK;Not OK', type: 'Yes/No' },
+        { sequence: 15, body: 'Analytical report along with worksheet and relevant supporting data received from QC and reviewed by QA:', options: 'Yes;No', type: 'Yes/No' },
+        { sequence: 16, body: 'A.R. No. of Batch:', type: 'Text' },
+        { sequence: 17, body: 'Specification No :', type: 'Text' },
+        { sequence: 18, body: 'Certificate of analysis with remark/ Opinion :', type: 'Text' },
+        { sequence: 19, body: 'Manufacturing License', options: 'OK;Not OK', type: 'Yes/No' },
+        { sequence: 20, body: 'Meeting requirements with respect to technical or Quality Agreement /DMF/CEP', options: 'OK;Not OK;NA', type: 'Yes/No' },
+        { sequence: 21, body: 'Stability study sample required*', options: 'Yes;No;NA', type: 'Yes/No' },
+        { sequence: 22, body: 'Any Other', type: 'Text' }
+    ];
+}
+
+function notifyQuestionGroup(level, message) {
+    if (window.toastr && typeof window.toastr[level] === 'function') {
+        window.toastr[level](message);
+    } else if (console && typeof console[level] === 'function') {
+        console[level](message);
+    } else {
+        console.log(message);
+    }
+}
+
+function resetQuestionForm() {
+    $('#newQuestionGroupForm')[0].reset();
+}
+
+
+
+// newQuestionGroupPanel.js     End
+
+
+
+
+
+// editQuestionGroupPanel.js    Start
+var questionGroupId;
+var currentEnagagementId;
+var currentQuestionList;
+$(document).ready(function(){
+    $('.editQuestionGroupSaveBtn').show();
+    $('.editQuestionGroupInput').attr('readonly',false);
+    $('.editQuestionGroupInput').attr('disabled',false);
+    $('.editQuestionGroupCancelBtn').on('click',function(){
+        $('#editQuestionGroupPanel').hide();
+        $('#editEngagementProcedurePanel').hide();
+        $('#newQuestionGroupPanel').hide();
+        $('#allQuestionGrouPanel').show();
+    });
+    // $('.editQuestionGroupEditBtn').on('click',function(){
+    //     $('.editQuestionGroupInput').attr('readonly',false);
+    //     $('.editQuestionGroupInput').attr('disabled',false);
+    //     $('.editQuestionGroupSaveBtn').show();
+    //     $(this).hide();
+    // }); 
+    $('.editQuestionGroupSaveBtn').on('click', function () {
+        var questionGroupPayload = JSUTIL.buildFormDataJSON('editQuestionGroupInput');
+        var putUrl = JSUTIL.getUrl('/api/question-groups/' + questionGroupId);
+        JSUTIL.callAJAXPut(putUrl, JSON.stringify(questionGroupPayload), callbackAfterQustionGroupRequestSuccess);
+    });
+    $('#allQuestionGrouPanel tbody').on('click','.selectQuestionGroupBtn',function(){
+        $('#editQuestionGroupPanel').show();
+        $('#allQuestionGrouPanel').hide();
+        var currentId = $(this).attr('id');
+        questionGroupId = currentId;
+        $.each(recordList,function(i,val){
+            if(currentId.indexOf(val.id) >= 0){
+                populateQuestionGroupDetail(val);
+                return;
+            }
+        });
+    });
+});
+function callbackAfterQustionGroupRequestSuccess(response){
+    console.log(response);
+    location.reload();
+}
+function populateQuestionGroupDetail(val){
+    console.log(val);
+    var currentQuestionObj = val;
+    $('#editQuestionGroupTitle').text(val.name);
+    $('.editQuestionGroupInput[name="name"]').val(val.name);
+    $('.editQuestionGroupInput[name="sequence"]').val(val.sequence);
+    $('.editQuestionGroupInput[name="version"]').val(val.version);
+    $('#editQuestionGroupId').val(val.id);
+    $('#newEngagementProcedureId').val(val.id);
+    $('#editEngagementProcedureId').val(val.id);
+    
+
+    var getUrl = JSUTIL.getUrl('/api/questions/group/' + questionGroupId);
+    JSUTIL.callAJAXGet(getUrl, getQuestionDetailsCallBack, function () {
+        getQuestionDetailsCallBack([]);
+    });
+}
+function getQuestionDetailsCallBack(response){
+    console.log(response);
+    currentQuestionList = response;
+    $('#EngagementProcedureDataTable').empty();
+    var innerHtml='';
+    $.each(response,function(i,val){
+        innerHtml += '<tr>'+
+            '<td style="width: 7%;"><span class="checkbox" style="margin-top:0px;margin-bottom:0px; display: inline-block;"><input class="btn btn-warning deleteTrSelect selectEngagementProcedureBtn" type="checkbox" name="'+ val.id + '"><label></label><button type="button" class="btn btn-warning deleteTrSelect editEngagementProcedureBtn" name="' + val.id + '" style="margin-left: 5px; padding: 2px 6px; line-height: 1;"><i class="ti ti-pencil" style="font-size: 14px; line-height: 1;"></i></button></span></td>'+
+            '<td>'+ val.type +'</td>'+
+            '<td>'+ val.body + '</td>'+
+            '<td>'+ val.sequence + '</td>'+
+            '<td>'+ val.required + '</td>'+
+            '<td>'+ val.enableComment + '</td>'+
+            '</tr>';
+    });
+    $('#EngagementProcedureDataTable').append(innerHtml);
+    function toggleDeleteButton(){ 
+        let anyChecked = $(".selectEngagementProcedureBtn:checked").length > 0;
+        $('#deleteEngagementProcedures').prop('disabled', !anyChecked);
+    }
+    $('.selectEngagementProcedureBtn').on('change', toggleDeleteButton); toggleDeleteButton();
+    $('#deleteEngagementProcedures').on('click', function () {
+        var deleteIds = [];
+        $('.selectEngagementProcedureBtn:checked').each(function () {
+            deleteIds.push(Number($(this).attr('name')));
+        });
+        if (!deleteIds.length) return;
+        var promises = deleteIds.map(function (id) {
+            return $.ajax({
+                url: JSUTIL.getUrl('/api/questions/' + id),
+                method: 'DELETE'
+            });
+        });
+        $.when.apply($, promises).then(
+            callbackAfterDeleteEngagementDetails,
+            callbackAfterDeleteEngagementDetails
+        );
+    });
+    $('.editEngagementProcedureBtn').on('click', function(){
+        currentEnagagementId = $(this).attr('name');
+        $.each(response, function (i, val) {
+            if(Number(currentEnagagementId) === val.id) {
+                $('.editEngagementProcedureInput[name="body"]').val(val.body);
+                $('.editEngagementProcedureInput[name="options"]').val(val.options);
+                $('.editEngagementProcedureInput[name="type"]').val(val.type);
+                $('.editEngagementProcedureInput[name="sequence"]').val(val.sequence);
+                $('.editEngagementProcedureInput[name="required"]').prop('checked',val.required);
+                $('.editEngagementProcedureInput[name="enableComment"]').prop('checked',val.enableComment);
+                //$('#editEngagementProcedureId').val(val.id);
+            }
+        });
+        $('#editEngagementProcedurePanel').show();
+        $('#editQuestionGroupPanel').hide();
+    });
+}
+function callbackAfterDeleteEngagementDetails(response){
+    console.log(response);
+     location.reload();
+}
+// editQuestionGroupPanel.js    End
+
+
+
+
+
+
+// newEngagementProcedurePanel.js   Start
+$(document).ready(function(){
+    $('#typeofQuestion').change('click',function(){
+        if($('#typeofQuestion').val() === "Yes/No"){
+            $('#option').show();
+        }
+        else{
+            $('#option').hide();
+        }
+    })
+    $('.newEngagementProcedureCancelBtn').on('click',function(){
+        $('#editQuestionGroupPanel').show();
+    });
+    $('.AddQuestionsBtn').on('click',function(){
+        $('#newEngagementProcedurePanel').show();
+        $('#editQuestionGroupPanel').hide();
+        $('#newEngagementProcedureId').val(questionGroupId);
+    });
+    $('.newEngagementProcedureSaveBtn').on('click', function () {
+        var newQuestionPayload = JSUTIL.buildFormDataJSON('newEngagementProcedureInput');
+        var postUrl = JSUTIL.getUrl('/api/questions');
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(newQuestionPayload), callbackSuccessnewQuestionCreated);
+    });
+});
+function callbackSuccessnewQuestionCreated(response){
+    console.log(response)
+    location.reload();
+}
+function updateCheckboxValue(checkbox) {
+    checkbox.value = checkbox.checked ? true : false;
+}
+// newEngagementProcedurePanel.js   End
+
+
+
+
+
+
+
+
+// editEngagementProcedurePanel.js     Start
+
+$(document).ready(function(){
+    $('.editEngagementProcedureCancelBtn').on('click',function(){
+        // Close edit item panel and return to edit question group only.
+        $('#editEngagementProcedurePanel').hide();
+        $('#newEngagementProcedurePanel').hide();
+        $('#editQuestionGroupPanel').show();
+        $('#allQuestionGrouPanel').hide();
+    })
+    $('.editEngagementProcedureEditBtn').on('click',function(){
+        $('.editEngagementProcedureInput').attr('readonly',false);
+        $('.editEngagementProcedureInput').attr('disabled',false);
+        $('.editEngagementProcedureSaveBtn').show();
+        $(this).hide();
+    });
+    $('#editTypeofQuestion').change('click',function(){
+        if($('#editTypeofQuestion').val() === "Yes/No"){
+            $('#editOption').show();
+        }
+        else{
+            $('#editOption').hide();
+        }
+    });
+    $('.editEngagementProcedureSaveBtn').on('click', function () {
+        var editEngagementPayload = JSUTIL.buildFormDataJSON('editEngagementProcedureInput');
+        var putUrl = JSUTIL.getUrl('/api/questions/' + currentEnagagementId);
+        JSUTIL.callAJAXPut(putUrl, JSON.stringify(editEngagementPayload), callbackSuccessQuestionEditied);
+    });
+});
+function callbackSuccessQuestionEditied(response){
+    console.log(response);
+    location.reload();
+}
+function buildFormDataJSON(className) {
+    let jsonPayload = {};
+    $('.' + className).each(function () {
+        let attrName = $(this).attr('name');
+        let attrValue = $(this).val();
+        console.log(attrValue);
+        if(attrValue) {
+            if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance') || $(this).hasClass('datepickerCompliance2')) {
+                attrValue = JSUTIL.toDatabaseDate(attrValue);
+                jsonPayload[attrName] = attrValue;
+            } else if ($(this).hasClass('datetimepicker')) {
+                attrValue = JSUTIL.getDatabaseDateTime(attrValue);
+                jsonPayload[attrName] = attrValue;
+
+            } else if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
+                attrValue = $(this).prop('checked');  
+                jsonPayload[attrName] = attrValue;
+            }  else if ($(this).attr('type') && $(this).attr('type') === 'number') {
+                attrValue = Number(attrValue);
+                jsonPayload[attrName] = attrValue;
+            } else if ($(this).attr('name') && $(this).attr('name').indexOf('.') >= 0) {
+                console.log()
+                let splitArray = $(this).attr('name').split('.');
+                jsonPayload[splitArray[0]] = {};
+                jsonPayload[splitArray[0]][splitArray[1]] = Number(attrValue);
+            } else {    
+                console.log(attrName);
+                if (attrName === 'id'){
+                    attrValue = Number(attrValue);
+                jsonPayload[attrName] = attrValue;
+                }
+                jsonPayload[attrName] = attrValue;
+            }
+        }
+        else if(!attrValue){
+            if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
+                attrValue = $(this).prop('checked');  
+                jsonPayload[attrName] = attrValue;
+            }  
+        }
+    });
+    console.info(jsonPayload);
+    return jsonPayload;
+}
+// editEngagementProcedurePanel.js     End
+
+
+</script>

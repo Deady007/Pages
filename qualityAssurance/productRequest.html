@@ -1,0 +1,1533 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!--allMaterialRequestPanel.html start-->
+<style>
+   #editRecordPanel .bs-select-proxy button.dropdown-toggle:disabled,
+#editRecordPanel .bs-select-proxy button.dropdown-toggle[disabled] {
+    border: 1px solid var(--bs-border-color, #ced4da) !important;
+    box-shadow: none !important;
+}
+
+    #editRecordPanel .form-control[readonly],
+    #editRecordPanel .form-control:disabled {
+        background-color: inherit !important;
+        opacity: 1 !important;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #allMaterialRequestPanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allMaterialRequestPanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .selectRecordBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    .isKsm-hidden { display: none !important; }
+</style>
+<div class="qa-white-panel">
+    <div class="row" id="allRecordPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Material Request <small>Quality Assurance</small></h5>
+                    <div class="ibox-tools">
+                        <!-- <button type="button" class="btn btn-sm btn-secondary newRecordBtn"><i class="fa-plus fa"></i> New Material Request</button> -->
+                        <button type="button" class="btn btn-sm btn-secondary newRecordBtn">
+                            <i data-lucide="plus"></i> New Material Request
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="table-responsive">
+                        <table id="allMaterialRequestPanelTable" class="table table-bordered table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Material #</th>
+                                    <th>Name</th>
+                                    <th>Version</th>
+                                    <th>Type</th>
+                                    <th>Unit Price</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allVendorTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--allMaterialRequestPanel.html end-->
+
+
+
+
+
+
+
+    <!--editMaterialRequestPanel.html start-->
+    <style>
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+
+        .details-subtitle {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+            color: #2563eb;
+            border-left: 3px solid #2563eb;
+            padding-left: 8px;
+        }
+
+        .process-flow-container {
+            margin: 0 auto 12px;
+            padding: 10px 5px;
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        .flow-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .step-button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 18px;
+            min-width: 150px;
+            height: 32px;
+            background: #fed804;
+            border: 2px solid #fed804;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #000;
+            transition: 0.2s ease;
+            justify-content: flex-start;
+        }
+
+        .step-button .stepnumber {
+            width: 23px;
+            height: 23px;
+            background: white;
+            border: 2px solid #c5d4ff;
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .step-button p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .step-button.active {
+            background: #ff9800 !important;
+            border-color: #fed804;
+        }
+
+        .step-button.active .stepnumber {
+            border-color: #ff9800;
+        }
+
+        .step-button.completed {
+            background: #ffeeb1;
+            border-color: #fed804;
+            color: #000;
+        }
+
+        .step-button.completed .stepnumber {
+            border-color: #ff9800;
+        }
+    </style>
+    <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="process-flow-container">
+                <div class="flow-row">
+                    <button type="button" class="step-button active" data-step="1">
+                        <div class="stepnumber">1</div>
+                        <p>New</p>
+                    </button>
+                    <button type="button" class="step-button" data-step="2">
+                        <div class="stepnumber">2</div>
+                        <p>In Review</p>
+                    </button>
+                    <button type="button" class="step-button" data-step="3">
+                        <div class="stepnumber">3</div>
+                        <p>Accepted</p>
+                    </button>
+                </div>
+            </div>
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRecordTitle"></span> <small>Edit Request</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
+                                data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-default btn-sm recordEditBtn" style="display: none;"><i
+                                data-lucide="pencil"></i>Edit </button>
+                        <button type="button" class="btn btn-secondary btn-sm documentSaveAndUpdateBtn"
+                            style="display: none;"><i data-lucide="check"></i>Save </button>
+                        <button type="button" class="btn btn-default btn-sm sendApproval" style="display: none;"><i
+                                data-lucide="check"></i>Send For Approval </button>
+                        <!-- <button type="button" class="btn btn-secondary btn-sm acceptBtn" style="display: none;"><i
+                                class="fa fa-check "></i> Accept </button>
+                        <button type="button" class="btn btn-default btn-sm rejectBtn" style="display: none;"><i
+                                class="fa fa-times "></i> Reject </button> -->
+                        <button type="button" class="btn btn-secondary btn-sm" id="approveRejectResultBtn"
+                            style="display: none;"><i class="fa fa-check-double"></i> Approve / Reject </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="newObj">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Purpose</label>
+                                    <select class="form-control editRecordInput d-none" name="purpose"
+                                        id="editPurposeValue" disabled>
+                                        <option value="">--none--</option>
+                                        <option value="New">New</option>
+                                        <option value="Revised">Revised</option>
+                                    </select>
+                                    <div class="bs-select-proxy" data-for="#editPurposeValue"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6" style="display:none;">
+                                <div class="form-group">
+                                    <label>Material Name</label>
+                                    <input type="text" class="form-control editRecordInput" name="name" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6" style="display:none;">
+                                <div class="form-group">
+                                    <label>Material Code</label>
+                                    <input type="text" name="number" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6" style="display:none;">
+                                <div class="form-group">
+                                    <label>Material</label>
+                                    <input type="text" placeholder="search.."
+                                        class="typeahead_3 form-control serviceSelectInput" readonly />
+                                    <input type="hidden" name="product.id"
+                                        class="selectSearchInputAutoCompleteId1 editRecordInput" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>HSN Code</label>
+                                    <input class="form-control editRecordInput" name="hsn" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>UOM</label>
+                                    <select class="form-control editRecordInput d-none" name="uom" id="editUomSelect"
+                                        disabled>
+                                        <option value="">--none--</option>
+                                    </select>
+                                    <div class="bs-select-proxy" data-for="#editUomSelect"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Version Number</label>
+                                    <input type="text" class="form-control" name="version" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Type</label>
+                                    <select class="form-control editRecordInput d-none" name="type" id="editTypeSelect"
+                                        disabled>
+                                        <option value="">--none--</option>
+                                        <option value="Raw Material">Raw Material</option>
+                                        <option value="Packaging Material">Packaging Material</option>
+                                        <option value="Finished Goods">Finished Goods</option>
+                                        <option value="Intermediate Goods">Intermediate Goods</option>
+                                        <option value="General Material">General Material</option>
+                                    </select>
+                                    <div class="bs-select-proxy" data-for="#editTypeSelect"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <input class="form-control editRecordInput" name="description" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Unit Price</label>
+                                    <input type="text" class="form-control editRecordInput" name="unitPrice" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <input type="hidden" class="editRecordInput" name="category" id="editCategoryHiddenInput" value="">
+                                    <div class="form-check mt-1">
+                                        <input type="checkbox" class="form-check-input" id="editBlendingMaterialCheckbox" disabled>
+                                        <label class="form-check-label" for="editBlendingMaterialCheckbox">Blending Material</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Restock/Minimum Quantity</label>
+                                    <input type="text" class="form-control editRecordInput" name="restockQuantity"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                <label>Retest Duration (in days)</label>
+                                <input type="number" min="0" max="9999" class="editRecordInput form-control" name="retestPeriod" readonly>
+                            </div>
+                            </div>
+                            <div class="col-sm-6 isKsm-hidden" id="editIsKsmWrapper">
+                                <div class="form-group">
+                                    <label>Is KSM ?</label>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input editRecordInput" name="isKsm" id="editIsKsmCheckbox" value="true">
+                                        <label class="form-check-label" for="editIsKsmCheckbox">Yes</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal inmodal fade" id="resultApprovalModal" tabindex="-1" role="dialog" aria-hidden="true"
+        style="display: none;">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Approve / Reject</h4>
+                    <small class="font-bold">Approve or reject a request by reviewing all related information.</small>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Remarks</label>
+                                <textarea rows="5" name="request.ApprovalRemarks" id="approvalRemarks"
+                                    class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-warning btn-sm" data-bs-dismiss="modal"
+                        id="resultRejectBtn">Reject</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal"
+                        id="resultApproveBtn">Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--editMaterialRequestPanel.html end-->
+
+
+
+
+
+
+
+    <!--newMaterialRequestPanel.html start-->
+    <style>
+        .bs-select-proxy .dropdown-toggle {
+            text-align: left !important;
+            justify-content: flex-start !important;
+        }
+    </style>
+    <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Material Request<small> New</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i
+                                data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-secondary btn-sm newMaterialSaveBtn"
+                            id="newMaterialSaveBtn"><i data-lucide="check"></i>
+                            Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="newObj">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Purpose</label>
+                                    <!-- <select class="select2 form-control newRecordInput" name="purpose" id="purposeValue"
+                                        required> -->
+                                    <select class="form-control newRecordInput" name="purpose" id="purposeValue"
+                                        required>
+                                        <option value="">--none--</option>
+                                        <option value="New">New</option>
+                                        <option value="Revised">Revised</option>
+                                    </select>
+                                    <div class="bs-select-proxy" data-for="#purposeValue"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6" style="display:none;">
+                                <div class="form-group">
+                                    <label>Material Name</label>
+                                    <input type="text" class="form-control newRecordInput" name="name">
+                                </div>
+                            </div>
+                            <div class="col-sm-6" style="display:none;">
+                                <div class="form-group">
+                                    <label for="">Material Code</label>
+                                    <input type="text" name="number" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6" style="display:none;">
+                                <div class="form-group">
+                                    <label>Material</label>
+                                    <input type="text" placeholder="search.."
+                                        class="typeahead_3 form-control serviceSelectInput" />
+                                    <input type="hidden" name="product.id"
+                                        class="selectSearchInputAutoCompleteId1 newRecordInput" />
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>HSN Code</label>
+                                    <input class="form-control newRecordInput" name="hsn" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>UOM</label>
+                                    <!-- <select class="form-control select2 newRecordInput" name="uom"> -->
+                                    <select class="form-control newRecordInput" name="uom" id="uomSelect">
+                                        <option value="">--none--</option>
+                                    </select>
+                                    <div class="bs-select-proxy" data-for="#uomSelect"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Version Number</label>
+                                    <input type="text" class="form-control newRecordInput" id="versionNumber"
+                                        name="version" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Type</label>
+                                    <!-- <select class="form-control select2 newRecordInput" name="type"> -->
+                                    <select class="form-control newRecordInput" name="type" id="typeSelect">
+                                        <option value="">--none--</option>
+                                        <option value="Raw Material">Raw Material</option>
+                                        <option value="Packaging Material">Packaging Material</option>
+                                        <option value="Finished Goods">Finished Goods</option>
+                                        <option value="Intermediate Goods">Intermediate Goods</option>
+                                        <option value="General Material">General Material</option>
+                                    </select>
+                                    <div class="bs-select-proxy" data-for="#typeSelect"></div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <input class="form-control newRecordInput" name="description">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Unit Price</label>
+                                    <input type="text" class="form-control newRecordInput" name="unitPrice">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <input type="hidden" class="newRecordInput" name="category" id="categoryHiddenInput" value="">
+                                    <div class="form-check mt-1">
+                                        <input type="checkbox" class="form-check-input" id="blendingMaterialCheckbox" disabled>
+                                        <label class="form-check-label" for="blendingMaterialCheckbox">Blending Material</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Restock/Minimum Quantity</label>
+                                    <input type="text" class="form-control newRecordInput" name="restockQuantity">
+                                    <input type="hidden" class="form-control newRecordInput" name="processStatus"
+                                        value="New">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label>Retest Duration (in days)</label>
+                                <input type="number" min="0" max="9999" class="newRecordInput form-control" name="retestPeriod">
+                            </div>
+                            <div class="col-sm-6 isKsm-hidden" id="newIsKsmWrapper">
+                                <div class="form-group">
+                                    <label>Is KSM ?</label>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input newRecordInput" name="isKsm" id="isKsmCheckbox" value="true">
+                                        <label class="form-check-label" for="isKsmCheckbox">Yes</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--newMaterialRequestPanel.html end-->
+
+
+
+
+
+
+
+    <script>
+        lucide.createIcons();
+        // allMaterialRequestPanel.js start
+        if (typeof window.jQuery === 'undefined') {
+            console.log('jQuery is not loaded. Please ensure /js/vendors.min.js is loaded before this page.');
+        }
+        var MATERIAL_REQUEST_API_BASE = '/api/quality-assurance/product-versions';
+        var recordList = Array.isArray(window.recordList)
+            ? window.recordList.map(normalizeMaterialRecord)
+            : [];
+
+        function normalizeMaterialRecord(item) {
+            if (!item || typeof item !== 'object') {
+                return {};
+            }
+
+            var product = item.product || item.Product || null;
+            var normalized = $.extend(true, {}, item);
+
+            normalized.id = item.id != null ? item.id : item.Id;
+            normalized.number = item.number != null ? item.number : item.Number;
+            normalized.name = item.name != null ? item.name : item.Name;
+            normalized.version = item.version != null ? item.version : item.Version;
+            normalized.purpose = item.purpose != null ? item.purpose : item.Purpose;
+            normalized.type = item.type != null ? item.type : item.Type;
+            normalized.description = item.description != null ? item.description : item.Description;
+            normalized.hsn = item.hsn != null ? item.hsn : item.Hsn;
+            normalized.uom = item.uom != null ? item.uom : item.Uom;
+            normalized.category = item.category != null ? item.category : item.Category;
+            normalized.unitPrice = item.unitPrice != null ? item.unitPrice : item.UnitPrice;
+            normalized.restockQuantity = item.restockQuantity != null ? item.restockQuantity : item.RestockQuantity;
+            normalized.processStatus = item.processStatus != null ? item.processStatus : item.ProcessStatus;
+            normalized.isKsm = item.isKsm != null ? item.isKsm : item.IsKsm;
+
+            if (product && typeof product === 'object') {
+                normalized.product = $.extend(true, {}, product);
+                normalized.product.id = product.id != null ? product.id : product.Id;
+                normalized.product.name = product.name != null ? product.name : product.Name;
+                normalized.product.number = product.number != null ? product.number : product.Number;
+            }
+
+            return normalized;
+        }
+
+        function pickValue(obj, keys, defaultValue) {
+            if (!obj || typeof obj !== 'object') {
+                return defaultValue;
+            }
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') {
+                    return obj[key];
+                }
+            }
+            return defaultValue;
+        }
+
+        function refreshMaterialRequestList() {
+            JSUTIL.callAJAXGet(
+                JSUTIL.getUrl(MATERIAL_REQUEST_API_BASE),
+                function (response) {
+                    if (Array.isArray(response)) {
+                        recordList = response.map(normalizeMaterialRecord);
+                        window.recordList = recordList;
+                    } else {
+                        recordList = [];
+                        window.recordList = [];
+                    }
+                    renderMaterialRequestTable(recordList);
+                },
+                function () {
+                    console.error('Failed to load material request records from ' + MATERIAL_REQUEST_API_BASE);
+                    recordList = [];
+                    renderMaterialRequestTable(recordList);
+                }
+            );
+        }
+
+        // REPLACE WITH:
+        var productRequestTableSelector = '#allMaterialRequestPanelTable';
+
+        function destroyProductRequestTable() {
+            try {
+                if ($.fn.DataTable && $.fn.DataTable.isDataTable(productRequestTableSelector)) {
+                    $(productRequestTableSelector).DataTable().clear().destroy();
+                }
+            } catch (e) {
+                console.warn('DataTable destroy warning:', e);
+            }
+            $('#allVendorTable').empty();
+        }
+
+        function initProductRequestDataTable(retryCount) {
+            retryCount = typeof retryCount === 'number' ? retryCount : 0;
+            if (typeof $.fn.DataTable === 'function') {
+                if (!$.fn.DataTable.isDataTable(productRequestTableSelector)) {
+                    $(productRequestTableSelector).DataTable({ order: [], pageLength: 25 });
+                }
+                return;
+            }
+            if (retryCount < 40) {
+                setTimeout(function () { initProductRequestDataTable(retryCount + 1); }, 150);
+            }
+        }
+
+        function renderMaterialRequestTable(records) {
+            destroyProductRequestTable();
+            var innerHtml = '';
+            $.each(records || [], function (i, val) {
+                innerHtml += '<tr>' +
+                    '<td class="itemNum"><a href="javascript:void(0);" class="selectRecordBtn" id="' + val.id + '">' + (val.number || (val.product && val.product.number) || '') + '</a></td>' +
+                    '<td>' + (val.name || (val.product && val.product.name) || '') + '</td>' +
+                    '<td>' + (val.version || '') + '</td>' +
+                    '<td>' + (val.type || '') + '</td>' +
+                    '<td>' + (val.unitPrice || '') + '</td>' +
+                    '<td>' + (val.processStatus || '') + '</td>' +
+                    '</tr>';
+            });
+            $('#allVendorTable').html(innerHtml);
+            initProductRequestDataTable();
+        }
+
+        $(document).ready(function () {
+            $(window).off('load.productRequestDT').on('load.productRequestDT', function () {
+                initProductRequestDataTable();
+            });
+
+            // Delay first render so DataTable lib is ready on hard refresh
+            setTimeout(function () {
+                renderMaterialRequestTable(recordList);
+                refreshMaterialRequestList();
+            }, 300);
+        });
+
+        // allMaterialRequestPanel.js end
+
+
+
+
+
+
+
+        // editMaterialRequestPanel.js start
+        // Bootstrap dropdown proxies for edit panel
+        var editPurposeProxy = createBootstrapDropdownForSelect(
+            $('#editPurposeValue')[0],
+            $('#editRecordPanel .bs-select-proxy[data-for="#editPurposeValue"]')[0],
+            { placeholder: 'Choose Option' }
+        );
+        var editTypeProxy = createBootstrapDropdownForSelect(
+            $('#editTypeSelect')[0],
+            $('#editRecordPanel .bs-select-proxy[data-for="#editTypeSelect"]')[0],
+            { placeholder: 'Choose Option' }
+        );
+        // Is KSM is now a checkbox, no dropdown proxy needed
+        var editUomProxy = createBootstrapDropdownForSelect(
+            $('#editUomSelect')[0],
+            $('#editRecordPanel .bs-select-proxy[data-for="#editUomSelect"]')[0],
+            { placeholder: 'Choose Option' }
+        );
+        window.editUomProxy = editUomProxy;
+        // Dropdowns in edit panel start disabled — enabled only when Edit button is clicked
+        $('#editRecordPanel .bs-select-proxy button.dropdown-toggle').prop('disabled', true);
+        $(document).ready(function () {
+            var $panel = $('#editRecordPanel');
+            var $typeSelect = $panel.find('select[name="type"]');
+
+            function toggleIsKsmField(selectedType) {
+                var $cb = $('#editIsKsmCheckbox');
+                var $group = $('#editIsKsmWrapper');
+                var normalized = (selectedType == null ? '' : String(selectedType)).trim().toLowerCase();
+                var isRaw = normalized === 'raw material';
+                if (isRaw) {
+                    $group.removeClass('isKsm-hidden').show();
+                    $cb.prop('disabled', false);
+                } else {
+                    $cb.prop('checked', false);
+                    $cb.prop('disabled', true);
+                    $group.addClass('isKsm-hidden');
+                }
+            }
+
+            $panel.on('change', 'select[name="type"]', function () {
+                toggleIsKsmField($(this).val());
+            });
+            // Also listen on proxy clicks (bs-select-proxy may not always trigger native change)
+            $panel.on('click', '.bs-select-proxy[data-for="#editTypeSelect"] .bs-select-item', function () {
+                toggleIsKsmField($(this).data('value'));
+            });
+
+            // Hide Is KSM by default until a Raw Material is chosen
+            toggleIsKsmField($typeSelect.val());
+
+            // Preload dropdown options
+            populateUomDropdown();
+
+            $('#editBlendingMaterialCheckbox').on('change', function () {
+                $('#editCategoryHiddenInput').val($(this).is(':checked') ? 'Blending Material' : '');
+            });
+
+            $('#allRecordPanel tbody').on('click', '.selectRecordBtn', function () {
+                $('.documentSaveAndUpdateBtn').hide();
+                currentRecordId = $(this).attr('id');
+                $.each(recordList, function (j, val2) {
+                    if (String(val2.id) === String(currentRecordId)) {
+                        currentRecordData = val2;
+                        updateProgressSteps(pickValue(val2, ['processStatus', 'ProcessStatus'], ''));
+                        var linkedProduct = val2.product || {};
+                        var resolvedName = pickValue(val2, ['name', 'Name'], pickValue(linkedProduct, ['name', 'Name'], ''));
+                        var resolvedNumber = pickValue(val2, ['number', 'Number'], pickValue(linkedProduct, ['number', 'Number'], ''));
+                        var resolvedType = pickValue(val2, ['type', 'Type'], pickValue(linkedProduct, ['type', 'Type'], ''));
+                        var resolvedPurpose = pickValue(val2, ['purpose', 'Purpose'], '');
+                        var resolvedUom = pickValue(val2, ['uom', 'Uom'], pickValue(linkedProduct, ['uom', 'Uom'], ''));
+                        var resolvedCategory = pickValue(val2, ['category', 'Category'], pickValue(linkedProduct, ['category', 'Category'], ''));
+                        var resolvedIsKsm = pickValue(val2, ['isKsm', 'IsKsm'], pickValue(linkedProduct, ['isKsm', 'IsKsm'], ''));
+                        var resolvedVersion = pickValue(val2, ['version', 'Version'], pickValue(linkedProduct, ['version', 'Version'], ''));
+                        var resolvedHsn = pickValue(val2, ['hsn', 'Hsn'], pickValue(linkedProduct, ['hsn', 'Hsn'], ''));
+                        var resolvedDescription = pickValue(val2, ['description', 'Description'], pickValue(linkedProduct, ['description', 'Description'], ''));
+                        var resolvedUnitPrice = pickValue(val2, ['unitPrice', 'UnitPrice', 'unitprice'], pickValue(linkedProduct, ['unitPrice', 'UnitPrice', 'unitprice'], ''));
+                        var resolvedRestockQuantity = pickValue(val2, ['restockQuantity', 'RestockQuantity', 'restockquantity'], pickValue(linkedProduct, ['restockQuantity', 'RestockQuantity', 'restockquantity'], ''));
+
+                        var $ep = $('#editRecordPanel');
+                        if (resolvedPurpose === 'New') {
+                            $ep.find('input[name="name"]').closest('.col-sm-6').show();
+                            $ep.find('input[name="number"]').closest('.col-sm-6').show();
+                            $ep.find('input[name="product.id"]').closest('.col-sm-6').hide();
+                            $ep.find('.editRecordInput[name="name"]').val(resolvedName);
+                            $ep.find('.editRecordInput[name="number"]').val(resolvedNumber);
+                        }
+                        else {
+                            $ep.find('input[name="name"]').closest('.col-sm-6').hide();
+                            $ep.find('input[name="number"]').closest('.col-sm-6').hide();
+                            $ep.find('input[name="product.id"]').closest('.col-sm-6').show();
+                            $ep.find('.editRecordInput[name="product.id"]').val(linkedProduct.id || linkedProduct.Id || '');
+                            $ep.find('.editRecordInput[name="product.id"]').parent().find('.serviceSelectInput').val(resolvedName);
+                        }
+
+                        // Check if user is QA Head
+                        var isQAHead = false;
+                        if (typeof FOX !== 'undefined' && FOX && FOX.userGroupNames && Array.isArray(FOX.userGroupNames)) {
+                            isQAHead = FOX.userGroupNames.includes('qa_head');
+                        }
+
+                        var processStatus = pickValue(val2, ['processStatus', 'ProcessStatus'], '');
+                        if (processStatus === "New" || String(processStatus).toLowerCase().includes('rejected')) {
+                            $('.recordEditBtn').show();
+                            $('.sendApproval').show();
+                            $('.acceptBtn').hide();
+                            $('.rejectBtn').hide();
+                            $("#approveRejectResultBtn").hide();
+                        }
+                        else {
+                            if (processStatus === "In Review") {
+                                $('.recordEditBtn').hide();
+                                $('.sendApproval').hide();
+
+                                // Only show Accept/Reject buttons if user is QA Head
+                                if (isQAHead) {
+                                    $('.acceptBtn').show();
+                                    $('.rejectBtn').show();
+                                    $("#approveRejectResultBtn").show();
+                                } else {
+                                    $('.acceptBtn').hide();
+                                    $('.rejectBtn').hide();
+                                    $("#approveRejectResultBtn").hide();
+                                }
+                            } else {
+                                $('.recordEditBtn').hide();
+                                $("#approveRejectResultBtn").hide();
+                                $('.sendApproval').hide();
+                                $('.acceptBtn').hide();
+                                $('.rejectBtn').hide();
+                            }
+                        }
+                        var isAccepted = processStatus === 'Accepted';
+                        $('#editRecordPanel .editRecordInput').prop('disabled', isAccepted).prop('readonly', isAccepted);
+                        $('#editRecordPanel .bs-select-proxy button.dropdown-toggle').prop('disabled', true);
+                        $('input[name="version"]').val(resolvedVersion);
+                        $('.editRecordInput[name="hsn"]').val(resolvedHsn);
+                        $('.editRecordInput[name="description"]').val(resolvedDescription);
+                        $('.editRecordInput[name="unitPrice"]').val(resolvedUnitPrice);
+                        $('.editRecordInput[name="restockQuantity"]').val(resolvedRestockQuantity);
+                        $('.editRecordInput[name="retestPeriod"]').val(val2.retestPeriod || '')
+                        setSelectValue('.editRecordInput[name="type"]', resolvedType);
+                        toggleIsKsmField(resolvedType);
+                        // Final guard — re-toggle from the actual select value in case setSelectValue normalized it
+                        toggleIsKsmField($('#editTypeSelect').val());
+                        setSelectValue('.editRecordInput[name="purpose"]', resolvedPurpose);
+                        // Explicitly re-apply layout after setSelectValue (trigger may read stale value)
+                        var $ep2 = $('#editRecordPanel');
+                        if (resolvedPurpose === 'New') {
+                            $ep2.find('input[name="name"]').closest('.col-sm-6').show();
+                            $ep2.find('input[name="number"]').closest('.col-sm-6').show();
+                            $ep2.find('input[name="product.id"]').closest('.col-sm-6').hide();
+                        } else {
+                            $ep2.find('input[name="name"]').closest('.col-sm-6').hide();
+                            $ep2.find('input[name="number"]').closest('.col-sm-6').hide();
+                            $ep2.find('input[name="product.id"]').closest('.col-sm-6').show();
+                        }
+                        setSelectValue('.editRecordInput[name="uom"]', resolvedUom);
+                        var isBlendingEdit = resolvedCategory === 'Blending Material';
+                        $('#editBlendingMaterialCheckbox').prop('checked', isBlendingEdit);
+                        $('#editCategoryHiddenInput').val(isBlendingEdit ? 'Blending Material' : '');
+                        // Set Is KSM checkbox
+                        var $isKsmCheckbox = $('.editRecordInput[name="isKsm"]');
+                        $isKsmCheckbox.prop('checked', resolvedIsKsm === 'yes' || resolvedIsKsm === true || resolvedIsKsm === 'true');
+                        $isKsmCheckbox.prop('disabled', true);
+                    }
+                });
+                $('#hiddenRecordId').val(currentRecordId);
+                $('.editRecordInput').prop('disabled', true);
+                $('#newRecordPanel').hide();
+                $('#allRecordPanel').hide();
+                $('#editRecordPanel').show();
+            });
+            // Direct click handler on purpose proxy items — fires reliably on every selection
+            $('#editRecordPanel').on('click', '.bs-select-proxy[data-for="#editPurposeValue"] .bs-select-item', function () {
+                applyEditPurposeLayout($(this).data('value'));
+            });
+
+            // Also keep change handler as fallback
+            $('#editPurposeValue').on('change', function () {
+                applyEditPurposeLayout($(this).val());
+            });
+            $('.recordEditBtn').on('click', function () {
+                var currentStatus = pickValue(currentRecordData, ['processStatus', 'ProcessStatus'], '');
+                if (currentStatus === 'Accepted') {
+                    return; // silently block — button should already be hidden, this is a safety guard
+                }
+                $(".recordEditBtn").hide();
+                $('.documentSaveAndUpdateBtn').show();
+                $('.editRecordInput').prop('disabled', false).prop('readonly', false);
+
+                $('#editBlendingMaterialCheckbox').prop('disabled', false);
+                $('input[name="version"]').prop('readonly', true);
+                $('#editRecordPanel .bs-select-proxy button.dropdown-toggle').prop('disabled', false);
+                toggleIsKsmField($('#editTypeSelect').val());
+            });
+            $('.editRecordCancelBtn').on('click', function () {
+                $('.editRecordInput').prop('disabled', true);
+                $('.editRecordInput').prop('readonly', true);
+                $('#editBlendingMaterialCheckbox').prop('disabled', true);
+                $('#editRecordPanel .bs-select-proxy button.dropdown-toggle').prop('disabled', true);
+                $('#editRecordPanel').hide();
+                $('#allRecordPanel').show();
+            });
+            $('.documentSaveAndUpdateBtn').on('click', function () {
+                $(this).prop('disabled',true)
+                var editDocumentPayload = JSUTIL.buildFormDataJSON('editRecordInput');
+                editDocumentPayload.isKsm = $('#editIsKsmCheckbox').is(':checked');
+                editDocumentPayload.category = $('#editBlendingMaterialCheckbox').is(':checked') ? 'Blending Material' : '';
+                var postUrl = ('/api/quality-assurance/product-versions/' + currentRecordId);
+                JSUTIL.callAJAXPut(postUrl, JSON.stringify(editDocumentPayload), callbackSuccessDocumentUpdate);
+            });
+            $('.sendApproval').on('click', function () {
+                const dataToSend = {
+                    processStatus: 'In Review'
+                };
+                var postUrl = JSUTIL.getUrl('/api/quality-assurance/product-versions/' + currentRecordId);
+                JSUTIL.callAJAXPut(postUrl, JSON.stringify(dataToSend), callbackSuccessDocumentUpdate);
+            });
+            $('.acceptBtn').on('click', function () {
+                // First, update the ProductVersion status to Accepted
+                const statusUpdateData = {
+                    processStatus: 'Accepted'
+                };
+                var statusUpdateUrl = JSUTIL.getUrl('/api/quality-assurance/product-versions/' + currentRecordId);
+
+                // Check if purpose is New or Revised
+                if (currentRecordData.purpose === 'New') {
+                    // Create new Product
+                    const productData = {
+                        name: currentRecordData.name,
+                        number: currentRecordData.number,
+                        type: currentRecordData.type,
+                        description: currentRecordData.description,
+                        hsn: currentRecordData.hsn,
+                        uom: currentRecordData.uom,
+                        unitPrice: currentRecordData.unitPrice,
+                        category: currentRecordData.category,
+                        restockQuantity: currentRecordData.restockQuantity,
+                        version: currentRecordData.version,
+                        isKsm: currentRecordData.isKsm
+                    };
+
+                    // First update status, then create product
+                    JSUTIL.callAJAXPut(statusUpdateUrl, JSON.stringify(statusUpdateData), function (response) {
+                        var createProductUrl = JSUTIL.getUrl('/api/products');
+                        JSUTIL.callAJAXPost(createProductUrl, JSON.stringify(productData), callbackSuccessDocumentUpdate);
+                    });
+
+                } else if (currentRecordData.purpose === 'Revised') {
+                    // Update existing Product
+                    const productData = {
+                        type: currentRecordData.type,
+                        description: currentRecordData.description,
+                        hsn: currentRecordData.hsn,
+                        uom: currentRecordData.uom,
+                        unitPrice: currentRecordData.unitPrice,
+                        category: currentRecordData.category,
+                        restockQuantity: currentRecordData.restockQuantity,
+                        version: currentRecordData.version,
+                        isKsm: currentRecordData.isKsm
+                    };
+
+                    var productId = currentRecordData.product.id;
+
+                    // First update status, then update product
+                    JSUTIL.callAJAXPut(statusUpdateUrl, JSON.stringify(statusUpdateData), function (response) {
+                        var updateProductUrl = JSUTIL.getUrl('/api/products/' + productId);
+                        JSUTIL.callAJAXPut(updateProductUrl, JSON.stringify(productData), callbackSuccessDocumentUpdate);
+                    });
+                }
+            });
+            $('#approveRejectResultBtn').on('click', function () {
+                var modal = new bootstrap.Modal($('#resultApprovalModal')[0]);
+                modal.show();
+            });
+            $('.rejectBtn').on('click', function () {
+                const dataToSend = {
+                    processStatus: 'Rejected'
+                };
+                var postUrl = JSUTIL.getUrl('/api/quality-assurance/product-versions/' + currentRecordId);
+                JSUTIL.callAJAXPut(postUrl, JSON.stringify(dataToSend), callbackSuccessDocumentUpdate);
+            });
+
+            $('#resultApproveBtn').on('click', function () {
+
+                // First, update the ProductVersion status to Accepted
+                const statusUpdateData = {
+                    processStatus: 'Accepted'
+                };
+                var statusUpdateUrl = JSUTIL.getUrl('/api/quality-assurance/product-versions/' + currentRecordId);
+
+                // Check if purpose is New or Revised
+                if (currentRecordData.purpose === 'New') {
+                    // Create new Product
+                    const productData = {
+                        name: currentRecordData.name,
+                        number: currentRecordData.number,
+                        type: currentRecordData.type,
+                        description: currentRecordData.description,
+                        hsn: currentRecordData.hsn,
+                        uom: currentRecordData.uom,
+                        unitPrice: currentRecordData.unitPrice,
+                        category: currentRecordData.category,
+                        restockQuantity: currentRecordData.restockQuantity,
+                        version: currentRecordData.version,
+                        isKsm: currentRecordData.isKsm
+                    };
+
+                    // First update status, then create product
+                    JSUTIL.callAJAXPut(statusUpdateUrl, JSON.stringify(statusUpdateData), function (response) {
+                        var createProductUrl = JSUTIL.getUrl('/api/products');
+                        JSUTIL.callAJAXPost(createProductUrl, JSON.stringify(productData), callbackSuccessDocumentUpdate);
+                    });
+
+                } else if (currentRecordData.purpose === 'Revised') {
+                    // Update existing Product
+                    const productData = {
+                        type: currentRecordData.type,
+                        description: currentRecordData.description,
+                        hsn: currentRecordData.hsn,
+                        uom: currentRecordData.uom,
+                        unitPrice: currentRecordData.unitPrice,
+                        category: currentRecordData.category,
+                        restockQuantity: currentRecordData.restockQuantity,
+                        version: currentRecordData.version,
+                        isKsm: currentRecordData.isKsm
+                    };
+
+                    var productId = currentRecordData.product.id;
+
+                    // First update status, then update product
+                    JSUTIL.callAJAXPut(statusUpdateUrl, JSON.stringify(statusUpdateData), function (response) {
+                        var updateProductUrl = JSUTIL.getUrl('/api/products/' + productId);
+                        JSUTIL.callAJAXPut(updateProductUrl, JSON.stringify(productData), callbackSuccessDocumentUpdate);
+                    });
+                }
+            });
+            $('#resultRejectBtn').on('click', function () {
+                const dataToSend = {
+                    processStatus: 'Rejected'
+                };
+                var postUrl = JSUTIL.getUrl('/api/quality-assurance/product-versions/' + currentRecordId);
+                JSUTIL.callAJAXPut(postUrl, JSON.stringify(dataToSend), callbackSuccessDocumentUpdate);
+            });
+        });
+
+        function populateUomDropdown() {
+            var innerHtml = buildUomOptionsHtml();
+            var uomSelect = $('#editUomSelect');
+            uomSelect.empty().append(innerHtml);
+            if (window.editUomProxy) window.editUomProxy.rebuildMenu();
+        }
+        function buildUomOptionsHtml() {
+            var genericUoms = ['gm', 'kg', 'ml', 'l'];
+            var unique = {};
+            var allUoms = [];
+
+            $.each(genericUoms, function (_, uom) {
+                allUoms.push(uom);
+            });
+
+            if (Array.isArray(window.uomList)) {
+                $.each(window.uomList, function (_, uom) {
+                    var name = (uom && (uom.name || uom.Name)) ? (uom.name || uom.Name) : '';
+                    if (name) {
+                        allUoms.push(name);
+                    }
+                });
+            }
+
+            var innerHtml = '<option value="">--none--</option>';
+            $.each(allUoms, function (_, name) {
+                var normalized = String(name).trim().toLowerCase();
+                if (!normalized || unique[normalized]) {
+                    return;
+                }
+                unique[normalized] = true;
+                innerHtml += '<option value="' + name + '">' + name + '</option>';
+            });
+
+            return innerHtml;
+        }
+
+        function setSelectValue(selector, value) {
+            var $select = $(selector);
+            if (!$select.length) { return; }
+            if (value && $select.find('option[value="' + value + '"]').length === 0) {
+                $select.append('<option value="' + value + '">' + value + '</option>');
+            }
+            $select.val(value);
+            $select.trigger('change'); // syncs the Bootstrap dropdown label automatically
+            // Also directly update the proxy button label to guarantee display
+            var id = $select.attr('id');
+            if (id) {
+                var $btn = $('[data-for="#' + id + '"]').find('button.dropdown-toggle');
+                if ($btn.length) {
+                    var txt = value ? ($select.find('option[value="' + String(value).replace(/"/g, '\\"') + '"]').text() || value) : '';
+                    $btn.text(txt || 'Choose Option');
+                }
+            }
+        }
+        function applyEditPurposeLayout(purpose) {
+            var $ep = $('#editRecordPanel');
+            if (purpose === 'New') {
+                $ep.find('input[name="name"]').closest('.col-sm-6').show();
+                $ep.find('input[name="number"]').closest('.col-sm-6').show();
+                $ep.find('input[name="product.id"]').closest('.col-sm-6').hide();
+            } else {
+                $ep.find('input[name="name"]').closest('.col-sm-6').hide();
+                $ep.find('input[name="number"]').closest('.col-sm-6').hide();
+                $ep.find('input[name="product.id"]').closest('.col-sm-6').show();
+            }
+        }
+        function callbackSuccessDocumentUpdate(response) {
+            console.log(response);
+            location.reload();
+        }
+        function getProgressStepForStatus(status) {
+            const normalized = (status || '').toLowerCase();
+            if (!normalized) {
+                return 1;
+            }
+            if (normalized === 'new' || normalized === 'rejected') {
+                return 1;
+            }
+            if (normalized === 'in review') {
+                return 2;
+            }
+            if (normalized === 'accepted') {
+                return 3;
+            }
+            return 1;
+        }
+
+        function updateProgressSteps(status) {
+            const currentStep = getProgressStepForStatus(status);
+            const $steps = $('.step-button');
+            $steps.each(function () {
+                var stepNumber = Number($(this).data('step'));
+                $(this).removeClass('active completed');
+                const isCompleted = stepNumber < currentStep;
+                const isActive = stepNumber === currentStep;
+                $(this).toggleClass('completed', isCompleted);
+                $(this).toggleClass('active', isActive);
+            });
+        }
+
+        // editMaterialRequestPanel.js end
+
+
+
+
+
+
+        // newMaterialRequestPanel.js start
+
+        // Cache to avoid repeated server hits and to allow case-insensitive client-side filtering
+        var productSearchCache = null;
+        function createBootstrapDropdownForSelect(selectEl, proxyContainerEl, opts) {
+            var $select = $(selectEl);
+            var $proxy = $(proxyContainerEl);
+            var placeholder = (opts && opts.placeholder) || 'Choose Option';
+
+            $select.addClass('d-none'); // hide real select, keep for logic/payload
+
+            function buildMenuHtml() {
+                var html = '';
+                $select.find('option').each(function () {
+                    var val = $(this).attr('value');
+                    var text = $(this).text();
+                    if (val === '') return; // skip --none--
+                    html += '<button type="button" class="dropdown-item bs-select-item" data-value="' +
+                        String(val).replace(/"/g, '&quot;') + '">' +
+                        $('<div/>').text(text).html() +
+                        '</button>';
+                });
+                return html;
+            }
+
+            var dropdownId = 'bsDD_' + Math.random().toString(36).slice(2);
+
+            $proxy.html(
+                '<div class="dropdown w-100">' +
+                '<button class="btn btn-default dropdown-toggle w-100 text-start" type="button" id="' + dropdownId + '" data-bs-toggle="dropdown" aria-expanded="false">' +
+                placeholder +
+                '</button>' +
+                '<div class="dropdown-menu w-100" aria-labelledby="' + dropdownId + '" style="max-height:260px; overflow:auto;">' +
+                buildMenuHtml() +
+                '</div>' +
+                '</div>'
+            );
+
+            var $btn = $proxy.find('button.dropdown-toggle');
+            var $menu = $proxy.find('.dropdown-menu');
+
+            function syncLabel() {
+                var v = $select.val();
+                if (!v) { $btn.text(placeholder); return; }
+                var t = $select.find('option[value="' + v.replace(/"/g, '\\"') + '"]').text();
+                $btn.text(t || placeholder);
+            }
+
+            $proxy.off('click.bsSelect').on('click.bsSelect', '.bs-select-item', function () {
+                var newVal = $(this).data('value');
+                $select.val(newVal).trigger('change'); // IMPORTANT: keeps your existing logic
+                syncLabel();
+            });
+
+            function rebuildMenu() {
+                $menu.html(buildMenuHtml());
+                syncLabel();
+            }
+
+            $select.on('change.bsSelectSync', function () {
+                syncLabel();
+            });
+
+            syncLabel();
+
+            return { rebuildMenu: rebuildMenu, syncLabel: syncLabel };
+        }
+        $(document).ready(function () {
+            var $panel = $('#newRecordPanel');
+            var $typeSelect = $panel.find('select[name="type"]');
+
+            function toggleIsKsmField(selectedType) {
+                var $cb = $('#isKsmCheckbox');
+                var $group = $('#newIsKsmWrapper');
+                var normalized = (selectedType == null ? '' : String(selectedType)).trim().toLowerCase();
+                var isRaw = normalized === 'raw material';
+                if (isRaw) {
+                    $group.removeClass('isKsm-hidden').show();
+                    $cb.prop('disabled', false);
+                } else {
+                    $cb.prop('checked', false);
+                    $cb.prop('disabled', true);
+                    $group.addClass('isKsm-hidden');
+                }
+            }
+            $panel.on('click', '.bs-select-proxy[data-for="#typeSelect"] .bs-select-item', function () {
+                toggleIsKsmField($(this).data('value'));
+            });
+            // Bootstrap dropdown proxies (selects must have ids in HTML)
+            var purposeProxy = createBootstrapDropdownForSelect(
+                $panel.find('#purposeValue')[0],
+                $panel.find('.bs-select-proxy[data-for="#purposeValue"]')[0],
+                { placeholder: 'Choose Option' }
+            );
+
+            var typeProxy = createBootstrapDropdownForSelect(
+                $panel.find('#typeSelect')[0],
+                $panel.find('.bs-select-proxy[data-for="#typeSelect"]')[0],
+                { placeholder: 'Choose Option' }
+            );
+
+            // Is KSM is now a checkbox, no dropdown proxy needed
+
+            var uomProxy = createBootstrapDropdownForSelect(
+                $panel.find('#uomSelect')[0],
+                $panel.find('.bs-select-proxy[data-for="#uomSelect"]')[0],
+                { placeholder: 'Choose Option' }
+            );
+
+            window.uomProxy = uomProxy;
+
+            // Handle Blending Material checkbox
+            $('#blendingMaterialCheckbox').on('change', function() {
+                $('#categoryHiddenInput').val($(this).is(':checked') ? 'Blending Material' : '');
+            });
+            $typeSelect.on('change', function () {
+                toggleIsKsmField($(this).val());
+            });
+
+            function showNewRecordPanel() {
+                $('#allRecordPanel').hide();
+                $('#editRecordPanel').hide();
+                $panel.show();
+                var formEl = $panel.find('form')[0];
+                if (formEl) {
+                    formEl.reset();
+                }
+                //  $panel.find('select').trigger('change.select2');
+                $panel.find('select').trigger('change');
+                toggleIsKsmField($typeSelect.val());
+                // Reset Blending Material checkbox
+                $('#blendingMaterialCheckbox').prop('checked', false);
+            }
+
+            function showAllRecordsPanel() {
+                $panel.hide();
+                $('#editRecordPanel').hide();
+                $('#allRecordPanel').show();
+            }
+
+            $('.newRecordBtn').on('click', function () {
+                showNewRecordPanel();
+            });
+
+            $('.newRecordCancelBtn').on('click', function () {
+                showAllRecordsPanel();
+            });
+
+            $('#purposeValue').on('change', function () {
+                var purpose = $('#purposeValue').val();
+                var $np = $('#newRecordPanel');
+                selectedDocumentForDuplication = null;
+                $('.serviceSelectInput').val('');
+                $('#versionNumber').val('');
+
+                if (purpose === 'New') {
+                    $np.find('input[name="name"]').closest('.col-sm-6').show();
+                    $np.find('input[name="number"]').closest('.col-sm-6').show();
+                    $np.find('input[name="product.id"]').closest('.col-sm-6').hide();
+                    document.getElementById('versionNumber').value = '01';
+                } else {
+                    $np.find('input[name="name"]').closest('.col-sm-6').hide();
+                    $np.find('input[name="number"]').closest('.col-sm-6').hide();
+                    $np.find('input[name="product.id"]').closest('.col-sm-6').show();
+                    document.getElementById('versionNumber').value = '';
+                }
+            });
+
+            // Product search typeahead functionality
+            $('.serviceSelectInput').on('input', function () {
+                var searchTerm = $(this).val();
+
+                if (searchTerm.length >= 2) {
+                    var searchTermLower = searchTerm.toLowerCase();
+                    fetchProductsForSearch(function (products) {
+                        var filtered = (products || []).filter(function (product) {
+                            var nameLower = (product.name || product.Name || '').toLowerCase();
+                            var numberLower = (product.number || product.Number || '').toLowerCase();
+                            return nameLower.indexOf(searchTermLower) !== -1 || numberLower.indexOf(searchTermLower) !== -1;
+                        });
+                        callbackProductSearch(filtered, searchTerm);
+                    });
+                } else {
+                    // Clear search results when search term is less than 2 characters
+                    $('.product-search-results').remove();
+                }
+            });
+
+            // Handle product selection
+            $(document).on('click', '.product-search-item', function () {
+                var selectedProduct = $(this).data();
+                populateSelectedProduct(selectedProduct);
+                $('.product-search-results').remove();
+            });
+
+            $(document).off('click.materialReqSave', '.newMaterialSaveBtn');
+            $(document).on('click.materialReqSave', '.newMaterialSaveBtn', function () {
+                $(this).prop('disabled',true)
+                saveNewMaterialRequest();
+            });
+
+            var uomSelect = $('select[name="uom"]');
+            uomSelect.empty().append(buildUomOptionsHtml());
+            if (window.uomProxy) window.uomProxy.rebuildMenu();
+
+
+            // Ensure Is KSM is only available for Raw Material on load
+            toggleIsKsmField($typeSelect.val());
+        });
+
+        // Fetch and cache products once, then filter client-side for case-insensitive search
+        function fetchProductsForSearch(callback) {
+            if (productSearchCache) {
+                if (typeof callback === 'function') {
+                    callback(productSearchCache);
+                }
+                return;
+            }
+
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products'), function (res) {
+                productSearchCache = res || [];
+                if (typeof callback === 'function') {
+                    callback(productSearchCache);
+                }
+            });
+        }
+
+        function callbackProductSearch(response, searchTerm) {
+            // Remove existing results
+            $('.product-search-results').remove();
+
+            if (response && response.length > 0) {
+                var resultsHtml = '<div class="product-search-results" style="position: absolute; z-index: 1000; background: white; border: 1px solid #ddd; max-height: 200px; overflow-y: auto; width: 100%;">';
+
+                $.each(response, function (i, product) {
+                    var name = pickValue(product, ['name', 'Name'], '');
+                    var number = pickValue(product, ['number', 'Number'], '');
+                    var version = pickValue(product, ['version', 'Version'], '00');
+                    var id = pickValue(product, ['id', 'Id'], '');
+                    var type = pickValue(product, ['type', 'Type'], '');
+                    var description = pickValue(product, ['description', 'Description'], '');
+                    var hsn = pickValue(product, ['hsn', 'Hsn'], '');
+                    var uom = pickValue(product, ['uom', 'Uom'], '');
+                    var unitPrice = pickValue(product, ['unitPrice', 'UnitPrice', 'unitprice'], '');
+                    var category = pickValue(product, ['category', 'Category'], '');
+                    var restockQuantity = pickValue(product, ['restockQuantity', 'RestockQuantity', 'restockquantity'], '');
+                    resultsHtml += '<div class="product-search-item" style="padding: 8px; cursor: pointer; border-bottom: 1px solid #eee;" ' +
+                        'data-id="' + id + '" ' +
+                        'data-name="' + name + '" ' +
+                        'data-number="' + number + '" ' +
+                        'data-type="' + type + '" ' +
+                        'data-description="' + description + '" ' +
+                        'data-hsn="' + hsn + '" ' +
+                        'data-uom="' + uom + '" ' +
+                        'data-unitprice="' + unitPrice + '" ' +
+                        'data-category="' + category + '" ' +
+                        'data-restockquantity="' + restockQuantity + '" ' +
+                        'data-version="' + version + '">' +
+                        '<strong>' + name + '</strong>' +
+                        (number ? ' <span style="color: #555;">| ' + number + '</span>' : '') +
+                        ' <span style="color: #999;">(v' + version + ')</span>' +
+                        '</div>';
+                });
+
+                resultsHtml += '</div>';
+
+                $('.serviceSelectInput').parent().css('position', 'relative').append(resultsHtml);
+
+                // Add hover effect
+                $('.product-search-item').hover(
+                    function () {
+                        $(this).css('background-color', '#f5f5f5');
+                    },
+                    function () {
+                        $(this).css('background-color', 'white');
+                    }
+                );
+            }
+        }
+
+        function incrementVersion(currentVersion) {
+            if (!currentVersion || currentVersion === '') {
+                return '01';
+            }
+
+            // Parse the version number
+            var versionNum = parseInt(currentVersion, 10);
+
+            if (isNaN(versionNum)) {
+                return '01';
+            }
+
+            // Increment and format with leading zero if needed
+            var newVersionNum = versionNum + 1;
+            return newVersionNum.toString().padStart(2, '0');
+        }
+
+        function callbackNewProduct(response) {
+            
+            console.log(response);
+            location.reload()
+            if (Array.isArray(response)) {
+                recordList = response.map(normalizeMaterialRecord);
+                window.recordList = recordList;
+                renderMaterialRequestTable(recordList);
+                $('#newRecordPanel').hide();
+                $('#allRecordPanel').show();
+                return;
+            }
+            refreshMaterialRequestList();
+            $('#newRecordPanel').hide();
+            $('#allRecordPanel').show();
+        }
+
+        function callbackNewProductFailure() {
+            console.log('Save failed. Please check API endpoint and required fields.');
+        }
+
+        function saveNewMaterialRequest() {
+            var categoryPayload = JSUTIL.buildFormDataJSON('newRecordInput');
+            if (!categoryPayload.purpose) {
+                console.log('Purpose is required');
+                return;
+            }
+            categoryPayload.isKsm = $('#isKsmCheckbox').is(':checked');
+            if (categoryPayload.purpose === 'New' && (!categoryPayload.name || !categoryPayload.number)) {
+                console.log('Material Name and Material Code are required for New request');
+                return;
+            }
+
+            var postUrl = MATERIAL_REQUEST_API_BASE;
+            var headers = {
+                'Content-Type': 'application/json'
+            };
+            var token = $("meta[name='_csrf']").attr("content");
+            var csrfHeader = $("meta[name='_csrf_header']").attr("content");
+            if (token && csrfHeader) {
+                headers[csrfHeader] = token;
+            }
+
+            fetch(postUrl, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(categoryPayload)
+            })
+                .then(function (res) {
+                    if (!res.ok) {
+                        return res.text().then(function (txt) {
+                            throw new Error('Create failed (' + res.status + '): ' + txt);
+                        });
+                    }
+                    return res.json();
+                })
+                .then(function (data) {
+                    callbackNewProduct(data);
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    console.log('Save failed: ' + (err.message || 'Unknown error'));
+                    callbackNewProductFailure();
+                });
+        }
+
+        function populateSelectedProduct(product) {
+            var selectedVersion = pickValue(product, ['version', 'Version'], '');
+            var nextVersion = incrementVersion(selectedVersion);
+            var selectedName = pickValue(product, ['name', 'Name'], '');
+            var selectedId = pickValue(product, ['id', 'Id'], '');
+            var selectedNumber = pickValue(product, ['number', 'Number'], '');
+            var selectedHsn = pickValue(product, ['hsn', 'Hsn'], '');
+            var selectedDescription = pickValue(product, ['description', 'Description'], '');
+            var selectedUnitPrice = pickValue(product, ['unitPrice', 'UnitPrice', 'unitprice'], '');
+            var selectedRestockQuantity = pickValue(product, ['restockQuantity', 'RestockQuantity', 'restockquantity'], '');
+            var selectedType = pickValue(product, ['type', 'Type'], '');
+            var selectedUom = pickValue(product, ['uom', 'Uom'], '');
+            var selectedCategory = pickValue(product, ['category', 'Category'], '');
+
+            $('.serviceSelectInput').val(selectedName);
+            $('.selectSearchInputAutoCompleteId1').val(selectedId);
+            $('input[name="name"]').val(selectedName);
+            $('input[name="number"]').val(selectedNumber);
+            $('#versionNumber').val(nextVersion);
+            $('input[name="hsn"]').val(selectedHsn);
+            $('input[name="description"]').val(selectedDescription);
+            $('input[name="unitPrice"]').val(selectedUnitPrice);
+            $('input[name="restockQuantity"]').val(selectedRestockQuantity);
+
+            setSelectValue('select[name="type"]', selectedType);
+            setSelectValue('select[name="uom"]', selectedUom);
+            var isBlending = selectedCategory === 'Blending Material';
+            $('#blendingMaterialCheckbox').prop('checked', isBlending);
+            $('#categoryHiddenInput').val(isBlending ? 'Blending Material' : '');
+        }
+
+        // Close dropdown when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.serviceSelectInput').length) {
+                $('.product-search-results').remove();
+            }
+        });
+
+        // newMaterialRequestPanel.js end
+    </script>
+</div>

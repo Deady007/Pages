@@ -1,0 +1,440 @@
+<div class="row mt-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="row g-0">
+          <!-- LEFT: Welcome + Recent Activity -->
+          <div class="col-xxl-3 col-xl-6 order-xl-1 order-xxl-0">
+            <div class="p-4 border-end border-dashed">
+              <h4 class="fs-lg mb-1">Welcome to Suleshwari</h4>
+              <span class="text-muted" id="welcomeSubtitle">Loading activity...</span>
+              <ul class="list-group list-group-flush mt-3" id="recentActivityList">
+                <li class="list-group-item border-0 px-0 text-muted">Loading...</li>
+              </ul>
+              <div class="text-center mt-2">
+                <a href="#!" class="btn btn-secondary rounded-pill btn-sm" onclick="if(typeof FOX !== 'undefined' && FOX.loadPage) FOX.loadPage('visitorEntry');">Visitor Entry</a>
+                <a href="#!" class="btn btn-outline-secondary rounded-pill btn-sm" onclick="if(typeof FOX !== 'undefined' && FOX.loadPage) FOX.loadPage('gatePass');">Gate Pass</a>
+              </div>
+            </div>
+            <hr class="d-xxl-none border-light m-0">
+          </div>
+
+          <!-- CENTER: Production & Warehouse Overview -->
+          <div class="col-xxl-6 order-xl-3 order-xxl-1">
+            <div class="px-4 py-3 border-end border-dashed">
+              <div class="d-flex justify-content-between mb-3">
+                <h4 class="card-title">Operations Overview</h4>
+                <span class="text-muted" id="dashboardDate"></span>
+              </div>
+
+              <!-- Department Summary Row -->
+              <div class="row text-center mb-3 g-2">
+                <div class="col">
+                  <div class="bg-light bg-opacity-50 p-2 rounded">
+                    <div class="text-muted fs-xs text-uppercase">Production</div>
+                    <h5 class="m-0 text-primary fw-bold" id="statProductionActive">-</h5>
+                    <div class="text-muted" style="font-size: 11px;">Active Processes</div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="bg-light bg-opacity-50 p-2 rounded">
+                    <div class="text-muted fs-xs text-uppercase">Warehouse</div>
+                    <h5 class="m-0 text-primary fw-bold" id="statWarehouseDisposals">-</h5>
+                    <div class="text-muted" style="font-size: 11px;">Pending Disposals</div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="bg-light bg-opacity-50 p-2 rounded">
+                    <div class="text-muted fs-xs text-uppercase">Gate</div>
+                    <h5 class="m-0 text-primary fw-bold" id="statGateTodayTotal">-</h5>
+                    <div class="text-muted" style="font-size: 11px;">Entries Today</div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="bg-light bg-opacity-50 p-2 rounded">
+                    <div class="text-muted fs-xs text-uppercase">QA</div>
+                    <h5 class="m-0 text-primary fw-bold" id="statQAChecklists">-</h5>
+                    <div class="text-muted" style="font-size: 11px;">Open Checklists</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Production Table -->
+              <h6 class="text-muted text-uppercase fs-xs mb-2">Recent Manufacturing Processes</h6>
+              <div class="table-responsive" style="max-height: 130px; overflow-y: auto;">
+                <table class="table table-sm table-hover mb-0">
+                  <thead><tr>
+                    <th style="font-size: 11px;">Batch</th>
+                    <th style="font-size: 11px;">Template</th>
+                    <th style="font-size: 11px;">Progress</th>
+                    <th style="font-size: 11px;">Status</th>
+                  </tr></thead>
+                  <tbody id="recentMfgTable"><tr><td colspan="4" class="text-muted text-center" style="font-size: 12px;">Loading...</td></tr></tbody>
+                </table>
+              </div>
+
+              <!-- Warehouse Table -->
+              <h6 class="text-muted text-uppercase fs-xs mb-2 mt-3">Recent Disposal Requests</h6>
+              <div class="table-responsive" style="max-height: 100px; overflow-y: auto;">
+                <table class="table table-sm table-hover mb-0">
+                  <thead><tr>
+                    <th style="font-size: 11px;">Number</th>
+                    <th style="font-size: 11px;">Category</th>
+                    <th style="font-size: 11px;">Status</th>
+                  </tr></thead>
+                  <tbody id="recentDisposalTable"><tr><td colspan="3" class="text-muted text-center" style="font-size: 12px;">Loading...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Pending Approvals -->
+          <div class="col-xxl-3 col-xl-6 order-xl-2 order-xxl-2">
+            <div class="p-3">
+              <h4 class="card-title mb-1">Pending Actions</h4>
+              <p class="text-muted fs-xs">Items requiring your attention across all modules.</p>
+              <div id="pendingActionsList" class="mt-3" style="max-height: 310px; overflow-y: auto;">
+                <p class="text-muted text-center">Loading...</p>
+              </div>
+            </div>
+            <hr class="d-xxl-none border-light m-0">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Metric Cards Row -->
+<div class="row row-cols-xxl-5 row-cols-md-3 row-cols-1 align-items-center">
+  <!-- Card 1: Gate Entries -->
+  <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <h5 title="Gate Entries">Gate Entries</h5>
+        <div class="d-flex align-items-center gap-2 my-3">
+          <div class="avatar-md flex-shrink-0">
+            <span class="avatar-title text-bg-light rounded-circle fs-22"><i class="ti ti-truck-delivery"></i></span>
+          </div>
+          <h3 class="mb-0" id="cardGateEntriesToday">-</h3>
+          <span class="badge badge-soft-primary fw-medium ms-2 fs-xs ms-auto" id="cardGateEntriesTodayBadge"></span>
+        </div>
+        <p class="mb-0">
+          <span class="text-primary"><i class="ti ti-point-filled"></i></span>
+          <span class="text-nowrap text-muted">Total All Time</span>
+          <span class="float-end fw-bold" id="cardGateEntriesTotal">-</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Gate Passes -->
+  <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <h5 title="Gate Passes">Gate Passes</h5>
+        <div class="d-flex align-items-center gap-2 my-3">
+          <div class="avatar-md flex-shrink-0">
+            <span class="avatar-title text-bg-light rounded-circle fs-22"><i class="ti ti-file-invoice"></i></span>
+          </div>
+          <h3 class="mb-0" id="cardGatePassTotal">-</h3>
+          <span class="badge badge-soft-secondary fw-medium ms-2 fs-xs ms-auto" id="cardGatePassBadge"></span>
+        </div>
+        <p class="mb-0">
+          <span class="text-secondary"><i class="ti ti-point-filled"></i></span>
+          <span class="text-nowrap text-muted">Outward Requests</span>
+          <span class="float-end fw-bold" id="cardOutwardReqTotal">-</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Visitors -->
+  <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <h5 title="Visitors">Visitors</h5>
+        <div class="d-flex align-items-center gap-2 my-3">
+          <div class="avatar-md flex-shrink-0">
+            <span class="avatar-title text-bg-light rounded-circle fs-22"><i class="ti ti-users"></i></span>
+          </div>
+          <h3 class="mb-0" id="cardVisitorsInside">-</h3>
+          <span class="badge text-bg-light fw-medium ms-2 fs-xs ms-auto" id="cardVisitorsBadge"></span>
+        </div>
+        <p class="mb-0">
+          <span class="text-primary"><i class="ti ti-point-filled"></i></span>
+          <span class="text-nowrap text-muted">Total All Time</span>
+          <span class="float-end fw-bold" id="cardVisitorsTotal">-</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 4: Manufacturing -->
+  <div class="col">
+    <div class="card">
+      <div class="card-body">
+        <h5 title="Manufacturing">Manufacturing</h5>
+        <div class="d-flex align-items-center gap-2 my-3">
+          <div class="avatar-md flex-shrink-0">
+            <span class="avatar-title text-bg-light rounded-circle fs-22"><i class="ti ti-assembly"></i></span>
+          </div>
+          <h3 class="mb-0" id="cardMfgInProgress">-</h3>
+          <span class="badge badge-soft-secondary fw-medium ms-2 fs-xs ms-auto" id="cardMfgBadge"></span>
+        </div>
+        <p class="mb-0">
+          <span class="text-secondary"><i class="ti ti-point-filled"></i></span>
+          <span class="text-nowrap text-muted">Completed</span>
+          <span class="float-end fw-bold" id="cardMfgCompleted">-</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 5: Disposal / Warehouse -->
+  <div class="col-lg col-md-auto">
+    <div class="card">
+      <div class="card-body">
+        <h5 title="Warehouse Disposals">Warehouse</h5>
+        <div class="d-flex align-items-center gap-2 my-3">
+          <div class="avatar-md flex-shrink-0">
+            <span class="avatar-title text-bg-light rounded-circle fs-22"><i class="ti ti-package"></i></span>
+          </div>
+          <h3 class="mb-0" id="cardDisposalPending">-</h3>
+          <span class="badge badge-soft-primary fw-medium ms-2 fs-xs ms-auto" id="cardDisposalBadge"></span>
+        </div>
+        <p class="mb-0">
+          <span class="text-primary"><i class="ti ti-point-filled"></i></span>
+          <span class="text-nowrap text-muted">Issued</span>
+          <span class="float-end fw-bold" id="cardDisposalIssued">-</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var today = new Date();
+    $('#dashboardDate').text(today.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+
+    function isToday(dateStr) {
+      if (!dateStr) return false;
+      var d = new Date(dateStr);
+      var now = new Date();
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }
+
+    function formatTime(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    var statusColors = {
+      'New': 'secondary', 'Pending': 'warning', 'Submitted': 'info', 'Inside': 'warning',
+      'Entry Approved': 'success', 'Exit Requested': 'info', 'Exit Approved': 'primary',
+      'Exited': 'secondary', 'Rejected': 'danger', 'Approved': 'success', 'Completed': 'success',
+      'In Progress': 'primary', 'Not Started': 'secondary', 'On Hold': 'warning',
+      'Issued': 'success', 'Under Review': 'warning', 'Draft': 'secondary',
+      'In-Production': 'primary', 'QC-Approved': 'success'
+    };
+
+    function badge(status) {
+      var c = statusColors[status] || 'secondary';
+      return '<span class="badge text-bg-' + c + '" style="font-size: 10px;">' + (status || '-') + '</span>';
+    }
+
+    var pendingActions = [];
+
+    function renderPendingActions() {
+      var $list = $('#pendingActionsList');
+      if (!pendingActions.length) { $list.html('<p class="text-muted text-center" style="font-size: 13px;">No pending actions.</p>'); return; }
+      var html = '';
+      pendingActions.sort(function(a, b) { return (b.priority || 0) - (a.priority || 0); });
+      pendingActions.slice(0, 12).forEach(function(item) {
+        var c = statusColors[item.status] || 'secondary';
+        html += '<div class="d-flex align-items-start gap-2 mb-2 p-2 bg-light rounded">' +
+                '<span class="badge text-bg-' + c + '" style="margin-top: 2px; font-size: 9px; white-space: nowrap;">' + item.module + '</span>' +
+                '<div style="flex: 1; min-width: 0;">' +
+                '<div class="fw-semibold text-truncate" style="font-size: 12px;">' + item.label + '</div>' +
+                '<div class="text-muted" style="font-size: 10px;">' + item.detail + '</div>' +
+                '</div></div>';
+      });
+      $list.html(html);
+    }
+
+    var recentActivity = [];
+
+    function renderRecentActivity() {
+      recentActivity.sort(function(a, b) { return new Date(b.time || 0) - new Date(a.time || 0); });
+      var recent = recentActivity.slice(0, 5);
+      if (!recent.length) {
+        $('#recentActivityList').html('<li class="list-group-item border-0 px-0 text-muted">No recent activity.</li>');
+        return;
+      }
+      var html = '';
+      recent.forEach(function(a, i) {
+        var c = statusColors[a.status] || 'secondary';
+        html += '<li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">' +
+                '<div><span class="badge text-bg-' + c + ' avatar-xs me-2"><span class="avatar-title fw-medium fs-sm">' + (i + 1) + '</span></span>' +
+                '<span style="font-size: 13px;">' + a.label + '</span></div>' +
+                '<span class="text-muted" style="font-size: 11px;">' + formatTime(a.time) + '</span></li>';
+      });
+      $('#recentActivityList').html(html);
+    }
+
+    // ---- Visitors ----
+    $.get('/api/visitor', function(visitors) {
+      visitors = Array.isArray(visitors) ? visitors : [];
+      var inside = visitors.filter(function(v) { return v.processStatus === 'Inside' || v.processStatus === 'Entry Approved'; });
+      var pendingEntry = visitors.filter(function(v) { return v.processStatus === 'Inside'; });
+      var exitRequested = visitors.filter(function(v) { return v.processStatus === 'Exit Requested'; });
+
+      $('#cardVisitorsInside').text(inside.length);
+      $('#cardVisitorsBadge').text(inside.length > 0 ? inside.length + ' Inside' : '');
+      $('#cardVisitorsTotal').text(visitors.length);
+
+      pendingEntry.forEach(function(v) {
+        var name = ((v.firstName || '') + ' ' + (v.lastName || '')).trim();
+        pendingActions.push({ module: 'Visitor', label: name || 'Visitor', detail: 'Awaiting entry approval', status: 'Inside', priority: 3 });
+      });
+      exitRequested.forEach(function(v) {
+        var name = ((v.firstName || '') + ' ' + (v.lastName || '')).trim();
+        pendingActions.push({ module: 'Visitor', label: name || 'Visitor', detail: 'Awaiting exit approval', status: 'Exit Requested', priority: 2 });
+      });
+
+      visitors.slice(0, 3).forEach(function(v) {
+        recentActivity.push({ label: ((v.firstName || '') + ' ' + (v.lastName || '')).trim() + ' - ' + (v.processStatus || ''), time: v.entryTime, status: v.processStatus });
+      });
+      renderPendingActions();
+      renderRecentActivity();
+    });
+
+    // ---- Gate Entries ----
+    $.get('/api/gate-entry', function(entries) {
+      entries = Array.isArray(entries) ? entries : [];
+      var todayEntries = entries.filter(function(e) { return isToday(e.gateEntryTime); });
+
+      $('#cardGateEntriesToday').text(todayEntries.length);
+      $('#cardGateEntriesTodayBadge').text(todayEntries.length > 0 ? '+' + todayEntries.length + ' Today' : '');
+      $('#cardGateEntriesTotal').text(entries.length);
+      $('#statGateTodayTotal').text(todayEntries.length);
+
+      var pending = entries.filter(function(e) { return e.processStatus === 'Pending'; });
+      pending.slice(0, 3).forEach(function(e) {
+        pendingActions.push({ module: 'Gate', label: e.number || 'Gate Entry', detail: 'Pending verification', status: 'Pending', priority: 2 });
+      });
+
+      entries.slice(0, 2).forEach(function(e) {
+        recentActivity.push({ label: (e.number || '') + ' - ' + (e.vendor ? e.vendor.name : 'Gate Entry'), time: e.gateEntryTime, status: e.processStatus });
+      });
+      renderPendingActions();
+      renderRecentActivity();
+    });
+
+    // ---- Gate Passes ----
+    $.get('/api/gate-passes', function(passes) {
+      passes = Array.isArray(passes) ? passes : [];
+      $('#cardGatePassTotal').text(passes.length);
+      var newPasses = passes.filter(function(p) { return p.processStatus === 'New'; });
+      $('#cardGatePassBadge').text(newPasses.length > 0 ? newPasses.length + ' New' : '');
+    });
+
+    // ---- Gate Outward Requests ----
+    $.get('/api/gate-outward-requests', function(reqs) {
+      reqs = Array.isArray(reqs) ? reqs : [];
+      $('#cardOutwardReqTotal').text(reqs.length);
+
+      var underReview = reqs.filter(function(r) { return r.processStatus === 'Under Review'; });
+      underReview.slice(0, 3).forEach(function(r) {
+        pendingActions.push({ module: 'Outward', label: r.number || 'Outward Req', detail: 'Awaiting approval (' + (r.type || '') + ')', status: 'Under Review', priority: 3 });
+      });
+      renderPendingActions();
+    });
+
+    // ---- Manufacturing Processes ----
+    $.get('/api/manufacturing-processes', function(procs) {
+      procs = Array.isArray(procs) ? procs : [];
+      var inProgress = procs.filter(function(p) { return p.processStatus === 'In Progress'; });
+      var completed = procs.filter(function(p) { return p.processStatus === 'Completed'; });
+
+      $('#cardMfgInProgress').text(inProgress.length);
+      $('#cardMfgBadge').text(inProgress.length > 0 ? inProgress.length + ' Active' : '');
+      $('#cardMfgCompleted').text(completed.length);
+      $('#statProductionActive').text(inProgress.length);
+
+      // Recent mfg table
+      var tableHtml = '';
+      if (!procs.length) {
+        tableHtml = '<tr><td colspan="4" class="text-muted text-center" style="font-size: 12px;">No processes found.</td></tr>';
+      } else {
+        procs.slice(0, 5).forEach(function(p) {
+          var tmplName = p.template ? (p.template.name || '') : '-';
+          var progress = (p.currentStepIndex || 0) + '/' + (p.totalSteps || 0);
+          tableHtml += '<tr>' +
+                  '<td style="font-size: 12px;">' + (p.batchNumber || p.number || '-') + '</td>' +
+                  '<td style="font-size: 12px;">' + tmplName + '</td>' +
+                  '<td style="font-size: 12px;">' + progress + '</td>' +
+                  '<td>' + badge(p.processStatus) + '</td></tr>';
+        });
+      }
+      $('#recentMfgTable').html(tableHtml);
+
+      inProgress.slice(0, 2).forEach(function(p) {
+        recentActivity.push({ label: (p.batchNumber || p.number || '') + ' - Manufacturing', time: p.startedAt, status: 'In Progress' });
+      });
+      renderRecentActivity();
+    });
+
+    // ---- Disposal Requests ----
+    $.get('/api/disposal-requests', function(disposals) {
+      disposals = Array.isArray(disposals) ? disposals : [];
+      var submitted = disposals.filter(function(d) { return d.processStatus === 'Submitted' || d.processStatus === 'New'; });
+      var issued = disposals.filter(function(d) { return d.processStatus === 'Issued'; });
+
+      $('#cardDisposalPending').text(submitted.length);
+      $('#cardDisposalBadge').text(submitted.length > 0 ? submitted.length + ' Pending' : '');
+      $('#cardDisposalIssued').text(issued.length);
+      $('#statWarehouseDisposals').text(submitted.length);
+
+      // Recent disposal table
+      var tableHtml = '';
+      if (!disposals.length) {
+        tableHtml = '<tr><td colspan="3" class="text-muted text-center" style="font-size: 12px;">No disposal requests.</td></tr>';
+      } else {
+        disposals.slice(0, 4).forEach(function(d) {
+          tableHtml += '<tr>' +
+                  '<td style="font-size: 12px;">' + (d.number || '-') + '</td>' +
+                  '<td style="font-size: 12px;">' + (d.wasteCategory || d.materialType || '-') + '</td>' +
+                  '<td>' + badge(d.processStatus) + '</td></tr>';
+        });
+      }
+      $('#recentDisposalTable').html(tableHtml);
+
+      submitted.slice(0, 2).forEach(function(d) {
+        pendingActions.push({ module: 'Warehouse', label: d.number || 'Disposal', detail: 'Pending dispensing', status: 'Submitted', priority: 2 });
+      });
+      renderPendingActions();
+    });
+
+    // ---- QA Checklists ----
+    $.get('/api/question-groups', function(groups) {
+      groups = Array.isArray(groups) ? groups : [];
+      var open = groups.filter(function(g) { return g.processStatus === 'Draft' || !g.processStatus; });
+      $('#statQAChecklists').text(open.length);
+
+      open.slice(0, 2).forEach(function(g) {
+        pendingActions.push({ module: 'QA', label: g.number || g.name || 'Checklist', detail: 'Draft - needs completion', status: 'Draft', priority: 1 });
+      });
+      renderPendingActions();
+    });
+
+    // ---- Welcome subtitle ----
+    setTimeout(function() {
+      var totalPending = pendingActions.length;
+      $('#welcomeSubtitle').html('You have <span class="text-primary fw-semibold">' + totalPending + '</span> pending action' + (totalPending !== 1 ? 's' : '') + ' today.');
+    }, 2000);
+
+  })();
+</script>

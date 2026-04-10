@@ -1,0 +1,3343 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+
+<!-- templatePreview.html start -->
+<style>
+    .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
+    .selectTemplateRecord { color: #337AB7 !important; text-decoration: none; }
+
+    .status-new {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    .status-submitted {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .status-completed  { 
+      background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; 
+    }
+
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    #templatePreviewPanel .tpl-body {
+        padding: 22px 24px;
+    }
+
+    #templatePreviewPanel .tpl-doc {
+        background: #fff;
+        border: 1px solid #d1d5db;
+        padding: 28px 32px;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 12px;
+        color: #111;
+        line-height: 1.5;
+    }
+
+    /* ── Logo + Company centered ── */
+    #templatePreviewPanel .tpl-doc-banner {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    #templatePreviewPanel img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 2px;
+    }
+
+    #templatePreviewPanel .logo-text {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+        color: #aaa;
+        letter-spacing: 1px;
+    }
+
+    #templatePreviewPanel .tpl-doc-company {
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    /* ── Single header row: left | center | right ── */
+    #templatePreviewPanel .tpl-doc-hf {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        min-height: 16px;
+        margin-bottom: 2px;
+    }
+
+    #templatePreviewPanel .tpl-doc-hf .tpl-hf-l {
+        text-align: left;
+        flex: 1;
+    }
+
+    #templatePreviewPanel .tpl-doc-hf .tpl-hf-c {
+        text-align: center;
+        flex: 1;
+    }
+
+    #templatePreviewPanel .tpl-doc-hf .tpl-hf-r {
+        text-align: right;
+        flex: 1;
+    }
+
+    /* ── Dividers ── */
+    #templatePreviewPanel .tpl-doc-divider {
+        border: none;
+        border-top: 1px solid #111;
+        margin: 8px 0;
+    }
+
+    #templatePreviewPanel .tpl-doc-divider.thin {
+        border-top: 1px solid #aaa;
+        margin: 10px 0;
+    }
+
+    /* ── Template title ── */
+    #templatePreviewPanel .tpl-doc-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 13px;
+        margin: 6px 0 4px;
+    }
+
+    /* ── Description ── */
+    #templatePreviewPanel .tpl-doc-desc {
+        margin-bottom: 10px;
+        font-size: 12px;
+        color: #333;
+    }
+
+    /* ── Table ── */
+    #templatePreviewPanel #tplPreviewTable {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 12px;
+    }
+
+    #templatePreviewPanel #tplPreviewTable th {
+        border: 1px solid #111;
+        padding: 5px 8px;
+        text-align: left;
+        font-weight: bold;
+        background: #fff;
+        font-size: 12px;
+        vertical-align: top;
+    }
+
+    #templatePreviewPanel #tplPreviewTable th .tpl-col-type {
+        display: block;
+        font-weight: normal;
+        font-size: 10px;
+        color: #555;
+    }
+
+    #templatePreviewPanel #tplPreviewTable td {
+        border: 1px solid #aaa;
+        padding: 5px 8px;
+        font-size: 12px;
+        height: 26px;
+    }
+
+    #templatePreviewPanel .tpl-no-cols {
+        text-align: center;
+        color: #aaa;
+        font-style: italic;
+        padding: 20px 0;
+        font-size: 12px;
+    }
+
+    /* ── Footer ── */
+    #templatePreviewPanel .tpl-doc-footer {
+        margin-top: 14px;
+        font-size: 12px;
+    }
+</style>
+
+<div class="qa-white-panel">
+
+<div class="row animated fadeInRight aasaanPanel" id="templatePreviewPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>
+                    <span id="tplPreviewTitle">Template Preview</span>
+                    <small> Logbook </small>
+                    <span id="tplPreviewRevisionLabel" class="badge bg-secondary"
+                        style="margin-left: 8px; float: none; vertical-align: middle;">Rev 0</span>
+                </h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm" id="tplPreviewCloseBtn">
+                        <i data-lucide="x"></i> Close
+                    </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="tpl-body">
+                    <div class="tpl-doc">
+
+                        <!-- Logo + Company Name centered -->
+                        <div class="tpl-doc-banner">
+                            <img src="" alt="Logo"
+                                onerror="this.style.display='none'; if(!this.parentElement.querySelector('.logo-text')) { var span=document.createElement('div'); span.className='logo-text'; span.textContent='LOGO'; this.parentElement.appendChild(span); }" />
+                            <div class="logo-text" style="display:none;">LOGO</div>
+
+                            <div class="tpl-doc-company" id="tplPreviewCompanyName">Suleshvari Pharma</div>
+                        </div>
+
+                        <!-- Template title centered -->
+                        <div class="tpl-doc-title" id="tplPreviewDocTitle"></div>
+
+                        <!-- Single header line: left | center | right -->
+                        <div class="tpl-doc-hf">
+                            <div class="tpl-hf-l" id="tplPreviewHeaderLeft"></div>
+                            <div class="tpl-hf-c" id="tplPreviewHeaderCenter"></div>
+                            <div class="tpl-hf-r" id="tplPreviewHeaderRight"></div>
+                        </div>
+
+                        <!-- <hr class="tpl-doc-divider"> -->
+
+                        <!-- Description (if any) -->
+                        <div class="tpl-doc-desc" id="tplPreviewDesc" style="display:none;"></div>
+
+                        <!-- Columns table -->
+                        <div id="tplPreviewTableContainer"></div>
+
+                        <!-- <hr class="tpl-doc-divider thin"> -->
+
+                        <!-- Single footer line: left | center | right -->
+                        <div class="tpl-doc-footer">
+                            <div class="tpl-doc-hf">
+                                <div class="tpl-hf-l" id="tplPreviewFooterLeft"></div>
+                                <div class="tpl-hf-c" id="tplPreviewFooterCenter"></div>
+                                <div class="tpl-hf-r" id="tplPreviewFooterRight"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // templatePreview.js
+// Single shared preview component — works with createTemplate, editTemplate and editTemplateReview panels.
+// Call openTemplatePreview(callerPanelId) from each panel's Preview button.
+
+(function () {
+    'use strict';
+
+    // Which panel called open — used to restore on close
+    var _callerPanelId = null;
+
+    // ── Field ID maps per caller panel ───────────────────────────────────────
+    // Each map defines which DOM IDs to read from for that panel's fields.
+    var FIELD_MAPS = {
+        'createTemplatePanel': {
+            name:         'tpl-name',
+            revision:     'tpl-revision',
+            desc:         'tpl-desc',
+            headerLeft:   'tpl-header-left',
+            headerCenter: 'tpl-header-center',
+            headerRight:  'tpl-header-right',
+            footerLeft:   'tpl-footer-left',
+            footerCenter: 'tpl-footer-center',
+            footerRight:  'tpl-footer-right',
+            fieldListSelector: '#field-list .field-item'
+        },
+        'editTemplatePanel': {
+            name:         'edit-tpl-name',
+            revision:     'edit-tpl-revision',
+            desc:         'edit-tpl-desc',
+            headerLeft:   'edit-tpl-header-left',
+            headerCenter: 'edit-tpl-header-center',
+            headerRight:  'edit-tpl-header-right',
+            footerLeft:   'edit-tpl-footer-left',
+            footerCenter: 'edit-tpl-footer-center',
+            footerRight:  'edit-tpl-footer-right',
+            fieldListSelector: '#edit-template-field-list .field-item'
+        },
+        'editTemplateReviewPanel': {
+            name:         'edit-tpl-name',
+            revision:     'edit-tpl-revision',
+            desc:         'edit-tpl-desc',
+            headerLeft:   'edit-tpl-header-left',
+            headerCenter: 'edit-tpl-header-center',
+            headerRight:  'edit-tpl-header-right',
+            footerLeft:   'edit-tpl-footer-left',
+            footerCenter: 'edit-tpl-footer-center',
+            footerRight:  'edit-tpl-footer-right',
+            fieldListSelector: '#edit-template-field-list .field-item'
+        }
+    };
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    function val(id) {
+        var el = document.getElementById(id);
+        return el ? (el.value || '').trim() : '';
+    }
+
+    function esc(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function typeLabel(type) {
+        var map = {
+            text: 'Text', number: 'Number', date: 'Date',
+            time: 'Time', dropdown: 'Dropdown',
+            textarea: 'Text Area', checkbox: 'Checkbox'
+        };
+        return map[type] || type;
+    }
+
+    function setText(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text || '';
+    }
+
+    // ── Read columns from whichever field list the caller uses ────────────────
+
+    function readColumns(fieldListSelector) {
+        var columns = [];
+        document.querySelectorAll(fieldListSelector).forEach(function (item) {
+            var name     = ((item.querySelector('[data-role="name"]')    || {}).value || '').trim();
+            var type     = ((item.querySelector('[data-role="type"]')    || {}).value || 'text');
+            var reqEl    =   item.querySelector('[data-role="required"]');
+            var required = reqEl ? reqEl.checked : false;
+            if (!name) return;
+            columns.push({ name: name, type: type, required: required });
+        });
+        return columns;
+    }
+
+    // ── Build columns table ───────────────────────────────────────────────────
+
+    function buildTable(columns) {
+        var container = document.getElementById('tplPreviewTableContainer');
+        if (!container) return;
+
+        if (!columns.length) {
+            container.innerHTML = '<div class="tpl-no-cols">No columns defined.</div>';
+            return;
+        }
+
+        var ths = columns.map(function (col) {
+            return '<th>' +
+                esc(col.name) + (col.required ? ' *' : '') +
+                '<span class="tpl-col-type">(' + typeLabel(col.type) + ')</span>' +
+                '</th>';
+        }).join('');
+
+        var tds = columns.map(function () { return '<td></td>'; }).join('');
+        var rows = '<tr>' + tds + '</tr><tr>' + tds + '</tr><tr>' + tds + '</tr>';
+
+        container.innerHTML =
+            '<table id="tplPreviewTable">' +
+                '<thead><tr>' + ths + '</tr></thead>' +
+                '<tbody>' + rows + '</tbody>' +
+            '</table>';
+    }
+
+    // ── Populate preview from the correct field map ───────────────────────────
+
+    function populatePreview(map) {
+        var name     = val(map.name) || 'Untitled Template';
+        var revision = val(map.revision) || '0';
+        var desc     = val(map.desc);
+        var columns  = readColumns(map.fieldListSelector);
+
+        // ibox title bar
+        var titleEl = document.getElementById('tplPreviewTitle');
+        if (titleEl) titleEl.textContent = name;
+
+        var revLabel = document.getElementById('tplPreviewRevisionLabel');
+        if (revLabel) revLabel.textContent = 'Rev ' + revision;
+
+        // Document title
+        setText('tplPreviewDocTitle', name);
+
+        // Header row
+        setText('tplPreviewHeaderLeft',   val(map.headerLeft));
+        setText('tplPreviewHeaderCenter', val(map.headerCenter));
+        setText('tplPreviewHeaderRight',  val(map.headerRight));
+
+        // Footer row
+        setText('tplPreviewFooterLeft',   val(map.footerLeft));
+        setText('tplPreviewFooterCenter', val(map.footerCenter));
+        setText('tplPreviewFooterRight',  val(map.footerRight));
+
+        // Description
+        var descEl = document.getElementById('tplPreviewDesc');
+        if (descEl) {
+            if (desc) {
+                descEl.textContent = desc;
+                descEl.style.display = 'block';
+            } else {
+                descEl.style.display = 'none';
+            }
+        }
+
+        buildTable(columns);
+    }
+
+    // ── Open ─────────────────────────────────────────────────────────────────
+    // callerPanelId: 'createTemplatePanel' | 'editTemplatePanel' | 'editTemplateReviewPanel'
+
+    function openTemplatePreview(callerPanelId) {
+        if (!$('#templatePreviewPanel').length) {
+            console.warn('[TemplatePreview] #templatePreviewPanel not found.');
+            return;
+        }
+
+        // Default to create if not specified
+        _callerPanelId = callerPanelId || 'createTemplatePanel';
+
+        var map = FIELD_MAPS[_callerPanelId];
+        if (!map) {
+            console.warn('[TemplatePreview] Unknown callerPanelId:', _callerPanelId);
+            map = FIELD_MAPS['createTemplatePanel'];
+        }
+
+        populatePreview(map);
+
+        // Hide the caller panel, show preview
+        $('#' + _callerPanelId).hide();
+        $('#templatePreviewPanel').show();
+        $('.newCreateTemplateBtn').hide();
+    }
+
+    // ── Close ─────────────────────────────────────────────────────────────────
+
+    function closeTemplatePreview() {
+        $('#templatePreviewPanel').hide();
+
+        // Restore whichever panel opened us
+        if (_callerPanelId) {
+            $('#' + _callerPanelId).show();
+        }
+
+        // newCreateTemplateBtn: only hide it if we came from edit panels
+        // (create panel manages it via showCreateTemplatePanel)
+        if (_callerPanelId === 'createTemplatePanel') {
+            $('.newCreateTemplateBtn').hide();
+        } else {
+            $('.newCreateTemplateBtn').hide();
+        }
+
+        _callerPanelId = null;
+    }
+
+    // ── Bind close button ─────────────────────────────────────────────────────
+
+    function bindPreviewEvents() {
+        var panel = document.getElementById('templatePreviewPanel');
+        if (!panel || panel.dataset.bound === 'true') return;
+        panel.dataset.bound = 'true';
+        var closeBtn = document.getElementById('tplPreviewCloseBtn');
+        if (closeBtn) closeBtn.addEventListener('click', closeTemplatePreview);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindPreviewEvents);
+    } else {
+        bindPreviewEvents();
+    }
+
+    window.openTemplatePreview  = openTemplatePreview;
+    window.closeTemplatePreview = closeTemplatePreview;
+
+}());
+</script>
+<!-- templatePreview.html end -->
+
+
+<!-- editTemplate.html start -->
+<style>
+    #editTemplatePanel .tpl-body {
+        padding: 22px 24px;
+    }
+
+    #editTemplatePanel .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        color: #2563eb;
+        border-left: 3px solid #2563eb;
+        padding-left: 8px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+
+    #editTemplatePanel .section-card {
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    }
+
+    #editTemplatePanel .columns-toolbar {
+        margin-bottom: 10px;
+        align-items: center;
+    }
+
+    #editTemplatePanel .columns-toolbar .section-title {
+        margin: 0;
+    }
+
+    #editTemplatePanel #edit-template-field-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #editTemplatePanel .field-item {
+        border: 1px solid #d5dde8;
+        border-radius: 10px;
+        padding: 12px 14px;
+        background: #fafcff;
+        margin-bottom: 12px;
+    }
+
+    #editTemplatePanel .field-item .form-group {
+        margin-bottom: 10px;
+    }
+
+    #editTemplatePanel .field-item .field-required-toggle {
+        margin-top: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #676a6c;
+        font-size: 13px;
+        font-weight: 400;
+    }
+
+    #editTemplatePanel .field-item .field-index {
+        margin-top: 32px;
+        display: inline-block;
+        font-size: 12px;
+        color: #888;
+    }
+
+    #editTemplatePanel .remove-field-btn {
+        margin-top: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #editTemplatePanel .options-editor label {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #52647d;
+    }
+
+    #editTemplatePanel .add-column-btn--mini {
+        border: 1px solid #c8d2e0;
+        border-radius: 6px;
+        background: #fff;
+        color: #2563EB;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        line-height: 1.2;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    #editTemplatePanel .add-column-btn--mini:hover {
+        background: #f1f5ff;
+        border-color: #9bb6ff;
+        color: #1e3a8a;
+    }
+
+    #editTemplatePanel .departmentDropDown + .select2-container .select2-selection--multiple {
+        background: #fff;
+        border: 1px solid #e5e6e7;
+        border-radius: 3px;
+        min-height: 34px;
+        padding: 2px 6px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    #editTemplatePanel .departmentDropDown + .select2-container.select2-container--focus .select2-selection--multiple {
+        border-color: #4d6dff;
+        box-shadow: 0 0 0 2px rgba(77, 109, 255, 0.12);
+    }
+
+    #editTemplatePanel label .required-asterisk {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+
+    #editTemplatePanel .history-table-wrap {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    @media (max-width: 1199px) {
+        #editTemplatePanel .field-item [class*="col-sm-"] {
+            margin-bottom: 8px;
+        }
+
+        #editTemplatePanel .field-item .field-required-toggle,
+        #editTemplatePanel .field-item .field-index,
+        #editTemplatePanel .field-item .remove-field-btn {
+            margin-top: 0;
+        }
+
+        #editTemplatePanel .field-item .field-index {
+            display: block;
+            line-height: 34px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        #editTemplatePanel .field-item [class*="col-sm-"] {
+            float: none;
+            width: 100%;
+        }
+
+        #editTemplatePanel .columns-toolbar .text-right {
+            text-align: left;
+            margin-top: 8px;
+        }
+
+        #editTemplatePanel .field-item .remove-field-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="row animated fadeInRight aasaanPanel" id="editTemplatePanel" style="display: none;">
+    <div class="col-lg-12" id="templateStatusStepsWrap" style="display:none;">
+        <div id="template-status-steps">
+            <div class="step" data-step="new">
+                <div class="step-circle">1</div>
+                <div class="step-label">New</div>
+            </div>
+            <div class="step" data-step="pending">
+                <div class="step-circle">2</div>
+                <div class="step-label">Pending Approval</div>
+            </div>
+            <div class="step" data-step="approved">
+                <div class="step-circle">3</div>
+                <div class="step-label">Approved</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>
+                    <span id="editTemplateTitle">Edit Logbook Template</span>
+                    <small> Logbook </small>
+                    <span id="editTemplateStatus" class="status-badge status-new" style="margin-left: 8px; float: none; vertical-align: middle;">New</span>
+                </h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm editTemplateCloseBtn"><i data-lucide="x"></i> Close </button>
+                    <button type="button" class="btn btn-default btn-sm" id="editTemplateEnableEditBtn"><i data-lucide="pencil"></i> Edit </button>
+                    <button type="button" class="btn btn-default btn-sm" id="editTemplateSaveBtn"><i data-lucide="check"></i> Save </button>
+                    <button type="button" class="btn btn-default btn-sm" id="editTemplateSendToQaBtn"><i data-lucide="check-check"></i> Send to QA </button>
+                    <button type="button" class="btn btn-default btn-sm" id="editTemplatePreviewBtn" onclick="openTemplatePreview('editTemplatePanel');"><i data-lucide="eye"></i> Preview </button>
+                    <!-- <button type="button" class="btn btn-secondary btn-sm" id="editTemplateApproveBtn"><i data-lucide="check"></i> Approve </button> -->
+                    <button type="button" class="btn btn-secondary btn-sm" id="editTemplateCreateRevisionBtn" style="display:none;"><i data-lucide="history"></i> Revise </button>
+                    <!-- <button type="button" class="btn btn-warning btn-sm" id="editTemplateReturnBtn"><i data-lucide="undo-2"></i> Return </button>
+                    <button type="button" class="btn btn-danger btn-sm" id="editTemplateRejectBtn"><i data-lucide="x"></i> Reject </button> -->
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="tpl-body">
+                    <input type="hidden" id="edit-template-record-id">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="edit-tpl-name">Template Name <span class="required-asterisk">*</span></label>
+                                <input type="text" id="edit-tpl-name" class="form-control edit-template-input"
+                                    placeholder="e.g., Equipment Cleaning Log" readonly>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="edit-tpl-applicable-depts">Applicable Departments</label>
+                                <select id="edit-tpl-applicable-depts" class="select2 form-control edit-template-input departmentDropDown" multiple="multiple" data-placeholder="Select departments" disabled>
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="edit-tpl-preparing-depts">Departments Allowed to Prepare Entries</label>
+                                <select id="edit-tpl-preparing-depts" class="select2 form-control edit-template-input departmentDropDown" multiple="multiple" data-placeholder="Select departments" disabled>
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="edit-tpl-reviewing-depts">Reviewing Departments</label>
+                                <select id="edit-tpl-reviewing-depts" class="select2 form-control edit-template-input departmentDropDown" multiple="multiple" data-placeholder="Select departments" disabled>
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="edit-tpl-revision">Revision</label>
+                                <input type="text" id="edit-tpl-revision" class="form-control revisionNumber" value="0" readonly disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="edit-tpl-id">
+                    <input type="hidden" id="edit-tpl-parent-id">
+
+                    <div class="row" style="margin-top:12px;">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label for="edit-tpl-desc">Description / SOP Reference</label>
+                                <textarea id="edit-tpl-desc" class="form-control edit-template-input" rows="3"
+                                    placeholder="Describe the purpose of this logbook and reference applicable SOPs..." readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row columns-toolbar" style="margin-top: 8px;">
+                        <div class="col-sm-12">
+                            <h6 class="section-title">Header &amp; Footer</h6>
+                        </div>
+                    </div>
+                    <div class="section-card">
+                        <div class="section-body">
+                            <div class="row">
+                                <div class="col-sm-12" style="margin-bottom: 8px;">
+                                    <label style="font-size:13px; font-weight:600; color:#52647d; margin-bottom:4px; display:block;">
+                                        <i style="margin-right:4px;"></i> Header
+                                    </label>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label style="font-size:12px; color:#888;">Left</label>
+                                        <input type="text" id="edit-tpl-header-left" class="form-control edit-template-input" placeholder="e.g., Company Name" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label style="font-size:12px; color:#888;">Center</label>
+                                        <input type="text" id="edit-tpl-header-center" class="form-control edit-template-input" placeholder="e.g., Document Title" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label style="font-size:12px; color:#888;">Right</label>
+                                        <input type="text" id="edit-tpl-header-right" class="form-control edit-template-input" placeholder="e.g., Version / Date" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-top: 4px;">
+                                <div class="col-sm-12" style="margin-bottom: 8px;">
+                                    <label style="font-size:13px; font-weight:600; color:#52647d; margin-bottom:4px; display:block;">
+                                        <i style="margin-right:4px;"></i> Footer
+                                    </label>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label style="font-size:12px; color:#888;">Left</label>
+                                        <input type="text" id="edit-tpl-footer-left" class="form-control edit-template-input" placeholder="e.g., Prepared By" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label style="font-size:12px; color:#888;">Center</label>
+                                        <input type="text" id="edit-tpl-footer-center" class="form-control edit-template-input" placeholder="e.g., Page {n} of {total}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label style="font-size:12px; color:#888;">Right</label>
+                                        <input type="text" id="edit-tpl-footer-right" class="form-control edit-template-input" placeholder="e.g., Approved By" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row columns-toolbar">
+                        <div class="col-sm-6">
+                            <h6 class="section-title">Define Table Columns</h6>
+                        </div>
+                        <div class="col-sm-6 text-right">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-default btn-sm add-column-btn--mini" id="editTemplateAddColumnBtn" onclick="editTemplateAddField();"><i data-lucide="plus"></i> Add Column</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-card">
+                        <div class="section-body">
+                            <div id="edit-template-field-list"></div>
+                        </div>
+                    </div>
+
+                    <div class="tabs-container" style="margin-top: 16px;">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a class="nav-link" data-toggle="tab" href="#editTemplateHistoryTab" aria-expanded="true">History</a></li>
+                            <li><a class="nav-link" data-toggle="tab" href="#editTemplateRevisionTab" aria-expanded="false">Revision History</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="editTemplateHistoryTab" class="tab-pane active">
+                                <div class="panel-body">
+                                    <div class="table-responsive history-table-wrap">
+                                        <table class="table table-bordered table-hover" style="margin-bottom:0;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Activity</th>
+                                                    <th>Performed By</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="editTemplateHistoryTableBody">
+                                                <tr>
+                                                    <td colspan="3" class="text-center text-muted">No history found.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="editTemplateRevisionTab" class="tab-pane">
+                                <div class="panel-body">
+                                    <div class="table-responsive history-table-wrap">
+                                        <table class="table table-bordered table-hover" style="margin-bottom:0;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Template ID</th>
+                                                    <th>Name</th>
+                                                    <th>Revision</th>
+                                                    <th>Status</th>
+                                                    <th>Created</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="editTemplateRevisionTableBody">
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">No revisions found.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var editTemplateFieldCounter = 0;
+var currentEditTemplateRecord = null;
+var isEditTemplateEditMode = false;
+
+function editTemplateEscapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function editTemplateShowToast(message, type) {
+  if (typeof window.showToast === 'function') {
+    window.showToast(message, type);
+    return;
+  }
+  if (typeof JSUTIL !== 'undefined' && JSUTIL.buildErrorModal && type === 'error') {
+    JSUTIL.buildErrorModal(message);
+    return;
+  }
+  console.log((type || 'info').toUpperCase() + ': ' + message);
+}
+
+function normalizeTemplateStatus(status) {
+  return (status || '').toString().trim().toLowerCase();
+}
+
+function normalizeTemplateListResponse(response) {
+  if (Array.isArray(response)) return response;
+  if (response && Array.isArray(response.data)) return response.data;
+  return [];
+}
+
+function isTemplateEditable(record) {
+  var status = normalizeTemplateStatus(record && (record.processStatus || record.ProcessStatus));
+  return status === 'new' || status === 'returned';
+}
+
+function getEditTemplateRecordId(record) {
+  return (record && (record.id || record.Id)) || '';
+}
+
+function getEditTemplateDepartmentId(record) {
+  if (!record) return '';
+  var dept = record.department || record.Department || {};
+  return dept.id || dept.Id || record.departmentId || record.DepartmentId || '';
+}
+
+function getTemplateRevision(record) {
+  if (!record) return 0;
+  var candidate = record.revisionNumber;
+  if (candidate === null || typeof candidate === 'undefined' || candidate === '') {
+    candidate = record.RevisionNumber;
+  }
+  if (candidate === null || typeof candidate === 'undefined' || candidate === '') {
+    candidate = record.revision;
+  }
+  if (candidate === null || typeof candidate === 'undefined' || candidate === '') {
+    candidate = record.Revision;
+  }
+  var parsed = Number(candidate);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getTemplateParentId(record) {
+  if (!record) return '';
+  return record.parentId || record.ParentId || '';
+}
+
+function parseTemplateFieldsForEdit(rawFields) {
+  if (!rawFields) return [];
+  if (Array.isArray(rawFields)) return rawFields;
+  if (typeof rawFields === 'string') {
+    try {
+      var parsed = JSON.parse(rawFields);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+      return [];
+    }
+  }
+  return [];
+}
+
+function getTemplateStatusMeta(statusValue) {
+  var normalized = normalizeTemplateStatus(statusValue);
+  if (normalized === 'approved' || normalized === 'active') {
+    return { label: 'Approved', cssClass: 'status-completed' };
+  }
+  if (normalized === 'rejected') {
+    return { label: 'Rejected', cssClass: 'bg-danger' };
+  }
+  if (normalized === 'pending approval' || normalized === 'pending') {
+    return { label: 'Pending Approval', cssClass: 'status-submitted' };
+  }
+  if (normalized === 'archived') {
+    return { label: 'Archived', cssClass: 'bg-secondary' };
+  }
+  if (normalized === 'returned') {
+    return { label: 'Returned', cssClass: 'bg-warning' };
+  }
+  return { label: (statusValue || 'New'), cssClass: 'status-new' };
+}
+
+function setEditTemplateToolbarState(canEdit, isEditing, status) {
+  var normalizedStatus = normalizeTemplateStatus(status);
+  var isPendingApproval = normalizedStatus === 'pending approval' || normalizedStatus === 'pending';
+  var isApproved = normalizedStatus === 'approved' || normalizedStatus === 'active';
+
+  var isApprovedOrArchived = isApproved || (normalizedStatus === 'archived');
+  var allowEdit = canEdit && !isApprovedOrArchived;
+
+  $('#editTemplateEnableEditBtn').toggle(!!allowEdit && !isEditing);
+  $('#editTemplateSaveBtn').toggle(!!allowEdit && isEditing);
+  $('#editTemplateSendToQaBtn').toggle(!!allowEdit && !isEditing);
+  $('#editTemplateApproveBtn').toggle(isPendingApproval && !isEditing);
+  $('#editTemplateReturnBtn').toggle(isPendingApproval && !isEditing);
+  $('#editTemplateRejectBtn').toggle(isPendingApproval && !isEditing);
+  $('#editTemplateAddColumnBtn').toggle(!!allowEdit && isEditing);
+  $('#editTemplatePanel .remove-field-btn').toggle(!!allowEdit && isEditing);
+  $('#editTemplateCreateRevisionBtn').toggle(isApproved && !isEditing);
+}
+
+function renderEditTemplateStatus(statusValue) {
+  var statusMeta = getTemplateStatusMeta(statusValue);
+  $('#editTemplateStatus')
+    .attr('class', 'status-badge ' + statusMeta.cssClass)
+    .text(statusMeta.label);
+}
+
+function renderTemplateStatusSteps(statusValue) {
+  var normalized = normalizeTemplateStatus(statusValue);
+  if (normalized === 'rejected' || normalized === 'archived') {
+    $('#templateStatusStepsWrap').hide();
+    return;
+  }
+  if ($('#editTemplatePanel').is(':visible')) {
+    $('#templateStatusStepsWrap').show();
+  }
+  var $steps = $('#editTemplatePanel #template-status-steps .step');
+  if (!$steps.length) return;
+
+  $steps.removeClass('completed current');
+  var $new = $steps.filter('[data-step="new"]');
+  var $pending = $steps.filter('[data-step="pending"]');
+  var $approved = $steps.filter('[data-step="approved"]');
+
+  if (normalized === 'approved' || normalized === 'active') {
+    $new.addClass('completed');
+    $pending.addClass('completed');
+    $approved.addClass('current');
+    return;
+  }
+
+  if (normalized === 'pending approval' || normalized === 'pending' || normalized === 'rejected') {
+    $new.addClass('completed');
+    $pending.addClass('current');
+    return;
+  }
+
+  $new.addClass('current');
+}
+
+function setEditTemplateFormEditable(isEditable) {
+  var panel = $('#editTemplatePanel');
+  panel.find('input.edit-template-input, textarea.edit-template-input').prop('readonly', !isEditable);
+  panel.find('select.edit-template-input').prop('disabled', !isEditable);
+  panel.find('#edit-tpl-revision').prop('readonly', true).prop('disabled', true);
+  // Header/footer inputs follow the same editable state
+  ['#edit-tpl-header-left','#edit-tpl-header-center','#edit-tpl-header-right',
+   '#edit-tpl-footer-left','#edit-tpl-footer-center','#edit-tpl-footer-right'].forEach(function(sel) {
+    panel.find(sel).prop('readonly', !isEditable);
+  });
+  panel.find('#edit-template-field-list input[data-role="required"]').prop('disabled', !isEditable);
+
+  if (!isEditable) {
+    panel.find('#edit-template-field-list select[data-role="type"]').prop('disabled', true);
+  } else {
+    panel.find('#edit-template-field-list select[data-role="type"]').prop('disabled', false);
+  }
+
+  var deptSelectors = ['#edit-tpl-applicable-depts', '#edit-tpl-preparing-depts', '#edit-tpl-reviewing-depts'];
+  deptSelectors.forEach(function (selector) {
+    initializeEditTemplateSelect2(panel.find(selector));
+  });
+}
+
+
+function clearEditTemplateFields() {
+  editTemplateFieldCounter = 0;
+  $('#edit-template-field-list').empty();
+}
+
+function initializeEditTemplateSelect2($select) {
+  if (!($select && $select.length && window.$ && window.$.fn && typeof window.$.fn.select2 === 'function')) return;
+
+  if ($select.hasClass('select2-hidden-accessible')) {
+    $select.select2('destroy');
+  }
+
+  var isMultiple = $select.prop('multiple');
+  var placeholder = $select.attr('data-placeholder') || '--none--';
+
+  $select.select2({
+    width: '100%',
+    minimumResultsForSearch: 0,
+    closeOnSelect: !isMultiple,
+    allowClear: !isMultiple,
+    placeholder: placeholder
+  });
+}
+
+function editTemplateAddField(fieldData) {
+  var fieldList = document.getElementById('edit-template-field-list');
+  if (!fieldList) return;
+
+  editTemplateFieldCounter += 1;
+
+  var name = (fieldData && fieldData.name) || '';
+  var type = (fieldData && fieldData.type) || 'text';
+  var required = (fieldData && typeof fieldData.required !== 'undefined') ? !!fieldData.required : true;
+  var options = (fieldData && fieldData.options) || '';
+
+  var div = document.createElement('div');
+  div.className = 'field-item';
+  div.id = 'edit-field-' + editTemplateFieldCounter;
+  div.innerHTML =
+    '<div class="row">' +
+    '  <div class="col-sm-4">' +
+    '    <div class="form-group">' +
+    '      <label>Column Name</label>' +
+    '      <input type="text" class="form-control edit-template-input" placeholder="Column Name" data-role="name" value="' + editTemplateEscapeHtml(name) + '">' +
+    '    </div>' +
+    '  </div>' +
+    '  <div class="col-sm-3">' +
+    '    <div class="form-group">' +
+    '      <label>Type</label>' +
+    '      <select class="select2 form-control edit-template-input" data-role="type" onchange="editTemplateToggleOptions(' + editTemplateFieldCounter + ', this.value)">' +
+    '        <option value="text">Text Input</option>' +
+    '        <option value="number">Number</option>' +
+    '        <option value="date">Date</option>' +
+    '        <option value="time">Time</option>' +
+    '        <option value="dropdown">Dropdown</option>' +
+    '        <option value="textarea">Text Area</option>' +
+    '        <option value="checkbox">Checkbox</option>' +
+    '      </select>' +
+    '    </div>' +
+    '  </div>' +
+    '  <div class="col-sm-2">' +
+    '    <label class="field-required-toggle">' +
+    '      <input type="checkbox" data-role="required" ' + (required ? 'checked' : '') + '> Required' +
+    '    </label>' +
+    '  </div>' +
+    '  <div class="col-sm-2">' +
+    '    <span class="field-index">Col ' + editTemplateFieldCounter + '</span>' +
+    '  </div>' +
+    '  <div class="col-sm-1">' +
+    '    <button type="button" class="btn btn-danger btn-sm remove-field-btn" onclick="editTemplateRemoveField(' + editTemplateFieldCounter + ')" title="Remove column"><i data-lucide="trash"></i></button>' +
+    '  </div>' +
+    '</div>' +
+    '<div class="row dropdown-config" id="edit-options-' + editTemplateFieldCounter + '" style="display:none;">' +
+    '  <div class="col-sm-12">' +
+    '    <div class="options-editor">' +
+    '      <label>Dropdown Options (comma-separated)</label>' +
+    '      <input type="text" class="form-control edit-template-input" data-role="options" placeholder="Option 1, Option 2, Option 3" value="' + editTemplateEscapeHtml(options) + '">' +
+    '    </div>' +
+    '  </div>' +
+    '</div>';
+
+  fieldList.appendChild(div);
+
+  if (window.$ && $.fn && typeof $.fn.select2 === 'function') {
+    initializeEditTemplateSelect2($(div).find('select[data-role="type"]'));
+  }
+  $(div).find('select[data-role="type"]').val(type).trigger('change');
+}
+
+function editTemplateRemoveField(id) {
+  var node = document.getElementById('edit-field-' + id);
+  if (node) {
+    node.remove();
+  }
+}
+
+function editTemplateToggleOptions(id, type) {
+  var optionsRow = document.getElementById('edit-options-' + id);
+  if (optionsRow) {
+    optionsRow.style.display = type === 'dropdown' ? 'block' : 'none';
+  }
+}
+
+function loadEditTemplateDepartments(callback) {
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXGet !== 'function') {
+    if (typeof callback === 'function') callback();
+    return;
+  }
+
+  JSUTIL.callAJAXGet('/api/departments', function (objList) {
+    var deptSelectors = ['#edit-tpl-applicable-depts', '#edit-tpl-preparing-depts', '#edit-tpl-reviewing-depts'];
+    deptSelectors.forEach(function (selector) {
+      var $dept = $(selector);
+      var selectedValues = ($dept.val() || []).filter(function (v) {
+        return v !== null && v !== undefined && String(v).trim() !== '';
+      });
+      var innerHtml = '';
+      $.each(objList || [], function (_, item) {
+        var id = item.id || item.Id || '';
+        var name = item.name || item.Name || '';
+        innerHtml += '<option value="' + editTemplateEscapeHtml(id) + '">' + editTemplateEscapeHtml(name) + '</option>';
+      });
+      $dept.html(innerHtml);
+      initializeEditTemplateSelect2($dept);
+      $dept.val(selectedValues).trigger('change');
+    });
+
+    if (typeof callback === 'function') callback();
+  }, function () {
+    if (typeof callback === 'function') callback();
+  });
+}
+
+function createTemplateRevision() {
+  if (!currentEditTemplateRecord) {
+    editTemplateShowToast('Template record not loaded.', 'error');
+    return;
+  }
+
+  var selfId = getEditTemplateRecordId(currentEditTemplateRecord);
+  var existingParentId = getTemplateParentId(currentEditTemplateRecord);
+
+  // Always use the ROOT parent id — never the immediate parent's id.
+  // If source has no parentId, it IS the root → use its own id.
+  var rootParentId = existingParentId || selfId;
+
+  // If root template doesn't have parentId stored yet, patch it now so archive queries find it.
+  if (!existingParentId && selfId) {
+    currentEditTemplateRecord.parentId = rootParentId;
+    if (typeof JSUTIL !== 'undefined' && typeof JSUTIL.callAJAXPost === 'function') {
+      JSUTIL.callAJAXPost('/data/LogbookTemplate/update/' + selfId, JSON.stringify({ Id: Number(selfId), parentId: Number(rootParentId) }));
+    }
+  }
+
+  var nextRevision = getTemplateRevision(currentEditTemplateRecord) + 1;
+  var fields = parseTemplateFieldsForEdit(currentEditTemplateRecord.fields || currentEditTemplateRecord.Fields);
+  var departmentId = getEditTemplateDepartmentId(currentEditTemplateRecord);
+  var preparedById = (currentEditTemplateRecord.preparedBy && (currentEditTemplateRecord.preparedBy.id || currentEditTemplateRecord.preparedBy.Id))
+    || resolveCurrentUserId()
+    || (typeof employeeId !== 'undefined' ? employeeId : null);
+
+  var applicableDepts = (currentEditTemplateRecord.applicableDepartments || currentEditTemplateRecord.ApplicableDepartments || '').toString();
+  var preparingDepts  = (currentEditTemplateRecord.preparingDepartments  || currentEditTemplateRecord.PreparingDepartments  || '').toString();
+  var reviewingDepts  = (currentEditTemplateRecord.reviewingDepartments  || currentEditTemplateRecord.ReviewingDepartments  || '').toString();
+
+  var payload = {
+    number: currentEditTemplateRecord.number || currentEditTemplateRecord.Number || '',
+    name: currentEditTemplateRecord.name || currentEditTemplateRecord.Name || '',
+    description: currentEditTemplateRecord.description || currentEditTemplateRecord.Description || '',
+    fields: JSON.stringify(fields),
+    revisionNumber: nextRevision,
+    processStatus: 'New',
+    parentId: rootParentId,
+    applicableDepartments: applicableDepts,
+    preparingDepartments: preparingDepts,
+    reviewingDepartments: reviewingDepts
+  };
+
+  if (departmentId) {
+    payload.department = { id: Number(departmentId) };
+  }
+  if (preparedById) {
+    payload.preparedBy = { id: Number(preparedById) };
+  }
+
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    editTemplateShowToast('API not available to create revision.', 'error');
+    return;
+  }
+
+  JSUTIL.callAJAXPost('/data/LogbookTemplate/create', JSON.stringify(payload), function (res) {
+    var createdId = extractCreatedRecordId(res);
+    if (!createdId) {
+      editTemplateShowToast('Revision created but ID missing.', 'warning');
+      return;
+    }
+      editTemplateShowToast('Revision ' + nextRevision + ' created successfully.', 'success');
+      // Record revision-specific history entry, then refresh list and open editor
+      createTemplateProcessHistory('Revision', createdId, function () {
+        refreshTemplateList(function () {
+          renderAllTemplateTable();
+          openTemplateEditorById(createdId);
+        });
+      });
+  }, function () {
+    editTemplateShowToast('Unable to create revision.', 'error');
+  });
+}
+
+function normalizeTemplateHistoryResponse(response) {
+  if (Array.isArray(response)) return response;
+  if (response && Array.isArray(response.data)) return response.data;
+  return [];
+}
+
+function formatTemplateHistoryDate(dateValue) {
+  if (!dateValue) return '--';
+  var date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return String(dateValue);
+  return date.toLocaleString();
+}
+
+function getTemplateHistoryPerformedByName(item) {
+  var actor = item && (item.performedBy || item.PerformedBy || {});
+  return actor.name || actor.Name
+    || [actor.firstName || actor.FirstName || '', actor.lastName || actor.LastName || ''].join(' ').trim()
+    || '--';
+}
+
+function renderTemplateHistoryRows(historyItems) {
+  var $tbody = $('#editTemplateHistoryTableBody');
+  if (!$tbody.length) return;
+
+  $tbody.empty();
+  if (!Array.isArray(historyItems) || !historyItems.length) {
+    $tbody.append('<tr><td colspan="3" class="text-center text-muted">No history found.</td></tr>');
+    return;
+  }
+
+  var rowsHtml = '';
+  historyItems.forEach(function (item) {
+    var name = editTemplateEscapeHtml(item.name || item.Name || '--');
+    var performedBy = editTemplateEscapeHtml(getTemplateHistoryPerformedByName(item));
+    var dateDisplay = editTemplateEscapeHtml(formatTemplateHistoryDate(item.startDate || item.StartDate));
+    rowsHtml += '<tr>' +
+      '<td>' + name + '</td>' +
+      '<td>' + performedBy + '</td>' +
+      '<td>' + dateDisplay + '</td>' +
+      '</tr>';
+  });
+
+  $tbody.append(rowsHtml);
+}
+
+function getTemplateStatusLabel(statusValue) {
+  var meta = getTemplateStatusMeta(statusValue);
+  var cssClass = meta.cssClass || 'status-new';
+  return '<span class="status-badge ' + cssClass + '">' + editTemplateEscapeHtml(meta.label) + '</span>';
+}
+
+function renderRevisionHistoryRows(items) {
+  var $tbody = $('#editTemplateRevisionTableBody');
+  if (!$tbody.length) return;
+
+  $tbody.empty();
+  if (!Array.isArray(items) || !items.length) {
+    $tbody.append('<tr><td colspan="5" class="text-center text-muted">No revisions found.</td></tr>');
+    return;
+  }
+
+  // Sort by revisionNumber ascending so oldest revision is at top
+  var sorted = items.slice().sort(function (a, b) {
+    return Number(a.revisionNumber || a.RevisionNumber || 0) - Number(b.revisionNumber || b.RevisionNumber || 0);
+  });
+
+  var rowsHtml = '';
+  sorted.forEach(function (item) {
+    var id = item.id || item.Id || '';
+    var number = editTemplateEscapeHtml(item.number || item.Number || '--');
+    var name = editTemplateEscapeHtml(item.name || item.Name || '--');
+    var revision = editTemplateEscapeHtml(String(item.revisionNumber !== undefined ? item.revisionNumber : (item.RevisionNumber !== undefined ? item.RevisionNumber : '0')));
+    var statusRaw = item.processStatus || item.ProcessStatus || 'New';
+    var created = formatTemplateHistoryDate(item.createdDate || item.CreatedDate || item.createdAt || '');
+
+    // Highlight the currently open record
+    var isCurrentRecord = currentEditTemplateRecord && String(id) === String(getEditTemplateRecordId(currentEditTemplateRecord));
+    var rowStyle = isCurrentRecord ? ' style="font-weight:600; background:#f0f7ff;"' : '';
+
+    var idCell = id
+      ? '<a href="javascript:void(0);" class="editTemplateRevisionLink" data-record-id="' + editTemplateEscapeHtml(String(id)) + '">' + number + '</a>'
+      : number;
+
+    rowsHtml += '<tr' + rowStyle + '>' +
+      '<td>' + idCell + '</td>' +
+      '<td>' + name + '</td>' +
+      '<td>' + revision + '</td>' +
+      '<td>' + getTemplateStatusLabel(statusRaw) + '</td>' +
+      '<td>' + editTemplateEscapeHtml(created) + '</td>' +
+      '</tr>';
+  });
+
+  $tbody.html(rowsHtml);
+
+  // Bind click on revision links to open that template in the editor
+  $tbody.find('.editTemplateRevisionLink').off('click').on('click', function () {
+    var revId = $(this).data('record-id');
+    if (!revId || typeof window.openTemplateEditorById !== 'function') return;
+    window.openTemplateEditorById(revId);
+  });
+}
+
+function loadRevisionHistory(parentId) {
+  var $tbody = $('#editTemplateRevisionTableBody');
+  if (!parentId) {
+    if ($tbody.length) $tbody.html('<tr><td colspan="5" class="text-center text-muted">No revisions found.</td></tr>');
+    return;
+  }
+
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    if ($tbody.length) $tbody.html('<tr><td colspan="5" class="text-center text-muted">No revisions found.</td></tr>');
+    return;
+  }
+
+  if ($tbody.length) $tbody.html('<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>');
+
+  var payload = { Condition: 'parentId=' + Number(parentId) };
+
+  JSUTIL.callAJAXPost('/data/LogbookTemplate/list', JSON.stringify(payload), function (response) {
+    var list = normalizeTemplateListResponse(response);
+    renderRevisionHistoryRows(list);
+  }, function () {
+    if ($tbody.length) $tbody.html('<tr><td colspan="5" class="text-center text-danger">Unable to load revision history.</td></tr>');
+  });
+}
+
+function loadEditTemplateHistory(recordId) {
+  var parsedRecordId = Number(recordId);
+  if (!Number.isFinite(parsedRecordId)) {
+    renderTemplateHistoryRows([]);
+    return;
+  }
+
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    renderTemplateHistoryRows([]);
+    return;
+  }
+
+  $('#editTemplateHistoryTableBody').html('<tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>');
+
+  JSUTIL.callAJAXGet('/api/process-activities/parent/' + parsedRecordId, function (response) {
+    var historyItems = normalizeTemplateHistoryResponse(response);
+    renderTemplateHistoryRows(historyItems);
+  }, function () {
+    $('#editTemplateHistoryTableBody').html('<tr><td colspan="3" class="text-center text-danger">Unable to load history.</td></tr>');
+  });
+}
+
+function populateEditTemplatePanel(record) {
+  currentEditTemplateRecord = record || {};
+  isEditTemplateEditMode = false;
+
+  var recordNumber = currentEditTemplateRecord.number || currentEditTemplateRecord.Number || '--';
+  var templateName = currentEditTemplateRecord.name || currentEditTemplateRecord.Name || '';
+  var templateId = currentEditTemplateRecord.number || currentEditTemplateRecord.Number || '';
+  var description = currentEditTemplateRecord.description || currentEditTemplateRecord.Description || '';
+  var departmentId = getEditTemplateDepartmentId(currentEditTemplateRecord);
+  var revision = getTemplateRevision(currentEditTemplateRecord);
+  var canEdit = isTemplateEditable(currentEditTemplateRecord);
+  var currentStatus = currentEditTemplateRecord.processStatus || currentEditTemplateRecord.ProcessStatus;
+
+  $('#edit-template-record-id').val(getEditTemplateRecordId(currentEditTemplateRecord));
+  $('#editTemplateTitle').text('Template: ' + recordNumber);
+  renderEditTemplateStatus(currentStatus);
+  renderTemplateStatusSteps(currentStatus);
+  loadEditTemplateHistory(getEditTemplateRecordId(currentEditTemplateRecord));
+
+  // Load revision history for this template family (all records sharing the same root parentId)
+  var rootParentId = getTemplateParentId(currentEditTemplateRecord) || getEditTemplateRecordId(currentEditTemplateRecord);
+  loadRevisionHistory(rootParentId);
+  $('#edit-tpl-name').val(templateName);
+  $('#edit-tpl-id').val(templateId);
+  var parentId = getTemplateParentId(currentEditTemplateRecord) || getEditTemplateRecordId(currentEditTemplateRecord);
+  $('#edit-tpl-parent-id').val(parentId || '');
+  $('#edit-tpl-desc').val(description);
+  $('#edit-tpl-revision').val(String(revision));
+
+  // Header & Footer fields
+  var rawHeader = (currentEditTemplateRecord.header || currentEditTemplateRecord.Header || '').toString();
+  var rawFooter = (currentEditTemplateRecord.footer || currentEditTemplateRecord.Footer || '').toString();
+  var headerParts = rawHeader.split(';');
+  var footerParts = rawFooter.split(';');
+  $('#edit-tpl-header-left').val(headerParts[0] || '');
+  $('#edit-tpl-header-center').val(headerParts[1] || '');
+  $('#edit-tpl-header-right').val(headerParts[2] || '');
+  $('#edit-tpl-footer-left').val(footerParts[0] || '');
+  $('#edit-tpl-footer-center').val(footerParts[1] || '');
+  $('#edit-tpl-footer-right').val(footerParts[2] || '');
+
+  clearEditTemplateFields();
+  var fields = parseTemplateFieldsForEdit(currentEditTemplateRecord.fields || currentEditTemplateRecord.Fields);
+  if (fields.length) {
+    fields.forEach(function (field) {
+      editTemplateAddField(field);
+    });
+  } else if (canEdit) {
+    editTemplateAddField();
+  }
+
+  var applicableDepts = (currentEditTemplateRecord && (currentEditTemplateRecord.applicableDepartments || currentEditTemplateRecord.ApplicableDepartments || '')) || '';
+  var preparingDepts = (currentEditTemplateRecord && (currentEditTemplateRecord.preparingDepartments || currentEditTemplateRecord.PreparingDepartments || '')) || '';
+  var reviewingDepts = (currentEditTemplateRecord && (currentEditTemplateRecord.reviewingDepartments || currentEditTemplateRecord.ReviewingDepartments || '')) || '';
+
+  loadEditTemplateDepartments(function () {
+    if (applicableDepts) {
+      var deptArray = applicableDepts.toString().split(',').map(function (d) { return d.trim(); }).filter(Boolean);
+      $('#edit-tpl-applicable-depts').val(deptArray).trigger('change');
+    }
+    if (preparingDepts) {
+      var deptArray = preparingDepts.toString().split(',').map(function (d) { return d.trim(); }).filter(Boolean);
+      $('#edit-tpl-preparing-depts').val(deptArray).trigger('change');
+    }
+    if (reviewingDepts) {
+      var deptArray = reviewingDepts.toString().split(',').map(function (d) { return d.trim(); }).filter(Boolean);
+      $('#edit-tpl-reviewing-depts').val(deptArray).trigger('change');
+    }
+  });
+
+  setEditTemplateFormEditable(false);
+  setEditTemplateToolbarState(canEdit, false, currentStatus);
+}
+
+function getEditTemplatePayload(nextStatus, options) {
+  var opts = options || {};
+  var recordId = ($('#edit-template-record-id').val() || '').toString().trim();
+  if (!recordId) {
+    recordId = ((currentEditTemplateRecord && (currentEditTemplateRecord.id || currentEditTemplateRecord.Id)) || '').toString().trim();
+  }
+  var name = ($('#edit-tpl-name').val() || '').trim();
+  var number = ($('#edit-tpl-id').val() || '').trim();
+  if (!number) {
+    number = ((currentEditTemplateRecord && (currentEditTemplateRecord.number || currentEditTemplateRecord.Number)) || '').toString().trim();
+  }
+  var applicableDeptIds = ($('#edit-tpl-applicable-depts').val() || []).filter(Boolean).join(',');
+  var preparingDeptIds = ($('#edit-tpl-preparing-depts').val() || []).filter(Boolean).join(',');
+  var reviewingDeptIds = ($('#edit-tpl-reviewing-depts').val() || []).filter(Boolean).join(',');
+  var description = ($('#edit-tpl-desc').val() || '').trim();
+  // Always read revisionNumber from the DOM hidden field — it is set by populateEditTemplatePanel
+  // and is reliable even after a fresh fetch. currentEditTemplateRecord may have stale data.
+  var domRevision = parseInt($('#edit-tpl-revision').val(), 10);
+  var currentRevision = Number.isFinite(domRevision) ? domRevision : getTemplateRevision(currentEditTemplateRecord);
+  var nextRevision = opts.bumpRevision ? (currentRevision + 1) : currentRevision;
+  // Always read parentId from the DOM hidden field for the same reason.
+  // Falls back to recordId so the root template self-references correctly.
+  var domParentId = ($('#edit-tpl-parent-id').val() || '').toString().trim();
+  var parentId = domParentId || recordId;
+
+  if (!name) {
+    editTemplateShowToast('Please enter a template name', 'error');
+    return null;
+  }
+
+  var fields = [];
+  var hasInvalidField = false;
+
+  $('#edit-template-field-list .field-item').each(function () {
+    var fieldName = ($(this).find('[data-role="name"]').val() || '').trim();
+    var fieldType = ($(this).find('[data-role="type"]').val() || 'text').trim();
+    var fieldRequired = !!$(this).find('[data-role="required"]').prop('checked');
+    var fieldOptions = ($(this).find('[data-role="options"]').val() || '').trim();
+
+    if (!fieldName) {
+      hasInvalidField = true;
+      return;
+    }
+
+    fields.push({
+      name: fieldName,
+      type: fieldType,
+      required: fieldRequired,
+      options: fieldOptions
+    });
+  });
+
+  if (hasInvalidField) {
+    editTemplateShowToast('Please enter column names for all fields.', 'error');
+    return null;
+  }
+
+  var parsedRecordId = Number(recordId);
+  if (!Number.isFinite(parsedRecordId)) {
+    editTemplateShowToast('Template ID not found for update.', 'error');
+    return null;
+  }
+
+  var payload = {
+    Id: parsedRecordId,
+    number: number,
+    name: name,
+    description: description,
+    fields: JSON.stringify(fields),
+    revisionNumber: nextRevision,
+    processStatus: nextStatus,
+    applicableDepartments: applicableDeptIds,
+    preparingDepartments: preparingDeptIds,
+    reviewingDepartments: reviewingDeptIds,
+    header: [
+      ($('#edit-tpl-header-left').val() || '').trim(),
+      ($('#edit-tpl-header-center').val() || '').trim(),
+      ($('#edit-tpl-header-right').val() || '').trim()
+    ].join(';'),
+    footer: [
+      ($('#edit-tpl-footer-left').val() || '').trim(),
+      ($('#edit-tpl-footer-center').val() || '').trim(),
+      ($('#edit-tpl-footer-right').val() || '').trim()
+    ].join(';')
+  };
+
+  if (parentId) {
+    payload.parentId = parentId;
+  }
+
+  return payload;
+}
+
+function getTemplateActivityNameByStatus(statusValue) {
+  var normalized = normalizeTemplateStatus(statusValue);
+  if (normalized === 'returned' || normalized === 'return') {
+    return 'Logbook Template Returned';
+  }
+  if (normalized === 'pending approval' || normalized === 'pending') {
+    return 'Logbook Template Sent To QA';
+  }
+  if (normalized === 'approved') {
+    return 'Logbook Template Approved';
+  }
+  if (normalized === 'revision' || normalized === 'revised' || normalized === 'revise') {
+    return 'Logbook Template Revision Created';
+  }
+  if (normalized === 'rejected') {
+    return 'Logbook Template Rejected';
+  }
+  return 'Logbook Template Edited';
+}
+
+function resolveTemplateActivityUserId() {
+  var candidate = null;
+  if (typeof FOX !== 'undefined' && FOX.employeeId) candidate = FOX.employeeId;
+  else if (typeof employeeiD !== 'undefined') candidate = employeeiD;
+  else if (typeof employeeId !== 'undefined') candidate = employeeId;
+  else if (typeof window !== 'undefined' && window.currentUser && window.currentUser.id) candidate = window.currentUser.id;
+  else if (typeof window !== 'undefined' && window.loggedInUser && window.loggedInUser.id) candidate = window.loggedInUser.id;
+
+  var parsed = Number(candidate);
+  return (Number.isFinite(parsed) && parsed > 0) ? parsed : null;
+}
+
+function resolveCurrentUserId() {
+  var selectors = [
+    'userIdSidebar',
+    'currentUserId',
+    'loggedInUserId'
+  ];
+
+  for (var i = 0; i < selectors.length; i++) {
+    var el = document.getElementById(selectors[i]);
+    if (!el) continue;
+
+    var candidate = (el.value || el.textContent || '').trim();
+    if (candidate) return candidate;
+  }
+
+  if (window.currentUser && window.currentUser.id) return String(window.currentUser.id);
+  if (window.loggedInUser && window.loggedInUser.id) return String(window.loggedInUser.id);
+
+  return null;
+}
+
+function createTemplateProcessHistory(statusValue, parentRecordId, callback) {
+  if (typeof callback !== 'function') callback = function () { };
+
+  var activityUserId = resolveTemplateActivityUserId();
+  var parsedParentRecordId = Number(parentRecordId);
+  if (!Number.isFinite(parsedParentRecordId) || !Number.isFinite(activityUserId) || activityUserId <= 0) {
+    callback();
+    return;
+  }
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    callback();
+    return;
+  }
+
+  var historyObj = {
+    name: getTemplateActivityNameByStatus(statusValue),
+    startDate: new Date(),
+    performedBy: { id: activityUserId },
+    parentRecordId: parsedParentRecordId
+  };
+
+  JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify(historyObj), function () {
+    callback();
+  }, function () {
+    callback();
+  });
+}
+
+function updateEditTemplate(nextStatus, options) {
+  var opts = options || {};
+  var previousStatus = normalizeTemplateStatus(
+    currentEditTemplateRecord && (currentEditTemplateRecord.processStatus || currentEditTemplateRecord.ProcessStatus)
+  );
+  var recordIdRaw = ($('#edit-template-record-id').val() || '').toString().trim();
+  if (!recordIdRaw) {
+    recordIdRaw = ((currentEditTemplateRecord && (currentEditTemplateRecord.id || currentEditTemplateRecord.Id)) || '').toString().trim();
+  }
+  var recordId = Number(recordIdRaw);
+  if (!Number.isFinite(recordId)) {
+    editTemplateShowToast('Template ID not found for update.', 'error');
+    return;
+  }
+
+  var payload = getEditTemplatePayload(nextStatus, { bumpRevision: !!opts.bumpRevision });
+  if (!payload) return;
+  payload.Id = recordId;
+
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    editTemplateShowToast('Update API is not available.', 'error');
+    return;
+  }
+
+  JSUTIL.callAJAXPost('/data/LogbookTemplate/update/' + recordId, JSON.stringify(payload), function () {
+    createTemplateProcessHistory(opts.activityStatus || nextStatus, recordId, function () {
+    if (currentEditTemplateRecord) {
+      currentEditTemplateRecord.processStatus = nextStatus;
+      currentEditTemplateRecord.ProcessStatus = nextStatus;
+      currentEditTemplateRecord.revisionNumber = payload.revisionNumber;
+      currentEditTemplateRecord.RevisionNumber = payload.revisionNumber;
+      currentEditTemplateRecord.revision = payload.revisionNumber;
+      currentEditTemplateRecord.Revision = payload.revisionNumber;
+      currentEditTemplateRecord.parentId = payload.parentId;
+      currentEditTemplateRecord.ParentId = payload.parentId;
+    }
+
+    var successMessage = opts.successMessage || 'Template updated successfully.';
+    if (nextStatus === 'Pending Approval') successMessage = 'Template sent to QA successfully.';
+    if (nextStatus === 'Approved') successMessage = 'Template approved successfully.';
+    if (nextStatus === 'Rejected') successMessage = 'Template rejected successfully.';
+
+    editTemplateShowToast(successMessage, 'success');
+
+    isEditTemplateEditMode = false;
+    setEditTemplateFormEditable(false);
+    $('#edit-tpl-revision').val(String(payload.revisionNumber));
+    $('#edit-tpl-parent-id').val(payload.parentId || '');
+    renderEditTemplateStatus(nextStatus);
+    renderTemplateStatusSteps(nextStatus);
+    setEditTemplateToolbarState(isTemplateEditable(currentEditTemplateRecord), false, nextStatus);
+
+    var statusChanged = previousStatus !== normalizeTemplateStatus(nextStatus);
+
+    function afterArchive() {
+      if (statusChanged) {
+        window.location.reload();
+        return;
+      }
+
+      if (opts.keepOpen) {
+        if (typeof window.refreshTemplateList === 'function') {
+          window.refreshTemplateList(function () {
+            if (typeof window.renderAllTemplateTable === 'function') {
+              window.renderAllTemplateTable();
+            }
+          });
+        }
+        return;
+      }
+
+      if (typeof window.refreshTemplateList === 'function') {
+        window.refreshTemplateList(function () {
+          if (typeof window.renderAllTemplateTable === 'function') {
+            window.renderAllTemplateTable();
+          }
+          closeEditTemplatePanel();
+        });
+        return;
+      }
+
+      closeEditTemplatePanel();
+    }
+
+    if (normalizeTemplateStatus(nextStatus) === 'approved') {
+      // parentId is always the root family id — use payload.parentId which was correctly resolved
+      var parentIdForArchive = payload.parentId || recordId;
+      // Archive all previous revisions FIRST, then navigate away so the page
+      // reload does not abort in-flight AJAX calls.
+      archivePreviousTemplateRevisions(parentIdForArchive, recordId, function () {
+        afterArchive();
+      });
+    } else {
+      afterArchive();
+    }
+    });
+  }, function () {
+    editTemplateShowToast('Unable to update template. Please try again.', 'error');
+  });
+}
+
+function archivePreviousTemplateRevisions(parentId, keepId, callback) {
+  if (typeof callback !== 'function') callback = function () {};
+
+  if (!parentId || typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    callback();
+    return;
+  }
+
+  var numParentId = Number(parentId);
+  var numKeepId   = Number(keepId);
+
+  // Query 1: all records whose ParentId = rootParentId  (covers revisions + self-referencing root)
+  // Query 2: the root record itself (ParentId may be null if it was never patched)
+  // We run both and union the results.
+  var listPayload = { Condition: 'parentId=' + numParentId };
+
+  var rootPayload = { Condition: 'Id=' + numParentId };
+
+  function doArchive(list) {
+    var seen = {};
+    var merged = [];
+    (list || []).forEach(function (item) {
+      var id = Number(item.id || item.Id);
+      if (!seen[id]) { seen[id] = true; merged.push(item); }
+    });
+
+    var toArchive = merged.filter(function (item) {
+      var id = Number(item.id || item.Id);
+      var status = normalizeTemplateStatus(item.processStatus || item.ProcessStatus);
+      return id !== numKeepId && status !== 'archived';
+    });
+
+    console.log('[Archive] parentId=' + numParentId + ', keepId=' + numKeepId + ', toArchive count=' + toArchive.length);
+
+    function archiveNext(index) {
+      if (index >= toArchive.length) {
+        callback();
+        return;
+      }
+      var id = Number(toArchive[index].id || toArchive[index].Id);
+      JSUTIL.callAJAXPost(
+        '/data/LogbookTemplate/update/' + id,
+        JSON.stringify({ Id: id, processStatus: 'Archived' }),
+        function () { archiveNext(index + 1); },
+        function () { archiveNext(index + 1); }
+      );
+    }
+    archiveNext(0);
+  }
+
+  // Fetch all revisions by parentId, then also fetch the root record by its own Id
+  JSUTIL.callAJAXPost('/data/LogbookTemplate/list', JSON.stringify(listPayload), function (res) {
+    var byParent = normalizeTemplateListResponse(res);
+    // Also fetch root record in case its own ParentId was never set
+    JSUTIL.callAJAXPost('/data/LogbookTemplate/list', JSON.stringify(rootPayload), function (res2) {
+      var byId = normalizeTemplateListResponse(res2);
+      doArchive(byParent.concat(byId));
+    }, function () {
+      doArchive(byParent);
+    });
+  }, function () {
+    console.warn('[Archive] Unable to fetch templates for archiving. parentId=' + parentId);
+    callback();
+  });
+}
+
+function showEditTemplatePanel(record) {
+  if (!record) {
+    editTemplateShowToast('Template record not found.', 'error');
+    return;
+  }
+
+  if (!$('#editTemplatePanel').length) {
+    editTemplateShowToast('Edit Template panel is not loaded.', 'error');
+    return;
+  }
+
+  $('#allTemplatePanel').show();
+  $('#allTemplateListWrap').hide();
+  $('#createTemplatePanel').hide();
+  $('#editTemplatePanel').show();
+  $('.newCreateTemplateBtn').hide();
+
+  populateEditTemplatePanel(record);
+}
+
+function closeEditTemplatePanel() {
+  $('#editTemplatePanel').hide();
+  $('#createTemplatePanel').hide();
+  $('#allTemplatePanel').show();
+  $('#allTemplateListWrap').show();
+  $('#templateStatusStepsWrap').hide();
+  $('.newCreateTemplateBtn').show();
+}
+
+function bindEditTemplateEvents() {
+  var panel = document.getElementById('editTemplatePanel');
+  if (!panel || panel.dataset.bound === 'true') return;
+
+  panel.dataset.bound = 'true';
+
+  if (window.$ && $.fn && typeof $.fn.select2 === 'function') {
+    var deptSelectors = ['#edit-tpl-applicable-depts', '#edit-tpl-preparing-depts', '#edit-tpl-reviewing-depts'];
+    deptSelectors.forEach(function (selector) {
+      initializeEditTemplateSelect2($(selector));
+    });
+  }
+
+  var closeBtns = panel.querySelectorAll('.editTemplateCloseBtn');
+  closeBtns.forEach(function (btn) {
+    btn.addEventListener('click', closeEditTemplatePanel);
+  });
+
+  $('#editTemplateEnableEditBtn').on('click', function () {
+    if (!isTemplateEditable(currentEditTemplateRecord)) return;
+    isEditTemplateEditMode = true;
+    setEditTemplateFormEditable(true);
+    setEditTemplateToolbarState(true, true, currentEditTemplateRecord && (currentEditTemplateRecord.processStatus || currentEditTemplateRecord.ProcessStatus));
+  });
+
+  $('#editTemplateSaveBtn').on('click', function () {
+    if (!isTemplateEditable(currentEditTemplateRecord)) return;
+    updateEditTemplate('New', { bumpRevision: false });
+  });
+
+  $('#editTemplateSendToQaBtn').on('click', function () {
+    if (!isTemplateEditable(currentEditTemplateRecord)) return;
+    updateEditTemplate('Pending Approval', { bumpRevision: false });
+  });
+
+  $('#editTemplateApproveBtn').on('click', function () {
+    updateEditTemplate('Approved', { keepOpen: true });
+  });
+
+  $('#editTemplateRejectBtn').on('click', function () {
+    updateEditTemplate('Rejected', { keepOpen: true });
+  });
+
+  $('#editTemplateCreateRevisionBtn').on('click', function () {
+    createTemplateRevision();
+  });
+
+  $('#editTemplateReturnBtn').on('click', function () {
+    updateEditTemplate('New', {
+      bumpRevision: false,
+      keepOpen: true,
+      activityStatus: 'Returned',
+      successMessage: 'Template returned to New successfully.'
+    });
+  });
+}
+
+window.editTemplateAddField = editTemplateAddField;
+window.editTemplateRemoveField = editTemplateRemoveField;
+window.editTemplateToggleOptions = editTemplateToggleOptions;
+window.showEditTemplatePanel = showEditTemplatePanel;
+window.closeEditTemplatePanel = closeEditTemplatePanel;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindEditTemplateEvents);
+} else {
+  bindEditTemplateEvents();
+}
+</script>
+<!-- editTemplate.html end -->
+
+
+<!-- createTemplate.html start -->
+<style>
+    /* #createTemplatePanel .tpl-card {
+        background: #fff;
+        border: 1px solid #d8dee6;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(25, 38, 56, 0.06);
+        overflow: hidden;
+    } */
+
+    /* #createTemplatePanel .tpl-version {
+        font-size: 11px;
+        font-weight: 600;
+        color: #8a97a8;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #f3f6fa;
+    } */
+
+    #createTemplatePanel .tpl-body {
+        padding: 22px 24px;
+    }
+
+    #createTemplatePanel .section-line {
+        margin: 18px 0;
+        border-top: 1px solid #e7ebf0;
+    }
+
+    #createTemplatePanel .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        color: #2563eb;
+        border-left: 3px solid #2563eb;
+        padding-left: 8px;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+
+    #createTemplatePanel .section-card {
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        padding: 16px 18px;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s ease;
+    }
+
+    #createTemplatePanel .columns-toolbar {
+        margin-bottom: 10px;
+        align-items: center;
+    }
+
+    #createTemplatePanel .columns-toolbar .btn-group {
+        gap: 6px;
+    }
+
+    #createTemplatePanel .columns-toolbar .section-title {
+        margin: 0;
+    }
+
+    #createTemplatePanel .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+        margin-bottom: 10px;
+    }
+
+    #createTemplatePanel .details-subtitle {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        color: #2563EB;
+        border-left: 3px solid #2563EB;
+        padding-left: 8px;
+    }
+
+    #createTemplatePanel .toggle-icon {
+        margin-left: auto;
+        color: #2563EB;
+        transition: transform 0.25s ease;
+    }
+
+    #createTemplatePanel .section-card.collapsed .toggle-icon {
+        transform: rotate(-90deg);
+    }
+
+    #createTemplatePanel .section-body {
+        display: block;
+    }
+
+    #createTemplatePanel .section-card.collapsed .section-body {
+        display: none;
+    }
+
+    #createTemplatePanel #field-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #createTemplatePanel .field-item {
+        border: 1px solid #d5dde8;
+        border-radius: 10px;
+        padding: 12px 14px;
+        background: #fafcff;
+        margin-bottom: 12px;
+    }
+
+    #createTemplatePanel .field-item .form-group {
+        margin-bottom: 10px;
+    }
+
+    #createTemplatePanel .field-item .field-required-toggle {
+        margin-top: 28px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #676a6c;
+        font-size: 13px;
+        font-weight: 400;
+    }
+
+    #createTemplatePanel .field-item .field-index {
+        margin-top: 32px;
+        display: inline-block;
+        font-size: 12px;
+        color: #888;
+    }
+
+    #createTemplatePanel .remove-field-btn {
+        margin-top: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #createTemplatePanel .options-editor label {
+        margin: 0 0 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #52647d;
+    }
+
+    #createTemplatePanel .add-column-btn {
+        width: 100%;
+        border: 2px dashed #c8d2e0;
+        border-radius: 8px;
+        height: 42px;
+        background: #fff;
+        color: #3e6188;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    #createTemplatePanel .add-column-btn:hover {
+        background: #f7faff;
+    }
+
+    #createTemplatePanel .add-column-btn--mini {
+        border: 1px solid #c8d2e0;
+        border-radius: 6px;
+        background: #fff;
+        color: #2563EB;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        line-height: 1.2;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    #createTemplatePanel .add-column-btn--mini:hover {
+        background: #f1f5ff;
+        border-color: #9bb6ff;
+        color: #1e3a8a;
+    }
+
+    /* #createTemplatePanel .footer-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 10px;
+    } */
+
+    #createTemplatePanel .btn-draft,
+    #createTemplatePanel .btn-send {
+        border-radius: 4px;
+        height: 34px;
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+
+    #createTemplatePanel .departmentDropDown + .select2-container .select2-selection--multiple {
+        background: #fff;
+        border: 1px solid #e5e6e7;
+        border-radius: 3px;
+        min-height: 34px;
+        padding: 2px 6px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    #createTemplatePanel .departmentDropDown + .select2-container.select2-container--focus .select2-selection--multiple {
+        border-color: #4d6dff;
+        box-shadow: 0 0 0 2px rgba(77, 109, 255, 0.12);
+    }
+
+    #createTemplatePanel label .required-asterisk,
+    #createTemplatePanel label:has(+ input[required]) .required-asterisk {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+        #createTemplatePanel .section-title {
+            font-size: 18px;
+        }
+
+        /* #createTemplatePanel .footer-actions {
+            flex-direction: column;
+        } */
+
+        #createTemplatePanel .btn-draft,
+        #createTemplatePanel .btn-send {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="row animated fadeInRight aasaanPanel" id="createTemplatePanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="createTemplateTitle">New Logbook Template</span><small> Logbook </small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm showAllRequestsOnCancel"><i data-lucide="x"></i> Close </button>
+                    <button type="button" class="btn btn-default btn-sm" id="deleteRequestBtn"><i data-lucide="trash"></i> Cancel Request </button>
+                    <button type="button" class="btn btn-default btn-sm" id="previewTemplateBtn" onclick="openTemplatePreview();"><i data-lucide="eye"></i> Preview </button>
+                    <button type="button" class="btn btn-default btn-sm labControlBtn updateSampleRequestBtn"><i data-lucide="check"></i> Save </button>
+                    <!-- <button type="button" class="btn btn-default btn-sm labControlBtn" id="sendToQcBtn"><i data-lucide="check-check"></i> Send to QA </button> -->
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="tpl-body">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="tpl-name">Template Name <span class="required-asterisk">*</span></label>
+                                <input type="text" id="tpl-name" class="form-control editRecordInput"
+                                    placeholder="e.g., Equipment Cleaning Log">
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="tpl-applicable-depts">Applicable Departments</label>
+                                <select id="tpl-applicable-depts" class="select2 form-control editRecordInput departmentDropDown" multiple="multiple" data-placeholder="Select departments">
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="tpl-preparing-depts">Departments Allowed to Prepare Entries</label>
+                                <select id="tpl-preparing-depts" class="select2 form-control editRecordInput departmentDropDown" multiple="multiple" data-placeholder="Select departments">
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="tpl-reviewing-depts">Reviewing Departments</label>
+                                <select id="tpl-reviewing-depts" class="select2 form-control editRecordInput departmentDropDown" multiple="multiple" data-placeholder="Select departments">
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="tpl-revision">Revision</label>
+                                <input type="text" id="tpl-revision" class="form-control revisionNumber" value="0" readonly disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="tpl-id" placeholder="Auto-generated if empty">
+                    <input type="hidden" id="tpl-parent-id" placeholder="Auto-set after save">
+
+                    <div class="row" style="margin-top:12px;">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label for="tpl-desc">Description / SOP Reference</label>
+                                <textarea id="tpl-desc" class="form-control editRecordInput" rows="3"
+                                    placeholder="Describe the purpose of this logbook and reference applicable SOPs..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Header & Footer Layout -->
+                    <div class="row columns-toolbar" style="margin-top: 8px;">
+                        <div class="col-sm-12">
+                            <h6 class="section-title">Header &amp; Footer</h6>
+                        </div>
+                    </div>
+                    <div class="section-card">
+                        <div class="section-body">
+                            <div class="row">
+                                <div class="col-sm-12" style="margin-bottom: 8px;">
+                                    <label style="font-size:13px; font-weight:600; color:#52647d; margin-bottom:4px; display:block;">
+                                        <i style="margin-right:4px;"></i> Header
+                                    </label>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="tpl-header-left" style="font-size:12px; color:#888;">Left</label>
+                                        <input type="text" id="tpl-header-left" class="form-control editRecordInput"
+                                            placeholder="e.g., Company Name">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="tpl-header-center" style="font-size:12px; color:#888;">Center</label>
+                                        <input type="text" id="tpl-header-center" class="form-control editRecordInput"
+                                            placeholder="e.g., Document Title">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="tpl-header-right" style="font-size:12px; color:#888;">Right</label>
+                                        <input type="text" id="tpl-header-right" class="form-control editRecordInput"
+                                            placeholder="e.g., Version / Date">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" style="margin-top: 4px;">
+                                <div class="col-sm-12" style="margin-bottom: 8px;">
+                                    <label style="font-size:13px; font-weight:600; color:#52647d; margin-bottom:4px; display:block;">
+                                        <i style="margin-right:4px;"></i> Footer
+                                    </label>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="tpl-footer-left" style="font-size:12px; color:#888;">Left</label>
+                                        <input type="text" id="tpl-footer-left" class="form-control editRecordInput"
+                                            placeholder="e.g., Prepared By">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="tpl-footer-center" style="font-size:12px; color:#888;">Center</label>
+                                        <input type="text" id="tpl-footer-center" class="form-control editRecordInput"
+                                            placeholder="e.g., Page {n} of {total}">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="tpl-footer-right" style="font-size:12px; color:#888;">Right</label>
+                                        <input type="text" id="tpl-footer-right" class="form-control editRecordInput"
+                                            placeholder="e.g., Approved By">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Columns -->
+                    <div class="row columns-toolbar">
+                        <div class="col-sm-6">
+                            <h6 class="section-title">Define Table Columns</h6>
+                        </div>
+                        <div class="col-sm-6 text-right">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-default btn-sm add-column-btn--mini" onclick="addField();"><i data-lucide="plus"></i> Add Column</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section-card">
+                        <!-- <div class="section-header" onclick="toggleStandardSection(this)">
+                            <h6 class="details-subtitle">Identification &amp; Metadata</h6>
+                            <i data-lucide="chevron-down" class="toggle-icon"></i>
+                        </div> -->
+                        <div class="section-body">
+                            <div id="field-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- <div class="section-line"></div> -->
+<!-- 
+                    <div class="footer-actions">
+                        <button type="button" class="btn btn-default btn-draft" onclick="saveTemplate('draft')">Save as
+                            Draft</button>
+                        <button type="button" class="btn btn-secondary btn-send" onclick="saveTemplate('pending')">Save
+                            &amp; Send
+                            for Approval</button>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var fieldCounter = 0;
+var templates = window.templates || [];
+var activityLog = window.activityLog || [];
+
+if (Array.isArray(window.recordList) && window.recordList.length && templates.length === 0) {
+  templates = window.recordList.slice();
+}
+
+window.templates = templates;
+window.activityLog = activityLog;
+
+function resetTemplateForm() {
+  var nameEl = document.getElementById('tpl-name');
+  if (nameEl) nameEl.value = '';
+  var idEl = document.getElementById('tpl-id');
+  if (idEl) idEl.value = '';
+  var parentIdEl = document.getElementById('tpl-parent-id');
+  if (parentIdEl) parentIdEl.value = '';
+  var departmentSelectIds = [
+    'tpl-applicable-depts',
+    'tpl-preparing-depts',
+    'tpl-reviewing-depts'
+  ];
+  departmentSelectIds.forEach(function (selectId) {
+    var selectEl = document.getElementById(selectId);
+    if (!selectEl) return;
+    if (window.$ && typeof window.$.fn.select2 === 'function') {
+      window.$(selectEl).val([]).trigger('change');
+      return;
+    }
+    selectEl.selectedIndex = -1;
+  });
+  var revisionEl = document.getElementById('tpl-revision');
+  if (revisionEl) {
+    revisionEl.value = '0';
+    revisionEl.readOnly = true;
+    revisionEl.disabled = true;
+  }
+  var descEl = document.getElementById('tpl-desc');
+  if (descEl) descEl.value = '';
+  // Header fields
+  ['tpl-header-left', 'tpl-header-center', 'tpl-header-right'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  // Footer fields
+  ['tpl-footer-left', 'tpl-footer-center', 'tpl-footer-right'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var fieldListEl = document.getElementById('field-list');
+  if (fieldListEl) fieldListEl.innerHTML = '';
+  fieldCounter = 0;
+  addField();
+  addField();
+}
+
+function initializeDepartmentSelect2($select) {
+  if (!($select && $select.length && window.$ && window.$.fn && typeof window.$.fn.select2 === 'function')) return;
+
+  if ($select.hasClass('select2-hidden-accessible')) {
+    $select.select2('destroy');
+  }
+
+  var isMultiple = $select.prop('multiple');
+  var placeholder = $select.attr('data-placeholder') || '--none--';
+
+  $select.select2({
+    width: '100%',
+    minimumResultsForSearch: 0,
+    closeOnSelect: !isMultiple,
+    allowClear: !isMultiple,
+    placeholder: placeholder
+  });
+}
+
+function initializeTemplateDepartmentDropdowns() {
+  if (!(window.$ && window.$.fn && typeof window.$.fn.select2 === 'function')) return;
+
+  $('#createTemplatePanel .departmentDropDown').each(function () {
+    initializeDepartmentSelect2($(this));
+  });
+}
+
+function loadDepartments() {
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXGet !== 'function') return;
+
+  JSUTIL.callAJAXGet('/api/departments', function (objList) {
+    $('#createTemplatePanel .departmentDropDown').each(function () {
+      var $select = $(this);
+      var selectedValues = ($select.val() || []).filter(function (v) {
+        return v !== null && v !== undefined && String(v).trim() !== '';
+      });
+      var innerHtml = '';
+      $.each(objList || [], function (i, val) {
+        var id = val.id || val.Id || '';
+        var name = val.name || val.Name || '';
+        innerHtml += '<option value="' + id + '">' + name + '</option>';
+      });
+      $select.html(innerHtml);
+      initializeDepartmentSelect2($select);
+      $select.val(selectedValues).trigger('change');
+    });
+  });
+}
+
+function initializeCreateTemplatePanel() {
+  initializeTemplateDepartmentDropdowns();
+  loadDepartments();
+}
+
+function bindCreateTemplateSelect2Refresh() {
+  if (!(window.$ && window.$.fn)) return;
+
+  $(document).off('click.createTemplateSelect2', '.newCreateTemplateBtn').on('click.createTemplateSelect2', '.newCreateTemplateBtn', function () {
+    setTimeout(function () {
+      initializeCreateTemplatePanel();
+    }, 0);
+  });
+}
+
+function getMultiSelectValues(selectId) {
+  var el = document.getElementById(selectId);
+  if (!el) return [];
+  if (window.$ && typeof window.$.fn.select2 === 'function') {
+    var select2Values = window.$(el).val();
+    if (Array.isArray(select2Values)) {
+      return select2Values.filter(Boolean).map(function (value) {
+        return String(value).trim();
+      }).filter(Boolean);
+    }
+  }
+
+  return Array.prototype.slice.call(el.selectedOptions || [])
+    .map(function (option) {
+      return (option.value || '').toString().trim();
+    })
+    .filter(Boolean);
+}
+
+function getMultiSelectTexts(selectId) {
+  var el = document.getElementById(selectId);
+  if (!el) return [];
+
+  return Array.prototype.slice.call(el.selectedOptions || [])
+    .map(function (option) {
+      return (option.text || '').toString().trim();
+    })
+    .filter(Boolean);
+}
+
+function addField() {
+  fieldCounter++;
+  var div = document.createElement('div');
+  div.className = 'field-item';
+  div.id = 'field-' + fieldCounter;
+  div.innerHTML = '\n    <div class="row">\n      <div class="col-sm-4">\n        <div class="form-group">\n          <label>Column Name</label>\n          <input type="text" class="form-control editRecordInput" placeholder="Column Name" data-role="name">\n        </div>\n      </div>\n      <div class="col-sm-3">\n        <div class="form-group">\n          <label>Type</label>\n          <select class="select2 form-control editRecordInput" data-role="type" onchange="toggleOptions(' + fieldCounter + ', this.value)">\n            <option value="text">Text Input</option>\n            <option value="number">Number</option>\n            <option value="date">Date</option>\n            <option value="time">Time</option>\n            <option value="dropdown">Dropdown</option>\n            <option value="textarea">Text Area</option>\n            <option value="checkbox">Checkbox</option>\n          </select>\n        </div>\n      </div>\n      <div class="col-sm-2">\n        <label class="field-required-toggle">\n          <input type="checkbox" checked data-role="required"> Required\n        </label>\n      </div>\n      <div class="col-sm-2">\n        <span class="field-index">Col ' + fieldCounter + '</span>\n      </div>\n      <div class="col-sm-1 field-delete-col">\n        <button type="button" class="btn btn-danger btn-sm remove-field-btn" onclick="removeField(' + fieldCounter + ')" title="Remove column"><i data-lucide="trash"></i></button>\n      </div>\n    </div>\n    <div class="row dropdown-config" id="options-' + fieldCounter + '" style="display:none;">\n      <div class="col-sm-12">\n        <div class="options-editor">\n          <label>Dropdown Options (comma-separated)</label>\n          <input type="text" class="form-control editRecordInput" data-role="options" placeholder="Option 1, Option 2, Option 3">\n        </div>\n      </div>\n    </div>\n  ';
+  document.getElementById('field-list').appendChild(div);
+
+  if (window.$ && window.$.fn && typeof window.$.fn.select2 === 'function') {
+    window.$(div).find('.select2').select2({ width: '100%' });
+  }
+}
+
+function removeField(id) {
+  var el = document.getElementById('field-' + id);
+  if (el) el.remove();
+}
+
+function toggleOptions(id, type) {
+  var opt = document.getElementById('options-' + id);
+  if (opt) opt.style.display = type === 'dropdown' ? 'block' : 'none';
+}
+
+function saveTemplate(status) {
+  var name = (document.getElementById('tpl-name') || {}).value || '';
+  name = name.trim();
+
+  var templateId = (document.getElementById('tpl-id') || {}).value || '';
+  templateId = templateId.trim();
+
+  var applicableDepartmentIds = (window.$('#tpl-applicable-depts').val() || []).filter(Boolean);
+  var preparingDepartmentIds = (window.$('#tpl-preparing-depts').val() || []).filter(Boolean);
+  var reviewingDepartmentIds = (window.$('#tpl-reviewing-depts').val() || []).filter(Boolean);
+  var applicableDepartmentNames = getMultiSelectTexts('tpl-applicable-depts');
+  var preparingDepartmentNames = getMultiSelectTexts('tpl-preparing-depts');
+  var reviewingDepartmentNames = getMultiSelectTexts('tpl-reviewing-depts');
+
+  var desc = (document.getElementById('tpl-desc') || {}).value || '';
+  desc = desc.trim();
+  var revisionEl = document.getElementById('tpl-revision');
+  var revisionValue = 0;
+  if (revisionEl) {
+    var parsedRevision = Number((revisionEl.value || '').toString().trim());
+    revisionValue = Number.isFinite(parsedRevision) ? parsedRevision : 0;
+  }
+
+  var effectiveEl = document.getElementById('tpl-effective');
+  var effective = effectiveEl ? effectiveEl.value : '';
+
+  // Header: combine left;center;right into one string
+  var headerLeft   = ((document.getElementById('tpl-header-left')   || {}).value || '').trim();
+  var headerCenter = ((document.getElementById('tpl-header-center') || {}).value || '').trim();
+  var headerRight  = ((document.getElementById('tpl-header-right')  || {}).value || '').trim();
+  var headerValue  = [headerLeft, headerCenter, headerRight].join(';');
+
+  // Footer: combine left;center;right into one string
+  var footerLeft   = ((document.getElementById('tpl-footer-left')   || {}).value || '').trim();
+  var footerCenter = ((document.getElementById('tpl-footer-center') || {}).value || '').trim();
+  var footerRight  = ((document.getElementById('tpl-footer-right')  || {}).value || '').trim();
+  var footerValue  = [footerLeft, footerCenter, footerRight].join(';');
+
+  if (!name) {
+    showToast('Please enter a template name', 'error');
+    return;
+  }
+
+  var fieldElements = document.querySelectorAll('#field-list .field-item');
+  var fields = [];
+  var valid = true;
+
+  fieldElements.forEach(function (f) {
+    var fieldName = f.querySelector('[data-role="name"]').value.trim();
+    var fieldType = f.querySelector('[data-role="type"]').value;
+    var fieldReq = f.querySelector('[data-role="required"]').checked;
+    var fieldOpts = (f.querySelector('[data-role="options"]') || {}).value;
+    fieldOpts = (fieldOpts || '').trim();
+
+    if (!fieldName) {
+      valid = false;
+      return;
+    }
+
+    fields.push({
+      name: fieldName,
+      type: fieldType,
+      required: fieldReq,
+      options: fieldOpts
+    });
+  });
+
+  // if (!valid || fields.length === 0) {
+  //   showToast('Please name all columns and add at least one', 'error');
+  //   return;
+  // }
+
+  var createdByName = (document.getElementById('userNameSidebar') || {}).textContent || '';
+  createdByName = createdByName.trim();
+  var createdById = resolveCurrentUserId();
+
+  var tpl = {
+    id: 'tpl_' + Date.now(),
+    templateId: templateId || generateTemplateId(),
+    name: name,
+    applicableDepartments: applicableDepartmentIds.join(','),
+    preparingDepartments: preparingDepartmentIds.join(','),
+    reviewingDepartments: reviewingDepartmentIds.join(','),
+    applicableDepartmentNames: applicableDepartmentNames.join(', '),
+    preparingDepartmentNames: preparingDepartmentNames.join(', '),
+    reviewingDepartmentNames: reviewingDepartmentNames.join(', '),
+    parentId: '', // set after create when id is known
+    description: desc,
+    effectiveDate: effective,
+    header: headerValue,
+    footer: footerValue,
+    version: '1.0',
+    revisionNumber: revisionValue,
+   
+    createdAt: new Date().toISOString(),
+    approvedBy: null,
+    approvedAt: null,
+    fields: fields
+  };
+
+  tpl.logbookTemplate = buildLogbookTemplateDataObject(tpl, createdById, status);
+  if (typeof JSUTIL !== 'undefined' && typeof JSUTIL.callAJAXPost === 'function') {
+    JSUTIL.callAJAXPost('/data/LogbookTemplate/create', JSON.stringify(tpl.logbookTemplate), function (res) {
+      var createdId = extractCreatedRecordId(res);
+      console.log('Create response:', res);
+      console.log('[TemplateCreate] extracted createdId:', createdId);
+      var errorMessage = extractCreateErrorMessage(res);
+      if (errorMessage) {
+        showToast(errorMessage, 'error');
+        return;
+      }
+      if (createdId) tpl.id = createdId;
+      ensureTemplateParentId(tpl, createdId);
+      finalizeTemplateSave(tpl, status, name);
+      createTemplateActivityHistory(createdId);
+    });
+    return;
+  }
+
+  finalizeTemplateSave(tpl, status, name);
+}
+
+function createTemplateActivityHistory(createdTemplateId) {
+  var parentRecordId = Number(createdTemplateId);
+  console.log('[TemplateCreate] createTemplateActivityHistory called with:', createdTemplateId);
+  if (!Number.isFinite(parentRecordId)) {
+    console.warn('[TemplateCreate] skipped history create: invalid parentRecordId', createdTemplateId);
+    return;
+  }
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    console.warn('[TemplateCreate] skipped history create: JSUTIL.callAJAXPost unavailable');
+    return;
+  }
+
+  var activityUserId = Number(
+    (typeof FOX !== 'undefined' && FOX.employeeId) ? FOX.employeeId
+      : (typeof employeeiD !== 'undefined' ? employeeiD
+        : (typeof employeeId !== 'undefined' ? employeeId : resolveCurrentUserId()))
+  );
+  if (!Number.isFinite(activityUserId) || activityUserId <= 0) {
+    console.warn('[TemplateCreate] skipped history create: invalid activityUserId');
+    return;
+  }
+
+  var historyObj = {
+    name: 'Logbook Template Created',
+    startDate: new Date(),
+    performedBy: { id: activityUserId },
+    parentRecordId: parentRecordId
+  };
+
+  console.log('[TemplateCreate] posting activity history payload:', historyObj);
+  JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify(historyObj), function (res) {
+    console.log('[TemplateCreate] ProcessActivity create success:', res);
+    console.log('[TemplateCreate] reloading page after activity create');
+    // location.reload();
+  }, function (err) {
+    console.error('[TemplateCreate] ProcessActivity create failed:', err);
+  });
+}
+
+function ensureTemplateParentId(tpl, createdId) {
+  var parentId = tpl.parentId;
+  if (!parentId && createdId) {
+    parentId = createdId;
+  }
+
+  if (!createdId || !parentId) return;
+
+  var parentIdEl = document.getElementById('tpl-parent-id');
+  if (parentIdEl) parentIdEl.value = parentId;
+
+  if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+    return;
+  }
+
+  var payload = {
+    parentId: Number(parentId)
+  };
+  JSUTIL.callAJAXPost('/data/LogbookTemplate/update/' + createdId, JSON.stringify(payload), function () {
+    console.log('[TemplateCreate] parentId set to', parentId, 'for template', createdId);
+  }, function (err) {
+    console.warn('[TemplateCreate] failed to set parentId', err);
+  });
+}
+
+function buildLogbookTemplateDataObject(tpl, preparedById, status) {
+  var normalizedStatus = (status || '').toString().toLowerCase();
+  var processStatus = (normalizedStatus === 'pending' || normalizedStatus === 'pending approval')
+    ? 'Pending Approval'
+    : 'New';
+
+  var payload = {
+    number: tpl.templateId,
+    name: tpl.name,
+    description: tpl.description || '',
+    fields: JSON.stringify(tpl.fields),
+    revisionNumber: Number.isFinite(Number(tpl.revisionNumber)) ? Number(tpl.revisionNumber) : 0,
+    parentId: tpl.parentId || null,
+    processStatus: processStatus
+  };
+
+  var preparedBy = preparedById || (typeof employeeId !== 'undefined' ? employeeId : null);
+  if (preparedBy !== null && typeof preparedBy !== 'undefined' && String(preparedBy).trim() !== '') {
+    payload.preparedBy = {
+      id: preparedBy
+    };
+  }
+
+  payload.applicableDepartments = tpl.applicableDepartments || '';
+  payload.preparingDepartments = tpl.preparingDepartments || '';
+  payload.reviewingDepartments = tpl.reviewingDepartments || '';
+  payload.header = tpl.header || '';
+  payload.footer = tpl.footer || '';
+
+  return payload;
+}
+
+function parseEntityId(value) {
+  var raw = (value || '').toString().trim();
+  if (!raw) return null;
+  var num = Number(raw);
+  if (!Number.isFinite(num)) return null;
+  return num;
+}
+
+function extractCreatedRecordId(response) {
+  if (!response) return null;
+  if (response.id || response.Id) return response.id || response.Id;
+  if (response.data && (response.data.id || response.data.Id)) return response.data.id || response.data.Id;
+  return null;
+}
+
+function extractCreateErrorMessage(response) {
+  if (!response || typeof response !== 'object') return '';
+
+  var createdId = extractCreatedRecordId(response);
+  if (createdId) return '';
+
+  var responseType = (response.responseType || '').toString().toLowerCase();
+  var status = (response.status || '').toString().toLowerCase();
+
+  if (responseType === 'error' || status === 'error' || response.success === false) {
+    return response.message || response.errorMessage || response.error || 'Unable to create template.';
+  }
+
+  if (response.error || response.errorMessage) {
+    return response.errorMessage || response.error;
+  }
+
+  return '';
+}
+
+function resolveCurrentUserId() {
+  var selectors = [
+    'userIdSidebar',
+    'currentUserId',
+    'loggedInUserId'
+  ];
+
+  for (var i = 0; i < selectors.length; i++) {
+    var el = document.getElementById(selectors[i]);
+    if (!el) continue;
+
+    var candidate = (el.value || el.textContent || '').trim();
+    if (candidate) return candidate;
+  }
+
+  if (window.currentUser && window.currentUser.id) return String(window.currentUser.id);
+  if (window.loggedInUser && window.loggedInUser.id) return String(window.loggedInUser.id);
+
+  return null;
+}
+
+function finalizeTemplateSave(tpl, status, name) {
+  templates.push(tpl);
+  window.templates = templates;
+
+  if (Array.isArray(window.recordList)) {
+    window.recordList.push(tpl);
+  }
+
+  activityLog.unshift({
+    action: status === 'pending' ? 'Template Sent for Approval' : 'Template Saved as Draft',
+    template: name,
+    user: tpl.createdBy,
+    date: tpl.createdAt,
+    status: status === 'pending' ? 'pending' : 'draft'
+  });
+
+  if (typeof updateApprovalBadge === 'function') {
+    updateApprovalBadge();
+  }
+
+  showToast(
+    status === 'pending' ? '"' + name + '" sent for approval' : '"' + name + '" saved as draft',
+    'success'
+  );
+
+  if (typeof window.renderAllTemplateTable === 'function') {
+    window.renderAllTemplateTable();
+  }
+  if (typeof window.refreshTemplateList === 'function') {
+    window.refreshTemplateList(function () {
+      if (typeof window.renderAllTemplateTable === 'function') {
+        window.renderAllTemplateTable();
+      }
+    });
+  }
+  closeCreateTemplatePanel();
+}
+
+function generateTemplateId() {
+  return 'LOG-' + String(templates.length + 1).padStart(3, '0');
+}
+
+function closeCreateTemplatePanel() {
+  if (window.$ && $('#allTemplatePanel').length && $('#createTemplatePanel').length) {
+    $('#createTemplatePanel').hide();
+    $('#allTemplatePanel').show();
+    $('.newCreateTemplateBtn').show();
+    if (typeof window.renderAllTemplateTable === 'function') {
+      window.renderAllTemplateTable();
+    }
+    return;
+  }
+  if (typeof navigateTo === 'function') {
+    navigateTo('manage-templates');
+    return;
+  }
+  if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+  // window.location.reload();
+}
+
+function registerTemplateToolbarControls() {
+  var panel = document.getElementById('createTemplatePanel');
+  if (!panel || panel.dataset.toolbarBound === 'true') return;
+  panel.dataset.toolbarBound = 'true';
+
+  var closeBtns = panel.querySelectorAll('.showAllRequestsOnCancel');
+  closeBtns.forEach(function (btn) {
+    btn.addEventListener('click', closeCreateTemplatePanel);
+  });
+
+  var deleteBtn = panel.querySelector('#deleteRequestBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', function () {
+      resetTemplateForm();
+      closeCreateTemplatePanel();
+    });
+  }
+
+  var saveBtn = panel.querySelector('.updateSampleRequestBtn');
+  if (saveBtn) {
+    saveBtn.style.display = 'inline-block';
+    saveBtn.addEventListener('click', function () {
+      saveTemplate('draft');
+    });
+  }
+}
+
+function ensureTemplatePanelVisibility() {
+  var createPanel = document.getElementById('createTemplatePanel');
+  var listPanel = document.getElementById('allTemplatePanel');
+  if (!createPanel) return;
+
+  if (!listPanel) {
+    createPanel.style.display = 'block';
+  }
+}
+
+window.resetTemplateForm = resetTemplateForm;
+window.addField = addField;
+window.removeField = removeField;
+window.toggleOptions = toggleOptions;
+window.saveTemplate = saveTemplate;
+window.generateTemplateId = generateTemplateId;
+window.initializeCreateTemplatePanel = initializeCreateTemplatePanel;
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () {
+    initializeCreateTemplatePanel();
+    bindCreateTemplateSelect2Refresh();
+    ensureTemplatePanelVisibility();
+    if (document.getElementById('field-list') && fieldCounter === 0) {
+      addField();
+      addField();
+    }
+    registerTemplateToolbarControls();
+  });
+} else if (document.getElementById('field-list') && fieldCounter === 0) {
+  initializeCreateTemplatePanel();
+  bindCreateTemplateSelect2Refresh();
+  ensureTemplatePanelVisibility();
+  addField();
+  addField();
+  registerTemplateToolbarControls();
+}
+
+function showToast(message, type) {
+  if (typeof window.showToast === 'function' && window.showToast !== showToast) {
+    window.showToast(message, type);
+    return;
+  }
+  if (typeof JSUTIL !== 'undefined' && JSUTIL.buildErrorModal && type === 'error') {
+    JSUTIL.buildErrorModal(message);
+    return;
+  }
+  console.log((type || 'info').toUpperCase() + ': ' + message);
+}
+</script>
+<!-- createTemplate.html end -->
+
+
+<!-- allTemplatePanel.html start -->
+<style>
+    #allTemplatePanel table.dataTable thead .sorting,
+    #allTemplatePanel table.dataTable thead .sorting_asc,
+    #allTemplatePanel table.dataTable thead .sorting_desc {
+        padding-left: 28px;
+        padding-right: 8px;
+    }
+
+    #allTemplatePanel table.dataTable thead .sorting:before,
+    #allTemplatePanel table.dataTable thead .sorting:after,
+    #allTemplatePanel table.dataTable thead .sorting_asc:before,
+    #allTemplatePanel table.dataTable thead .sorting_asc:after,
+    #allTemplatePanel table.dataTable thead .sorting_desc:before,
+    #allTemplatePanel table.dataTable thead .sorting_desc:after {
+        left: 8px;
+        right: auto;
+    }
+
+    #editTemplatePanel #template-status-steps {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 0;
+        padding: 22px 0;
+    }
+
+    #editTemplatePanel #template-status-steps .step {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 0 0 170px;
+        text-align: center;
+        font-size: 12px;
+        color: #1f6fb6;
+    }
+
+    #editTemplatePanel #template-status-steps .step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 17px;
+        left: calc(50% + 18px);
+        width: calc(100% - 36px);
+        height: 3px;
+        background: #d4d7db;
+        z-index: -1;
+    }
+
+    #editTemplatePanel #template-status-steps .step-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        background: #d4d7db;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #6d737a;
+        margin-bottom: 8px;
+    }
+
+    #editTemplatePanel #template-status-steps .step-label {
+        font-weight: 600;
+        width: 100%;
+        min-height: 20px;
+        white-space: nowrap;
+    }
+
+    #editTemplatePanel #template-status-steps .step.completed .step-circle {
+        background: #f3d400;
+        border-color: #fff;
+        color: #333;
+    }
+
+    #editTemplatePanel #template-status-steps .step.completed::after {
+        background: #f3d400;
+    }
+
+    #editTemplatePanel #template-status-steps .step.current .step-circle {
+        background: #f39c12;
+        border-color: #fff;
+
+    }
+</style>
+
+<div class="row animated fadeInRight aasaanPanel" id="allTemplatePanel" style="display: none;">
+    <div class="col-lg-12" id="allTemplateListWrap">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Logbook Templates <small>Templates</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-sm btn-secondary newCreateTemplateBtn"><i data-lucide="plus"></i>Create Template</button>
+                </div>
+            </div>
+            <div class="ibox-content m-b-sm border-bottom">
+                <table class="table table-hover table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>Template ID</th>
+                            <th>Template Name</th>
+                            <th>Department</th>
+                            <th>Prepared By</th>
+                            <th>Revision</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="dataTableRecordList" id="allTemplateTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var allTemplateRowsCache = [];
+
+function getTemplateRows() {
+    var rows = [];
+    if (Array.isArray(allTemplateRowsCache) && allTemplateRowsCache.length) {
+        rows = allTemplateRowsCache.slice();
+    } else if (Array.isArray(window.recordList) && window.recordList.length) {
+        rows = window.recordList.slice();
+    } else if (Array.isArray(window.templates) && window.templates.length) {
+        rows = window.templates.slice();
+    }
+    return rows.filter(function (record) {
+        return isTemplateApplicableToCurrentDepartment(record);
+    });
+}
+
+function normalizeDepartmentId(value) {
+    var raw = (value === null || value === undefined) ? '' : String(value).trim();
+    if (!raw) return '';
+    var num = Number(raw);
+    return Number.isFinite(num) ? String(num) : raw;
+}
+
+function getCurrentEmployeeDepartmentId() {
+    if (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartmentId) {
+        return normalizeDepartmentId(FOX.employeeDepartmentId);
+    }
+    if (typeof window !== 'undefined' && window.FOX && window.FOX.employeeDepartmentId) {
+        return normalizeDepartmentId(window.FOX.employeeDepartmentId);
+    }
+    if (typeof employeeDepartmentId !== 'undefined' && employeeDepartmentId) {
+        return normalizeDepartmentId(employeeDepartmentId);
+    }
+    return '';
+}
+
+function parseApplicableDepartmentIds(record) {
+    var raw = record && (record.applicableDepartments || record.ApplicableDepartments || '');
+    if (!raw) return [];
+
+    if (Array.isArray(raw)) {
+        return raw.map(function (id) {
+            return normalizeDepartmentId(id);
+        }).filter(function (id) {
+            return id.length > 0;
+        });
+    }
+
+    return String(raw).split(',').map(function (id) {
+        return normalizeDepartmentId(id);
+    }).filter(function (id) {
+        return id.length > 0;
+    });
+}
+
+function isTemplateApplicableToCurrentDepartment(record) {
+    var currentDepartmentId = getCurrentEmployeeDepartmentId();
+    if (!currentDepartmentId) return true; // Show all templates if department not resolved
+
+    var applicableDepartmentIds = parseApplicableDepartmentIds(record);
+    if (!applicableDepartmentIds.length) return true; // Show templates with no department restriction
+
+    return applicableDepartmentIds.indexOf(currentDepartmentId) !== -1;
+}
+
+function normalizeTemplateListResponse(response) {
+    if (Array.isArray(response)) {
+        return response;
+    }
+    if (response && Array.isArray(response.data)) {
+        return response.data;
+    }
+    return [];
+}
+
+function showTemplatePanelError(message) {
+    if (typeof JSUTIL !== 'undefined' && typeof JSUTIL.buildErrorModal === 'function') {
+        JSUTIL.buildErrorModal(message);
+        return;
+    }
+    console.error(message);
+}
+
+function getTemplateStatusLabel(status) {
+    var normalized = (status || '').toString().toLowerCase();
+    if (normalized === 'approved' || normalized === 'active') {
+        return '<span class="status-badge status-completed">Approved</span>';
+    }
+    if (normalized === 'rejected') {
+        return '<span class="status-badge bg-danger">Rejected</span>';
+    }
+    if (normalized === 'pending' || normalized === 'pending approval') {
+        return '<span class="status-badge status-submitted">Pending Approval</span>';
+    }
+    return '<span class="status-badge status-new">New</span>';
+}
+
+function getDepartmentDisplayValue(record) {
+    var dept = (record && (record.department || record.Department)) || '';
+    if (!dept) return '--';
+    if (typeof dept === 'string') return dept;
+    if (typeof dept === 'object') {
+        return dept.name || dept.Name || dept.number || dept.Number || '--';
+    }
+    return '--';
+}
+
+function escapeTemplateHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getTemplateRecordId(record) {
+    return (record && (record.id || record.Id)) || '';
+}
+
+function openTemplateEditorById(recordId) {
+    if (!recordId) return;
+    if (typeof window.showEditTemplatePanel !== 'function') {
+        showTemplatePanelError('Edit Template panel is not loaded.');
+        return;
+    }
+
+    // Search the raw unfiltered cache first — avoids department filter blocking
+    // a newly created revision that hasn't been re-fetched with full dept data yet.
+    var cacheSource = Array.isArray(allTemplateRowsCache) && allTemplateRowsCache.length
+        ? allTemplateRowsCache
+        : (Array.isArray(window.recordList) ? window.recordList : []);
+
+    var record = null;
+    for (var i = 0; i < cacheSource.length; i++) {
+        if (String(getTemplateRecordId(cacheSource[i])) === String(recordId)) {
+            record = cacheSource[i];
+            break;
+        }
+    }
+
+    if (record) {
+        window.showEditTemplatePanel(record);
+        return;
+    }
+
+    // Not found in cache — fetch directly from API (handles newly created revisions).
+    if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXGet !== 'function') {
+        showTemplatePanelError('Template not found.');
+        return;
+    }
+
+    JSUTIL.callAJAXGet('/data/LogbookTemplate/get/' + Number(recordId), function (response) {
+        var fetched = response || null;
+        if (!fetched) {
+            showTemplatePanelError('Template not found.');
+            return;
+        }
+        // Merge into cache so subsequent lookups work without another round-trip.
+        allTemplateRowsCache.push(fetched);
+        window.showEditTemplatePanel(fetched);
+    }, function () {
+        showTemplatePanelError('Unable to load template. Please try again.');
+    });
+}
+
+function safeReinitializeTemplateTable(tableEl) {
+    try {
+        if (typeof JSUTIL !== 'undefined' && typeof JSUTIL.reinitializeDataTable === 'function') {
+            JSUTIL.reinitializeDataTable();
+            return;
+        }
+    } catch (err) {
+        // Fallback to local init to avoid breaking flow when global initializer fails.
+    }
+
+    if (window.$ && $.fn && $.fn.DataTable && tableEl && tableEl.length && !$.fn.DataTable.isDataTable(tableEl)) {
+        tableEl.DataTable();
+    }
+}
+
+function refreshTemplateList(callback) {
+    if (typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXPost !== 'function') {
+        if (typeof callback === 'function') callback(false, []);
+        return;
+    }
+
+    JSUTIL.callAJAXPost('/data/LogbookTemplate/list', JSON.stringify({}), function (response) {
+        var list = normalizeTemplateListResponse(response);
+        allTemplateRowsCache = Array.isArray(list) ? list.slice() : [];
+        if (typeof callback === 'function') callback(true, list);
+    }, function () {
+        allTemplateRowsCache = [];
+        if (typeof callback === 'function') callback(false, []);
+    });
+}
+
+function renderAllTemplateTable() {
+    var tableEl = $('#allTemplatePanel table.dataTables');
+    var tableBody = $('#allTemplateTable');
+    if (!tableBody.length) return;
+
+    if (window.$ && $.fn && $.fn.dataTable && $.fn.dataTable.ext) {
+        $.fn.dataTable.ext.errMode = 'none';
+    }
+
+    if (window.$ && $.fn && $.fn.DataTable && $.fn.DataTable.isDataTable && tableEl.length && $.fn.DataTable.isDataTable(tableEl)) {
+        tableEl.DataTable().clear().destroy();
+    }
+
+    tableBody.empty();
+    var innerHtml = '';
+    var rows = getTemplateRows();
+
+    $.each(rows, function (i, val) {
+        var recordId = getTemplateRecordId(val);
+        var templateId = val.number || val.Number || '';
+        var templateName = val.name || val.Name || '';
+        var department = getDepartmentDisplayValue(val);
+        var preparedBy = val.createdBy
+            || (val.preparedBy && (val.preparedBy.name || val.preparedBy.Name
+                || ((val.preparedBy.firstName || val.preparedBy.FirstName || '') + ' ' + (val.preparedBy.lastName || val.preparedBy.LastName || '')).trim()))
+            || '--';
+        var revision = val.revision || val.Revision || val.revisionNumber || val.RevisionNumber || '0';
+        var status = val.processStatus || val.ProcessStatus || '';
+
+        // skip archived templates from the all-template list
+        var normalizedStatus = (status || '').toString().toLowerCase();
+        if (normalizedStatus === 'archived') {
+            return true; // continue to next item
+        }
+
+        var templateIdLabel = templateId || '--';
+        var templateIdCell = recordId
+            ? '<a href="javascript:void(0);" class="selectTemplateRecord" data-record-id="' + escapeTemplateHtml(recordId) + '">' + escapeTemplateHtml(templateIdLabel) + '</a>'
+            : escapeTemplateHtml(templateIdLabel);
+
+        innerHtml += '<tr>' +
+            '<td>' + templateIdCell + '</td>' +
+            '<td>' + escapeTemplateHtml(templateName) + '</td>' +
+            '<td>' + escapeTemplateHtml(department) + '</td>' +
+            '<td>' + escapeTemplateHtml(preparedBy) + '</td>' +
+            '<td>' + escapeTemplateHtml(revision) + '</td>' +
+            '<td>' + getTemplateStatusLabel(status) + '</td>' +
+            '</tr>';
+    });
+
+    tableBody.append(innerHtml);
+    tableBody.off('click.templateOpen').on('click.templateOpen', '.selectTemplateRecord', function (event) {
+        event.preventDefault();
+        openTemplateEditorById($(this).attr('data-record-id'));
+    });
+    safeReinitializeTemplateTable(tableEl);
+    if (window.lucide) lucide.createIcons();
+}
+
+function showCreateTemplatePanel() {
+    if (!$('#createTemplatePanel').length) {
+        showTemplatePanelError('Create Template panel is not loaded.');
+        return;
+    }
+    $('#templateStatusStepsWrap').hide();
+    $('#allTemplateListWrap').show();
+    $('#allTemplatePanel').hide();
+    $('#createTemplatePanel').show();
+    $('.newCreateTemplateBtn').hide();
+    if (typeof resetTemplateForm === 'function') {
+        resetTemplateForm();
+    }
+}
+
+$(document).ready(function () {
+    if (window.lucide) lucide.createIcons();
+    $('#templateStatusStepsWrap').hide();
+    $('#allTemplateListWrap').show();
+    var tableEl = $('#allTemplatePanel table.dataTables');
+    if (tableEl.length) {
+        tableEl.off('error.dt.template').on('error.dt.template', function (e, settings, techNote, message) {
+            var errorText = message || ('Data table error (tech note ' + techNote + ').');
+            showTemplatePanelError(errorText);
+        });
+    }
+
+    refreshTemplateList(function () {
+        renderAllTemplateTable();
+        $('#allTemplatePanel').show();
+        if (window.lucide) lucide.createIcons();
+    });
+
+    $('.newCreateTemplateBtn').show().off('click').on('click', function () {
+        showCreateTemplatePanel();
+    });
+});
+
+window.renderAllTemplateTable = renderAllTemplateTable;
+window.showCreateTemplatePanel = showCreateTemplatePanel;
+window.refreshTemplateList = refreshTemplateList;
+</script>
+</div>
+<!-- allTemplatePanel.html end -->

@@ -1,0 +1,1566 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<script src="pages/lib/math.min.js"></script>
+<script src=https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js></script>
+<style>
+     .nav-tabs .nav-link.active {
+        color: #337AB7 !important;
+        background-color: #fff !important;
+        
+    }
+    .nav-tabs .nav-link {
+        color: #337AB7;
+    }
+    /* ── Lucide icon sizing ── */
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    /* ── ibox-title: flex layout ── */
+    .qa-white-panel .ibox-title {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+    }
+
+    .qa-white-panel .ibox-title h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .qa-white-panel .ibox-tools {
+        margin-left: auto;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .qa-white-panel .ibox-content {
+        padding: 15px 20px;
+    }
+
+    /* ── Form group spacing ── */
+    .qa-white-panel .form-group {
+        margin-bottom: 15px;
+    }
+
+    /* ── All panel tables ── */
+    .qa-white-panel .table td {
+        vertical-align: middle;
+    }
+
+    /* ── Status badges ── */
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .status-new      { background: #f3f4f6; color: #6b7280; }
+    .status-submitted{ background: #dbeafe; color: #1e40af; }
+    .status-completed{ background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+
+    /* ── Readonly inputs ── */
+    .qa-white-panel .form-control[readonly] {
+        cursor: not-allowed;
+        opacity: 0.85;
+    }
+
+    /* ── DataTables search input ── */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    /* ── Main list table ── */
+    #allQualityControlDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allQualityControlDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #allQualityControlDataTable th,
+    #allQualityControlDataTable td {
+        text-align: left !important;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* ── Record link ── */
+    .qa-white-panel .selectRequestBtn {
+        color: #337ab7;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .qa-white-panel .selectRequestBtn:hover {
+        text-decoration: underline;
+    }
+
+    /* ── Dropdown ── */
+    .qa-white-panel .dropdown .btn-light {
+        background: #fff;
+        color: #495057;
+        font-size: 14px;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    .qa-white-panel .dropdown .btn-light:focus,
+    .qa-white-panel .dropdown .btn-light:active {
+        background-color: #fff;
+        color: #495057;
+    }
+
+    .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+    }
+
+    .qa-white-panel .dropdown .btn-light:disabled,
+    .qa-white-panel .dropdown .btn-light[disabled] {
+        opacity: 1;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .qa-white-panel .dropdown-menu {
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        border-radius: 4px;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 4px 0;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item {
+        padding: 7px 14px;
+        color: #495057;
+        font-size: 13px;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    /* ── Dark mode: dropdown ── */
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light {
+        background-color: #2c2c2e;
+        color: #c9d1d9;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #3a3a3c;
+        border-color: #666;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:disabled {
+        background-color: #1e1e1e;
+        color: #6c757d;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu {
+        background-color: #2b2b2b;
+        border-color: #444;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item {
+        color: #e0e0e0;
+        background-color: #2b2b2b;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item:hover {
+        background-color: #4d4d4e;
+        color: #fff;
+    }
+
+    /* ── Dark mode: disabled/readonly inputs ── */
+    [data-bs-theme="dark"] .form-control:disabled,
+    [data-bs-theme="dark"] .form-control[readonly] {
+        background-color: #2c2c2e !important;
+        color: #c9d1d9 !important;
+        border-color: #444 !important;
+        opacity: 1 !important;
+    }
+
+    /* ── Dark mode: status badges ── */
+    [data-bs-theme="dark"] .status-new       { background: #0d3349; color: #7ec8e3; border-color: #1a5a7a; }
+    [data-bs-theme="dark"] .status-submitted { background: #3a2e00; color: #f0c040; border-color: #6b5500; }
+    [data-bs-theme="dark"] .status-completed { background: #0d2e0d; color: #5cb85c; border-color: #1a5c1a; }
+
+    /* ── DataTables dark mode ── */
+    [data-bs-theme="dark"] div.dt-container .dt-search input {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border-color: var(--bs-border-color) !important;
+    }
+
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] select,
+    [data-bs-theme="dark"] .dropdown .btn-light {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* ── Dark mode: inputs, tables ── */
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] input[type="text"] {
+        border: 1px solid #bfc9da !important;
+        background: #23272f !important;
+        color: #eee !important;
+    }
+
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] input[type="text"]:focus {
+        border-color: #7ec8e3 !important;
+        box-shadow: 0 0 0 2px rgba(126,200,227,0.2);
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel table,
+    html[data-bs-theme="dark"] .qa-white-panel thead,
+    html[data-bs-theme="dark"] .qa-white-panel tbody,
+    html[data-bs-theme="dark"] .qa-white-panel tr,
+    html[data-bs-theme="dark"] .qa-white-panel th,
+    html[data-bs-theme="dark"] .qa-white-panel td {
+        background-color: #18191d !important;
+        color: #e0e0e0 !important;
+        border-color: #23242a !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel th {
+        font-weight: 600;
+        color: #bfc7d5 !important;
+        background: #18191d !important;
+        border-bottom: 1px solid #23242a !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel td {
+        background: #18191d !important;
+        color: #e0e0e0 !important;
+        border-top: 1px solid #23242a !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel input[type="text"],
+    html[data-bs-theme="dark"] .qa-white-panel input[type="number"],
+    html[data-bs-theme="dark"] .qa-white-panel select,
+    html[data-bs-theme="dark"] .qa-white-panel textarea {
+        background: #23242a !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #333 !important;
+        border-radius: 4px;
+        box-shadow: none !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel input[type="text"]:focus,
+    html[data-bs-theme="dark"] .qa-white-panel input[type="number"]:focus,
+    html[data-bs-theme="dark"] .qa-white-panel select:focus,
+    html[data-bs-theme="dark"] .qa-white-panel textarea:focus {
+        background: #23242a !important;
+        color: #fff !important;
+        border-color: #4a90e2 !important;
+        outline: none;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel input[readonly],
+    html[data-bs-theme="dark"] .qa-white-panel .form-control[readonly] {
+        background: #23242a !important;
+        color: #bfc7d5 !important;
+        opacity: 1 !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel .btn,
+    html[data-bs-theme="dark"] .qa-white-panel .btn:focus {
+        background: #23242a !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #444 !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel .btn:hover {
+        background: #35363c !important;
+        color: #fff !important;
+        border-color: #4a90e2 !important;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .form-control,
+    [data-bs-theme="dark"] .qa-white-panel .form-control:disabled,
+    [data-bs-theme="dark"] .qa-white-panel input[type="text"]:disabled,
+    [data-bs-theme="dark"] .qa-white-panel input[type="number"]:disabled,
+    [data-bs-theme="dark"] .qa-white-panel select:disabled {
+        background: #23242a !important;
+        color: #bfc7d5 !important;
+        border: 1px solid #333 !important;
+        opacity: 1 !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel .form-control[readonly],
+    html[data-bs-theme="dark"] .qa-white-panel input[readonly] {
+        background: #23242a !important;
+        color: #bfc7d5 !important;
+        opacity: 1 !important;
+    }
+
+    html[data-bs-theme="dark"] .qa-white-panel select option {
+        background: #23242a !important;
+        color: #bfc7d5 !important;
+    }
+
+    /* ── Daterangepicker dark mode ── */
+    html[data-bs-theme="dark"] .daterangepicker,
+    html[data-bs-theme="dark"] .daterangepicker .drp-calendar,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table table {
+        background-color: #23272f !important;
+        border-color: #444 !important;
+        color: #eee !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table td,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-table th {
+        background-color: #23272f !important;
+        color: #bfc9da !important;
+        border-color: transparent !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker td.active,
+    html[data-bs-theme="dark"] .daterangepicker td.active:hover {
+        background-color: #2196f3 !important;
+        color: #fff !important;
+        border-radius: 4px;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker select.monthselect,
+    html[data-bs-theme="dark"] .daterangepicker select.yearselect {
+        background-color: #1a1d23 !important;
+        color: #eee !important;
+        border: 1px solid #444 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .drp-buttons {
+        background-color: #23272f !important;
+        border-top: 1px solid #444 !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .applyBtn {
+        background-color: #2196f3 !important;
+        border-color: #2196f3 !important;
+        color: #fff !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .cancelBtn {
+        background-color: transparent !important;
+        border: 1px solid #444 !important;
+        color: #bfc9da !important;
+    }
+
+    /* ── Time picker fix ── */
+    .daterangepicker .calendar-time {
+        position: relative;
+        z-index: 1;
+        overflow: visible;
+    }
+
+    .daterangepicker .calendar-time select.hourselect,
+    .daterangepicker .calendar-time select.minuteselect,
+    .daterangepicker .calendar-time select.ampmselect {
+        height: 28px !important;
+        width: 56px !important;
+        padding: 2px 4px !important;
+        font-size: 13px !important;
+        border-radius: 4px !important;
+        border: 1px solid #ced4da !important;
+        background-color: #fff !important;
+        cursor: pointer;
+        overflow: hidden !important;
+        -webkit-appearance: auto !important;
+        appearance: auto !important;
+    }
+
+    html[data-bs-theme="dark"] .daterangepicker .calendar-time select.hourselect,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-time select.minuteselect,
+    html[data-bs-theme="dark"] .daterangepicker .calendar-time select.ampmselect {
+        background-color: #1a1d23 !important;
+        color: #eee !important;
+        border: 1px solid #444 !important;
+    }
+</style>
+<!-- ========================================= -->
+<!-- allQualityControlPanel.html Start -->
+<div class="qa-white-panel">
+<div class="row animated fadeInRight aasaanPanel" id="allQualityControlPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>QC Analysis <small>Laboratory</small></h5>
+            </div>
+            <div class="ibox-content m-b-sm border-bottom">
+                <div class="table-responsive">
+                    <table id="allQualityControlDataTable" class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th>&nbsp;</th>
+                            <th>ARN</th>
+                            <th>Department</th>
+                            <th>Material Type</th>
+                            <th>Sample ID</th>
+                            <th>Received Date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="allServiceRequestTable" class="dataTableRecordList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- allQualityControlPanel.html End -->
+<!-- ========================================= -->
+
+
+
+
+<!-- ========================================= -->
+<!-- editQcWoSamplesPanel.html Start -->
+<div class="row animated fadeInRight aasaanPanel" id="editQualityControlPanel2" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>
+                    <span class="editRequestTitle"></span>
+                    <span class="label label editRequestStatus" style="float: none;margin-left: 10px;"></span>
+                </h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box showAllRequestsOnCancel"><i data-lucide="x"></i> Close </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="updateTestingBtn"><i data-lucide="check"></i> Save </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="complTestingBtn"><i data-lucide="check-check"></i> Complete Result Recording</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Department</label>
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                    type="button" id="editDepartmentBtn2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                <div class="dropdown-menu w-100" id="editDepartmentDropdownMenu2">
+                                    <a class="dropdown-item edit-department-item2" href="#" data-value="">-- None --</a>
+                                    <a class="dropdown-item edit-department-item2" href="#" data-value="Production">Production</a>
+                                    <a class="dropdown-item edit-department-item2" href="#" data-value="Warehouse">Warehouse</a>
+                                </div>
+                            </div>
+                            <input type="hidden" class="inward-dropdown-hidden" name="description2" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Material Type</label>
+                            <div class="dropdown">
+                                    <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                        type="button" id="editMaterialTypeBtn2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                        style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                    <div class="dropdown-menu w-100" id="editMaterialTypeDropdownMenu2">
+                                        <a class="dropdown-item edit-materialtype-item2" href="#" data-value="">-- None --</a>
+                                        <a class="dropdown-item edit-materialtype-item2" href="#" data-value="Raw Material">Raw Material</a>
+                                        <a class="dropdown-item edit-materialtype-item2" href="#" data-value="Packaging Material">Packaging Material</a>
+                                        <a class="dropdown-item edit-materialtype-item2" href="#" data-value="In-Process Material">In-Process Material</a>
+                                        <a class="dropdown-item edit-materialtype-item2" href="#" data-value="Finished Goods">Finished Goods</a>
+                                    </div>
+                                </div>
+                                <input type="hidden" class="inward-dropdown-hidden" name="sampleType2" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample ID</label>
+                            <input type="text" class="form-control editRecordInput" name="sampleId" placeholder="Enter Sample ID" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample Name</label>
+                            <input type="text" class="form-control editRecordInput" name="sampleCondition" placeholder="Enter Sample Name" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample Quantity</label>
+                            <input type="number" class="form-control editRecordInput" name="sampleQuantity" placeholder="Enter Sample Quantity" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample Unit</label>
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                    type="button" id="editSampleUnitBtn2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                <div class="dropdown-menu w-100" id="editSampleUnitMenu2"></div>
+                            </div>
+                            <input type="hidden" class="inward-dropdown-hidden" name="sampleUnit2" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Manufacturing Date</label>
+                            <input type="text" class="form-control editRecordInput" name="manufacturingDate" autocomplete="off" placeholder="DD/MM/YYYY" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Expiry Date</label>
+                            <input type="text" class="form-control editRecordInput" name="expiryDate" autocomplete="off" placeholder="DD/MM/YYYY" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Batch / Lot #</label>
+                            <input type="text" class="form-control editRecordInput" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>STP Test</label>
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                    type="button" id="editStpBtn2" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                <div class="dropdown-menu w-100" id="editStpDropdownMenu2"></div>
+                            </div>
+                            <input type="hidden" id="editStpSelectionInput2" name="testProcedure.id" value="">
+                            </div>
+                        </div>
+                    <input type="hidden" id="editRequestId" name="Id"/>
+                </div>
+                <hr>
+                <div class="tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#resultWorksheet">Test Parameters</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="resultWorksheet" class="tab-pane active">
+                            <div class="panel-body">
+                                <div class="row" id="selectTestResultRow" style="margin-bottom: 15px;margin-top: 10px;">
+                                    <div class="col-sm-6">
+                                        <label>Select Test</label>
+                                        <div class="dropdown">
+                                            <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                                type="button" id="selectTestResultBtn" data-bs-toggle="dropdown"
+                                                style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                                            <div class="dropdown-menu w-100" id="selectTestResultMenu"></div>
+                                        </div>
+                                        <input type="hidden" id="selectTestResultInput" value="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- editQcWoSamplesPanel.html End -->
+<!-- ========================================= -->
+
+
+
+
+<!-- ========================================= -->
+<!-- editQcFromStpPanel.html Start -->
+
+<style>
+    /* ── Worksheet Preview ── */
+    .worksheet-preview-wrapper {
+        margin-top: 20px;
+        background: #fff;
+        border-radius: 10px;
+        padding: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
+        display: none;
+    }
+
+    .worksheet-preview-content {
+        padding: 25px;
+        font-family: "Inter", sans-serif;
+        line-height: 1.65;
+        font-size: 14px;
+        color: #1f2937;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .worksheet-preview-content:empty::before {
+        content: 'No worksheet available for this test.';
+        color: #6b7280;
+        font-size: 14px;
+        font-style: italic;
+        display: block;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .worksheet-preview-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+
+    .worksheet-preview-content table th,
+    .worksheet-preview-content table td {
+        border: 1px solid #e5e7eb;
+        padding: 8px 10px;
+        text-align: left;
+    }
+
+    .worksheet-preview-content table th {
+        background: #f3f4f6;
+        font-weight: 600;
+    }
+
+    .worksheet-preview-content .editor-input-field {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 6px;
+        padding: 4px 8px;
+        margin: 4px 2px;
+        vertical-align: middle;
+    }
+
+    .worksheet-preview-content .editor-input-field input {
+        border: none;
+        background: white;
+        font-size: 14px;
+        color: #3730a3;
+        outline: none;
+        padding: 4px 6px;
+        border-radius: 3px;
+        min-width: 90px;
+    }
+
+    .worksheet-preview-content .editor-input-field .remove-input { display: none; }
+</style>
+<div class="row animated fadeInRight aasaanPanel" id="editQualityControlPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>
+                    <span class="editRequestTitle"></span>
+                    <span class="label label editRequestStatus" style="float: none;margin-left: 10px;"></span>
+                </h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box showAllRequestsOnCancel"><i data-lucide="x"></i> Close </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="updateWorksheetBtn"><i data-lucide="check"></i> Save </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="complWorksheetBtn"><i data-lucide="check-check"></i> Complete Worksheets </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Department</label>
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                    type="button" id="editDepartmentBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                <div class="dropdown-menu w-100" id="editDepartmentDropdownMenu">
+                                    <a class="dropdown-item edit-department-item" href="#" data-value="">-- None --</a>
+                                    <a class="dropdown-item edit-department-item" href="#" data-value="Production">Production</a>
+                                    <a class="dropdown-item edit-department-item" href="#" data-value="Warehouse">Warehouse</a>
+                                </div>
+                            </div>
+                            <input type="hidden" class="inward-dropdown-hidden" name="description" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Material Type</label>
+                            <div class="dropdown">
+                            <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                type="button" id="editMaterialTypeBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                            <div class="dropdown-menu w-100" id="editMaterialTypeDropdownMenu">
+                                <a class="dropdown-item edit-materialtype-item" href="#" data-value="">-- None --</a>
+                                <a class="dropdown-item edit-materialtype-item" href="#" data-value="Raw Material">Raw Material</a>
+                                <a class="dropdown-item edit-materialtype-item" href="#" data-value="Packaging Material">Packaging Material</a>
+                                <a class="dropdown-item edit-materialtype-item" href="#" data-value="In-Process Material">In-Process Material</a>
+                                <a class="dropdown-item edit-materialtype-item" href="#" data-value="Finished Goods">Finished Goods</a>
+                            </div>
+                        </div>
+                        <input type="hidden" class="inward-dropdown-hidden" name="sampleType" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample ID</label>
+                            <input type="text" class="form-control editRecordInput" name="sampleId" placeholder="Enter Sample ID" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample Name</label>
+                            <input type="text" class="form-control editRecordInput" name="sampleCondition" placeholder="Enter Sample Name" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample Quantity</label>
+                            <input type="number" class="form-control editRecordInput" name="sampleQuantity" placeholder="Enter Sample Quantity" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Sample Unit</label>
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                    type="button" id="editSampleUnitBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                <div class="dropdown-menu w-100" id="editSampleUnitMenu"></div>
+                            </div>
+                            <input type="hidden" class="inward-dropdown-hidden" name="sampleUnit" value="">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Manufacturing Date</label>
+                            <input type="text" class="form-control editRecordInput" name="manufacturingDate" autocomplete="off" placeholder="DD/MM/YYYY" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Expiry Date</label>
+                            <input type="text" class="form-control editRecordInput" name="expiryDate" autocomplete="off" placeholder="DD/MM/YYYY" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>Batch / Lot #</label>
+                            <input type="text" class="form-control editRecordInput" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
+                            <label>STP Test</label>
+                            <div class="dropdown">
+                                <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                    type="button" id="editStpBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                    style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                <div class="dropdown-menu w-100" id="editStpDropdownMenu"></div>
+                            </div>
+                            <input type="hidden" id="editStpSelectionInput" name="testProcedure.id" value="">
+                            </div>
+                        </div>
+                    <input type="hidden" id="editRequestId" name="Id"/>
+                </div>
+                <hr class="approvalRemarkPanel" style="display: none;">
+                <div class="panel panel-warning approvalRemarkPanel" style="display: none;">
+                    <div class="panel-heading">
+                        <h5 class="panel-title">
+                            <a data-bs-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" class="">Review Comments</a>
+                        </h5>
+                    </div>
+                    <div id="collapseOne" class="panel-collapse collapse in" aria-expanded="true">
+                        <div class="panel-body" id="approvalRemarkText"></div>
+                    </div>
+                </div>
+                <hr>
+                <div class="tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#worksheet">Worksheets</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="worksheet" class="tab-pane active">
+                            <div class="panel-body">
+                                <div class="row" style="margin-bottom: 15px; margin-top: 10px;">
+                                    <div class="col-sm-6">
+                                        <label>Select Test</label>
+                                        <div class="dropdown">
+                                            <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                                type="button" id="selectTestBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                                style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                                            <div class="dropdown-menu w-100" id="selectTestMenu"></div>
+                                        </div>
+                                        <input type="hidden" id="selectTestInput" value="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- editQcFromStpPanel.html End -->
+<!-- ========================================= -->
+
+
+
+
+<script>
+    try { lucide.createIcons(); } catch(e) { console.error("lucide init:", e); }
+
+    if ($.fn && !$.fn.datepicker) {
+        $.fn.datepicker = function() { return this; };
+    }
+    if ($.fn && !$.fn.datetimepicker) {
+        $.fn.datetimepicker = function() { return this; };
+    }
+
+    // ========================================
+    // allQualityControlPanel.js Start
+    
+var currentRequestId = '';
+var currentSampleRequest = {};
+var currentRequestLineItems = [];
+var btnClicked = '';
+var currentParameterItemList = [];
+
+// ── State ──
+var recordList = [];
+
+// ── Safe DataTable destroy/init ──
+function destroyQcDataTable() {
+    if (!$.fn || !$.fn.DataTable) return;
+    if ($.fn.DataTable.isDataTable('#allQualityControlDataTable')) {
+        $('#allQualityControlDataTable').DataTable().clear().destroy();
+    }
+}
+function initQcDataTable() {
+    if (!$.fn || !$.fn.DataTable) return;
+    if ($.fn.DataTable.isDataTable('#allQualityControlDataTable')) return;
+    $('#allQualityControlDataTable').DataTable({ order: [], destroy: true });
+
+    // Register status filter only once
+    if (!$.fn.dataTable._qcStatusFilterRegistered) {
+        $.fn.dataTable._qcStatusFilterRegistered = true;
+        $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+            if (settings.nTable.id !== 'allQualityControlDataTable') return true;
+            var filterVal = $('#qcStatusFilter').val();
+            var colVal    = data[6];
+            return (!filterVal || colVal.indexOf(filterVal) >= 0);
+        });
+    }
+}
+
+// ── Status badge helper ──
+function getQcStatusBadge(status) {
+    var cls = 'status-submitted';
+    if (status === 'QC Analysis') cls = 'status-new';
+    else if (status === 'QC Review' || status === 'Completed') cls = 'status-completed';
+    return '<span class="status-badge ' + cls + '">' + (status || '-') + '</span>';
+}
+
+// ── Build the request list table ──
+function buildQcTable() {
+    destroyQcDataTable();
+    $('#allServiceRequestTable').empty();
+    var rows = '';
+    $.each(recordList, function(i, val) {
+        if((val.requestStatus !== 'QC Analysis') && (val.requestStatus !== 'QC Result Recording')) {
+            return;
+        }
+        var badge = getQcStatusBadge(val.requestStatus);
+        rows +=
+            '<tr>' +
+            '<td><div class="checkbox" style="margin:0;"><input class="selectRequestChkbox" type="checkbox" name="' + val.id + '"><label></label></div></td>' +
+            '<td class="itemNum"><a href="javascript:void(0)" class="selectRequestBtn" id="' + val.id + '">' + (val.referenceNumber || '') + '</a></td>' +
+            '<td>' + (val.description || '') + '</td>' +
+            '<td>' + (val.sampleType   || '') + '</td>' +
+            '<td>' + (val.sampleId     || '') + '</td>' +
+            '<td>' + JSUTIL.getDate(val.receivedDate) + '</td>' +
+            '<td>' + badge + '</td>' +
+            '</tr>';
+    });
+    $('#allServiceRequestTable').append(rows);
+    initQcDataTable();
+    try { lucide.createIcons(); } catch(e) {}
+}
+
+$(document).ready(function(){
+    $('#allQualityControlPanel').show();
+
+    // ── Status filter handler ──
+    $(document).on('click', '#qcStatusFilterMenu .qc-status-filter-item', function(e) {
+        e.preventDefault();
+        var val   = $(this).data('value');
+        var label = $(this).text().trim();
+        $('#qcStatusFilterBtn').text(label);
+        $('#qcStatusFilter').val(val);
+        $(this).siblings().removeClass('active');
+        $(this).addClass('active');
+        if ($.fn.DataTable && $.fn.DataTable.isDataTable('#allQualityControlDataTable')) {
+            $('#allQualityControlDataTable').DataTable().draw();
+        }
+    });
+
+    // ── Fetch records then build the table ──
+    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-requests'), function(data) {
+        recordList = data || [];
+        buildQcTable();
+
+        // Auto-open ?id= record after table is populated
+        var id = new URL(window.location.href).searchParams.get('id');
+        if (id) {
+            setTimeout(function () {
+                var btn = $('#allServiceRequestTable .selectRequestBtn[id="' + id + '"]');
+                if (btn.length) {
+                    btn.trigger('click');
+                } else {
+                    console.warn("Button with id " + id + " not found.");
+                }
+            }, 200);
+        }
+    });
+
+    $('#allServiceRequestTable').on('click', '.selectRequestBtn', function() {
+        JSUTIL.startSpinner();
+        $('.approvalRemarkPanel').hide();
+        var currentId = $(this).attr('id');
+        console.log(currentId)
+        currentRequestId = currentId;
+        $.each(recordList, function(i, objList) {
+            if(Number(currentId) === objList.id) {
+                console.log("Request data:", objList);
+                currentSampleRequest = objList;
+                $('.editRequestTitle').text('ARN - ' + objList.referenceNumber);
+                $('.editRequestStatus').text(objList.requestStatus);
+                // Department — both panels
+                var deptLabel = objList.description || '-- None --';
+                // Worksheet panel
+                $('#editDepartmentBtn').text(deptLabel);
+                $('#editDepartmentDropdownMenu .dropdown-item').removeClass('active');
+                $('#editDepartmentDropdownMenu .dropdown-item[data-value="' + (objList.description || '') + '"]').addClass('active');
+                $('#editDepartmentDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.description || '');
+                // Result Recording panel
+                $('#editDepartmentBtn2').text(deptLabel);
+                $('#editDepartmentDropdownMenu2 .dropdown-item').removeClass('active');
+                $('#editDepartmentDropdownMenu2 .dropdown-item[data-value="' + (objList.description || '') + '"]').addClass('active');
+                $('#editDepartmentDropdownMenu2').closest('.form-group').find('.inward-dropdown-hidden').val(objList.description || '');
+                // Material Type — both panels
+                var matLabel = objList.sampleType || '-- None --';
+
+                $('#editMaterialTypeBtn').text(matLabel);
+                $('#editMaterialTypeDropdownMenu .dropdown-item').removeClass('active');
+                $('#editMaterialTypeDropdownMenu .dropdown-item[data-value="' + (objList.sampleType || '') + '"]').addClass('active');
+                $('#editMaterialTypeDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleType || '');
+
+                $('#editMaterialTypeBtn2').text(matLabel);
+                $('#editMaterialTypeDropdownMenu2 .dropdown-item').removeClass('active');
+                $('#editMaterialTypeDropdownMenu2 .dropdown-item[data-value="' + (objList.sampleType || '') + '"]').addClass('active');
+                $('#editMaterialTypeDropdownMenu2').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleType || '');
+                $('.editRecordInput[name="sampleId"]').val(objList.sampleId);
+                $('.editRecordInput[name="sampleCondition"]').val(objList.sampleCondition);
+                $('.editRecordInput[name="sampleQuantity"]').val(objList.sampleQuantity);
+                // Sample Unit — both panels
+                var unitLabel = '-- None --';
+                if (objList.sampleUnit) {
+                    $.each(uomList, function(i, val){
+                        if (val.name === objList.sampleUnit){
+                            unitLabel = val.name + ' (' + val.description + ')';
+                            return false;
+                        }
+                    });
+                }
+                // Worksheet panel unit
+                $('#editSampleUnitBtn').text(unitLabel);
+                $('#editSampleUnitMenu .dropdown-item').removeClass('active');
+                $('#editSampleUnitMenu .dropdown-item[data-value="' + (objList.sampleUnit || '') + '"]').addClass('active');
+                $('#editSampleUnitMenu').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleUnit || '');
+                // Result Recording panel unit
+                $('#editSampleUnitBtn2').text(unitLabel);
+                $('#editSampleUnitMenu2 .dropdown-item').removeClass('active');
+                $('#editSampleUnitMenu2 .dropdown-item[data-value="' + (objList.sampleUnit || '') + '"]').addClass('active');
+                $('#editSampleUnitMenu2').closest('.form-group').find('.inward-dropdown-hidden').val(objList.sampleUnit || '');
+
+                $('.editRecordInput[name="manufacturingDate"]').val(JSUTIL.getDate(objList.manufacturingDate));
+                $('.editRecordInput[name="expiryDate"]').val(JSUTIL.getDate(objList.expiryDate));
+                $('.editRecordInput[name="batchNumber"]').val(objList.batchNumber);
+
+                // STP — both panels
+                var stpLabel = '-- None --';
+                var stpId = '';
+                if (objList.testProcedure && objList.testProcedure.id) {
+                    stpLabel = objList.testProcedure.number || objList.testProcedure.id;
+                    stpId = objList.testProcedure.id;
+                }
+                // Worksheet panel STP
+                $('#editStpBtn').text(stpLabel);
+                $('#editStpDropdownMenu .dropdown-item').removeClass('active');
+                $('#editStpDropdownMenu .dropdown-item[data-value="' + stpId + '"]').addClass('active');
+                $('#editStpSelectionInput').val(stpId);
+                // Result Recording panel STP
+                $('#editStpBtn2').text(stpLabel);
+                $('#editStpDropdownMenu2 .dropdown-item').removeClass('active');
+                $('#editStpDropdownMenu2 .dropdown-item[data-value="' + stpId + '"]').addClass('active');
+                $('#editStpSelectionInput2').val(stpId);
+                $('#editRequestId').val(objList?.id);
+
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-request-items?requestId=' + currentRequestId), callbackAfterGetRequestItems);
+                if(objList.requestStatus === 'QC Analysis'){
+                    $('#editQualityControlPanel').show();
+                    $('#allQualityControlPanel').hide();
+                } else if(objList.requestStatus === 'QC Result Recording'){
+                    $('#editQualityControlPanel2').show();
+                    $('#allQualityControlPanel').hide();
+                }
+                return;
+            }
+        });
+    });
+});
+function callbackAfterGetRequestItems(ObjList1){
+    console.log('RequestItems: ', ObjList1);
+    currentRequestLineItems = ObjList1;
+
+    // Populate both Test dropdowns (worksheet panel + result recording panel)
+    var testMenuHtml = '<a class="dropdown-item qc-test-item" href="#" data-value="">-- None --</a>';
+    $.each(ObjList1, function(i, val){
+        testMenuHtml += '<a class="dropdown-item qc-test-item" href="#" data-value="' + val.service.id + '">' + val.service.name + '</a>';
+    });
+    // Worksheet panel
+    $('#selectTestMenu').html(testMenuHtml);
+    $('#selectTestBtn').text('-- None --');
+    $('#selectTestInput').val('');
+    // Result Recording panel
+    $('#selectTestResultMenu').html(testMenuHtml);
+    $('#selectTestResultBtn').text('-- None --');
+    $('#selectTestResultInput').val('');
+}
+
+
+$(document).ready(function(){
+    $('#updateTestingBtn').on('click', function () {
+        saveTestResults(false);
+    });
+    $('#complTestingBtn').on('click', function() {
+        saveTestResults(true);
+    });
+    $('#resultParameterContainer').find('.result-param-input').on('input change', function () {
+        const paramId = $(this).attr("aria-details");
+        const idx = $(this).attr("aria-description") || 0;
+        attachResultParameterAutoSave(); 
+        MATHJS.calculate(paramId, idx);
+    });
+});
+// ── Panel 2: Result Recording (testResult field, parameter-based form) ──
+var resultParameterCache = {};   // serviceId → parameter list from API
+var resultTestResultCache = {};  // serviceId → saved testResult JSON
+
+function loadResultForm(selectedItem) {
+    if (!selectedItem) return;
+    var serviceId = selectedItem.service.id;
+    JSUTIL.startSpinner();
+    // Fetch the individual item to get testResult (list endpoint doesn't include it)
+    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-request-items/' + selectedItem.id), function(fullItem) {
+        var savedResult = fullItem.testResult || null;
+        if (savedResult && typeof savedResult === 'string') {
+            try { savedResult = JSON.parse(savedResult); } catch(e) { savedResult = null; }
+        }
+        resultTestResultCache[serviceId] = savedResult;
+        selectedItem._testResultObj = savedResult;
+        // Now fetch parameters for this service
+        if (resultParameterCache[serviceId]) {
+            buildResultParameterForm(serviceId, resultParameterCache[serviceId], savedResult);
+        } else {
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/lab-services/' + serviceId + '/parameters'), function(paramList) {
+                resultParameterCache[serviceId] = paramList;
+                buildResultParameterForm(serviceId, paramList, savedResult);
+            }); 
+        }
+    });
+}
+function buildResultParameterForm(serviceId, parameterList, savedValues) {
+    currentParameterItemList = parameterList;
+    console.info('Building result form for service', serviceId, '- params:', parameterList.length, '- saved:', savedValues);
+    var $container = $('#resultParameterContainer');
+    if ($container.length === 0) {
+        $container = $('<div id="resultParameterContainer" style="margin-top:15px;"></div>');
+        $('#selectTestResultInput').closest('.row').after($container);
+    }
+    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Parameter</th><th>Test Result</th><th>Unit</th></tr></thead><tbody>';
+    $.each(parameterList, function(i, val) {
+        var isFormula = val.formula && val.formula.trim() !== '';
+        var readonlyAttr = isFormula ? 'readonly' : '';
+        var fieldClass = isFormula ? 'nonEditableField' : 'editableField';
+        html += '<tr><td>' + val.name + (val.number ? ' (' + val.number + ')' : '') + '</td><td>';
+        if (val.numberOfReadings > 1) {
+            for (var k = 0; k < val.numberOfReadings; k++) {
+                var savedVal = '';
+                if (savedValues && savedValues[val.id]) {
+                    var parts = savedValues[val.id].split(';');
+                    savedVal = parts[k] || '';
+                }
+                html += '<input type="text" value="' + savedVal + '" class="form-control result-param-input ' + fieldClass + '" name="requestLnItem_' + val.id + '_Reading_' + k + '"  aria-details="' + val.number + '" aria-parameter-id="' + val.id + '" aria-description="' + k + '" ' + readonlyAttr + '>';
+            }
+        } else {
+            var savedVal = '';
+            if (savedValues && savedValues[val.id] !== undefined) {
+                savedVal = savedValues[val.id];
+            } else if (val.defaultValues) {
+                savedVal = val.defaultValues;
+            }
+            html += '<input type="text" value="' + savedVal + '" class="form-control result-param-input ' + fieldClass + '" name="requestLnItem_' + val.id + '_Reading_' + k + '" aria-details="' + val.number + '" aria-parameter-id="' + val.id + '" aria-description="0" ' + readonlyAttr + '>';
+        }
+        html += '</td><td>' + (val.unit || '') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    $container.html(html);
+    $container.show();
+    attachResultParameterAutoSave();
+    JSUTIL.stopSpinner();
+}
+function attachResultParameterAutoSave() {
+    $('#resultParameterContainer .result-param-input').off('input change').on('input change', function () {
+        var selectedId = $('#selectTestResultInput').val();
+        var currentItem = currentRequestLineItems.find(function(i) {
+            return i.service.id.toString() === selectedId;
+        });
+        if (currentItem) {
+            currentItem._testResultObj = collectResultParameterValues();
+        }
+        var paramId = $(this).attr('aria-details');
+        var idx = parseInt($(this).attr('aria-description')) || 0;
+        MATHJS.calculate(paramId, idx);
+    });
+}
+function collectResultParameterValues() {
+    var obj = {};
+    $('#resultParameterContainer .result-param-input').each(function () {
+        var paramId = $(this).attr('aria-parameter-id').toString();
+        var reading = parseInt($(this).attr('aria-description'));
+        var val = $(this).val();
+        if (reading > 0) {
+            // Multiple readings: join with semicolons
+            if (!obj[paramId]) obj[paramId] = val;
+            else obj[paramId] += ';' + val;
+        } else {
+            obj[paramId] = val;
+        }
+    });
+    return obj;
+}
+function saveTestResults(completeRecording) {
+    // Flush currently visible form
+    var resultSelectedId = $('#selectTestResultInput').val();
+    if (resultSelectedId) {
+        var visibleItem = currentRequestLineItems.find(function(i) {
+            return i.service.id.toString() === resultSelectedId.toString();
+        });
+        if (visibleItem && $('#resultParameterContainer').length) {
+            visibleItem._testResultObj = collectResultParameterValues();
+        }
+    }
+
+    JSUTIL.startSpinner();
+    var items = currentRequestLineItems.slice();
+    var idx = 0;
+    function saveNextItem() {
+        if (idx >= items.length) {
+            if (completeRecording) {
+                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentRequestId),
+                    JSON.stringify({'requestStatus': 'QC Review'}), function() { location.reload(); });
+            } else {
+                location.reload();
+            }
+            return;
+        }
+        var val = items[idx++];
+        var testResultStr = val._testResultObj ? JSON.stringify(val._testResultObj) : null;
+        console.info('Saving testResult for item', val.id, ':', testResultStr ? testResultStr.length + ' chars' : 'null');
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-request-items/' + val.id),
+            JSON.stringify({'testResult': testResultStr}), saveNextItem);
+    }
+    saveNextItem();
+}
+const MATHJS = {
+    calculate: function (fieldId, index, visitedIds = new Set()) {
+        console.log("🔄 Recalculation Triggered for:", fieldId);
+        if (visitedIds.has(String(fieldId))) return;
+        visitedIds.add(String(fieldId));
+        $.each(currentParameterItemList, function (_, param) {
+            if (param.formula && param.formula.includes(`{${fieldId}}`)) {
+                console.log("Level 1 ->", param.id, param.formula);
+                if (param.numberOfReadings > 1) {
+                    MATHJS.recalculateFormulaMultiple(param.formula, param.id, true, param.numberOfDecimals, index);
+                } else {
+                    MATHJS.recalculateFormula(param.formula, param.id, true, param.numberOfDecimals);
+                }
+                MATHJS.calculate(param.id, index, visitedIds);
+                $.each(currentParameterItemList, function (_, param2) {
+                    if (param2.formula && param2.formula.includes(`{${param.number}}`)) {
+                        console.log("Level 2 ->", param2.id, param2.formula);
+                        if (param2.numberOfReadings > 1) {
+                            MATHJS.recalculateFormulaMultiple(param2.formula, param2.id, true, param2.numberOfDecimals, index);
+                        } else {
+                            MATHJS.recalculateFormula(param2.formula, param2.id, true, param2.numberOfDecimals);
+                        }
+                        MATHJS.calculate(param2.id, index, visitedIds);
+                        $.each(currentParameterItemList, function (_, param3) {
+                            if (param3.formula && param3.formula.includes(`{${param2.number}}`)) {
+                                console.log("Level 3 ->", param3.id, param3.formula);
+                                if (param2.numberOfReadings > 1) {
+                                    MATHJS.recalculateFormulaMultiple(param3.formula, param3.id, true, param3.numberOfDecimals, index);
+                                } else {
+                                    MATHJS.recalculateFormula(param3.formula, param3.id, true, param3.numberOfDecimals);
+                                }
+                                MATHJS.calculate(param.id, index, visitedIds);
+                                
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    },
+    recalculateFormula: function (formula, targetFieldId, isTestResult, numberOfDecimals) {
+        let matches = [], regEx = /{([^}]+)}/g, text = '';
+        let avgList = [];
+        while ((text = regEx.exec(formula))) { matches.push(text[1]); }
+        $.each(matches, function (i, paramId) {
+            let inputs = $(`input[aria-details="${paramId}"]`);
+
+            if (inputs.length > 1) {
+                let values = [];
+                $.each(inputs, function (_, el) {
+                    if (el.value && !isNaN(el.value)) values.push(el.value.trim());
+                });
+                avgList.push(...values);
+                formula = formula.replaceAll(`{${paramId}}`, values.join(","));
+            } else {
+                let singleValue = inputs.val();
+                if (singleValue && !isNaN(singleValue)) {
+                    avgList.push(singleValue.trim());
+                    formula = formula.replaceAll(`{${paramId}}`, singleValue.trim());
+                }
+            }
+        });
+        try {
+            let result = MATHJS.computeFormulaResult(formula, avgList);
+            if (!isNaN(result)) {
+                let dec = numberOfDecimals ? Number(numberOfDecimals) : 2;
+                $(`input[aria-parameter-id="${targetFieldId}"]`).val(result.toFixed(dec));
+            }
+        } catch (e) {
+            console.error("Formula Error:", e);
+        }
+    },
+    recalculateFormulaMultiple: function (formula, targetFieldId, isTestResult, numberOfDecimals, index) {
+        let matches = [], regEx = /{([^}]+)}/g, text = '';
+        let avgList = [];
+        while ((text = regEx.exec(formula))) { matches.push(text[1]); }
+        $.each(matches, function (i, paramId) {
+            let inputs = $(`input[aria-details="${paramId}"]`);
+            let oneVal = inputs[index];
+
+            if (oneVal && oneVal.value && !isNaN(oneVal.value)) {
+                avgList.push(oneVal.value.trim());
+                formula = formula.replaceAll(`{${paramId}}`, oneVal.value.trim());
+            }
+        });
+        try {
+            let result = MATHJS.computeFormulaResult(formula, avgList);
+            if (!isNaN(result)) {
+                let dec = numberOfDecimals ? Number(numberOfDecimals) : 2;
+                $(`input[aria-parameter-id="${targetFieldId}"][aria-description="${index}"]`)
+                    .val(result.toFixed(dec));
+            }
+        } catch (e) { console.error("Formula Error:", e); }
+    },
+    computeFormulaResult: function (expr, avgList) {
+        if (expr.includes("AVG(") && avgList.length) return math.mean(avgList);
+        if (expr.includes("MIN(")) return math.min(avgList);
+        if (expr.includes("MAX(")) return math.max(avgList);
+        if (expr.includes("SUM(")) return math.sum(avgList);
+        if (expr.includes("STDEV(")) return math.std(avgList);
+        if (expr.includes("SQRT(")) return math.sqrt(avgList);
+        return math.eval(expr);
+    }
+};
+    // editQcWoSamplesPanel.js End
+    // ========================================
+
+
+
+
+    // ========================================
+    // editQcFromStpPanel.js Start
+var lastSelectedTestId = null;
+$(document).ready(function(){
+    $('.showAllRequestsOnCancel').on('click', function() {
+        $('#newRequestPanel').hide();
+        $('#editQualityControlPanel').hide();
+        $('#editQualityControlPanel2').hide();
+        $('#allQualityControlPanel').show();
+        $('#csvUploadPanel').hide();
+    });
+    $('#updateWorksheetBtn').on('click', function () {
+        saveWorksheetResults(false);
+    });
+    $('#complWorksheetBtn').on('click', function() {
+        btnClicked = "complWorksheetBtn";
+        saveWorksheetResults(true);
+    });
+});
+function attachWorksheetAutoSave() {
+    $('#worksheetPreviewContent').find('input, textarea, select').off('input change').on('input change', function () {
+        const worksheetHtml = getWorksheetHtmlWithValues();
+        const currentItem = currentRequestLineItems.find(
+            i => i.service.id.toString() === lastSelectedTestId
+        );
+        if (currentItem) {
+            currentItem.worksheet = worksheetHtml;
+            console.log("Auto-saved worksheet on input:", lastSelectedTestId);
+        }
+    });
+}
+function getWorksheetHtmlWithValues() {
+    const $clone = $('#worksheetPreviewContent').clone();
+    $clone.find('input').each(function () {
+        const val = $(this).prop('value'); 
+        $(this).attr('value', val);        
+    });
+    $clone.find('textarea').each(function () {
+        const val = $(this).prop('value');
+        $(this).text(val);
+    });
+    $clone.find('select').each(function () {
+        const val = $(this).prop('value');
+        $(this).find('option').removeAttr('selected');
+        $(this).find(`option[value="${val}"]`).attr('selected', true);
+    });
+    return $clone.html();
+}
+function displayWorksheetPreview(worksheetHtml) {
+    console.log(worksheetHtml);
+    let $previewContainer = $('#worksheetPreviewContainer');
+    if ($previewContainer.length === 0) {
+        $previewContainer = $(`
+            <div id="worksheetPreviewContainer" class="worksheet-preview-wrapper">
+                <div id="worksheetPreviewContent" class="worksheet-preview-content"></div>
+            </div>
+        `);
+        $('#selectTestInput').closest('.row').after($previewContainer);
+    }
+    $('#worksheetPreviewContent').html(worksheetHtml);
+    $previewContainer.show();
+}
+function saveWorksheetResults(completeAnalysis) {
+    // Flush the currently-visible worksheet before iterating — auto-save only fires on input events,
+    // so if the user viewed the worksheet without editing, currentItem.worksheet hasn't been updated.
+    if (lastSelectedTestId) {
+        var visibleItem = currentRequestLineItems.find(function(i) {
+            return i.service.id.toString() === lastSelectedTestId.toString();
+        });
+        if (visibleItem && $('#worksheetPreviewContent').length) {
+            visibleItem.worksheet = getWorksheetHtmlWithValues();
+        }
+    }
+
+    JSUTIL.startSpinner();
+    var items = currentRequestLineItems.slice();
+    var idx = 0;
+    function saveNextItem() {
+        if (idx >= items.length) {
+            if (completeAnalysis) {
+                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentRequestId),
+                    JSON.stringify({'requestStatus': 'QC Worksheet Review'}), saveResultsCallback);
+            } else {
+                saveResultsCallback({});
+            }
+            return;
+        }
+        var val = items[idx++];
+        console.info('Saving worksheet for item', val.id, ':', val.worksheet ? val.worksheet.length + ' chars' : 'null');
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-request-items/' + val.id),
+            JSON.stringify({'worksheet': val.worksheet}), saveNextItem);
+    }
+    saveNextItem();
+}
+function saveResultsCallback(response) {
+    console.log("Result Respone: ",response);
+    location.reload();
+}
+
+// ── Populate UOM dropdown helper ──
+function populateQcUomDropdown() {
+    if (typeof uomList === 'undefined' || !uomList) return;
+    var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+    $.each(uomList, function(i, val) {
+        html += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + ' (' + val.description + ')</a>';
+    });
+    $('#editSampleUnitMenu').html(html);
+    $('#editSampleUnitMenu2').html(html);
+}
+
+// ── Populate STP dropdown helper ──
+function populateQcStpDropdown() {
+    if (typeof stpList === 'undefined' || !stpList) return;
+    var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
+    $.each(stpList, function(i, val) {
+        html += '<a class="dropdown-item" href="#" data-value="' + val.id + '">' + val.number + '</a>';
+    });
+    $('#editStpDropdownMenu').html(html);
+    $('#editStpDropdownMenu2').html(html);
+}
+
+$(document).ready(function() {
+    // Populate dynamic dropdowns on load
+    populateQcUomDropdown();
+    populateQcStpDropdown();
+
+    // ── Department — Worksheet panel ──
+    $(document).on('click', '#editDepartmentDropdownMenu .edit-department-item', function(e) {
+        e.preventDefault();
+        $('#editDepartmentBtn').text($(this).text());
+        $('#editDepartmentDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── Department — Result Recording panel ──
+    $(document).on('click', '#editDepartmentDropdownMenu2 .edit-department-item2', function(e) {
+        e.preventDefault();
+        $('#editDepartmentBtn2').text($(this).text());
+        $('#editDepartmentDropdownMenu2').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── Material Type — Worksheet panel ──
+    $(document).on('click', '#editMaterialTypeDropdownMenu .edit-materialtype-item', function(e) {
+        e.preventDefault();
+        $('#editMaterialTypeBtn').text($(this).text());
+        $('#editMaterialTypeDropdownMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── Material Type — Result Recording panel ──
+    $(document).on('click', '#editMaterialTypeDropdownMenu2 .edit-materialtype-item2', function(e) {
+        e.preventDefault();
+        $('#editMaterialTypeBtn2').text($(this).text());
+        $('#editMaterialTypeDropdownMenu2').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── Sample Unit — Worksheet panel ──
+    $(document).on('click', '#editSampleUnitMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#editSampleUnitBtn').text($(this).text());
+        $('#editSampleUnitMenu').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── Sample Unit — Result Recording panel ──
+    $(document).on('click', '#editSampleUnitMenu2 .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#editSampleUnitBtn2').text($(this).text());
+        $('#editSampleUnitMenu2').closest('.form-group').find('.inward-dropdown-hidden').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── STP — Worksheet panel ──
+    $(document).on('click', '#editStpDropdownMenu .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#editStpBtn').text($(this).text());
+        $('#editStpSelectionInput').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── STP — Result Recording panel ──
+    $(document).on('click', '#editStpDropdownMenu2 .dropdown-item', function(e) {
+        e.preventDefault();
+        $('#editStpBtn2').text($(this).text());
+        $('#editStpSelectionInput2').val($(this).data('value'));
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+    });
+
+    // ── Select Test — Worksheet panel ──
+    $(document).on('click', '#selectTestMenu .qc-test-item', function(e) {
+        e.preventDefault();
+        var val = $(this).data('value');
+        var label = $(this).text().trim();
+        $('#selectTestBtn').text(label);
+        $('#selectTestInput').val(val);
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+        // ── Flush the currently-visible worksheet before switching ──
+        // Capture final state of the old test's form before lastSelectedTestId changes.
+        if (lastSelectedTestId && $('#worksheetPreviewContent').length && $('#worksheetPreviewContainer').is(':visible')) {
+            var prevItem = currentRequestLineItems.find(function(i) {
+                return i.service.id.toString() === lastSelectedTestId.toString();
+            });
+            if (prevItem) {
+                prevItem.worksheet = getWorksheetHtmlWithValues();
+                console.log('Flushed worksheet for previous test', lastSelectedTestId);
+            }
+        }
+        // Trigger test change logic
+        lastSelectedTestId = val;
+        var selectedItem = currentRequestLineItems.find(function(i) {
+            return i.service.id.toString() === val.toString();
+        });
+        if (selectedItem && selectedItem.worksheet) {
+            displayWorksheetPreview(selectedItem.worksheet);
+        } else {
+            $('#worksheetPreviewContainer').hide();
+        }
+        attachWorksheetAutoSave();
+    });
+
+    // ── Select Test — Result Recording panel ──
+    $(document).on('click', '#selectTestResultMenu .qc-test-item', function(e) {
+        e.preventDefault();
+        var val = $(this).data('value');
+        var label = $(this).text().trim();
+
+        // ── Flush the currently-visible result form before switching ──
+        // This ensures values entered for the previous test are captured
+        // even if the user didn't trigger an input/change event last.
+        var prevSelectedId = $('#selectTestResultInput').val();
+        if (prevSelectedId && $('#resultParameterContainer').is(':visible')) {
+            var prevItem = currentRequestLineItems.find(function(i) {
+                return i.service.id.toString() === prevSelectedId.toString();
+            });
+            if (prevItem) {
+                prevItem._testResultObj = collectResultParameterValues();
+                console.log('Flushed result form for previous test', prevSelectedId, ':', prevItem._testResultObj);
+            }
+        }
+
+        $('#selectTestResultBtn').text(label);
+        $('#selectTestResultInput').val(val);
+        $(this).siblings().removeClass('active'); $(this).addClass('active');
+        if (!val) { $('#resultParameterContainer').hide(); return; }
+        var selectedItem = currentRequestLineItems.find(function(i) {
+            return i.service.id.toString() === val.toString();
+        });
+        loadResultForm(selectedItem);
+    });
+});
+
+</script>

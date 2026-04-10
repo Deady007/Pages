@@ -1,0 +1,2817 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+        position: absolute !important;
+        transform: none !important;
+        will-change: auto;
+        z-index: 1050;
+    }
+
+    .dropdown {
+        position: relative;
+    }
+
+    .form-group .dropdown {
+        width: 100%;
+    }
+
+    .dropdown-menu.show {
+        display: block;
+        top: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        min-width: 100%;
+        transform: translate3d(0px, 0px, 0px) !important;
+    }
+
+    /* Search input styling */
+    .dropdown-menu .form-control {
+        border: 1px solid #ddd;
+    }
+
+    .dropdown-menu .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .dropdown-items-container {
+        border-top: 1px solid #e9ecef;
+    }
+
+    #allVendorDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allVendorDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #allVendorDataTable .selectRecordBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+
+    #allVendorDataTable .selectRecordBtn:hover,
+    #allVendorDataTable .selectRecordBtn:focus {
+        color: #286090;
+        /* text-decoration: underline; */
+    }
+
+    /* Disabled dropdown button styling */
+    #editVendorTypeBtn:disabled,
+    #editStateBtn:disabled,
+    #editCountryBtn:disabled,
+    [id^="editPicklist_"][id$="_Btn"]:disabled {
+        opacity: 0.6;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+    }
+
+    #editVendorTypeBtn,
+    #editStateBtn,
+    #editCountryBtn,
+    [id^="editPicklist_"][id$="_Btn"] {
+        color: inherit;
+        background-color: transparent;
+        border-color: inherit;
+    }
+
+    /* Required field asterisk styling */
+    label.required::after {
+        content: " *";
+        color: #dc3545;
+        font-weight: bold;
+    }
+
+    /* Tab styling - Contacts and Products tabs */
+    .nav-tabs .nav-link {
+        color: #337ab7;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #286090;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #337ab7;
+        font-weight: 600;
+    }
+</style>
+<!-- allVendorPanel.html    Start -->
+<div class="qa-white-panel">
+    <div class="row" id="allRecordPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h5>Manufacturers<small> Purchase </small></h5>
+                    <!-- <div class="ibox-tools" style="margin-left: auto; text-align: right;">
+                        <button type="button" class="newRecordBtn btn btn-secondary btn-sm" ><i data-lucide="plus"></i>
+                            New Manufacture</button>
+                    </div> -->
+                </div>
+                <div class="ibox-content" style="padding: 15px 20px 20px 20px;">
+                    <div class="table-responsive">
+                        <table id="allVendorDataTable" class="table table-bordered table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>TAX ID</th>
+                                    <th>Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allVendorTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- allVendorPanel.html    End -->
+
+
+
+
+    <!-- editContactVendorPanel.html    Start -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="editContactPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Edit Contact</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newContactCloseBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-default btn-sm recordEditBtn"><i data-lucide="pencil"></i>
+                            Edit </button>
+                        <button type="button" class="btn btn-secondary btn-sm recordSaveAndUpdateBtn"
+                            style="display: none;"><i data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="contactObj" action="/api/contacts" method="post" id="editContactForm">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">First Name</label>
+                                    <input type="text" class="form-control editContactInput" name="FirstName" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">Last Name</label>
+                                    <input type="text" class="form-control editContactInput" name="LastName" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Email</label>
+                                    <input type="text" class="form-control editContactInput" name="Email" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">Phone</label>
+                                    <input type="text" class="form-control editContactInput" name="Phone" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">Address Line 1</label>
+                                    <input type="text" class="form-control editContactInput" name="AddressLine1"
+                                        required readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Address Line 2</label>
+                                    <input type="text" class="form-control editContactInput" name="AddressLine2"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Address Line 3</label>
+                                    <input type="text" class="form-control editContactInput" name="AddressLine3"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">City</label>
+                                    <input type="text" class="form-control editContactInput" name="City" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">State</label>
+                                    <input type="text" class="form-control editContactInput" name="State" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">PostalCode</label>
+                                    <input type="text" class="form-control editContactInput" name="PostalCode"
+                                        id="editContactPostalCode" required readonly>
+                                    <small id="editContactPostalCodeStatus"
+                                        style="display:none; font-size:12px;"></small>
+                                </div>
+                            </div>
+                            <input type="hidden" id="editContactId" name="Id" />
+                            <input type="hidden" class="editContactInput" name="Account.Id" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- editContactVendorPanel.html    End  -->
+
+
+
+
+
+
+    <!-- newVendorContactPanel.html    Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="newContactPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New Contact</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newContactCloseBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="saveContactBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="contactObj" action="/api/contacts" method="post" id="newContactForm">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">First Name</label>
+                                    <input type="text" class="form-control" name="FirstName" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">Last Name</label>
+                                    <input type="text" class="form-control" name="LastName" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Email</label>
+                                    <input type="text" class="form-control" name="Email">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">Phone</label>
+                                    <input type="text" class="form-control" name="Phone" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">Address Line 1</label>
+                                    <input type="text" class="form-control" name="AddressLine1" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Address Line 2</label>
+                                    <input type="text" class="form-control" name="AddressLine2">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label>Address Line 3</label>
+                                    <input type="text" class="form-control" name="AddressLine3">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">City</label>
+                                    <input type="text" class="form-control" name="City" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">State</label>
+                                    <input type="text" class="form-control" name="State" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group mb-3">
+                                    <label class="required">Postal Code</label>
+                                    <input type="text" class="form-control" name="PostalCode" id="newContactPostalCode"
+                                        required>
+                                    <small id="newContactPostalCodeStatus"
+                                        style="display:none; font-size:12px;"></small>
+                                </div>
+                            </div>
+                            <input type="hidden" id="createContact" name="Account.Id" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- newVendorContactPanel.html    End -->
+
+
+
+
+
+
+    <!-- editManufacturePanel.html     Start -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRecordTitle"></span></h5>
+                    <span id="qualifyDisplay" class="label label-primary" style="margin-left: 10px;"></span>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-default btn-sm" id="newContactBtn"><i
+                                data-lucide="user-circle"></i> Add Contact </button>
+                        <button type="button" class="btn btn-default btn-sm" id="deleteVendorBtn"><i
+                                data-lucide="trash-2"></i> Delete </button>
+                        <button type="button" class="btn btn-default btn-sm recordEditBtn"><i data-lucide="pencil"></i>
+                            Edit </button>
+                        <button type="button" class="btn btn-secondary btn-sm vendorSaveAndUpdateBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="editVendorObj">
+                        <div class="row g-2" id="layoutRenderer_editForm">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Name</label>
+                                    <input type="text" name="name" class="form-control editRecordInput" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Vendor Type</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="editVendorTypeBtn" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                            <span>--none--</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="editVendorTypeBtn">
+                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            <a class="dropdown-item" href="#" data-value="RM">Raw Materials</a>
+                                            <a class="dropdown-item" href="#" data-value="PM">Packing Materials</a>
+                                            <a class="dropdown-item" href="#" data-value="Products">Products</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="vendorType" id="editVendorTypeSelect"
+                                        class="editRecordInput" value="" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Phone</label>
+                                    <input type="text" name="phone" class="form-control editRecordInput" required
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="text" name="email" class="form-control editRecordInput" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Address Line 1</label>
+                                    <input type="text" name="billingStreet" class="form-control editRecordInput"
+                                        required readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Address Line 2</label>
+                                    <input type="text" name="billingStreet2" class="form-control editRecordInput"
+                                        readonly>
+                                </div>
+                            </div>
+
+                            <!-- Country → State → City → Postal (cascading + auto-fill) -->
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Country</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="editCountryBtn" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                            <span>--none--</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-0" aria-labelledby="editCountryBtn"
+                                            id="editCountryDropdown">
+                                            <div class="px-3 py-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="editCountrySearchInput" placeholder="Search countries..."
+                                                    autocomplete="off">
+                                            </div>
+                                            <div class="dropdown-items-container"
+                                                style="max-height: 200px; overflow-y: auto;">
+                                                <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="billingCountry" id="editVendorCountry"
+                                        class="editRecordInput" value="" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">State</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="editStateBtn" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false">
+                                            <span>--Select Country First--</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-0" aria-labelledby="editStateBtn"
+                                            id="editStateDropdown">
+                                            <div class="px-3 py-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="editStateSearchInput" placeholder="Search states..."
+                                                    autocomplete="off">
+                                            </div>
+                                            <div class="dropdown-items-container"
+                                                style="max-height: 200px; overflow-y: auto;">
+                                                <a class="dropdown-item active" href="#" data-value="">--Select Country
+                                                    First--</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="billingState" id="editVendorState"
+                                        class="editRecordInput" value="" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">City</label>
+                                    <input type="text" name="billingCity" id="editVendorCity"
+                                        class="form-control editRecordInput" required value="">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">
+                                        Postal Code
+                                        <small class="text-muted" style="font-weight:400; font-size:11px;">— auto-fills
+                                            Country, State &amp; City</small>
+                                    </label>
+                                    <input type="text" name="billingPostalCode" id="editPostalCode"
+                                        class="form-control editRecordInput" required readonly>
+                                    <small id="editPostalCodeStatus" style="display:none; font-size:12px;"></small>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">TAX ID</label>
+                                    <input type="text" class="form-control editRecordInput" name="gst" required readonly>
+                                </div>
+
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Manufacturer Code</label>
+                                    <input type="text" class="form-control editRecordInput" name="number" required readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="id" id="hiddenRecordId" class="editRecordInput" />
+                        <input type="hidden" class="editRecordInput" name="type" value="Manufacturer">
+                    </form>
+                    <ul class="nav nav-tabs mb-3" role="tablist" style="margin-top: 30px;">
+                        <li class="nav-item" role="presentation">
+                            <a href="#tab-contacts" data-bs-toggle="tab" class="nav-link active" id="contacts-tab"
+                                role="tab" aria-controls="tab-contacts" aria-selected="true">
+                                Contacts
+                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <a href="#tab-products" data-bs-toggle="tab" class="nav-link" id="products-tab" role="tab"
+                                aria-controls="tab-products" aria-selected="false">
+                                Products
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="tab-contacts" class="tab-pane fade show active" role="tabpanel"
+                            aria-labelledby="contacts-tab">
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Name</th>
+                                                <th>Phone</th>
+                                                <th>Email</th>
+                                                <th>Address</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="contactTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ADD THIS after tab-contacts div -->
+                        <div id="tab-products" class="tab-pane fade" role="tabpanel" aria-labelledby="products-tab">
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Product Code</th>
+                                                <th>Product Name</th>
+                                                <th>Type</th>
+                                                <th>Approval Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="vendorProductTable">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- editManufacturePanel.html     End -->
+
+
+
+
+
+
+
+
+
+    <!-- newManufacturePanel.html   Start -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small>Manufacturer</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i
+                                data-lucide="x"></i> Cancel </button>
+                        <button type="button" class="btn btn-secondary btn-sm newVendorSaveBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="vendorObj" id="newVendorForm">
+                        <div class="row" id="layoutRenderer_form">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Name</label>
+                                    <input type="text" name="name" class="form-control newRecordInput" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Type</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="vendorTypeBtn" data-toggle="dropdown" aria-haspopup="true"
+                                            aria-expanded="false">
+                                            <span>--none--</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="vendorTypeBtn">
+                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            <a class="dropdown-item" href="#" data-value="RM">Raw Materials</a>
+                                            <a class="dropdown-item" href="#" data-value="PM">Packing Materials</a>
+                                            <a class="dropdown-item" href="#" data-value="Products">Products</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="vendorType" id="vendorTypeSelect" class="newRecordInput"
+                                        value="" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Phone</label>
+                                    <input type="text" name="phone" class="form-control newRecordInput" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="text" name="email" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Address Line 1</label>
+                                    <input type="text" name="billingStreet" class="form-control newRecordInput"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Address Line 2</label>
+                                    <input type="text" name="billingStreet2" class="form-control newRecordInput">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">City</label>
+                                    <input type="text" name="billingCity" class="form-control newRecordInput" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">
+                                        Postal Code
+                                        <small class="text-muted" style="font-weight:400; font-size:11px;">— auto-fills
+                                            City</small>
+                                    </label>
+                                    <input type="text" name="billingPostalCode" id="newPostalCode"
+                                        class="form-control newRecordInput" required>
+                                    <small id="newPostalCodeStatus" style="display:none; font-size:12px;"></small>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">State</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="stateVendorBtn" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                            <span>--none--</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-0" aria-labelledby="stateVendorBtn"
+                                            id="stateVendorDropdown">
+                                            <div class="px-3 py-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="stateSearchInput" placeholder="Search states..."
+                                                    autocomplete="off">
+                                            </div>
+                                            <div class="dropdown-items-container"
+                                                style="max-height: 200px; overflow-y: auto;">
+                                                <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="billingState" id="stateVendor" class="newRecordInput"
+                                        value="" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Country</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="countryVendorBtn" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                            <span>--none--</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100 p-0" aria-labelledby="countryVendorBtn"
+                                            id="countryVendorDropdown">
+                                            <div class="px-3 py-2">
+                                                <input type="text" class="form-control form-control-sm"
+                                                    id="countrySearchInput" placeholder="Search countries..."
+                                                    autocomplete="off">
+                                            </div>
+                                            <div class="dropdown-items-container"
+                                                style="max-height: 200px; overflow-y: auto;">
+                                                <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="billingCountry" id="countryVendor" class="newRecordInput"
+                                        value="" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">TAX ID</label>
+                                    <input type="text" class="form-control newRecordInput" name="gst" required>
+                                    <input type="hidden" class="newRecordInput" name="type" value="Manufacturer">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="required">Manufacturer Code</label>
+                                    <input type="text" class="form-control newRecordInput" name="number" required>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- newManufacturePanel.html   End -->
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this record? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-default" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Delete Confirmation Modal End -->
+
+    <script>
+        lucide.createIcons();
+        // select2 polyfill is defined at bottom of script after all libraries load
+        var recordList = [];
+        var countryList = Array.isArray(window.countryList) ? window.countryList : [];
+        var statesList = Array.isArray(window.statesList) ? window.statesList : [];
+        var statesByCountry = (window.countryStateMap && typeof window.countryStateMap === 'object') ? window.countryStateMap : {};
+        var isCountryStateLoading = false;
+        var COUNTRY_STATE_DATA_URL = 'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/json/countries+states.json';
+
+        function uniqueSorted(values) {
+            var map = {};
+            var out = [];
+            $.each(values || [], function (_, value) {
+                var name = String(value || '').trim();
+                if (!name) return;
+                var key = name.toLowerCase();
+                if (!map[key]) {
+                    map[key] = true;
+                    out.push(name);
+                }
+            });
+            out.sort(function (a, b) { return a.localeCompare(b); });
+            return out;
+        }
+
+        function getCountryName(item) {
+            if (typeof item === 'string') return item;
+            if (item && typeof item === 'object') return item.name || item.Name || '';
+            return '';
+        }
+
+        function getStateName(item) {
+            if (typeof item === 'string') return item;
+            if (item && typeof item === 'object') return item.name || item.Name || item.state || '';
+            return '';
+        }
+
+        function getAllStateNames() {
+            var names = $.map(statesList || [], function (item) {
+                return getStateName(item);
+            });
+            return uniqueSorted(names);
+        }
+
+        function fillSelectOptions(selector, options, placeholder) {
+            var $el = $(selector);
+            if (!$el.length) return;
+
+            // Handle both traditional select and custom dropdown
+            if ($el.is('select')) {
+                var html = '<option value="">' + (placeholder || '--none--') + '</option>';
+                $.each(options || [], function (_, option) {
+                    var value = String(option || '').trim();
+                    if (value) {
+                        html += '<option value="' + value + '">' + value + '</option>';
+                    }
+                });
+                $el.empty().append(html);
+                if ($el.hasClass('select2-hidden-accessible')) {
+                    $el.trigger('change.select2');
+                }
+            } else {
+                // Handle custom dropdown menu
+                var dropdownId = $el.attr('id');
+                var $dropdown = $('#' + dropdownId + 'Dropdown .dropdown-items-container');
+                if ($dropdown.length) {
+                    var html = '<a class="dropdown-item active" href="#" data-value="">' + (placeholder || '--none--') + '</a>';
+                    $.each(options || [], function (_, option) {
+                        var value = String(option || '').trim();
+                        if (value) {
+                            html += '<a class="dropdown-item" href="#" data-value="' + value + '">' + value + '</a>';
+                        }
+                    });
+                    $dropdown.html(html);
+                }
+            }
+        }
+
+        function applyGeoDataset(dataset) {
+            var countries = [];
+            var allStates = [];
+            var mapping = {};
+
+            $.each(dataset || [], function (_, row) {
+                var countryName = String(row && row.name ? row.name : '').trim();
+                if (!countryName) return;
+                countries.push(countryName);
+
+                var states = uniqueSorted($.map(row.states || [], function (stateName) {
+                    return getStateName(stateName);
+                }));
+                mapping[countryName] = states;
+                allStates = allStates.concat(states);
+            });
+
+            var normalizedCountries = uniqueSorted(countries);
+            var normalizedStates = uniqueSorted(allStates);
+            countryList = $.map(normalizedCountries, function (name) { return { name: name }; });
+            statesList = $.map(normalizedStates, function (name) { return { name: name }; });
+            statesByCountry = mapping;
+
+            window.countryList = countryList;
+            window.statesList = statesList;
+            window.countryStateMap = statesByCountry;
+        }
+
+        function populateStatesForCountry(countryName, stateSelector, selectedState) {
+            var trimmedCountry = String(countryName || '').trim();
+            var stateNames = trimmedCountry && statesByCountry[trimmedCountry]
+                ? statesByCountry[trimmedCountry]
+                : getAllStateNames();
+            fillSelectOptions(stateSelector, stateNames, '--none--');
+            if (selectedState) {
+                var $state = $(stateSelector);
+                if ($state.find('option[value="' + selectedState + '"]').length === 0) {
+                    $state.append('<option value="' + selectedState + '">' + selectedState + '</option>');
+                }
+                $state.val(selectedState).trigger('change.select2');
+            }
+        }
+
+        function populateCountryStateOptions() {
+            var countries = uniqueSorted($.map(countryList || [], function (item) {
+                return getCountryName(item);
+            }));
+            fillSelectOptions('#countryVendor', countries, '--none--');
+            fillSelectOptions('#editVendorCountry', countries, '--none--');
+            var states = getAllStateNames();
+            fillSelectOptions('#stateVendor', states, '--none--');
+            fillSelectOptions('#editVendorState', states, '--none--');
+
+            // Update button text for dropdowns after population
+            setTimeout(function () {
+                if ($('#countryVendorDropdown').length) {
+                    $('#countryVendorBtn span').first().text('--none--');
+                }
+                if ($('#stateVendorDropdown').length) {
+                    $('#stateVendorBtn span').first().text('--none--');
+                }
+            }, 100);
+        }
+
+        function loadAllCountryStateOptions() {
+            if (Object.keys(statesByCountry).length > 0 && countryList.length > 0) {
+                populateCountryStateOptions();
+                return;
+            }
+            if (isCountryStateLoading) {
+                return;
+            }
+            isCountryStateLoading = true;
+            $.ajax({
+                url: '/api/location/countries',
+                method: 'GET',
+                dataType: 'json'
+            }).done(function (response) {
+                console.log('Countries API Response:', response);
+                console.log('Response type:', typeof response);
+                console.log('Is array?', Array.isArray(response));
+
+                // Handle different response formats
+                var countries = [];
+                if (Array.isArray(response)) {
+                    countries = response;
+                } else if (response && typeof response === 'object') {
+                    // Try various property names
+                    countries = response.countries || response.data || response.result || response.results || [];
+                }
+
+                console.log('Extracted countries:', countries);
+
+                countryList = $.map(countries, function (name) { return { name: name }; });
+                window.countryList = countryList;
+                populateCountryStateOptions();
+            }).fail(function () {
+                console.error('Failed to load countries from backend');
+                populateCountryStateOptions();
+            }).always(function () {
+                isCountryStateLoading = false;
+            });
+        }
+
+        $(document).on('change', '#countryVendor', function () {
+            populateStatesForCountry($(this).val(), '#stateVendor');
+        });
+
+        populateCountryStateOptions();
+        loadAllCountryStateOptions();
+
+        function collectFormValues(formSelector) {
+            var values = {};
+            $(formSelector).serializeArray().forEach(function (field) {
+                values[field.name] = field.value;
+            });
+            return values;
+        }
+
+        function normalizeContactPayload(formValues, parentVendorId) {
+            var values = formValues || {};
+            var payload = {
+                firstName: values.FirstName || values.firstName || '',
+                lastName: values.LastName || values.lastName || '',
+                email: values.Email || values.email || '',
+                phone: values.Phone || values.phone || '',
+                designation: values.Designation || values.designation || '',
+                department: values.Department || values.department || '',
+                addressLine1: values.AddressLine1 || values.addressLine1 || '',
+                addressLine2: values.AddressLine2 || values.addressLine2 || '',
+                addressLine3: values.AddressLine3 || values.addressLine3 || '',
+                city: values.City || values.city || '',
+                state: values.State || values.state || '',
+                postalCode: values.PostalCode || values.postalCode || '',
+                status: true
+            };
+
+            var accountId = values['Account.Id'] || values.accountId || parentVendorId;
+            if (accountId) {
+                payload.account = { id: Number(accountId) };
+            }
+
+            return payload;
+        }
+
+        function refreshVendorDetails(onDone) {
+            if (!currentRecordId) {
+                if (typeof onDone === 'function') onDone();
+                return;
+            }
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/account/' + currentRecordId + '/details'), function (response) {
+                getDetailsCallback(response);
+                if (typeof onDone === 'function') onDone(response);
+            }, function () {
+                if (typeof onDone === 'function') onDone();
+            });
+        }
+
+        //  allVendorPanel.js   Start
+        function renderManufacturerTable(records) {
+            var innerHtml = '';
+            $.each(records || [], function (i, val) {
+                innerHtml += '<tr>' +
+                    '<td class="itemNum"><a href = "javascript:void(0);" class="selectRecordBtn" id="' + (val.id || '') + '">' + (val.name || '') + '</a></td>' +
+                    '<td>' + (val.phone || '') + '</td>' +
+                    '<td>' + (val.email || '') + '</td>' +
+                    '<td>' + (val.gst || '') + '</td>' +
+                    '<td>' + (val.billingStreet || '') + ' ' + (val.billingStreet2 || '') + ' ' + (val.billingCity || '') + ' ' + (val.billingState || '') + '</td>' +
+                    '</tr>';
+            });
+            // REPLACE WITH:
+            destroyManufacturerTable();
+            $('#allVendorTable').html(innerHtml);
+            initManufacturerDataTable();
+        }
+
+        var recordMap = {}; // ADD THIS at the top with other var declarations
+
+        function loadManufacturers(onDone) {
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/account'), function (response) {
+                var data = Array.isArray(response) ? response : [];
+                recordList = data.filter(function (item) {
+                    return String(item.type || item.Type || '').toLowerCase() === 'manufacturer';
+                });
+
+                // Build a map keyed by id for reliable lookup
+                recordMap = {};
+                $.each(recordList, function (i, item) {
+                    recordMap[String(item.id)] = item;
+                });
+
+                renderManufacturerTable(recordList);
+                if (typeof onDone === 'function') onDone(recordList);
+            }, function () {
+                recordList = [];
+                recordMap = {};
+                renderManufacturerTable(recordList);
+                if (typeof onDone === 'function') onDone(recordList);
+            });
+        }
+        var manufacturerTableSelector = '#allVendorDataTable';
+
+        function destroyManufacturerTable() {
+            try {
+                if ($.fn.DataTable && $.fn.DataTable.isDataTable(manufacturerTableSelector)) {
+                    $(manufacturerTableSelector).DataTable().clear().destroy();
+                }
+            } catch (e) {
+                console.warn('DataTable destroy warning:', e);
+            }
+            $('#allVendorTable').empty();
+        }
+
+        function initManufacturerDataTable(retryCount) {
+            retryCount = typeof retryCount === 'number' ? retryCount : 0;
+            if (typeof $.fn.DataTable === 'function') {
+                if (!$.fn.DataTable.isDataTable(manufacturerTableSelector)) {
+                    $(manufacturerTableSelector).DataTable({ order: [], pageLength: 25 });
+                }
+                return;
+            }
+            if (retryCount < 40) {
+                setTimeout(function () { initManufacturerDataTable(retryCount + 1); }, 150);
+            }
+        }
+        // REPLACE WITH:
+        $(document).ready(function () {
+            $(window).off('load.manufacturerDT').on('load.manufacturerDT', function () {
+                initManufacturerDataTable();
+            });
+            setTimeout(function () {
+                loadManufacturers();
+            }, 300);
+        });
+
+        //  allVendorPanel.js   End
+
+
+
+
+
+
+        // editContactVendorPanel.js    Start
+
+        $(document).ready(function () {
+            // Handle Edit button click in contact panel specifically
+            $('#editContactPanel .recordEditBtn').on('click', function () {
+                $('#editContactPanel .editContactInput').prop('readonly', false);
+                $('#editContactPanel .recordSaveAndUpdateBtn').show();
+            });
+
+            $('.recordSaveAndUpdateBtn').on('click', function () {
+                var contactId = Number($('#editContactId').val() || currentContactId);
+                if (!contactId) {
+                    JSUTIL.buildErrorModal('Contact id is missing.');
+                    return;
+                }
+                var payload = normalizeContactPayload(collectFormValues('#editContactForm'), currentRecordId);
+                JSUTIL.callAJAXPut('/api/contacts/' + contactId, JSON.stringify(payload), callbackEditRequest, function () {
+                    JSUTIL.buildErrorModal('Failed to update contact.');
+                });
+            });
+            $('.newContactCloseBtn').on('click', function () {
+                $('#newContactPanel').hide();
+                $('#editContactPanel .recordSaveAndUpdateBtn').hide();
+                $('#editContactPanel').hide();
+                $('#editRecordPanel').show();
+            });
+
+
+        })
+        function callbackEditRequest(response) {
+            console.log(response);
+            $('#editContactPanel .editContactInput').prop('readonly', true);
+            $('#editContactPanel .recordSaveAndUpdateBtn').hide();
+            $('#editContactPanel').hide();
+            $('#editRecordPanel').show();
+            refreshVendorDetails();
+        }
+
+        // editContactVendorPanel.js    End
+
+
+
+
+
+
+
+
+        // newVendorContactPanel.js    Start
+        $(document).ready(function () {
+            $('#newContactForm').on('submit', function (e) {
+                e.preventDefault();
+            });
+            $('#newContactBtn').on('click', function () {
+                $('#editRecordPanel').hide();
+                $('#newContactPanel').show();
+            });
+            $('.newContactCloseBtn').on('click', function () {
+                $('#newContactPanel').hide();
+                $('#editContactPanel').hide();
+                $('#editRecordPanel').show();
+            });
+            $('#saveContactBtn').on('click', function () {
+                // Validate all required contact fields
+                var firstName = $('#newContactForm input[name="FirstName"]').val() || '';
+                var lastName = $('#newContactForm input[name="LastName"]').val() || '';
+                var phone = $('#newContactForm input[name="Phone"]').val() || '';
+                var addressLine1 = $('#newContactForm input[name="AddressLine1"]').val() || '';
+                var city = $('#newContactForm input[name="City"]').val() || '';
+                var state = $('#newContactForm input[name="State"]').val() || '';
+                var postalCode = $('#newContactForm input[name="PostalCode"]').val() || '';
+
+                if (!firstName || firstName.trim() === '') {
+                    JSUTIL.buildErrorModal('First Name is required.');
+                    return;
+                }
+                if (!lastName || lastName.trim() === '') {
+                    JSUTIL.buildErrorModal('Last Name is required.');
+                    return;
+                }
+                if (!phone || phone.trim() === '') {
+                    JSUTIL.buildErrorModal('Phone is required.');
+                    return;
+                }
+                if (!addressLine1 || addressLine1.trim() === '') {
+                    JSUTIL.buildErrorModal('Address Line 1 is required.');
+                    return;
+                }
+                if (!city || city.trim() === '') {
+                    JSUTIL.buildErrorModal('City is required.');
+                    return;
+                }
+                if (!state || state.trim() === '') {
+                    JSUTIL.buildErrorModal('State is required.');
+                    return;
+                }
+                if (!postalCode || postalCode.trim() === '') {
+                    JSUTIL.buildErrorModal('Postal Code is required.');
+                    return;
+                }
+
+                var payload = normalizeContactPayload(collectFormValues('#newContactForm'), currentRecordId);
+                JSUTIL.callAJAXPost('/api/contacts', JSON.stringify(payload), callbackAfterEditVendorRequest, function () {
+                    JSUTIL.buildErrorModal('Failed to create contact.');
+                });
+            });
+
+        });
+        function callbackAfterEditVendorRequest(response) {
+            console.log(response);
+            $('#newContactForm')[0].reset();
+            $('#newContactPanel').hide();
+            $('#editRecordPanel').show();
+            refreshVendorDetails();
+        }
+        //  newVendorContactPanel.js    End
+
+
+
+
+
+
+
+        // editManufacturePanel.js     Start
+
+        var innerHtml = '';
+        var currentRecordId = '';
+        var elementToDelete = '';
+        var currentRequestData;
+        var isEditMode = false;
+
+        // ─────────────────────────────────────────────
+        // Edit Panel — Location Cache (shared with new panel if on same page)
+        // ─────────────────────────────────────────────
+        var editLocationCache = {};
+
+        // ─────────────────────────────────────────────
+        // Original Edit Panel Logic — unchanged
+        // ─────────────────────────────────────────────
+
+        $(document).ready(function () {
+
+            // Direct click handler — more reliable than shown.bs.tab
+            // $(document).on('click', '#products-tab', function () {
+            //     if (currentRecordId) {
+            //         loadVendorProducts(currentRecordId);
+            //     }
+            // });
+            $('#allRecordPanel tbody').on('click', '.selectRecordBtn', function () {
+                $('.vendorSaveAndUpdateBtn').hide();
+                $('.recordEditBtn').show();
+                var currentId = $(this).attr('id');
+                currentRecordId = currentId;
+                var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId + '/details');
+                JSUTIL.callAJAXGet(postUrl, getDetailsCallback);
+                loadVendorProducts(currentRecordId);
+                var val2 = recordMap[String(currentId)];
+                if (val2) {
+                    console.log(val2);
+                    currentRequestData = val2;
+
+                    // CLEAR ALL new form dropdown values when switching to edit
+                    console.log('Clearing all new form dropdown values when opening edit');
+                    $('.newRecordInput[name="vendorType"]').val('');
+                    $('.newRecordInput[name="billingCountry"]').val('');
+                    $('.newRecordInput[name="billingState"]').val('');
+                    $('.newRecordInput[name="billingCity"]').val('');
+
+                    // Set ALL field values including ID
+                    $('.editRecordInput[name="id"]').val(val2.id || currentRecordId || '');
+                    $('.editRecordInput[name="name"]').val(val2.name || '');
+                    $('.editRecordInput[name="phone"]').val(val2.phone || '');
+                    $('.editRecordInput[name="email"]').val(val2.email || '');
+                    $('.editRecordInput[name="billingStreet"]').val(val2.billingStreet || '');
+                    $('.editRecordInput[name="billingStreet2"]').val(val2.billingStreet2 || '');
+                    $('.editRecordInput[name="billingPostalCode"]').val(val2.billingPostalCode || '');
+                    $('.editRecordInput[name="gst"]').val(val2.gst || '');
+                    $('.editRecordInput[name="number"]').val(val2.number || '');
+                    $('#editRecordTitle').text(val2.name || '');
+
+                    // Vendor Type dropdown button label
+                    var vendorTypeLabels = { 'RM': 'Raw Materials', 'PM': 'Packing Materials', 'Products': 'Products' };
+                    $('#editVendorTypeBtn span').first().text(vendorTypeLabels[val2.vendorType] || '--none--');
+                    $('#editVendorTypeSelect').val(val2.vendorType || '');
+                    // ↑↑↑ end of added lines ↑↑↑
+
+                    // Load layout if not already loaded
+                    if (typeof layoutFields === 'undefined' || !layoutFields) {
+                        console.log('Loading layout for edit panel...');
+                        JSUTIL.callAJAXGet('/purchase/vendors/layout', function (response) {
+                            layoutFields = response;
+                            console.log('Layout loaded, layoutFields:', layoutFields);
+                            buildEditFieldsFromLayout(layoutFields);
+                        });
+                    } else {
+                        console.log('Using cached layoutFields');
+                        buildEditFieldsFromLayout(layoutFields);
+                    }
+
+                    $('#qualifyDisplay').text(val2.accountStatus);
+
+                    var savedCountry = val2.billingCountry;
+                    var savedState = val2.billingState;
+                    var savedCity = val2.billingCity;
+
+                    // Set Country value and button text
+                    if (savedCountry) {
+                        $('#editVendorCountry').val(savedCountry);
+                        $('#editCountryBtn span').first().text(savedCountry);
+
+                        // Fetch and populate states for saved country
+                        var cacheKeyStates = 'states_' + savedCountry;
+                        var doPopulateStates = function (states) {
+                            editPopulateDropdownMenu('#editStateDropdown', states, '--Select State--');
+
+                            // Update State button text and value
+                            if (savedState) {
+                                $('#editVendorState').val(savedState);
+                                $('#editStateBtn span').first().text(savedState);
+                            }
+
+                            // Set city value from saved data
+                            if (savedCity) {
+                                $('#editVendorCity').val(savedCity);
+                            }
+                        };
+
+                        if (editLocationCache[cacheKeyStates]) {
+                            doPopulateStates(editLocationCache[cacheKeyStates]);
+                        } else {
+                            $.ajax({
+                                url: '/api/location/states?country=' + encodeURIComponent(savedCountry),
+                                method: 'GET',
+                                dataType: 'json',
+                                success: function (res) {
+                                    console.log('Saved States API Response for ' + savedCountry + ':', res);
+                                    console.log('Response type:', typeof res);
+                                    console.log('Is array?', Array.isArray(res));
+
+                                    // Handle different response formats
+                                    var states = [];
+                                    if (Array.isArray(res)) {
+                                        states = res;
+                                    } else if (res && typeof res === 'object') {
+                                        // Try various property names
+                                        states = res.states || res.data || res.result || res.results || [];
+                                    }
+
+                                    console.log('Extracted states:', states);
+
+                                    if (!states || !states.length) {
+                                        console.warn('No states found for saved country:', savedCountry);
+                                        editResetDropdownMenu('#editStateDropdown', '--No States Found--');
+                                        return;
+                                    }
+                                    states = states.sort();
+                                    editLocationCache[cacheKeyStates] = states;
+                                    doPopulateStates(states);
+                                },
+                                error: function () {
+                                    editResetDropdownMenu('#editStateDropdown', '--Could Not Load States--');
+                                }
+                            });
+                        }
+                    } else {
+                        // Reset all location fields if no country
+                        $('#editVendorCountry').val('');
+                        $('#editCountryBtn span').first().text('--Select Country--');
+                        $('#editVendorState').val('');
+                        $('#editStateBtn span').first().text('--Select Country First--');
+                        $('#editVendorCity').val('');
+                        editResetDropdownMenu('#editStateDropdown', '--Select Country First--');
+                    }
+                }
+                // ↑↑↑ end of replacement block ↑↑↑
+
+                // Disable edit mode initially
+                isEditMode = false;
+                $('.editRecordInput').prop('readonly', true).prop('disabled', false);
+                $('#editVendorTypeBtn').prop('disabled', true);
+                $('#editStateBtn').prop('disabled', true);
+                $('#editCountryBtn').prop('disabled', true);
+                $('[id^="editPicklist_"][id$="_Btn"]').prop('disabled', true);
+
+                $('#newRecordPanel').hide();
+                $('#allRecordPanel').hide();
+                $('#editRecordPanel').show();
+            });
+
+            $('.recordEditBtn').on('click', function () {
+                $('.vendorSaveAndUpdateBtn').show();
+                $('.recordEditBtn').hide();
+                isEditMode = true;
+                // Enable text input fields
+                $('.editRecordInput').prop('disabled', false);
+                $('.editRecordInput').prop('readonly', false);
+                // Enable all dropdown buttons
+                $('#editVendorTypeBtn').prop('disabled', false);
+                $('#editStateBtn').prop('disabled', false);
+                $('#editCountryBtn').prop('disabled', false);
+                // Enable Picklist dropdown buttons
+                $('[id^="editPicklist_"][id$="_Btn"]').prop('disabled', false);
+            });
+
+            $('.editRecordCancelBtn').on('click', function () {
+                $('.editRecordInput').prop('disabled', false).prop('readonly', true);
+                // Disable all dropdown buttons
+                $('#editVendorTypeBtn').prop('disabled', true);
+                $('#editStateBtn').prop('disabled', true);
+                $('#editCountryBtn').prop('disabled', true);
+                // Disable Picklist dropdown buttons
+                $('[id^="editPicklist_"][id$="_Btn"]').prop('disabled', true);
+                isEditMode = false;
+                $('.vendorSaveAndUpdateBtn').hide();
+                $('#editRecordPanel').hide();
+                $('#allRecordPanel').show();
+                currentRecordId = '';
+                $('.dropdown-menu').removeClass('show');
+            });
+
+            $('.vendorSaveAndUpdateBtn').on('click', function () {
+                // Validate all required text input fields
+                var name = $('.editRecordInput[name="name"]').val() || '';
+                var phone = $('.editRecordInput[name="phone"]').val() || '';
+                var billingStreet = $('.editRecordInput[name="billingStreet"]').val() || '';
+                var billingCity = $('.editRecordInput[name="billingCity"]').val() || '';
+                var billingPostalCode = $('.editRecordInput[name="billingPostalCode"]').val() || '';
+                var gst = $('.editRecordInput[name="gst"]').val() || '';
+                var vendorType = $('#editVendorTypeSelect').val() || '';
+                var country = $('#editVendorCountry').val() || '';
+                var state = $('#editVendorState').val() || '';
+
+                if (!name || name.trim() === '') {
+                    JSUTIL.buildErrorModal('Name is required.');
+                    return;
+                }
+                if (!phone || phone.trim() === '') {
+                    JSUTIL.buildErrorModal('Phone is required.');
+                    return;
+                }
+                if (!billingStreet || billingStreet.trim() === '') {
+                    JSUTIL.buildErrorModal('Address Line 1 is required.');
+                    return;
+                }
+                if (!billingCity || billingCity.trim() === '') {
+                    JSUTIL.buildErrorModal('City is required.');
+                    return;
+                }
+                if (!billingPostalCode || billingPostalCode.trim() === '') {
+                    JSUTIL.buildErrorModal('Postal Code is required.');
+                    return;
+                }
+                if (!gst || gst.trim() === '') {
+                    JSUTIL.buildErrorModal('TAX ID is required.');
+                    return;
+                }
+                if (!vendorType || vendorType.trim() === '') {
+                    JSUTIL.buildErrorModal('Vendor Type is required.');
+                    return;
+                }
+                if (!country || country.trim() === '') {
+                    JSUTIL.buildErrorModal('Country is required.');
+                    return;
+                }
+                if (!state || state.trim() === '') {
+                    JSUTIL.buildErrorModal('State is required.');
+                    return;
+                }
+                var number = $('.editRecordInput[name="number"]').val() || '';
+                if (!number || number.trim() === '') {
+                    JSUTIL.buildErrorModal('Manufacturer Code is required.');
+                    return;
+                }
+
+                // Disable button during save
+                $(this).prop('disabled', true);
+                $(this).html('<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Saving...');
+
+                let updateVendor = buildFormDataJSON('editRecordInput');
+                console.log('Saving vendor:', updateVendor);
+                updateNewVendor(updateVendor);
+            });
+
+            $('#deleteVendorBtn').on('click', function () {
+                var modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                modal.show();
+                $('#confirmDeleteBtn').off('click').on('click', function () {
+                    deleteVendorCallback();
+                    modal.hide();
+                });
+            });
+        });
+        function loadVendorProducts(vendorId) {
+            $('#vendorProductTable').html('<tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>');
+            JSUTIL.callAJAXPost(
+                '/api/vendor-qualification-items/list',
+                JSON.stringify({}),
+                function (res) {
+                    $('#vendorProductTable').empty();
+                    var allData = Array.isArray(res) ? res : [];
+
+                    // Filter client-side by vendor id
+                    var data = allData.filter(function (item) {
+                        return item.vendor && String(item.vendor.id) === String(vendorId);
+                    });
+
+                    if (!data.length) {
+                        $('#vendorProductTable').html('<tr><td colspan="5" class="text-center text-muted">No products found.</td></tr>');
+                        return;
+                    }
+                    var html = '';
+                    $.each(data, function (i, item) {
+                        var product = item.product || {};
+                        var approvalStatus = item.approvalStatus || item.qualification && item.qualification.processStatus || '--';
+                        var statusClass = 'label-default';
+                        if (approvalStatus.toLowerCase().indexOf('approv') >= 0) statusClass = 'label-success';
+                        else if (approvalStatus.toLowerCase().indexOf('reject') >= 0) statusClass = 'label-danger';
+                        else if (approvalStatus.toLowerCase().indexOf('pending') >= 0) statusClass = 'label-warning';
+
+                        html += '<tr>' +
+                            '<td>' + (i + 1) + '</td>' +
+                            '<td>' + (product.number || '--') + '</td>' +
+                            '<td>' + (product.name || '--') + '</td>' +
+                            '<td>' + (product.type || '--') + '</td>' +
+                            '<td><span class="label ' + statusClass + '">' + approvalStatus + '</span></td>' +
+                            '</tr>';
+                    });
+                    $('#vendorProductTable').html(html);
+                },
+                function () {
+                    $('#vendorProductTable').html('<tr><td colspan="5" class="text-center text-danger">Failed to load products.</td></tr>');
+                }
+            );
+        }
+        function getDetailsCallback(response) {
+            console.log(response);
+            $("#contactTable").empty();
+            currentContactList = response['contacts'];
+            var innerHtml = '';
+            $.each(response['contacts'], function (i, val) {
+                innerHtml += '<tr>' +
+                    '<td><button type="button" class="btn btn-default deleteTrSelect deleteContactSelect" name="' + val.id + '"><i data-lucide="trash-2"></i></button><button type="button" class="btn btn-default deleteTrSelect editContactSelect" style="margin-left: 5px;" name="' + val.id + '"><i data-lucide="pencil"></i></button></td>' +
+                    '<td>' + val.firstName + ' ' + val.lastName + '</td>' +
+                    '<td>' + val.phone + '</td>' +
+                    '<td>' + val.email + '</td>' +
+                    '<td>' + val.city + ', ' + val.state + '</td>' +
+                    '</tr>';
+            });
+            $("#contactTable").append(innerHtml);
+            $('.editContactSelect').on('click', function () {
+                currentContactId = $(this).attr('name');
+                $.each(currentContactList, function (i, val) {
+                    if (Number(currentContactId) === val.id) {
+                        $('.editContactInput[name="FirstName"]').val(val.firstName);
+                        $('.editContactInput[name="LastName"]').val(val.lastName);
+                        $('.editContactInput[name="Phone"]').val(val.phone);
+                        $('.editContactInput[name="Email"]').val(val.email);
+                        $('.editContactInput[name="AddressLine1"]').val(val.addressLine1);
+                        $('.editContactInput[name="AddressLine2"]').val(val.addressLine2);
+                        $('.editContactInput[name="AddressLine3"]').val(val.addressLine3);
+                        $('.editContactInput[name="City"]').val(val.city);
+                        $('.editContactInput[name="State"]').val(val.state);
+                        $('.editContactInput[name="PostalCode"]').val(val.postalCode);
+                        $('.editContactInput[name="Account.Id"]').val(currentRecordId);
+                        $('#editContactId').val(val.id);
+                    }
+                });
+                // Ensure fields are readonly and save button is hidden
+                $('#editContactPanel .editContactInput').prop('readonly', true);
+                $('#editContactPanel .recordSaveAndUpdateBtn').hide();
+                $('#editContactPanel').show();
+                $('#editRecordPanel').hide();
+            });
+            $('.deleteContactSelect').on('click', function () {
+                elementToDelete = $(this).parent().parent();
+                currentContactId = $(this).attr('name');
+                var modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                modal.show();
+                $('#confirmDeleteBtn').off('click').on('click', function () {
+                    deleteContactCallback();
+                    modal.hide();
+                });
+            });
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+
+        function deleteContactCallback() {
+            console.log('🗑️ DELETE CONTACT - ID:', currentContactId);
+            var postUrl = JSUTIL.getUrl('/api/contacts/' + currentContactId);
+            console.log('📍 DELETE CONTACT URL:', postUrl);
+            $.ajax({
+                url: postUrl,
+                type: 'DELETE',
+                statusCode: {
+                    204: function () {
+                        console.log('Contact deleted successfully (204 No Content)');
+                        deleteContactCompleteCallback();
+                    },
+                    200: function (data) {
+                        console.log('Contact deleted successfully (200 OK)', data);
+                        deleteContactCompleteCallback();
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Delete contact error:', xhr.status);
+                    JSUTIL.buildErrorModal('Failed to delete contact.');
+                }
+            });
+        }
+
+        function deleteContactCompleteCallback() {
+            refreshVendorDetails();
+        }
+
+        function buildFormDataJSON(className) {
+            let jsonPayload = {};
+            console.log('\n=== STARTING buildFormDataJSON ===');
+            console.log('Class to collect:', className);
+
+            $('.' + className).each(function () {
+                let attrName = $(this).attr('name');
+                let attrValue = $(this).val();
+                let elementId = $(this).attr('id') || '';
+
+                console.log('  Field:', attrName, '| ID:', elementId, '| Value:', attrValue);
+
+                if (attrValue) {
+                    if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance') || $(this).hasClass('datepickerCompliance2')) {
+                        attrValue = JSUTIL.toDatabaseDate(attrValue);
+                        jsonPayload[attrName] = attrValue;
+                    } else if ($(this).hasClass('datetimepicker')) {
+                        attrValue = JSUTIL.getDatabaseDateTime(attrValue);
+                        jsonPayload[attrName] = attrValue;
+                    } else if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
+                        attrValue = $(this).prop('checked');
+                        jsonPayload[attrName] = attrValue;
+                    } else if ($(this).attr('type') && $(this).attr('type') === 'number') {
+                        attrValue = Number(attrValue);
+                        jsonPayload[attrName] = attrValue;
+                    } else if ($(this).attr('name') && $(this).attr('name').indexOf('.') >= 0) {
+                        let splitArray = $(this).attr('name').split('.');
+                        jsonPayload[splitArray[0]] = {};
+                        jsonPayload[splitArray[0]][splitArray[1]] = Number(attrValue);
+                    } else {
+                        if (attrName === 'id') {
+                            attrValue = Number(attrValue);
+                        }
+                        jsonPayload[attrName] = attrValue;
+                    }
+                }
+                else if (!attrValue) {
+                    if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
+                        attrValue = $(this).prop('checked');
+                        jsonPayload[attrName] = attrValue;
+                    }
+                }
+            });
+
+            console.info('=== FINAL PAYLOAD ===');
+            console.info(jsonPayload);
+            console.log('Specific fields:');
+            console.log('  id:', jsonPayload.id);
+            console.log('  vendorType:', jsonPayload.vendorType);
+            console.log('  billingCountry:', jsonPayload.billingCountry);
+            console.log('  billingState:', jsonPayload.billingState);
+            console.log('  billingCity:', jsonPayload.billingCity);
+            console.log('  type:', jsonPayload.type);
+            console.log('  name:', jsonPayload.name);
+            console.log('=== END buildFormDataJSON===\n');
+
+            return jsonPayload;
+        }
+
+
+        function updateNewVendor(updateVendor) {
+            var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId);
+            JSUTIL.callAJAXPut(postUrl, JSON.stringify(updateVendor), callbackEditRequest, callbackEditRequestError);
+        }
+        function callbackEditRequest(response) {
+            console.log('Vendor updated successfully:', response);
+
+            // Reset button state
+            $('.vendorSaveAndUpdateBtn').prop('disabled', false);
+            $('.vendorSaveAndUpdateBtn').html('<i data-lucide="save"></i>');
+
+            // Show success message
+            console.log('Vendor updated successfully!');
+
+            // Hide edit panel and show list
+            $('#editRecordPanel').hide();
+            $('#allRecordPanel').show();
+
+            // Reload the manufacturers list
+            loadManufacturers();
+        }
+        function callbackEditRequestError(error) {
+            console.error('Error updating vendor:', error);
+
+            // Reset button state
+            $('.vendorSaveAndUpdateBtn').prop('disabled', false);
+            $('.vendorSaveAndUpdateBtn').html('<i data-lucide="save"></i>');
+
+            // Show error message
+            console.log('Error updating vendor. Please try again.');
+        }
+
+        function deleteVendorCallback() {
+            console.log('🗑️ DELETE VENDOR - ID:', currentRecordId);
+            var postUrl = JSUTIL.getUrl('/api/account/' + currentRecordId);
+            console.log('📍 DELETE VENDOR URL:', postUrl);
+            $.ajax({
+                url: postUrl,
+                type: 'DELETE',
+                statusCode: {
+                    204: function () {
+                        console.log('Vendor deleted successfully (204 No Content)');
+                        callbackAfterDelete();
+                    },
+                    200: function (data) {
+                        console.log('Vendor deleted successfully (200 OK)', data);
+                        callbackAfterDelete();
+                    }
+                },
+                error: function (xhr) {
+                    console.error('Delete vendor error:', xhr.status);
+                    JSUTIL.buildErrorModal('Failed to delete vendor.');
+                }
+            });
+        }
+
+        function callbackAfterDelete() {
+            loadManufacturers(function () {
+                $('#editRecordPanel').hide();
+                $('#allRecordPanel').show();
+            });
+        }
+
+        function buildEditFieldsFromLayout(layoutFields) {
+            console.log('=== buildEditFieldsFromLayout called ===');
+            console.log('layoutFields:', layoutFields);
+            console.log('layoutFields length:', layoutFields ? layoutFields.length : 'undefined');
+
+            if (layoutFields && layoutFields.length > 0) {
+                console.log('First field:', layoutFields[0]);
+                $.each(layoutFields, function (i, f) {
+                    console.log('Field ' + i + ':', f.name, '- Type:', f.type);
+                });
+            }
+
+            var innerHtml = editBuildLayout(layoutFields, 'form', 'editRecordInput', 'layoutRenderer_editForm');
+            $('#layoutRenderer_editForm').append(innerHtml);
+
+            // Populate Picklist dropdown options
+            console.log('=== Calling populatePicklistOptions ===');
+            populatePicklistOptions(layoutFields);
+
+            populateLayoutFields(layoutFields);
+            bindPicklistDropdownHandlers();
+            if ($.fn.datepicker && typeof JSUTIL !== 'undefined' && JSUTIL.reinitializeInputTypes) {
+                JSUTIL.reinitializeInputTypes();
+            }
+        }
+
+        function populatePicklistOptions(layoutFields) {
+            $.each(layoutFields, function (i, field) {
+                if (field.type && field.type.indexOf('Picklist') >= 0) {
+                    var fieldName = JSUTIL.lowerCaseFirstLetter(field.name);
+                    var buttonId = 'editPicklist_' + fieldName + '_Btn';
+                    var dropdownId = 'editPicklist_' + fieldName + '_Dropdown';
+                    var $dropdown = $('#' + dropdownId);
+
+                    if ($dropdown.length === 0) {
+                        console.warn('Dropdown not found for field:', field.name);
+                        return;
+                    }
+
+                    // Special case for SampleUnit
+                    if (field.name === 'SampleUnit' && typeof uomList !== 'undefined' && uomList && uomList.length > 0) {
+                        $.each(uomList, function (o, option) {
+                            $dropdown.append('<a class="dropdown-item" href="#" data-value="' + option.name + '">' + option.name + '</a>');
+                        });
+                        console.log('Picklist ' + fieldName + ' populated from uomList');
+                        return;
+                    }
+
+                    // Try to get options from LAYOUT function
+                    try {
+                        if (typeof LAYOUT !== 'undefined' && LAYOUT.populatePicklistValues && typeof LAYOUT.populatePicklistValues === 'function') {
+                            var optionsHtml = LAYOUT.populatePicklistValues(layoutFields, field, 'editRecordInput');
+                            console.log('LAYOUT.populatePicklistValues for ' + fieldName + ':', optionsHtml);
+
+                            // Parse the options HTML and convert to dropdown items
+                            var $temp = $('<div>' + optionsHtml + '</div>');
+                            var options = [];
+
+                            $temp.find('option').each(function () {
+                                var value = $(this).val();
+                                var text = $(this).text();
+                                if (value !== '') {
+                                    options.push({ value: value, text: text });
+                                }
+                            });
+
+                            // Add options to dropdown (keep --none-- as first item)
+                            $.each(options, function (idx, opt) {
+                                $dropdown.append('<a class="dropdown-item" href="#" data-value="' + opt.value + '">' + opt.text + '</a>');
+                            });
+
+                            console.log('Picklist ' + fieldName + ' populated with ' + options.length + ' options from LAYOUT');
+                        } else {
+                            console.warn('LAYOUT or populatePicklistValues not available for field:', field.name);
+                        }
+                    } catch (e) {
+                        console.error('Error populating picklist ' + fieldName + ':', e);
+                    }
+                }
+            });
+        }
+
+        function bindPicklistDropdownHandlers() {
+            // Handle Picklist dropdown item clicks (pattern: editPicklist_fieldName_Dropdown)
+            $(document).off('click.editPicklist');
+            $(document).on('click.editPicklist', '[id^="editPicklist_"][id$="_Dropdown"] .dropdown-item', function (e) {
+                e.preventDefault();
+                var value = $(this).data('value');
+                var $dropdown = $(this).closest('[id^="editPicklist_"][id$="_Dropdown"]');
+                var dropdownId = $dropdown.attr('id');
+                var buttonId = dropdownId.replace('_Dropdown', '_Btn');
+
+                // Update button text
+                var $button = $('#' + buttonId);
+                var displayText = $(this).text();
+                $button.find('span').first().text(displayText);
+
+                // Extract field name from ID (editPicklist_fieldName_Btn -> fieldName)
+                var fieldName = buttonId.replace('editPicklist_', '').replace('_Btn', '');
+
+                // Update hidden input value
+                $('.editRecordInput[name="' + fieldName + '"]').val(value);
+
+                // Update active state
+                $(this).addClass('active').siblings().removeClass('active');
+
+                // Close dropdown
+                $dropdown.removeClass('show');
+            });
+        }
+
+        function populateLayoutFields(layoutFields) {
+            $.each(layoutFields, function (i, field) {
+                var fieldName = JSUTIL.lowerCaseFirstLetter(field.name);
+                var currentFieldVal = currentRequestData[fieldName];
+
+                if (!field.type || (field.type.indexOf('Text') >= 0 || field.type.indexOf('Number') >= 0)) {
+                    $('.editRecordInput[name="' + fieldName + '"]').val(currentFieldVal || '');
+                }
+                else if (field.type && field.type.indexOf('Date') >= 0 && field.type.indexOf('DateTime') < 0) {
+                    $('.editRecordInput[name="' + fieldName + '"]').val(JSUTIL.getDate(currentFieldVal) || '');
+                }
+                else if (field.type && field.type.indexOf('DateTime') >= 0) {
+                    $('.editRecordInput[name="' + fieldName + '"]').val(JSUTIL.getDateTime(currentFieldVal) || '');
+                }
+                else if (field.type && field.type.indexOf('Picklist') >= 0) {
+                    // Set hidden input value
+                    var $hidden = $('.editRecordInput[name="' + fieldName + '"]');
+                    $hidden.val(currentFieldVal || '');
+
+                    // Set button display text
+                    var buttonId = 'editPicklist_' + fieldName + '_Btn';
+                    var dropdownId = 'editPicklist_' + fieldName + '_Dropdown';
+                    var $button = $('#' + buttonId);
+                    var $dropdown = $('#' + dropdownId);
+
+                    if ($button.length && currentFieldVal) {
+                        var displayText = currentFieldVal;
+                        $button.find('span').first().text(displayText);
+
+                        // Mark the matching dropdown item as active
+                        if ($dropdown.length) {
+                            $dropdown.find('.dropdown-item').each(function () {
+                                if ($(this).data('value') === currentFieldVal) {
+                                    $(this).addClass('active');
+                                } else {
+                                    $(this).removeClass('active');
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+        }
+
+        function editBuildLayout(layoutFields, type, layoutClass, layoutFormId) {
+            var layoutMarkup = '';
+            try {
+                $.each(layoutFields, function (i, val) {
+                    if (!val.label) {
+                        val.label = '';
+                    }
+                    if (type === 'form') {
+                        $(`#${layoutFormId} .layoutRenderer_element`).remove();
+                        layoutMarkup += '<div class="col-sm-6 layoutRenderer_element"><div class="form-group"><label>' + val.label + '</label>';
+                    } else if (type === 'table') {
+                        layoutMarkup += '<td>';
+                    }
+                    var isRequired = val.required ? 'required' : '';
+
+                    if (!val.type || (val.type && val.type.indexOf('Text') >= 0)) {
+                        layoutMarkup += '<input class="form-control ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + ' readonly>';
+                    } else if (val.type && val.type.indexOf('Number') >= 0) {
+                        layoutMarkup += '<input type="number" class="form-control ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'readonly>';
+                    } else if (val.type && val.type.indexOf('Date') >= 0 && val.type.indexOf('DateTime') < 0 && val.type.indexOf('DateFromToday') < 0 && val.type.indexOf('DateTillToday') < 0) {
+                        layoutMarkup += '<input class="form-control datepicker ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
+                    } else if (val.type && val.type.indexOf('DateFromToday') >= 0) {
+                        layoutMarkup += '<input onkeydown="return false" class="form-control datepickerCompliance ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
+                    } else if (val.type && val.type.indexOf('DateTillToday') >= 0) {
+                        layoutMarkup += '<input onkeydown="return false" class="form-control datepickerCompliance2 ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
+                    } else if (val.type && val.type.indexOf('DateTime') >= 0) {
+                        layoutMarkup += '<input class="form-control datetimepicker ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
+                    } else if (val.type && val.type.indexOf('Picklist') >= 0) {
+                        var fieldName = JSUTIL.lowerCaseFirstLetter(val.name);
+                        var buttonId = 'editPicklist_' + fieldName + '_Btn';
+                        var dropdownId = 'editPicklist_' + fieldName + '_Dropdown';
+
+                        layoutMarkup += '<div class="dropdown">';
+                        layoutMarkup += '<button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center" type="button" id="' + buttonId + '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-picklist-field="' + val.name + '" disabled>';
+                        layoutMarkup += '<span>--none--</span><span class="caret"></span></button>';
+                        layoutMarkup += '<div class="dropdown-menu w-100" id="' + dropdownId + '" aria-labelledby="' + buttonId + '">';
+                        layoutMarkup += '<a class="dropdown-item active" href="#" data-value="">--none--</a>';
+                        layoutMarkup += '</div>';
+                        layoutMarkup += '</div>';
+                        layoutMarkup += '<input type="hidden" class="' + layoutClass + '" name="' + fieldName + '" value="">';
+                    }
+                    if (type === 'form') {
+                        layoutMarkup += '</div></div>'
+                    } else if (type === 'table') {
+                        layoutMarkup += '</td>';
+                    }
+                });
+            } catch (e) { console.info(e); }
+            return layoutMarkup;
+        }
+
+
+        // editManufacturePanel.js     End
+
+
+
+
+
+
+
+
+        // newManufacturePanel.js   Start
+        var innerHtml = '';
+        var layoutFields;
+        populateCountryStateOptions();
+        loadAllCountryStateOptions();
+        JSUTIL.callAJAXGet('/purchase/vendors/layout', buildFieldsFromLayout);
+
+        function callbackNewVendor(response) {
+            console.log(response);
+            // Instead of reload, hide panel and refresh list
+            $('#newRecordPanel').hide();
+            $('#allRecordPanel').show();
+            loadManufacturers();
+        }
+
+        $(document).ready(function () {
+            //    $('.select2').select2();
+
+            $('.newRecordBtn').on('click', function () {
+                $('#editRecordPanel').hide();
+                $('#editContactPanel').hide();
+                $('#newContactPanel').hide();
+                $('#allRecordPanel').hide();
+                $('#newRecordPanel').show();
+
+                // CLEAR all new form dropdown values before showing
+                console.log('Clearing all new form dropdown values');
+                $('.newRecordInput[name="vendorType"]').val('');
+                $('.newRecordInput[name="billingCountry"]').val('');
+                $('.newRecordInput[name="billingState"]').val('');
+                $('.newRecordInput[name="billingCity"]').val('');
+                $('#vendorTypeBtn span').first().text('--none--');
+                $('#countryVendorBtn span').first().text('--none--');
+                $('#stateVendorBtn span').first().text('--none--');
+
+                lucide.createIcons();
+            });
+
+            $('.newVendorSaveBtn').on('click', function () {
+                // Validate all required text input fields
+                var name = $('.newRecordInput[name="name"]').val() || '';
+                var phone = $('.newRecordInput[name="phone"]').val() || '';
+                var billingStreet = $('.newRecordInput[name="billingStreet"]').val() || '';
+                var billingCity = $('.newRecordInput[name="billingCity"]').val() || '';
+                var billingPostalCode = $('.newRecordInput[name="billingPostalCode"]').val() || '';
+                var gst = $('.newRecordInput[name="gst"]').val() || '';
+                var vendorType = $('#vendorTypeSelect').val() || '';
+                var country = $('#countryVendor').val() || '';
+                var state = $('#stateVendor').val() || '';
+
+                if (!name || name.trim() === '') {
+                    JSUTIL.buildErrorModal('Name is required.');
+                    return;
+                }
+                if (!phone || phone.trim() === '') {
+                    JSUTIL.buildErrorModal('Phone is required.');
+                    return;
+                }
+                if (!billingStreet || billingStreet.trim() === '') {
+                    JSUTIL.buildErrorModal('Address Line 1 is required.');
+                    return;
+                }
+                if (!billingCity || billingCity.trim() === '') {
+                    JSUTIL.buildErrorModal('City is required.');
+                    return;
+                }
+                if (!billingPostalCode || billingPostalCode.trim() === '') {
+                    JSUTIL.buildErrorModal('Postal Code is required.');
+                    return;
+                }
+                if (!gst || gst.trim() === '') {
+                    JSUTIL.buildErrorModal('TAX ID is required.');
+                    return;
+                }
+                if (!vendorType || vendorType.trim() === '') {
+                    JSUTIL.buildErrorModal('Vendor Type is required.');
+                    return;
+                }
+                if (!country || country.trim() === '') {
+                    JSUTIL.buildErrorModal('Country is required.');
+                    return;
+                }
+                if (!state || state.trim() === '') {
+                    JSUTIL.buildErrorModal('State is required.');
+                    return;
+                }
+                var number = $('.newRecordInput[name="number"]').val() || '';
+                if (!number || number.trim() === '') {
+                    JSUTIL.buildErrorModal('Manufacturer Code is required.');
+                    return;
+                }
+
+                var categoryPayload = buildFormDataJSON('newRecordInput');
+                var postUrl = JSUTIL.getUrl('/api/account');
+                console.log('Creating new vendor with payload:', categoryPayload);
+                JSUTIL.callAJAXPost(postUrl, JSON.stringify(categoryPayload), callbackNewVendor)
+            });
+            $('.newRecordCancelBtn').on('click', function () {
+                $('#newRecordPanel').hide();
+                $('#editRecordPanel').hide();
+                $('#editContactPanel').hide();
+                $('#newContactPanel').hide();
+                $('#allRecordPanel').show();
+            });
+        });
+        function buildFieldsFromLayout(response) {
+            console.log(response);
+            layoutFields = response;
+            var innerHtml = LAYOUT.buildLayout(response, 'form', 'newRequestFieldInput', 'layoutRenderer_form');
+            $('#layoutRenderer_form').append(innerHtml);
+            if ($.fn.datepicker && typeof JSUTIL !== 'undefined' && JSUTIL.reinitializeInputTypes) {
+                JSUTIL.reinitializeInputTypes();
+            }
+        }
+
+        // newManufacturePanel.js   End
+
+
+
+
+
+        // --- VendorType, State, Country dropdown logic ---
+
+        // NEW PANEL - Helper functions for dropdowns
+        function newResetDropdownMenu(dropdownId, placeholder) {
+            var $container = $(dropdownId + ' .dropdown-items-container');
+            $container.html('<a class="dropdown-item active" href="#" data-value="">' + placeholder + '</a>');
+        }
+
+        function newPopulateDropdownMenu(dropdownId, items, placeholder) {
+            var $container = $(dropdownId + ' .dropdown-items-container');
+            var html = '<a class="dropdown-item active" href="#" data-value="">' + (placeholder || '--Select--') + '</a>';
+            $.each(items, function (i, item) {
+                html += '<a class="dropdown-item" href="#" data-value="' + item + '">' + item + '</a>';
+            });
+            $container.html(html);
+        }
+
+        // NEW PANEL - Fetch states from backend when country changes
+        function newFetchStatesForDropdown(countryName, onDone) {
+            var cacheKey = 'states_' + countryName;
+            if (editLocationCache[cacheKey]) {
+                newPopulateDropdownMenu('#stateVendorDropdown', editLocationCache[cacheKey], '--Select State--');
+                if (typeof onDone === 'function') onDone();
+                return;
+            }
+
+            $.ajax({
+                url: '/api/location/states?country=' + encodeURIComponent(countryName),
+                method: 'GET',
+                dataType: 'json',
+                success: function (res) {
+                    console.log('NEW PANEL - States API Response for ' + countryName + ':', res);
+
+                    var states = [];
+                    if (Array.isArray(res)) {
+                        states = res;
+                    } else if (res && typeof res === 'object') {
+                        states = res.states || res.data || res.result || res.results || [];
+                    }
+
+                    console.log('Extracted states:', states);
+
+                    if (!states || !states.length) {
+                        console.warn('No states found for country:', countryName);
+                        newResetDropdownMenu('#stateVendorDropdown', '--No States Found--');
+                        return;
+                    }
+                    states = states.sort();
+                    editLocationCache[cacheKey] = states;
+                    newPopulateDropdownMenu('#stateVendorDropdown', states, '--Select State--');
+                    if (typeof onDone === 'function') onDone();
+                },
+                error: function (xhr) {
+                    console.error('NEW PANEL - Error loading states:', xhr);
+                    newResetDropdownMenu('#stateVendorDropdown', '--Could Not Load States--');
+                }
+            });
+        }
+
+        // when hidden country value changes, load states from backend
+        $(document).on('change', '#countryVendor', function () {
+            newFetchStatesForDropdown($(this).val());
+        });
+
+        // open/close Vendor Type dropdown
+        $(document).on('click', '#vendorTypeBtn', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $('#vendorTypeDropdown');
+            if (!$menu.length) $menu = $(this).next('.dropdown-menu');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+        });
+
+        // open/close State & Country dropdowns
+        $(document).on('click', '#stateVendorBtn', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $('#stateVendorDropdown');
+            if (!$menu.length) $menu = $(this).next('.dropdown-menu');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+
+            var $searchInput = $menu.find('input[type="text"]');
+            if ($searchInput.length) {
+                setTimeout(function () { $searchInput.focus(); }, 0);
+            }
+        });
+
+        $(document).on('click', '#countryVendorBtn', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $('#countryVendorDropdown');
+            if (!$menu.length) $menu = $(this).next('.dropdown-menu');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+
+            var $searchInput = $menu.find('input[type="text"]');
+            if ($searchInput.length) {
+                setTimeout(function () { $searchInput.focus(); }, 0);
+            }
+        });
+
+        // close all dropdowns when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.dropdown').length) {
+                $('.dropdown-menu').removeClass('show');
+            }
+        });
+
+        // Picklist dropdown button click (open/close)
+        $(document).on('click', '[id^="editPicklist_"][id$="_Btn"]', function (e) {
+            if (!isEditMode) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $(this).next('.dropdown-menu');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+        });
+
+        // don't close when clicking inside search boxes
+        $(document).on('click', '.dropdown-menu input', function (e) {
+            e.stopPropagation();
+        });
+
+        // Vendor Type option click
+        $(document).on('click', '#vendorTypeBtn ~ .dropdown-menu .dropdown-item', function (e) {
+            e.preventDefault();
+            var value = $(this).data('value');
+            var displayText = $(this).text();
+            console.log('NEW FORM - Vendor Type clicked:', { dropdownId: 'vendorTypeBtn', value: value, displayText: displayText });
+            $('#vendorTypeBtn span').first().text(displayText);
+            $('#vendorTypeSelect').val(value);
+            console.log('  Hidden input value set to:', $('#vendorTypeSelect').val());
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).closest('.dropdown-menu').removeClass('show');
+        });
+
+        // State option click
+        $(document).on('click', '#stateVendorBtn ~ .dropdown-menu .dropdown-item', function (e) {
+            e.preventDefault();
+            var value = $(this).data('value');
+            var displayText = $(this).text();
+            console.log('NEW FORM - State clicked:', { dropdownId: 'stateVendorBtn', value: value, displayText: displayText });
+            $('#stateVendorBtn span').first().text(displayText);
+            $('#stateVendor').val(value);
+            console.log('  Hidden input value set to:', $('#stateVendor').val());
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).closest('.dropdown-menu').removeClass('show');
+            $('#stateSearchInput').val('');
+        });
+
+        // Country option click
+        $(document).on('click', '#countryVendorBtn ~ .dropdown-menu .dropdown-item', function (e) {
+            e.preventDefault();
+            var value = $(this).data('value');
+            var displayText = $(this).text();
+            console.log('NEW FORM - Country clicked:', { dropdownId: 'countryVendorBtn', value: value, displayText: displayText });
+            $('#countryVendorBtn span').first().text(displayText);
+            $('#countryVendor').val(value).trigger('change');
+            console.log('  Hidden input value set to:', $('#countryVendor').val());
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).closest('.dropdown-menu').removeClass('show');
+
+            // Reset state when country changes
+            $('#stateVendorBtn span').first().text('--none--');
+            $('#stateVendor').val('');
+            $('#countrySearchInput, #stateSearchInput').val('');
+            console.log('  State field reset for new country selection');
+
+            // Load states for selected country (same as edit panel)
+            if (value) {
+                newFetchStatesForDropdown(value);
+            } else {
+                newResetDropdownMenu('#stateVendorDropdown', '--Select Country First--');
+            }
+        });
+
+        // State search
+        $(document).on('input', '#stateSearchInput', function () {
+            var term = this.value.toLowerCase();
+            $('#stateVendorDropdown .dropdown-items-container .dropdown-item').each(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(term) !== -1);
+            });
+        });
+
+        // Country search
+        $(document).on('input', '#countrySearchInput', function () {
+            var term = this.value.toLowerCase();
+            $('#countryVendorDropdown .dropdown-items-container .dropdown-item').each(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(term) !== -1);
+            });
+        });
+
+        // --- Edit Panel Dropdown Logic ---
+
+        // open/close Edit Vendor Type dropdown
+        $(document).on('click', '#editVendorTypeBtn', function (e) {
+            if (!isEditMode) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $('#editVendorTypeBtn').next('.dropdown-menu');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+        });
+
+        // open/close Edit Country dropdown
+        $(document).on('click', '#editCountryBtn', function (e) {
+            if (!isEditMode) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $('#editCountryDropdown');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+
+            var $searchInput = $menu.find('input[type="text"]');
+            if ($searchInput.length) {
+                setTimeout(function () { $searchInput.focus(); }, 0);
+            }
+        });
+
+        // open/close Edit State dropdown
+        $(document).on('click', '#editStateBtn', function (e) {
+            if (!isEditMode) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $('#editStateDropdown');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+
+            var $searchInput = $menu.find('input[type="text"]');
+            if ($searchInput.length) {
+                setTimeout(function () { $searchInput.focus(); }, 0);
+            }
+        });
+
+        // Edit Vendor Type option click
+        $(document).on('click', '#editVendorTypeBtn ~ .dropdown-menu .dropdown-item', function (e) {
+            e.preventDefault();
+            var value = $(this).data('value');
+            $('#editVendorTypeBtn span').first().text($(this).text());
+            $('#editVendorTypeSelect').val(value);
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).closest('.dropdown-menu').removeClass('show');
+        });
+
+        // Edit Country option click
+        $(document).on('click', '#editCountryBtn ~ .dropdown-menu .dropdown-item', function (e) {
+            e.preventDefault();
+            var value = $(this).data('value');
+            $('#editCountryBtn span').first().text($(this).text());
+            $('#editVendorCountry').val(value);
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).closest('.dropdown-menu').removeClass('show');
+
+            // Reset state when country changes
+            $('#editStateBtn span').first().text(value ? '--Select State--' : '--Select Country First--');
+            $('#editVendorState').val('');
+            $('#editVendorCity').val('');
+
+            // Load states for selected country
+            if (value) {
+                editFetchStatesForDropdown(value);
+            } else {
+                editResetDropdownMenu('#editStateDropdown', '--Select Country First--');
+            }
+
+            // Clear search inputs
+            $('#editCountrySearchInput, #editStateSearchInput').val('');
+        });
+
+        // Edit State option click
+        $(document).on('click', '#editStateBtn ~ .dropdown-menu .dropdown-item', function (e) {
+            e.preventDefault();
+            var value = $(this).data('value');
+            $('#editStateBtn span').first().text($(this).text());
+            $('#editVendorState').val(value);
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).closest('.dropdown-menu').removeClass('show');
+
+            // Clear search inputs
+            $('#editStateSearchInput').val('');
+        });
+
+        // Edit panel search functionality
+        $(document).on('input', '#editCountrySearchInput', function () {
+            var term = this.value.toLowerCase();
+            $('#editCountryDropdown .dropdown-items-container .dropdown-item').each(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(term) !== -1);
+            });
+        });
+
+        $(document).on('input', '#editStateSearchInput', function () {
+            var term = this.value.toLowerCase();
+            $('#editStateDropdown .dropdown-items-container .dropdown-item').each(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(term) !== -1);
+            });
+        });
+
+        // Helper functions for edit panel dropdowns
+        function editResetDropdownMenu(dropdownId, placeholder) {
+            var $container = $(dropdownId + ' .dropdown-items-container');
+            $container.html('<a class="dropdown-item active" href="#" data-value="">' + placeholder + '</a>');
+        }
+
+        function editPopulateDropdownMenu(dropdownId, items, placeholder) {
+            var $container = $(dropdownId + ' .dropdown-items-container');
+            var html = '<a class="dropdown-item active" href="#" data-value="">' + (placeholder || '--Select--') + '</a>';
+            $.each(items, function (i, item) {
+                html += '<a class="dropdown-item" href="#" data-value="' + item + '">' + item + '</a>';
+            });
+            $container.html(html);
+        }
+
+        function editFetchStatesForDropdown(countryName, onDone) {
+            var cacheKey = 'states_' + countryName;
+            if (editLocationCache[cacheKey]) {
+                editPopulateDropdownMenu('#editStateDropdown', editLocationCache[cacheKey], '--Select State--');
+                if (typeof onDone === 'function') onDone();
+                return;
+            }
+
+            $.ajax({
+                url: '/api/location/states?country=' + encodeURIComponent(countryName),
+                method: 'GET',
+                dataType: 'json',
+                success: function (res) {
+                    console.log('States API Response for ' + countryName + ':', res);
+                    console.log('Response type:', typeof res);
+                    console.log('Is array?', Array.isArray(res));
+
+                    // Handle different response formats
+                    var states = [];
+                    if (Array.isArray(res)) {
+                        states = res;
+                    } else if (res && typeof res === 'object') {
+                        // Try various property names
+                        states = res.states || res.data || res.result || res.results || [];
+                    }
+
+                    console.log('Extracted states:', states);
+
+                    if (!states || !states.length) {
+                        console.warn('No states found for country:', countryName);
+                        editResetDropdownMenu('#editStateDropdown', '--No States Found--');
+                        return;
+                    }
+                    states = states.sort();
+                    editLocationCache[cacheKey] = states;
+                    editPopulateDropdownMenu('#editStateDropdown', states, '--Select State--');
+                    if (typeof onDone === 'function') onDone();
+                },
+                error: function (xhr) {
+                    console.error('Error loading states:', xhr);
+                    editResetDropdownMenu('#editStateDropdown', '--Could Not Load States--');
+                }
+            });
+        }
+
+        // Populate edit dropdowns with countries on load
+        function populateEditCountryDropdown() {
+            $.ajax({
+                url: '/api/location/countries',
+                method: 'GET',
+                dataType: 'json',
+                success: function (res) {
+                    console.log('Edit Country Dropdown API Response:', res);
+                    console.log('Response type:', typeof res);
+                    console.log('Is array?', Array.isArray(res));
+
+                    // Handle different response formats
+                    var countries = [];
+                    if (Array.isArray(res)) {
+                        countries = res;
+                    } else if (res && typeof res === 'object') {
+                        // Try various property names
+                        countries = res.countries || res.data || res.result || res.results || [];
+                    }
+
+                    console.log('Extracted countries:', countries);
+
+                    countries = countries.sort ? countries.sort() : countries;
+                    if (countries.length) {
+                        editPopulateDropdownMenu('#editCountryDropdown', countries, '--Select Country--');
+                    }
+                },
+                error: function () {
+                    console.error('Error loading countries for edit dropdown');
+                    // Fallback to existing countryList
+                    if (typeof countryList !== 'undefined' && countryList.length) {
+                        var countries = uniqueSorted($.map(countryList, function (item) {
+                            return getCountryName(item);
+                        }));
+                        editPopulateDropdownMenu('#editCountryDropdown', countries, '--Select Country--');
+                    }
+                }
+            });
+        }
+
+        // Call on document ready
+        $(document).ready(function () {
+            populateEditCountryDropdown();
+        });
+
+        $(document).on('change', '#editVendorCountry', function () {
+            populateStatesForCountry($(this).val(), '#editVendorState');
+        });
+
+        // ─────────────────────────────────────────────────────────────────────────
+        // POSTAL CODE AUTO-FILL FUNCTIONALITY — Country, State & City
+        // ─────────────────────────────────────────────────────────────────────────
+
+        var ISO2_MAP = {
+            'Afghanistan': 'af', 'Albania': 'al', 'Algeria': 'dz', 'Argentina': 'ar',
+            'Australia': 'au', 'Austria': 'at', 'Bangladesh': 'bd', 'Belgium': 'be',
+            'Brazil': 'br', 'Bulgaria': 'bg', 'Canada': 'ca', 'Chile': 'cl', 'China': 'cn',
+            'Colombia': 'co', 'Croatia': 'hr', 'Czech Republic': 'cz', 'Denmark': 'dk',
+            'Egypt': 'eg', 'Finland': 'fi', 'France': 'fr', 'Germany': 'de', 'Greece': 'gr',
+            'Hungary': 'hu', 'India': 'in', 'Indonesia': 'id', 'Ireland': 'ie', 'Israel': 'il',
+            'Italy': 'it', 'Japan': 'jp', 'Kenya': 'ke', 'South Korea': 'kr', 'Malaysia': 'my',
+            'Mexico': 'mx', 'Morocco': 'ma', 'Netherlands': 'nl', 'New Zealand': 'nz',
+            'Nigeria': 'ng', 'Norway': 'no', 'Pakistan': 'pk', 'Peru': 'pe',
+            'Philippines': 'ph', 'Poland': 'pl', 'Portugal': 'pt', 'Romania': 'ro',
+            'Russia': 'ru', 'Saudi Arabia': 'sa', 'Singapore': 'sg', 'Slovakia': 'sk',
+            'South Africa': 'za', 'Spain': 'es', 'Sri Lanka': 'lk', 'Sweden': 'se',
+            'Switzerland': 'ch', 'Thailand': 'th', 'Turkey': 'tr', 'Ukraine': 'ua',
+            'United Arab Emirates': 'ae', 'UAE': 'ae', 'United Kingdom': 'gb',
+            'United States': 'us', 'Venezuela': 've', 'Vietnam': 'vn'
+        };
+
+        function getISO2(name) {
+            if (!name) return null;
+            for (var k in ISO2_MAP) {
+                if (k.toLowerCase() === name.toLowerCase()) return ISO2_MAP[k];
+            }
+            return null;
+        }
+
+        // Core lookup — works for both India (postalpincode.in) and international (zippopotam.us)
+        // onResult(country, state) is called on success
+        function lookupPostalCode(postalCode, countryName, showStatus, hideStatus, onResult) {
+            var isIndia = /india/i.test(countryName) || (!countryName && /^\d{6}$/.test(postalCode));
+            if (isIndia) {
+                showStatus('Looking up pincode...');
+                $.ajax({
+                    // NEW
+                    url: 'https://api.postalpincode.in/pincode/' + postalCode,
+                    method: 'GET',
+                    dataType: 'json',
+                    timeout: 3000,
+                    // NEW
+                    success: function (res) {
+                        if (!res || !res[0] || res[0].Status !== 'Success' ||
+                            !res[0].PostOffice || !res[0].PostOffice.length) {
+                            showStatus('Pincode not found', true);
+                            return;
+                        }
+                        var item = res[0].PostOffice[0];
+                        hideStatus();
+                        onResult('India', item.State, item.District);
+                    },
+                    error: function () {
+                        showStatus('Failed to lookup pincode', true);
+                    }
+                });
+            } else {
+                var iso2 = getISO2(countryName);
+                if (!iso2) {
+                    showStatus('Country not recognized', true);
+                    return;
+                }
+                showStatus('Looking up postal code...');
+                $.ajax({
+                    url: 'https://api.zippopotam.us/' + iso2 + '/' + postalCode,
+                    method: 'GET',
+                    dataType: 'json',
+                    timeout: 3000,
+                    success: function (res) {
+                        if (res.places && res.places.length > 0) {
+                            var place = res.places[0];
+                            hideStatus();
+                            onResult(res.country, place['state abbreviation'] || place.state, place['place name']);
+                        } else {
+                            showStatus('Postal code not found', true);
+                        }
+                    },
+                    error: function () {
+                        showStatus('Failed to lookup postal code', true);
+                    }
+                });
+            }
+        }
+
+        // ── EDIT VENDOR PANEL helpers ──
+        function editShowStatus(msg, isError) {
+            $('#editPostalCodeStatus').text(msg).css('color', isError ? '#e74c3c' : '#888').show();
+        }
+        function editHideStatus() { $('#editPostalCodeStatus').hide().text(''); }
+
+        function editSetLocationCascade(country, state, city) {
+            if (city) {
+                $('.editRecordInput[name="billingCity"]').val(city);
+            }
+            $('#editVendorCountry').val(country);
+            $('#editCountryBtn span').first().text(country || '--none--');
+            $('#editCountryDropdown .dropdown-items-container .dropdown-item').each(function () {
+                if ($(this).text().toLowerCase() === (country || '').toLowerCase()) {
+                    $(this).addClass('active').siblings().removeClass('active');
+                }
+            });
+            if (!state) return;
+            // NEW
+            editFetchStatesForDropdown(country, function () {
+                var matched = false;
+                $('#editStateDropdown .dropdown-items-container .dropdown-item').each(function () {
+                    if ($(this).text().toLowerCase() === (state || '').toLowerCase()) {
+                        $(this).addClass('active').siblings().removeClass('active');
+                        matched = true; return false;
+                    }
+                });
+                if (!matched) {
+                    $('#editStateDropdown .dropdown-items-container')
+                        .append('<a class="dropdown-item active" href="#" data-value="' + state + '">' + state + '</a>');
+                }
+                $('#editVendorState').val(state);
+                $('#editStateBtn span').first().text(state);
+            });
+        }
+
+        var editPostalTimer;
+        $(document).on('input', '#editPostalCode', function () {
+            var postalCode = $(this).val().trim();
+            clearTimeout(editPostalTimer);
+            if (postalCode.length < 4) return;
+            editPostalTimer = setTimeout(function () {
+                lookupPostalCode(postalCode, $('#editVendorCountry').val(), editShowStatus, editHideStatus, editSetLocationCascade);
+            }, 700);
+        });
+
+        // ── NEW VENDOR PANEL helpers ──
+        function newShowStatus(msg, isError) {
+            // Create or show status message for new vendor panel
+            var $statusElement = $('#newPostalCodeStatus');
+            if (!$statusElement.length) {
+                $statusElement = $('<small id="newPostalCodeStatus" style="display:none; font-size:12px;"></small>');
+                $('#newPostalCode').after($statusElement);
+            }
+            $statusElement.text(msg).css('color', isError ? '#e74c3c' : '#888').show();
+        }
+        function newHideStatus() {
+            var $statusElement = $('#newPostalCodeStatus');
+            if ($statusElement.length) {
+                $statusElement.hide().text('');
+            }
+        }
+
+        // NEW
+        function newSetLocationCascade(country, state, city) {
+            if (city) {
+                $('.newRecordInput[name="billingCity"]').val(city);
+            }
+            $('#countryVendor').val(country);
+            $('#countryVendorBtn span').first().text(country || '--none--');
+            $('#countryVendorDropdown .dropdown-items-container .dropdown-item').each(function () {
+                if ($(this).text().toLowerCase() === (country || '').toLowerCase()) {
+                    $(this).addClass('active').siblings().removeClass('active');
+                    return false;
+                }
+            });
+            if (!state) return;
+            newFetchStatesForDropdown(country, function () {
+                var matched = false;
+                $('#stateVendorDropdown .dropdown-items-container .dropdown-item').each(function () {
+                    if ($(this).text().toLowerCase() === state.toLowerCase()) {
+                        $(this).addClass('active').siblings().removeClass('active');
+                        matched = true; return false;
+                    }
+                });
+                if (!matched) {
+                    $('#stateVendorDropdown .dropdown-items-container')
+                        .append('<a class="dropdown-item active" href="#" data-value="' + state + '">' + state + '</a>');
+                }
+                $('#stateVendor').val(state);
+                $('#stateVendorBtn span').first().text(state);
+            });
+        }
+
+        var newPostalTimer;
+        $(document).on('input', '#newPostalCode', function () {
+            var postalCode = $(this).val().trim();
+            clearTimeout(newPostalTimer);
+            if (postalCode.length < 4) return;
+            newPostalTimer = setTimeout(function () {
+                lookupPostalCode(postalCode, '', newShowStatus, newHideStatus, newSetLocationCascade);
+            }, 700);
+        });
+
+        // ── EDIT CONTACT PANEL helpers ──
+        function editContactShowStatus(msg, isError) {
+            $('#editContactPostalCodeStatus').text(msg).css('color', isError ? '#e74c3c' : '#888').show();
+        }
+        function editContactHideStatus() { $('#editContactPostalCodeStatus').hide().text(''); }
+
+        function editContactSetLocation(country, state, city) {
+            if (state) {
+                $('.editContactInput[name="State"]').val(state);
+            }
+            if (city) {
+                $('.editContactInput[name="City"]').val(city);
+            }
+        }
+
+        var editContactPostalTimer;
+        $(document).on('input', '#editContactPostalCode', function () {
+            var postalCode = $(this).val().trim();
+            clearTimeout(editContactPostalTimer);
+            if (postalCode.length < 4) return;
+            editContactPostalTimer = setTimeout(function () {
+                lookupPostalCodeForContact(postalCode, '', editContactShowStatus, editContactHideStatus, editContactSetLocation);
+            }, 700);
+        });
+
+        // ── NEW CONTACT PANEL helpers ──
+        function newContactShowStatus(msg, isError) {
+            // Create or show status message for new contact panel
+            var $statusElement = $('#newContactPostalCodeStatus');
+            if (!$statusElement.length) {
+                $statusElement = $('<small id="newContactPostalCodeStatus" style="display:none; font-size:12px;"></small>');
+                $('#newContactPostalCode').after($statusElement);
+            }
+            $statusElement.text(msg).css('color', isError ? '#e74c3c' : '#888').show();
+        }
+        function newContactHideStatus() {
+            var $statusElement = $('#newContactPostalCodeStatus');
+            if ($statusElement.length) {
+                $statusElement.hide().text('');
+            }
+        }
+
+        function newContactSetLocation(country, state, city) {
+            if (state) {
+                $('input[name="State"]', '#newContactForm').val(state);
+            }
+            if (city) {
+                $('input[name="City"]', '#newContactForm').val(city);
+            }
+        }
+
+        var newContactPostalTimer;
+        $(document).on('input', '#newContactPostalCode', function () {
+            var postalCode = $(this).val().trim();
+            clearTimeout(newContactPostalTimer);
+            if (postalCode.length < 4) return;
+            newContactPostalTimer = setTimeout(function () {
+                lookupPostalCodeForContact(postalCode, '', newContactShowStatus, newContactHideStatus, newContactSetLocation);
+            }, 700);
+        });
+
+        // Contact-specific lookup — always tries India first for 6-digit, then international
+        // onResult(country, state, city) 
+        function lookupPostalCodeForContact(postalCode, countryName, showStatus, hideStatus, onResult) {
+            var isIndia = /india/i.test(countryName) || /^\d{6}$/.test(postalCode);
+            if (isIndia) {
+                showStatus('Looking up pincode...');
+                $.ajax({
+                    // NEW
+                    url: 'https://api.postalpincode.in/pincode/' + postalCode,
+                    method: 'GET',
+                    dataType: 'json',
+                    timeout: 3000,
+                    // NEW
+                    success: function (res) {
+                        if (!res || !res[0] || res[0].Status !== 'Success' ||
+                            !res[0].PostOffice || !res[0].PostOffice.length) {
+                            showStatus('Pincode not found', true);
+                            return;
+                        }
+                        var item = res[0].PostOffice[0];
+                        hideStatus();
+                        onResult('India', item.State, item.District);
+                    },
+                    error: function () {
+                        showStatus('Failed to lookup pincode', true);
+                    }
+                });
+            } else {
+                var iso2 = getISO2(countryName);
+                if (!iso2) {
+                    showStatus('Country not recognized', true);
+                    return;
+                }
+                showStatus('Looking up postal code...');
+                $.ajax({
+                    url: 'https://api.zippopotam.us/' + iso2 + '/' + postalCode,
+                    method: 'GET',
+                    dataType: 'json',
+                    timeout: 3000,
+                    success: function (res) {
+                        if (res.places && res.places.length > 0) {
+                            var place = res.places[0];
+                            hideStatus();
+                            onResult(res.country, place['state abbreviation'] || place.state, place['place name']);
+                        } else {
+                            showStatus('Postal code not found', true);
+                        }
+                    },
+                    error: function () {
+                        showStatus('Failed to lookup postal code', true);
+                    }
+                });
+            }
+        }
+
+        // ─── End Postal Code Auto-fill ───────────────────────────────────────────
+
+        // select2 polyfill - defined last so it only activates if real Select2 never loaded
+        if (window.jQuery && window.jQuery.fn && !window.jQuery.fn.select2) {
+            window.jQuery.fn.select2 = function (arg, value) {
+                if (arg === undefined || arg === null || typeof arg === 'object') {
+                    return this; // init call: $(".select2").select2()
+                }
+                if (arg === 'val') {
+                    if (arguments.length > 1) {
+                        this.val(value).trigger('change');
+                        return this;
+                    }
+                    return this.val();
+                }
+                return this; // destroy, open, close, data, etc.
+            };
+        }
+
+    </script>
+</div>

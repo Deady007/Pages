@@ -1,0 +1,305 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+
+<style>
+    #materialStatusTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #materialStatusTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    #materialProductDropdown li:hover,
+    #materialProductDropdown li.active {
+        background: #2196f3 !important;
+        color: #fff !important;
+    }
+    /* Default (light) theme */
+#materialProductDropdown {
+    background: #fff;
+    color: #222;
+    border: 1px solid #ccc;
+}
+#materialProductDropdown li {
+    color: #222;
+    background: transparent;
+}
+#materialProductDropdown li:hover,
+#materialProductDropdown li.active {
+    background: #2196f3 !important;
+    color: #fff !important;
+}
+
+html[data-bs-theme="dark"] #materialProductDropdown {
+    background: #23272f !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+    /* box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important; */
+}
+html[data-bs-theme="dark"] #materialProductDropdown li {
+    color: #bfc9da !important;
+    background: transparent !important;
+    border-bottom: none !important;
+}
+html[data-bs-theme="dark"] #materialProductDropdown li:hover,
+html[data-bs-theme="dark"] #materialProductDropdown li.active {
+    background: #2196f3 !important;
+    color: #fff !important;
+}
+</style>
+
+<div class="qa-white-panel">
+<div class="row animated fadeInRight aasaanPanel" id="newRecordPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                    <h5>Material Status <small>Warehouse</small></h5>
+                    <div class="ibox-tools">
+                    </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group" style="position: relative;">
+                                <label>Product</label>
+                                <input type="text" placeholder="search.."
+                                    class="form-control material-product-search" autocomplete="off" />
+                                <input type="hidden" name="Product.Id" class="material-product-id" />
+                                <ul id="materialProductDropdown"
+                                    style="display:none; position:absolute; top:100%; left:0; right:0;
+                                           z-index:9999; border:1px solid #ccc;
+                                           border-radius:4px; max-height:220px; overflow-y:auto;
+                                           padding:0; margin:0; list-style:none; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-sm-2" style="margin-top: 18px;">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button type="button" id="fetchMaterialStatusBtn"
+                                    class="btn btn-secondary btn-block">Fetch</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row" id="materialStatusResultsSection" style="display: none;">
+                    <div class="col-sm-12">
+                        <hr>
+                        <div class="table-responsive">
+                            <table id="materialStatusTable" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>PO Number</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Quantity Received</th>
+                                        <th>Manufacturer</th>
+                                        <th>Vendor</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="materialStatusTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var $searchInput   = $('.material-product-search');
+        var $hiddenInput   = $('.material-product-id');
+        var $dropdown      = $('#materialProductDropdown');
+        var searchDebounce = null;
+
+        // ── Dropdown helpers ──────────────────────────────────────────────────
+        function showDropdown(products) {
+            $dropdown.empty();
+
+            if (!products || !products.length) {
+                $dropdown.hide();
+                return;
+            }
+
+            products.forEach(function (p) {
+                var id     = p.Id     || p.id     || '';
+                var name   = p.Name   || p.name   || '';
+                var number = p.Number || p.number || '';
+                var label  = (number && name) ? number + ' - ' + name : (name || number);
+
+                var $li = $('<li></li>').text(label).css({
+                    padding     : '8px 12px',
+                    cursor      : 'pointer',
+                    borderBottom: '1px solid #f0f0f0'
+                }).hover(
+                    function () { $(this).css({ background: '#4f46e5', color: '#fff' }); },
+                    function () { $(this).css({ background: '',        color: ''      }); }
+                ).on('mousedown', function (e) {
+                    e.preventDefault();
+                    $searchInput.val(label);
+                    $hiddenInput.val(id);
+                    $dropdown.hide();
+                });
+
+                $dropdown.append($li);
+            });
+
+            $dropdown.show();
+        }
+
+        function hideDropdown() { $dropdown.hide(); }
+
+        // ── Product search — GET /api/products?name=<query> ───────────────────
+        $searchInput.on('input', function () {
+            var query = $(this).val().trim();
+            $hiddenInput.val('');
+            clearTimeout(searchDebounce);
+
+            if (!query) { hideDropdown(); return; }
+
+            searchDebounce = setTimeout(function () {
+                fetch('/api/products?name=' + encodeURIComponent(query))
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) { showDropdown(data || []); })
+                    .catch(function (err) { console.error('Product search error:', err); });
+            }, 300);
+        });
+
+        $searchInput.on('blur', function () { setTimeout(hideDropdown, 150); });
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('.material-product-search, #materialProductDropdown').length) {
+                hideDropdown();
+            }
+        });
+
+        // ── Fetch button ──────────────────────────────────────────────────────
+        $('#fetchMaterialStatusBtn').on('click', function () {
+            var productId = $hiddenInput.val();
+
+            if (!productId) {
+                JSUTIL.buildErrorModal('Please select a product');
+                return;
+            }
+
+            var $btn = $(this);
+            $btn.prop('disabled', true).text('Loading...');
+
+            fetch('/api/purchase/orders')
+                .then(function (res) {
+                    if (!res.ok) { throw new Error('HTTP ' + res.status); }
+                    return res.json();
+                })
+                .then(function (orders) {
+                    if (!orders || !orders.length) {
+                        displayMaterialStatus([]);
+                        return Promise.resolve(null);
+                    }
+
+                    var itemRequests = orders.map(function (order) {
+                        var orderId = order.id || order.Id;
+                        return fetch('/api/purchase/orders/' + orderId + '/items')
+                            .then(function (res) { return res.ok ? res.json() : []; })
+                            .then(function (items) {
+                                return (items || []).map(function (item) {
+                                    item.purchaseOrder = item.purchaseOrder || order;
+                                    return item;
+                                });
+                            })
+                            .catch(function () { return []; });
+                    });
+
+                    return Promise.all(itemRequests);
+                })
+                .then(function (allItemArrays) {
+                    if (!allItemArrays) return;
+
+                    var allItems = [].concat.apply([], allItemArrays);
+
+                    var filteredItems = allItems.filter(function (item) {
+                        var itemProductId = (item.product && (item.product.id || item.product.Id)) ||
+                                            (item.Product && (item.Product.id || item.Product.Id));
+                        return String(itemProductId) === String(productId);
+                    });
+
+                    displayMaterialStatus(filteredItems);
+                })
+                .catch(function (err) {
+                    console.error('Fetch material status error:', err);
+                    JSUTIL.buildErrorModal('Failed to load material status. Please try again.');
+                })
+                .finally(function () {
+                    $btn.prop('disabled', false).text('Fetch');
+                });
+        });
+
+        // ── Render results into DataTable (always, even when empty) ──────────
+        function displayMaterialStatus(items) {
+            var $tableBody = $('#materialStatusTableBody');
+
+            // 1. Destroy existing DataTable
+            if ($.fn.DataTable.isDataTable('#materialStatusTable')) {
+                $('#materialStatusTable').DataTable().destroy();
+            }
+
+            // 2. Clear tbody
+            $tableBody.empty();
+
+            // 3. Build rows only if data exists — empty tbody = DataTable shows "No data available"
+            if (items && items.length > 0) {
+                var innerHtml = '';
+                items.forEach(function (item) {
+                    var po           = item.purchaseOrder || {};
+                    var poNumber     = po.number || po.Number || '';
+                    var productName  = (item.Product && (item.Product.Name || item.Product.name)) ||
+                                       (item.product && (item.product.Name || item.product.name)) || '';
+                    var qtyOrdered   = parseFloat(item.quantity || 0);
+                    var uom          = (item.product && item.product.uom) ? item.product.uom : '';
+                    var qtyReceived  = (item.quantityReceived !== undefined && item.quantityReceived !== null)
+                                       ? item.quantityReceived + ' ' + uom : '';
+                    var manufacturer = (po.manufacturer && po.manufacturer.name) ? po.manufacturer.name : '';
+                    var vendor       = (po.vendor && po.vendor.name) ? po.vendor.name : '';
+
+                    var rawStatus = po.orderStatus || po.status || '';
+                    var status = (rawStatus && typeof rawStatus === 'object')
+                        ? (rawStatus.orderStatus || rawStatus.status || '')
+                        : rawStatus;
+
+                    innerHtml +=
+                        '<tr>' +
+                        '<td>' + poNumber                           + '</td>' +
+                        '<td>' + productName                        + '</td>' +
+                        '<td>' + qtyOrdered.toFixed(2) + ' ' + uom + '</td>' +
+                        '<td>' + qtyReceived                        + '</td>' +
+                        '<td>' + manufacturer                       + '</td>' +
+                        '<td>' + vendor                             + '</td>' +
+                        '<td>' + status                             + '</td>' +
+                        '</tr>';
+                });
+                $tableBody.html(innerHtml);
+            }
+
+            // 4. Show section
+            $('#materialStatusResultsSection').show();
+
+            // 5. Init DataTable — empty tbody renders "No data available in table" natively
+            new DataTable('#materialStatusTable', {
+                order      : [[0, 'desc']],
+                language   : {
+                    emptyTable: 'No purchase order line items found for the selected product.'
+                }
+            });
+        }
+    });
+</script>

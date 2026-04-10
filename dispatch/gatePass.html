@@ -1,0 +1,1597 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    #allGatePassDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allGatePassDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .selectGatePassBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    .type-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .type-non-returnable {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .type-returnable {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .product-search-dropdown {
+        position: absolute;
+        z-index: 1060;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        max-height: 200px;
+        overflow-y: auto;
+        list-style: none;
+        margin: 2px 0 0;
+        padding: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    .product-search-dropdown li {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+    }
+
+    .product-search-dropdown li:hover {
+        background: #f5f5f5;
+    }
+
+    .product-search-dropdown li:last-child {
+        border-bottom: none;
+    }
+
+    .vendor-search-wrap {
+        position: relative;
+    }
+
+    .vendor-search-dropdown {
+        position: absolute;
+        z-index: 1060;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        max-height: 220px;
+        overflow-y: auto;
+        list-style: none;
+        margin: 2px 0 0;
+        padding: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    .vendor-search-dropdown li {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 13px;
+    }
+
+    .vendor-search-dropdown li:hover {
+        background: #f5f5f5;
+    }
+
+    .vendor-search-dropdown li:last-child {
+        border-bottom: none;
+    }
+
+    /* CHANGE 1: Copied from outwardRequest — search dropdown styles for Bill To / Ship To */
+    .buyer-consignee-wrapper {
+        position: relative;
+    }
+    .user-search-dropdown {
+        width: 100% !important;
+        left: 0;
+        box-sizing: border-box;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        position: absolute !important;
+        z-index: 1060 !important;
+        top: 100%;
+        max-height: 250px;
+        overflow-y: auto;
+        list-style: none;
+        margin: 2px 0 0;
+        padding: 0;
+    }
+    .user-search-item {
+        color: #333 !important;
+        background: #fff !important;
+        padding: 9px 12px !important;
+        font-size: 13px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .user-search-item:last-child { border-bottom: none; }
+    .user-search-item:hover { background: #f5f5f5 !important; color: #000 !important; }
+    /* END CHANGE 1 */
+</style>
+
+<div class="qa-white-panel">
+
+    <!-- allGatePassPanel Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="allGatePassPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Dispatch <small>Gate Pass</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary" id="newGatePassBtn"><i
+                                data-lucide="plus"></i>New Gate Pass</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <table id="allGatePassDataTable" class="table table-hover table-bordered dataTables">
+                        <thead>
+                            <th>Number</th>
+                            <th>Type</th>
+                            <th>Customer</th>
+                            <th>EPO Number</th>
+                            <th>Invoice Date</th>
+                            <th>Process Status</th>
+                        </thead>
+                        <tbody id="allGatePassTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- allGatePassPanel End -->
+
+
+    <!-- newGatePassPanel Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="newGatePassPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small>Gate Pass</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm" id="cancelNewGatePassBtn"><i
+                                data-lucide="x"></i>Cancel</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="saveNewGatePassBtn"><i
+                                data-lucide="check"></i>Save</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+
+                    <!-- ── Gate Pass Fields ── -->
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <div class="form-group mb-3">
+                                <label>Gate Pass Number</label>
+                                <input type="text" class="form-control newGatePassInput" name="number"
+                                    id="newGPNumber" readonly>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group mb-3">
+                                <label>Type</label>
+                                <select class="form-control newGatePassInput newOutwardReqInput" name="type" id="newGPType" required>
+                                    <option value="">--select--</option>
+                                    <optgroup label="Returnable">
+                                        <option value="For Field Work">For Field Work</option>
+                                        <option value="Free Sample">Free Sample</option>
+                                        <option value="Hold Sample">Hold Sample</option>
+                                        <option value="Inter-Unit Transfer">Inter-Unit Transfer</option>
+                                        <option value="Job Re-Process">Job Re-Process</option>
+                                        <option value="Lab Testing">Lab Testing</option>
+                                    </optgroup>
+                                    <optgroup label="Non-Returnable">
+                                        <option value="Dispatch">Dispatch</option>
+                                        <option value="Disposal">Disposal</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group mb-3">
+                                <label>Gate Pass Date</label>
+                                <input type="date" class="form-control newGatePassInput" name="gatePassDate">
+                            </div>
+                        </div>
+                        <!-- Outward Request (normal select, filtered by type + bill-to) -->
+                        <div class="col-sm-4">
+                            <div class="form-group mb-3">
+                                <label>Outward Request <small style="color:#6b7280;">(optional)</small></label>
+                                <select class="form-control" id="newGPOutwardRequest">
+                                    <option value="">--select--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Return Date — shown only when type is Returnable -->
+                        <div class="col-sm-4" id="newReturnDateCol" style="display:none;">
+                            <div class="form-group mb-3">
+                                <label>Expected Return Date <span style="color:red;">*</span></label>
+                                <input type="date" class="form-control newGatePassInput" name="returnDate"
+                                    id="newReturnDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Bill To -->
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Bill To</label>
+                                <!-- CHANGE 2: Replaced <select id="newBillToSelect"> with search input — same pattern as outwardRequest vendor search -->
+                                <div class="buyer-consignee-wrapper">
+                                    <input type="text" class="form-control" id="newBillToSearch" placeholder="Search vendor..." autocomplete="off">
+                                    <input type="hidden" id="newBillToId">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Bill To Address</label>
+                                <input type="text" class="form-control" id="newBillToAddress" readonly
+                                    placeholder="Auto-filled on selection">
+                            </div>
+                        </div>
+                        <!-- Ship To -->
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Ship To</label>
+                                <!-- CHANGE 3: Replaced <select id="newShipToSelect"> with search input — same pattern as outwardRequest vendor search -->
+                                <div class="buyer-consignee-wrapper">
+                                    <input type="text" class="form-control" id="newShipToSearch" placeholder="Search vendor..." autocomplete="off">
+                                    <input type="hidden" id="newShipToId">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Ship To Address</label>
+                                <input type="text" class="form-control" id="newShipToAddress" readonly
+                                    placeholder="Auto-filled on selection">
+                            </div>
+                        </div>
+                        <!-- Transport -->
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Transport</label>
+                                <select class="form-control" id="newTransportSelect">
+                                    <option value="">--select--</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-12">
+                            <div class="form-group mb-3">
+                                <label>Remarks</label>
+                                <textarea class="form-control newGatePassInput" name="remarks" rows="2"
+                                    placeholder="Enter remarks..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 style="font-weight: 700; margin: 0;">Gate Pass Items</h6>
+                        <button type="button" class="btn btn-default btn-sm" id="addNewItemRowBtn"><i
+                                data-lucide="plus"></i>Add Item</button>
+                    </div>
+                    <div class="table-responsive" style="overflow: visible !important;">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;"></th>
+                                    <th>Product</th>
+                                    <th>Batch Number</th>
+                                    <th>UOM</th>
+                                    <th>Quantity</th>
+                                    <th>Net Weight</th>
+                                    <th>Container No</th>
+                                </tr>
+                            </thead>
+                            <tbody id="newItemsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- newGatePassPanel End -->
+
+
+    <!-- editGatePassPanel Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="editGatePassPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editGatePassTitle"></span> <small>Gate Pass</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm" id="closeEditGatePassBtn"><i
+                                data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-default btn-sm" id="enableEditBtn"><i
+                                data-lucide="pencil"></i>Edit</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="saveEditGatePassBtn"
+                            style="display:none;"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-default btn-sm printGatePass"><i
+                                data-lucide="printer"></i>Print</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="row g-3">
+                        <div class="col-sm-3">
+                            <div class="form-group mb-3">
+                                <label>Number</label>
+                                <input type="text" class="form-control editGatePassInput" name="number" disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group mb-3">
+                                <label>Type</label>
+                                <select class="form-control editGatePassInput" name="type" id="editGPType" disabled>
+                                    <option value="">--select--</option>
+                                    <optgroup label="Returnable">
+                                        <option value="For Field Work">For Field Work</option>
+                                        <option value="Free Sample">Free Sample</option>
+                                        <option value="Hold Sample">Hold Sample</option>
+                                        <option value="Inter-Unit Transfer">Inter-Unit Transfer</option>
+                                        <option value="Job Re-Process">Job Re-Process</option>
+                                        <option value="Lab Testing">Lab Testing</option>
+                                    </optgroup>
+                                    <optgroup label="Non-Returnable">
+                                        <option value="Dispatch">Dispatch</option>
+                                        <option value="Disposal">Disposal</option>
+                                    </optgroup>
+                                    <!-- Legacy values for backward compatibility -->
+                                    <option value="Returnable" hidden>Returnable (Legacy)</option>
+                                    <option value="Non-Returnable" hidden>Non-Returnable (Legacy)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group mb-3">
+                                <label>Date</label>
+                                <input type="date" class="form-control editGatePassInput" name="gatePassDate" disabled>
+                            </div>
+                        </div>
+                        <!-- Return Date in edit — shown only when type is Returnable -->
+                        <div class="col-sm-3" id="editReturnDateCol" style="display:none;">
+                            <div class="form-group mb-3">
+                                <label>Expected Return Date</label>
+                                <input type="date" class="form-control editGatePassInput" name="returnDate"
+                                    id="editReturnDate" disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group mb-3">
+                                <label>Status</label>
+                                <input type="text" class="form-control" id="editGatePassStatus" disabled>
+                            </div>
+                        </div>
+                        <!-- Linked Outward Request (read-only display) -->
+                        <div class="col-sm-3" id="editLinkedGORCol" style="display:none;">
+                            <div class="form-group mb-3">
+                                <label>Linked Outward Request</label>
+                                <input type="text" class="form-control" id="editLinkedGORDisplay" disabled>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <div class="form-group mb-3">
+                                <label>Remarks</label>
+                                <textarea class="form-control editGatePassInput" name="remarks" rows="2"
+                                    disabled></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <!-- Invoice Information (read-only, for linked gate passes) -->
+                    <div id="invoiceSection" style="display:none;">
+                        <h6 style="font-weight: 700; margin-bottom: 12px;">Invoice Information</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <p><strong>Invoice Number:</strong> <span id="inv_number"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Invoice Date:</strong> <span id="inv_date"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Customer:</strong> <span id="inv_customer"></span></p>
+                            </div>
+                        </div>
+                        <hr />
+                    </div>
+
+                    <!-- Product Release Information (read-only, for linked gate passes) -->
+                    <div id="productReleaseSection" style="display:none;">
+                        <h6 style="font-weight: 700; margin-bottom: 12px;">Product Release Information</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <p><strong>EPO Number:</strong> <span id="pr_epoNumber"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Container Size:</strong> <span id="pr_containerSize"></span></p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Transport Company:</strong> <span id="pr_transportCompany"></span></p>
+                            </div>
+                        </div>
+                        <hr />
+                    </div>
+
+                    <!-- Gate Pass Items -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 style="font-weight: 700; margin: 0;">Gate Pass Items</h6>
+                        <button type="button" class="btn btn-default btn-sm" id="addEditItemRowBtn"
+                            style="display:none;"><i data-lucide="plus"></i>Add Item</button>
+                    </div>
+                    <div class="table-responsive" style="overflow: visible !important;">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;"></th>
+                                    <th>Product</th>
+                                    <th>Batch Number</th>
+                                    <th>UOM</th>
+                                    <th>Quantity</th>
+                                    <th>Net Weight</th>
+                                    <th>Container No</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editItemsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- editGatePassPanel End -->
+
+</div>
+
+<script>
+    lucide.createIcons();
+
+    // ================================================================
+    // State
+    // ================================================================
+    var recordList = [];
+    var currentGatePassId = '';
+    var currentGatePassData = {};
+    var currentGatePassItems = [];
+    var productCache = null;
+    var deletedItemIds = [];
+    var allAccountOptions = [];
+    var transporterAccountOptions = [];
+
+    // Outward request state
+    var allApprovedOutwardRequests = [];
+    var linkedGatePassOutwardIds = [];
+
+    // Type mappings
+    var RETURNABLE_TYPES = ['For Field Work', 'Free Sample', 'Hold Sample', 'Inter-Unit Transfer', 'Job Re-Process', 'Lab Testing'];
+    var NON_RETURNABLE_TYPES = ['Dispatch', 'Disposal'];
+
+    // ================================================================
+    // Common helpers
+    // ================================================================
+    function showError(msg) {
+        if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') { JSUTIL.buildErrorModal(msg); } else { alert(msg); }
+    }
+    function getCsrfHeaders() {
+        var t = $("meta[name='_csrf']").attr("content"); var h = $("meta[name='_csrf_header']").attr("content");
+        var hd = {}; if (t && h) { hd[h] = t; } return hd;
+    }
+    function requestJson(url, method, payload) {
+        var opts = { method: method || 'GET', headers: Object.assign({}, getCsrfHeaders()) };
+        if (payload !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(payload); }
+        return fetch(url, opts).then(async function (r) {
+            if (!r.ok) { var t = await r.text(); throw new Error(t || ('HTTP ' + r.status)); }
+            var tb = await r.text(); if (!tb) return null;
+            try { return JSON.parse(tb); } catch (e) { return tb; }
+        });
+    }
+    function getTypeBadge(type) {
+        var t = type || '';
+        if (t === 'Returnable' || isReturnableType(t)) return '<span class="type-badge type-returnable">' + t + '</span>';
+        if (t === 'Non-Returnable' || NON_RETURNABLE_TYPES.indexOf(t) !== -1) return '<span class="type-badge type-non-returnable">' + t + '</span>';
+        return t;
+    }
+    function getAccountName(account) {
+        if (!account) return '';
+        return account.name || account.Name || account.accountName || account.AccountName || '';
+    }
+    function getAccountId(account) {
+        return (account && (account.id || account.Id)) ? String(account.id || account.Id) : '';
+    }
+    function getAccountOptionLabel(account) {
+        var code = account ? (account.number || account.Number || '') : '';
+        var name = getAccountName(account);
+        if (code && name) return '(' + code + ') ' + name;
+        return name || code || '';
+    }
+    function formatAccountAddress(account) {
+        if (!account) return '';
+        return [account.billingStreet, account.billingStreet2, account.billingCity,
+            account.billingState, account.billingCountry, account.billingPostalCode]
+            .filter(Boolean).join(', ');
+    }
+    function isReturnableType(type) {
+        return RETURNABLE_TYPES.indexOf(type) !== -1;
+    }
+
+    // ================================================================
+    // View management
+    // ================================================================
+    function setView(v) {
+        $('#allGatePassPanel, #newGatePassPanel, #editGatePassPanel').hide();
+        if (v === 'all') $('#allGatePassPanel').show();
+        if (v === 'new') $('#newGatePassPanel').show();
+        if (v === 'edit') $('#editGatePassPanel').show();
+        lucide.createIcons();
+    }
+
+    // ================================================================
+    // Gate Pass Number auto-generation
+    // ================================================================
+    function generateGatePassNumber() {
+        var now = new Date();
+        var yy = String(now.getFullYear()).slice(-2);
+        var nextNum = (recordList.length + 1).toString().padStart(4, '0');
+        return 'GP-' + yy + '-' + nextNum;
+    }
+
+    // ================================================================
+    // Return Date visibility helpers
+    // ================================================================
+    function updateNewReturnDateVisibility() {
+        var type = $('#newGPType').val();
+        if (isReturnableType(type)) {
+            $('#newReturnDateCol').show();
+        } else {
+            $('#newReturnDateCol').hide();
+            $('#newReturnDate').val('');
+        }
+    }
+    function updateEditReturnDateVisibility() {
+        var type = $('#editGPType').val();
+        if (type === 'Returnable' || isReturnableType(type)) {
+            $('#editReturnDateCol').show();
+        } else {
+            $('#editReturnDateCol').hide();
+            $('#editReturnDate').val('');
+        }
+    }
+
+    // ================================================================
+    // CHANGE 4: Bill To / Ship To vendor search — same pattern as outwardRequest searchVendors
+    // Uses /api/accounts/search?type=Vendor&search=, buyer-consignee-wrapper, user-search-item
+    // ================================================================
+    var billToSearchTimer, shipToSearchTimer;
+
+    function searchGPVendors(query, $inputEl, $hiddenEl, $addressEl, isBillTo) {
+        var apiUrl = '/api/accounts/search?type=Vendor&search=' + encodeURIComponent(query);
+        $.get(apiUrl, function (results) {
+            $('.user-search-dropdown').remove();
+            var $dropdown = $('<div class="user-search-dropdown"></div>');
+
+            if (!results || results.length === 0) {
+                $dropdown.append('<div class="user-search-item" style="color:#888;">No results found</div>');
+                $inputEl.closest('.buyer-consignee-wrapper').append($dropdown);
+                $dropdown.show();
+                return;
+            }
+
+            $.each(results, function (i, item) {
+                var id = item.id;
+                var name = getAccountOptionLabel(item);
+                $('<div class="user-search-item"></div>')
+                    .text(name)
+                    .attr('data-id', id)
+                   .on('mousedown', function (e) {
+                        e.preventDefault();
+                        
+                        // Set Bill To fields
+                        $inputEl.val(name);
+                        $hiddenEl.val(id);
+                        if ($addressEl) $addressEl.val(formatAccountAddress(item));
+                        $('.user-search-dropdown').remove();
+                        
+                        if (isBillTo) {
+                            // ✅ Preserve current Outward Request selection while rebuilding
+                            populateOutwardRequestSelect(true);
+
+                            var gorId = $('#newGPOutwardRequest').val();
+                            var type = $('#newGPType').val();
+                            
+                            tryAutoPopulateFromTwo(
+                                gorId,
+                                String(id || ''),
+                                type
+                            );
+                        }
+                    })
+                    .on('mouseenter', function () { $(this).css('background', '#f5f5f5'); })
+                    .on('mouseleave', function () { $(this).css('background', '#fff'); })
+                    .appendTo($dropdown);
+            });
+
+            $inputEl.closest('.buyer-consignee-wrapper').append($dropdown);
+            $dropdown.show();
+        }).fail(function () {
+            $('.user-search-dropdown').remove();
+            $('<div class="user-search-dropdown"></div>')
+                .append('<div class="user-search-item" style="color:#888;">Search failed</div>')
+                .appendTo($('#newBillToSearch, #newShipToSearch').filter(':focus').closest('.buyer-consignee-wrapper'))
+                .show();
+        });
+    }
+
+    function initBillToShipToSearch() {
+        var $billInput  = $('#newBillToSearch');
+        var $billHidden = $('#newBillToId');
+        var $billAddr   = $('#newBillToAddress');
+        var $shipInput  = $('#newShipToSearch');
+        var $shipHidden = $('#newShipToId');
+        var $shipAddr   = $('#newShipToAddress');
+
+        // Bill To search
+        $billInput.off('input.billTo blur.billTo')
+            .on('input.billTo', function () {
+                clearTimeout(billToSearchTimer);
+                var q = $(this).val();
+                $billHidden.val(''); $billAddr.val('');
+                populateOutwardRequestSelect();
+                if (!q || q.trim().length < 1) { $('.user-search-dropdown').remove(); return; }
+                billToSearchTimer = setTimeout(function () {
+                    searchGPVendors(q, $billInput, $billHidden, $billAddr, true);
+                }, 300);
+            })
+            .on('blur.billTo', function () {
+                setTimeout(function () { $('.user-search-dropdown').remove(); }, 150);
+            });
+
+        // Ship To search
+        $shipInput.off('input.shipTo blur.shipTo')
+            .on('input.shipTo', function () {
+                clearTimeout(shipToSearchTimer);
+                var q = $(this).val();
+                $shipHidden.val(''); $shipAddr.val('');
+                if (!q || q.trim().length < 1) { $('.user-search-dropdown').remove(); return; }
+                shipToSearchTimer = setTimeout(function () {
+                    searchGPVendors(q, $shipInput, $shipHidden, $shipAddr, false);
+                }, 300);
+            })
+            .on('blur.shipTo', function () {
+                setTimeout(function () { $('.user-search-dropdown').remove(); }, 150);
+            });
+
+        // Load transporters for transport select (unchanged)
+        JSUTIL.callAJAXGet('/api/accounts/search?type=Transporter&search=', function (transporters) {
+            transporterAccountOptions = Array.isArray(transporters) ? transporters : [];
+            populateAccountSelect('newTransportSelect', transporterAccountOptions);
+        }, function () {
+            transporterAccountOptions = [];
+            populateAccountSelect('newTransportSelect', transporterAccountOptions);
+        });
+    }
+    // END CHANGE 4
+
+    function populateAccountSelect(selectId, accounts) {
+        var $select = $('#' + selectId);
+        $select.html('<option value="">--select--</option>');
+        (accounts || []).forEach(function (account) {
+            var id = getAccountId(account);
+            var label = getAccountOptionLabel(account);
+            if (!id || !label) return;
+            $select.append('<option value="' + id + '">' + label + '</option>');
+        });
+    }
+
+    // ================================================================
+    // Load approved outward requests not linked to existing gate passes
+    // ================================================================
+    function loadApprovedOutwardRequests(callback) {
+        requestJson('/api/gate-passes', 'GET').then(function (gatePasses) {
+            var usedIds = [];
+            (Array.isArray(gatePasses) ? gatePasses : []).forEach(function (gp) {
+                if (gp.outwardRequest && gp.outwardRequest.id) {
+                    usedIds.push(String(gp.outwardRequest.id));
+                }
+            });
+            linkedGatePassOutwardIds = usedIds;
+
+            JSUTIL.callAJAXGet('/api/gate-outward-requests?processStatus=Approved', function (res) {
+                var all = Array.isArray(res) ? res : [];
+                // console.log('All approved outward requests:', all);
+                allApprovedOutwardRequests = all.filter(function (r) {
+                    return usedIds.indexOf(String(r.id)) === -1;
+                });
+                if (callback) callback();
+            }, function () {
+                allApprovedOutwardRequests = [];
+                if (callback) callback();
+            });
+        }).catch(function () {
+            allApprovedOutwardRequests = [];
+            if (callback) callback();
+        });
+    }
+
+    // ================================================================
+    // Populate outward request <select> filtered by type + bill-to
+    // ================================================================
+    // function populateOutwardRequestSelect() {
+    //     var $select = $('#newGPOutwardRequest');
+    //     var selectedType = $('#newGPType').val();
+    //     // CHANGE 5: Read from #newBillToId (hidden) — old #newBillToSelect no longer exists
+    //     var billToId = String($('#newBillToId').val() || '').trim();
+
+    //     $select.html('<option value="">--select--</option>');
+
+    //     var filtered = allApprovedOutwardRequests.filter(function (r) {
+    //         if (selectedType && r.type !== selectedType) return false;
+    //         if (billToId) {
+    //             var rAccountId = r.account ? String(r.account.id || '') : '';
+    //             if (rAccountId !== billToId) return false;
+    //         }
+    //         return true;
+    //     });
+
+    //     filtered.forEach(function (r) {
+    //         var vendorName = r.account ? getAccountName(r.account) : '';
+    //         var label = (r.number || 'GOR-' + r.id) + ' — ' + (r.type || '') + (vendorName ? ' | ' + vendorName : '');
+    //         $select.append('<option value="' + r.id + '">' + label + '</option>');
+    //     });
+    // }
+        function populateOutwardRequestSelect(preserveSelection) {
+    var $select = $('#newGPOutwardRequest');
+    var selectedType = $('#newGPType').val();
+    var billToId = String($('#newBillToId').val() || '').trim();
+    
+    // ✅ SAVE current selection before rebuilding
+    var currentSelection = preserveSelection !== false ? $select.val() : null;
+
+    $select.html('<option value="">--select--</option>');
+
+    var filtered = allApprovedOutwardRequests.filter(function (r) {
+        if (selectedType && r.type !== selectedType) return false;
+        if (billToId) {
+            var rAccountId = r.account ? String(r.account.id || '') : '';
+            if (rAccountId !== billToId) return false;
+        }
+        return true;
+    });
+
+    filtered.forEach(function (r) {
+        var vendorName = r.account ? getAccountName(r.account) : '';
+        var label = (r.number || 'GOR-' + r.id) + ' — ' + (r.type || '') + (vendorName ? ' | ' + vendorName : '');
+        $select.append('<option value="' + r.id + '">' + label + '</option>');
+    });
+
+    // ✅ Restore selection if it's still in the list
+    if (currentSelection) {
+        var stillExists = filtered.find(function (r) { return String(r.id) === String(currentSelection); });
+        if (stillExists) {
+            $select.val(currentSelection);
+        }
+    }
+}
+    // ================================================================
+    // Three-way auto-population: any 2 of (Type, Outward Request, Bill To) → fills the 3rd
+    // ================================================================
+    // overrideGorId / overrideBillId / overrideType: pass the freshly-selected value directly
+    // so we don't rely on the DOM having updated yet (avoids stale-read bugs)
+    function tryAutoPopulateFromTwo(overrideGorId, overrideBillId, overrideType) {
+        var selectedType   = overrideType   !== null && overrideType   !== undefined ? overrideType   : $('#newGPType').val();
+        var selectedGorId  = overrideGorId  !== null && overrideGorId  !== undefined ? String(overrideGorId)  : String($('#newGPOutwardRequest').val() || '');
+        var selectedBillId = overrideBillId !== null && overrideBillId !== undefined ? String(overrideBillId) : String($('#newBillToId').val() || '').trim();
+
+        // Case 1: Type + GOR selected → populate Bill To
+        // Case 1: Type + GOR selected → populate Bill To
+if (selectedType && selectedGorId && !selectedBillId) {
+    console.log('Case 1: Auto-populate Bill To from Type + GOR', {
+        selectedType: selectedType,
+        selectedGorId: selectedGorId,
+        availableGors: allApprovedOutwardRequests.map(function(r) { return r.id; })
+    });
+    
+    var gor = allApprovedOutwardRequests.find(function (r) { return String(r.id) === String(selectedGorId); });
+    
+    console.log('Found GOR:', gor);
+    
+    if (gor && gor.account) {
+        var $billInput = $('#newBillToSearch');
+        $billInput.off('input.billTo');
+
+        var accountId = gor.account.id || '';
+        var existingName = getAccountOptionLabel(gor.account);
+
+        function setBillTo(name, accountObj) {
+            $billInput.val(name);
+            $('#newBillToId').val(String(accountId));
+            $('#newBillToAddress').val(formatAccountAddress(accountObj || gor.account));
+            console.log('✅ Bill To populated:', name);
+
+            // Re-attach input handler after setting values
+            $billInput.on('input.billTo', function () {
+                clearTimeout(billToSearchTimer);
+                var q = $(this).val();
+                $('#newBillToId').val('');
+                $('#newBillToAddress').val('');
+                populateOutwardRequestSelect();
+                if (!q || q.trim().length < 1) { $('.user-search-dropdown').remove(); return; }
+                billToSearchTimer = setTimeout(function () {
+                    searchGPVendors(q, $billInput, $('#newBillToId'), $('#newBillToAddress'), true);
+                }, 300);
+            });
+        }
+
+        if (existingName) {
+            // Name already present in the GOR account object
+            setBillTo(existingName, gor.account);
+        } else if (accountId) {
+            // FIX: GOR account only has {id}, fetch full account from vendor list to get name
+            JSUTIL.callAJAXGet('/api/accounts/search?type=Vendor&search=', function (vendors) {
+                var matched = (vendors || []).find(function (v) { return String(v.id) === String(accountId); });
+                if (matched) {
+                    setBillTo(getAccountOptionLabel(matched), matched);
+                } else {
+                    // Fallback: try fetching by id directly
+                    JSUTIL.callAJAXGet('/api/accounts/' + accountId, function (acc) {
+                        setBillTo(getAccountOptionLabel(acc) || String(accountId), acc);
+                    }, function () {
+                        setBillTo(String(accountId), gor.account);
+                    });
+                }
+            }, function () {
+                setBillTo(String(accountId), gor.account);
+            });
+        }
+    } else {
+        console.warn('⚠️ GOR not found or has no account:', gor);
+    }
+    return;
+}
+
+        // Case 2: Bill To + GOR selected → populate Type
+        if (selectedBillId && selectedGorId && !selectedType) {
+            var gor2 = allApprovedOutwardRequests.find(function (r) { return String(r.id) === selectedGorId; });
+            if (gor2 && gor2.type) {
+                $('#newGPType').val(gor2.type);
+                updateNewReturnDateVisibility();
+                populateOutwardRequestSelect();
+            }
+            return;
+        }
+
+        // Case 3: Bill To + Type selected → populate Outward Request (if exactly one match)
+        if (selectedBillId && selectedType && !selectedGorId) {
+            var matched = allApprovedOutwardRequests.filter(function (r) {
+                if (r.type !== selectedType) return false;
+                var rAccId = r.account ? String(r.account.id || '') : '';
+                return rAccId === selectedBillId;
+            });
+            if (matched.length === 1) {
+                $('#newGPOutwardRequest').val(String(matched[0].id));
+                JSUTIL.callAJAXGet('/api/gate-outward-request-items/request/' + matched[0].id, function (items) {
+                    $('#newItemsTable').empty();
+                    var list = Array.isArray(items) ? items : [];
+                    list.forEach(function (item) {
+                        var product = (item && item.product) || {};
+                        buildItemRow({ id: null, product: product, batchNumber: item.batchNumber || '', uom: item.uom || product.uom || '', quantity: item.quantity || '', netWeight: '', containerNumber: '' }, 'newItemsTable', true);
+                    });
+                }, function () { });
+            }
+            return;
+        }
+    }
+
+    // ================================================================
+    // Product search cache
+    // ================================================================
+    function loadProductCache(callback) {
+        if (productCache) { callback(productCache); return; }
+        JSUTIL.callAJAXGet('/api/products', function (res) {
+            productCache = (res || []).map(function (p) {
+                return {
+                    id: p.id || p.Id,
+                    name: p.name || p.Name || '',
+                    number: p.number || p.Number || '',
+                    uom: p.uom || p.Uom || '',
+                    search: [p.name, p.number, p.id].filter(Boolean).join(' ').toLowerCase()
+                };
+            });
+            callback(productCache);
+        });
+    }
+
+    // ================================================================
+    // Item row builder (shared between new and edit)
+    // ================================================================
+    function buildItemRow(item, targetTableId, editable) {
+        var itemId = (item && item.id) || '';
+        var product = (item && item.product) || {};
+        var productName = product.name || '';
+        var productId = product.id || '';
+        var batchNumber = (item && item.batchNumber) || '';
+        var uom = (item && item.uom) || product.uom || '';
+        var quantity = (item && item.quantity) || '';
+        var netWeight = (item && item.netWeight) || '';
+        var containerNumber = (item && item.containerNumber) || '';
+        var disabledAttr = editable ? '' : 'disabled';
+
+        var html = '<tr data-item-id="' + itemId + '">' +
+            '<td><button type="button" class="btn btn-xs btn-default remove-item-row" ' + disabledAttr + '><i data-lucide="trash-2"></i></button></td>' +
+            '<td style="position:relative;">' +
+            '<input type="text" class="form-control item-product-search" value="' + productName + '" placeholder="Search product..." autocomplete="off" ' + disabledAttr + '>' +
+            '<input type="hidden" class="item-product-id" value="' + productId + '">' +
+            '</td>' +
+            '<td><input type="text" class="form-control item-batch" value="' + batchNumber + '" ' + disabledAttr + '></td>' +
+            '<td><input type="text" class="form-control item-uom" value="' + uom + '" ' + disabledAttr + '></td>' +
+            '<td><input type="number" class="form-control item-qty" value="' + quantity + '" min="0" ' + disabledAttr + '></td>' +
+            '<td><input type="number" class="form-control item-net-weight" value="' + netWeight + '" min="0" step="0.001" ' + disabledAttr + '></td>' +
+            '<td><input type="text" class="form-control item-container" value="' + containerNumber + '" ' + disabledAttr + '></td>' +
+            '</tr>';
+
+        var $row = $(html);
+        $('#' + targetTableId).append($row);
+        lucide.createIcons();
+        initProductSearchOnRow($row);
+        return $row;
+    }
+
+    function initProductSearchOnRow($row) {
+        var $input = $row.find('.item-product-search');
+        $input.off('input.productSearch focus.productSearch').on('input.productSearch focus.productSearch', function () {
+            var $el = $(this);
+            var q = ($el.val() || '').toLowerCase().trim();
+            loadProductCache(function (products) {
+                if (!$el.is(':focus')) return;
+                var filtered = products;
+                if (q) {
+                    filtered = products.filter(function (p) { return p.search.indexOf(q) !== -1; });
+                }
+                showProductDropdown($el, filtered.slice(0, 10), $row);
+            });
+        });
+    }
+
+    function showProductDropdown($input, products, $row) {
+        $('.product-search-dropdown').remove();
+        if (!products.length) return;
+        var $ul = $('<ul class="product-search-dropdown"></ul>');
+        products.forEach(function (p) {
+            var label = (p.number ? p.number + ' | ' : '') + p.name;
+            $('<li></li>').text(label).data('product', p).on('click', function () {
+                var chosen = $(this).data('product');
+                $input.val(chosen.name);
+                $row.find('.item-product-id').val(chosen.id);
+                $row.find('.item-uom').val(chosen.uom);
+                $('.product-search-dropdown').remove();
+            }).appendTo($ul);
+        });
+        $input.closest('td').append($ul);
+    }
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.item-product-search, .product-search-dropdown').length) {
+            $('.product-search-dropdown').remove();
+        }
+        if (!$(e.target).closest('.vendor-search-dropdown').length) {
+            $('.vendor-search-dropdown').remove();
+        }
+        // CHANGE 7: Close Bill To / Ship To dropdown on outside click
+        if (!$(e.target).closest('#newBillToSearch, #newShipToSearch, .user-search-dropdown').length) {
+            $('.user-search-dropdown').remove();
+        }
+        // END CHANGE 7
+    });
+
+    // Remove item row
+    $(document).on('click', '.remove-item-row', function () {
+        var $row = $(this).closest('tr');
+        var itemId = $row.data('item-id');
+        if (itemId) { deletedItemIds.push(itemId); }
+        $row.remove();
+    });
+
+    // ================================================================
+    // Collect items from a table
+    // ================================================================
+    function collectItemsFromTable(tableId) {
+        var items = [];
+        var valid = true;
+        $('#' + tableId + ' tr').each(function () {
+            var $row = $(this);
+            var productId = $row.find('.item-product-id').val();
+            if (!productId) { valid = false; return false; }
+            items.push({
+                id: $row.data('item-id') || null,
+                product: { id: Number(productId) },
+                batchNumber: $row.find('.item-batch').val() || null,
+                uom: $row.find('.item-uom').val() || null,
+                quantity: Number($row.find('.item-qty').val()) || null,
+                netWeight: Number($row.find('.item-net-weight').val()) || null,
+                containerNumber: $row.find('.item-container').val() || null
+            });
+        });
+        if (!valid) { showError('Please select a product for all item rows.'); return null; }
+        return items;
+    }
+
+    // ================================================================
+    // Render gate pass list table
+    // ================================================================
+    function renderGatePassTable() {
+        if ($.fn.DataTable && $.fn.DataTable.isDataTable('#allGatePassDataTable')) {
+            $('#allGatePassDataTable').DataTable().clear().destroy();
+        }
+        var html = '';
+        $.each(recordList, function (i, val) {
+            var customerName = (val.invoice && val.invoice.customer) ? val.invoice.customer.name : '';
+            var epoNumber = val.productRelease ? (val.productRelease.epoNumber || '') : '';
+            var invoiceDate = (val.invoice && val.invoice.invoiceDate) ? JSUTIL.getDate(val.invoice.invoiceDate) : '';
+            html += '<tr>' +
+                '<td><a href="javascript:void(0)" class="selectGatePassBtn" data-id="' + val.id + '">' + (val.number || '') + '</a></td>' +
+                '<td>' + getTypeBadge(val.type) + '</td>' +
+                '<td>' + customerName + '</td>' +
+                '<td>' + epoNumber + '</td>' +
+                '<td>' + invoiceDate + '</td>' +
+                '<td>' + (val.processStatus || '') + '</td>' +
+                '</tr>';
+        });
+        $('#allGatePassTable').html(html);
+        $('#allGatePassDataTable').DataTable({ order: [], pageLength: 25 });
+    }
+
+    // ================================================================
+    // Load all gate passes
+    // ================================================================
+    async function loadGatePasses() {
+        try {
+            var res = await requestJson('/api/gate-passes', 'GET');
+            recordList = Array.isArray(res) ? res : [];
+        } catch (e) { console.error(e); recordList = []; }
+        renderGatePassTable();
+        setView('all');
+    }
+
+    // ================================================================
+    // Populate edit panel
+    // ================================================================
+    function populateEditPanel(gatePass) {
+        currentGatePassData = gatePass;
+        currentGatePassId = String(gatePass.id);
+        deletedItemIds = [];
+
+        $('#editGatePassTitle').text(gatePass.number || '');
+        $('.editGatePassInput[name="number"]').val(gatePass.number || '');
+        $('.editGatePassInput[name="type"]').val(gatePass.type || '');
+        $('#editGPType').val(gatePass.type || '');
+
+        if (gatePass.gatePassDate) {
+            var d = new Date(gatePass.gatePassDate);
+            var yyyy = d.getFullYear();
+            var mm = String(d.getMonth() + 1).padStart(2, '0');
+            var dd = String(d.getDate()).padStart(2, '0');
+            $('.editGatePassInput[name="gatePassDate"]').val(yyyy + '-' + mm + '-' + dd);
+        } else {
+            $('.editGatePassInput[name="gatePassDate"]').val('');
+        }
+
+        // Return date
+        if (gatePass.returnDate) {
+            var rd = new Date(gatePass.returnDate);
+            var ry = rd.getFullYear(), rm = String(rd.getMonth() + 1).padStart(2, '0'), rdd = String(rd.getDate()).padStart(2, '0');
+            $('#editReturnDate').val(ry + '-' + rm + '-' + rdd);
+        } else {
+            $('#editReturnDate').val('');
+        }
+        updateEditReturnDateVisibility();
+
+        $('.editGatePassInput[name="remarks"]').val(gatePass.remarks || '');
+        $('#editGatePassStatus').val(gatePass.processStatus || '');
+
+        // Linked Outward Request display
+        if (gatePass.outwardRequest) {
+            var gorLabel = gatePass.outwardRequest.number || ('GOR-' + gatePass.outwardRequest.id);
+            $('#editLinkedGORDisplay').val(gorLabel);
+            $('#editLinkedGORCol').show();
+        } else {
+            $('#editLinkedGORCol').hide();
+            $('#editLinkedGORDisplay').val('');
+        }
+
+        // Reset to readonly
+        $('.editGatePassInput').prop('disabled', true);
+        $('#editReturnDate').prop('disabled', true);
+        $('#enableEditBtn').show();
+        $('#saveEditGatePassBtn').hide();
+        $('#addEditItemRowBtn').hide();
+
+        // Invoice section
+        if (gatePass.invoice) {
+            $('#invoiceSection').show();
+            $('#inv_number').text(gatePass.invoice.number || '');
+            $('#inv_date').text(gatePass.invoice.invoiceDate ? JSUTIL.getDate(gatePass.invoice.invoiceDate) : '');
+            $('#inv_customer').text(gatePass.invoice.customer ? gatePass.invoice.customer.name : '');
+        } else {
+            $('#invoiceSection').hide();
+        }
+
+        // Product Release section
+        if (gatePass.productRelease) {
+            $('#productReleaseSection').show();
+            var pr = gatePass.productRelease;
+            $('#pr_epoNumber').text(pr.epoNumber || '');
+            $('#pr_containerSize').text(pr.containerSize || '');
+            $('#pr_transportCompany').text(pr.transportCompany || '');
+        } else {
+            $('#productReleaseSection').hide();
+        }
+
+        // Load items
+        $('#editItemsTable').empty();
+        loadProductCache(function(products) {  // ✅ Load product cache first
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/gate-pass-items/gate-pass/' + gatePass.id), function (items) {
+            currentGatePassItems = Array.isArray(items) ? items : [];
+            if (currentGatePassItems.length > 0) {
+                $.each(currentGatePassItems, function (i, item) {
+                    var product = (item && item.product) || {};
+                    var productId = product.id || item.productId;
+                    
+                    // ✅ Enrich product with full details from cache
+                    var productDetails = products.find(function(p) { return p.id == productId; });
+                    if (productDetails) {
+                        product = productDetails;
+                    }
+                    
+                    // Create enriched item with full product data
+                    var enrichedItem = {
+                        id: item.id,
+                        product: product,
+                        batchNumber: item.batchNumber || '',
+                        uom: item.uom || product.uom || '',
+                        quantity: item.quantity || '',
+                        netWeight: item.netWeight || '',
+                        containerNumber: item.containerNumber || ''
+                    };
+                    
+                    buildItemRow(enrichedItem, 'editItemsTable', false);
+                });
+            }
+        }, function () {
+            console.error('Failed to load items');
+        });
+    });
+}
+
+    // ================================================================
+    // Print gate pass (preserved from original)
+    // ================================================================
+    function printGatePassDocument() {
+        if (!currentGatePassData || !currentGatePassData.id) { console.log('No gate pass selected'); return; }
+        var gp = currentGatePassData;
+        var pr = gp.productRelease || {};
+        var productReleaseId = pr.id;
+
+        loadDispatchInstructionByProductReleaseId(productReleaseId, function (di) {
+            var transporter = (di && di.transporter) || pr.transportCompany || '';
+            var vehicleNo = (di && di.vehicleNumber) || (gp.invoice && gp.invoice.vehicleNumber) || '';
+            var lrNo = (di && di.lrNumber) || (gp.invoice && gp.invoice.lrNumber) || '';
+            var lrDate = (di && di.lrDate) ? JSUTIL.getDate(di.lrDate) : '';
+            var prodReq = pr.productionRequest || {};
+            var modeOfDispatch = prodReq.modeOfTransport || '';
+            var remarks = (di && di.specialInstructions) || gp.remarks || '';
+            var customer = prodReq.customer || {};
+            var consignee = prodReq.consignee || {};
+            function addr(a) { return [a.billingStreet, a.billingStreet2, a.billingCity, a.billingState, a.billingCountry, a.billingPostalCode].filter(Boolean).join(', '); }
+
+            var isReturnable = gp.type === 'Returnable' || isReturnableType(gp.type);
+            var printTitle = (isReturnable ? 'RETURNABLE GATE PASS' : 'NON-RETURNABLE GATE PASS');
+            var preparedByName = gp.preparedBy ? (gp.preparedBy.name || ((gp.preparedBy.firstName || '') + ' ' + (gp.preparedBy.lastName || '')).trim()) : '';
+            var approvedByName = gp.approvedBy ? (gp.approvedBy.name || ((gp.approvedBy.firstName || '') + ' ' + (gp.approvedBy.lastName || '')).trim()) : '';
+
+            var rows = '';
+            var totalQty = 0;
+            var itemsToUse = currentGatePassItems || [];
+            itemsToUse.forEach(function (row, i) {
+                var item = row.productReleaseItem || {};
+                var product = item.product || row.product || {};
+                var lot = item.productLot || {};
+                var qty = Number(item.netWeight || row.netWeight || 0);
+                totalQty += qty;
+                rows += '<tr><td>' + (i + 1) + '</td><td>' + (product.name || '') + '</td><td>' + (product.number || '') + '</td><td>' + (product.uom || row.uom || '') + '</td><td>' + (row.batchNumber || lot.batchNumber || '') + '</td><td>' + (row.containerNumber || item.containerNumber || '') + '</td><td>' + (lot.manufacturingDate ? JSUTIL.getDate(lot.manufacturingDate) : '') + '</td><td>' + (lot.expiryDate ? JSUTIL.getDate(lot.expiryDate) : '') + '</td><td>' + (item.retestDate ? JSUTIL.getDate(item.retestDate) : '') + '</td><td>' + qty.toFixed(3) + '</td></tr>';
+            });
+
+            var returnDateLine = isReturnable && gp.returnDate ? '<br/><b>Expected Return Date:</b> ' + JSUTIL.getDate(gp.returnDate) : '';
+
+            var html = '<!DOCTYPE html><html><head><style>body{font-family:Arial;font-size:11px;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #000;padding:6px}th{background:#f2f2f2}.header{text-align:center;font-size:14px;font-weight:bold}.section{margin-top:12px}.label{font-weight:bold}</style></head><body>' +
+                '<div class="header">' + printTitle + '</div>' +
+                '<div class="section"><b>Gate Pass No:</b> ' + (gp.number || '') + '<br/><b>Date:</b> ' + JSUTIL.getDate(gp.gatePassDate || new Date()) + returnDateLine + '</div><hr/>' +
+                '<div class="section"><b>Customer:</b><br/>' + (customer.name || '') + '<br/>' + addr(customer) + '<br/>GST: ' + (customer.gst || '') + '</div>' +
+                '<div class="section"><b>Consignee:</b><br/>' + (consignee.name || '') + '<br/>' + addr(consignee) + '<br/>GST: ' + (consignee.gst || '') + '</div><hr/>' +
+                '<div class="section"><b>Transport Details</b><table><tr><td class="label">Transporter</td><td>' + transporter + '</td></tr><tr><td class="label">Vehicle No</td><td>' + vehicleNo + '</td></tr><tr><td class="label">LR No / Date</td><td>' + lrNo + ' ' + lrDate + '</td></tr><tr><td class="label">Mode</td><td>' + modeOfDispatch + '</td></tr><tr><td class="label">Remarks</td><td>' + remarks + '</td></tr></table></div><hr/>' +
+                '<div class="section"><table><thead><tr><th>#</th><th>Product</th><th>Code</th><th>UOM</th><th>Batch</th><th>Container</th><th>MFG</th><th>EXP</th><th>Retest</th><th>Qty</th></tr></thead><tbody>' + rows + '<tr style="font-weight:bold"><td colspan="9" style="text-align:right">TOTAL</td><td>' + totalQty.toFixed(3) + '</td></tr></tbody></table></div><hr/>' +
+                '<div style="margin-top:30px"><table style="width:100%;border:none;font-size:11px"><tr><td style="width:50%;border:none"><b>LR No:</b> ' + (lrNo || '') + '<br/><b>LR Date:</b> ' + (lrDate || '') + '</td><td style="width:50%;border:none"><b>Mode:</b> ' + (modeOfDispatch || '') + '<br/><b>Vehicle:</b> ' + (vehicleNo || '') + '</td></tr></table></div>' +
+                '<div style="margin-top:40px"><table style="width:100%;border:none"><tr><td style="width:50%;border:none;text-align:left"><b>Requested By</b><br/>' + preparedByName + '<br/><br/>_______________________</td><td style="width:50%;border:none;text-align:right"><b>Approved By</b><br/>' + approvedByName + '<br/><br/>_______________________</td></tr></table></div></body></html>';
+
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(html);
+            iframe.contentWindow.document.close();
+            iframe.onload = function () { iframe.contentWindow.print(); setTimeout(function () { document.body.removeChild(iframe); }, 500); };
+        });
+    }
+
+    function loadDispatchInstructionByProductReleaseId(productReleaseId, callback) {
+        if (!productReleaseId) { callback(null); return; }
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/dispatch-instructions'), function (res) {
+            if (Array.isArray(res) && res.length > 0) {
+                var match = res.find(function (d) { return (d.productRelease && d.productRelease.id == productReleaseId) || (d.productReleaseId == productReleaseId); });
+                callback(match || null);
+            } else { callback(null); }
+        }, function () { callback(null); });
+    }
+
+    // ================================================================
+    // Save items sequentially (create or update)
+    // ================================================================
+    function saveItemsSequentially(gatePassId, items, index, callback) {
+        if (index >= items.length) { callback(); return; }
+        var m = items[index];
+        var payload = {
+            gatePass: { id: Number(gatePassId) },
+            product: m.product,
+            batchNumber: m.batchNumber,
+            uom: m.uom,
+            quantity: m.quantity,
+            netWeight: m.netWeight,
+            containerNumber: m.containerNumber
+        };
+        if (m.id) {
+            requestJson('/api/gate-pass-items/' + m.id, 'PUT', payload)
+                .then(function () { saveItemsSequentially(gatePassId, items, index + 1, callback); })
+                .catch(function (err) { console.error(err); saveItemsSequentially(gatePassId, items, index + 1, callback); });
+        } else {
+            requestJson('/api/gate-pass-items', 'POST', payload)
+                .then(function () { saveItemsSequentially(gatePassId, items, index + 1, callback); })
+                .catch(function (err) { console.error(err); saveItemsSequentially(gatePassId, items, index + 1, callback); });
+        }
+    }
+
+    function deleteItemsSequentially(ids, index, callback) {
+        if (index >= ids.length) { callback(); return; }
+        requestJson('/api/gate-pass-items/' + ids[index], 'DELETE')
+            .then(function () { deleteItemsSequentially(ids, index + 1, callback); })
+            .catch(function () { deleteItemsSequentially(ids, index + 1, callback); });
+    }
+
+    // ================================================================
+    // Document ready
+    // ================================================================
+    $(document).ready(function () {
+        loadGatePasses();
+
+        // ---- New Gate Pass ----
+        $('#newGatePassBtn').on('click', function () {
+            // Reset form
+            $('.newGatePassInput').val('');
+            $('#newGPType').val('');
+            $('#newItemsTable').empty();
+            // CHANGE 6a: Clear search inputs + hidden ids instead of old selects
+            $('#newBillToSearch').val(''); $('#newBillToId').val(''); $('#newBillToAddress').val('');
+            $('#newShipToSearch').val(''); $('#newShipToId').val(''); $('#newShipToAddress').val('');
+            // END CHANGE 6a
+            $('#newTransportSelect').val('');
+            $('#newGPOutwardRequest').html('<option value="">--select--</option>');
+            updateNewReturnDateVisibility();
+
+            // Auto-generate gate pass number
+            $('#newGPNumber').val(generateGatePassNumber());
+
+            // CHANGE 6b: Init Bill To / Ship To search inputs instead of loading old selects
+            initBillToShipToSearch();
+
+            // Load approved outward requests then populate the select
+            loadApprovedOutwardRequests(function () {
+                populateOutwardRequestSelect();
+            });
+
+            setView('new');
+        });
+
+        $('#cancelNewGatePassBtn').on('click', function () { setView('all'); });
+
+        // $('#newGPType').on('change', function () {
+        //     updateNewReturnDateVisibility();
+        //     populateOutwardRequestSelect();
+        //     // Defer so the select DOM is stable before we read its value
+        //     setTimeout(function () { tryAutoPopulateFromTwo(null, null, null); }, 0);
+        // });
+      $('#newGPType').off('change.autoFill').on('change.autoFill', function () {
+    var type = $(this).val();
+    var gorId = $('#newGPOutwardRequest').val();
+    var billId = $('#newBillToId').val();
+
+    updateNewReturnDateVisibility();
+    
+    // ✅ Preserve current Outward Request if still matches new type filter
+    populateOutwardRequestSelect(true);
+
+    tryAutoPopulateFromTwo(gorId, billId, type);
+});
+        // $('#newGPOutwardRequest').on('change', function () {
+        //     var gorId = $(this).val();
+        //     $('#newItemsTable').empty();
+        //     tryAutoPopulateFromTwo(gorId, null, null);
+        //     if (gorId) {
+        //         JSUTIL.callAJAXGet('/api/gate-outward-request-items/request/' + gorId, function (items) {
+        //             var list = Array.isArray(items) ? items : [];
+        //             list.forEach(function (item) {
+        //                 var product = (item && item.product) || {};
+        //                 var fakeItem = {
+        //                     id: null,
+        //                     product: product,
+        //                     batchNumber: item.batchNumber || '',
+        //                     uom: item.uom || product.uom || '',
+        //                     quantity: item.quantity || '',
+        //                     netWeight: '',
+        //                     containerNumber: ''
+        //                 };
+        //                 buildItemRow(fakeItem, 'newItemsTable', true);
+        //             });
+        //         }, function () { });
+        //     }
+        // });
+    //     $('#newGPOutwardRequest').off('change.autoFill').on('change.autoFill', function () {
+    //         var gorId = $(this).val();
+    //         var billId = $('#newBillToId').val();
+    //         var type = $('#newGPType').val();
+
+    //         // Load items from outward request
+    //         $('#newItemsTable').empty();
+    //         if (gorId) {
+    //             JSUTIL.callAJAXGet('/api/gate-outward-request-items/request/' + gorId, function (items) {
+    //                 var list = Array.isArray(items) ? items : [];
+    //                 list.forEach(function (item) {
+    //                     var product = (item && item.product) || {};
+    //                     var fakeItem = {
+    //                         id: null,
+    //                         product: product,
+    //                         batchNumber: item.batchNumber || '',
+    //                         uom: item.uom || product.uom || '',
+    //                         quantity: item.quantity || '',
+    //                         netWeight: '',
+    //                         containerNumber: ''
+    //                     };
+    //                     buildItemRow(fakeItem, 'newItemsTable', true);
+    //                 });
+    //             }, function () { });
+    //         }
+    //          tryAutoPopulateFromTwo(
+    //     gorId !== undefined && gorId !== '' ? gorId : null,
+    //     billId !== undefined && billId !== '' ? billId : null,
+    //     type
+    // );
+    //     });
+    $('#newGPOutwardRequest').off('change.autoFill').on('change.autoFill', function () {
+    var gorId = $(this).val();
+    var billId = $('#newBillToId').val();
+    var type = $('#newGPType').val();
+
+    // Load items from outward request
+    $('#newItemsTable').empty();
+    if (gorId) {
+        loadProductCache(function(products) {  // ✅ Load product cache first
+            JSUTIL.callAJAXGet('/api/gate-outward-request-items/request/' + gorId, function (items) {
+                var list = Array.isArray(items) ? items : [];
+                list.forEach(function (item) {
+                    var product = (item && item.product) || {};
+                    var productId = product.id || item.productId;
+                    
+                    // ✅ Enrich product with full details from cache
+                    var productDetails = products.find(function(p) { return p.id == productId; });
+                    if (productDetails) {
+                        product = productDetails;
+                    }
+                    
+                    var fakeItem = {
+                        id: null,
+                        product: product,
+                        batchNumber: item.batchNumber || '',
+                        uom: item.uom || product.uom || '',
+                        quantity: item.quantity || '',
+                        netWeight: '',
+                        containerNumber: ''
+                    };
+                    buildItemRow(fakeItem, 'newItemsTable', true);
+                });
+            }, function () { });
+        });
+    }
+
+    tryAutoPopulateFromTwo(
+        gorId !== undefined && gorId !== '' ? gorId : null,
+        billId !== undefined && billId !== '' ? billId : null,
+        type
+    );
+});
+        // Return Date toggle - edit form
+        $('#editGPType').on('change', function () { updateEditReturnDateVisibility(); });
+
+        $('#addNewItemRowBtn').on('click', function () {
+            buildItemRow(null, 'newItemsTable', true);
+        });
+
+        // ---- Save New Gate Pass ----
+        $('#saveNewGatePassBtn').on('click', function () {
+            var number = $('#newGPNumber').val().trim();
+            var type = $('#newGPType').val();
+            if (!number) { showError('Gate Pass Number is required.'); return; }
+            if (!type) { showError('Please select a Gate Pass Type.'); return; }
+
+            // Return date required if Returnable type
+            var returnDate = null;
+            if (isReturnableType(type)) {
+                returnDate = $('#newReturnDate').val();
+                if (!returnDate) { showError('Expected Return Date is required for Returnable gate passes.'); return; }
+            }
+
+            var items = collectItemsFromTable('newItemsTable');
+            if (items === null) return;
+
+            var payload = {
+                number: number,
+                type: type,
+                remarks: $('.newGatePassInput[name="remarks"]').val() || null,
+                processStatus: 'New'
+            };
+            var gpDate = $('.newGatePassInput[name="gatePassDate"]').val();
+            if (gpDate) payload.gatePassDate = gpDate;
+            if (returnDate) payload.returnDate = returnDate;
+
+            // Bill To
+            // CHANGE 6d: Read from #newBillToId hidden input instead of old #newBillToSelect
+            var billToId = $('#newBillToId').val();
+            if (billToId) payload.account = { id: Number(billToId) };
+            payload.billToAddress = $('#newBillToAddress').val() || null;
+
+            // Ship To
+            // CHANGE 6d: Read from #newShipToId hidden input instead of old #newShipToSelect
+            var shipToId = $('#newShipToId').val();
+            if (shipToId) payload.shipTo = { id: Number(shipToId) };
+            payload.shipToAddress = $('#newShipToAddress').val() || null;
+
+            // Transport
+            var transportId = $('#newTransportSelect').val();
+            if (transportId) payload.transporter = { id: Number(transportId) };
+
+            // Outward Request
+            var outwardReqId = $('#newGPOutwardRequest').val();
+            if (outwardReqId) payload.outwardRequest = { id: Number(outwardReqId) };
+
+            requestJson('/api/gate-passes', 'POST', payload)
+                .then(function (created) {
+                    if (!created || !created.id) { loadGatePasses(); return; }
+                    if (items.length > 0) {
+                        saveItemsSequentially(created.id, items, 0, function () { loadGatePasses(); });
+                    } else {
+                        loadGatePasses();
+                    }
+                })
+                .catch(function (err) { console.error(err); showError('Unable to create gate pass.'); });
+        });
+
+        // ---- Select Gate Pass ----
+        $('#allGatePassTable').on('click', '.selectGatePassBtn', function () {
+            var id = String($(this).data('id'));
+            requestJson('/api/gate-passes/' + id, 'GET')
+                .then(function (gp) {
+                    if (!gp) return;
+                    populateEditPanel(gp);
+                    setView('edit');
+                })
+                .catch(function (err) {
+                    console.error(err);
+                    var match = recordList.find(function (item) { return String(item.id) === id; });
+                    if (match) { populateEditPanel(match); setView('edit'); }
+                });
+        });
+
+        // ---- Close edit ----
+        $('#closeEditGatePassBtn').on('click', function () { loadGatePasses(); });
+
+        // ---- Enable edit mode ----
+        $('#enableEditBtn').on('click', function () {
+            $('.editGatePassInput').prop('disabled', false);
+            $('#editItemsTable .item-product-search, #editItemsTable .item-batch, #editItemsTable .item-uom, #editItemsTable .item-qty, #editItemsTable .item-net-weight, #editItemsTable .item-container, #editItemsTable .remove-item-row').prop('disabled', false);
+            if ($('#editGPType').val() === 'Returnable' || isReturnableType($('#editGPType').val())) {
+                $('#editReturnDate').prop('disabled', false);
+            }
+            $('#enableEditBtn').hide();
+            $('#saveEditGatePassBtn').show();
+            $('#addEditItemRowBtn').show();
+        });
+
+        // ---- Add item in edit mode ----
+        $('#addEditItemRowBtn').on('click', function () {
+            buildItemRow(null, 'editItemsTable', true);
+        });
+
+        // ---- Save edit ----
+        $('#saveEditGatePassBtn').on('click', function () {
+            var items = collectItemsFromTable('editItemsTable');
+            if (items === null) return;
+
+            var type = $('#editGPType').val();
+            var returnDate = null;
+            if (type === 'Returnable' || isReturnableType(type)) {
+                returnDate = $('#editReturnDate').val();
+                if (!returnDate) { showError('Expected Return Date is required for Returnable gate passes.'); return; }
+            }
+
+            var payload = {
+                number: $('.editGatePassInput[name="number"]').val(),
+                type: type,
+                remarks: $('.editGatePassInput[name="remarks"]').val() || null
+            };
+            var gpDate = $('.editGatePassInput[name="gatePassDate"]').val();
+            if (gpDate) payload.gatePassDate = gpDate;
+            if (returnDate) payload.returnDate = returnDate;
+
+            requestJson('/api/gate-passes/' + currentGatePassId, 'PUT', payload)
+                .then(function () {
+                    deleteItemsSequentially(deletedItemIds, 0, function () {
+                        saveItemsSequentially(currentGatePassId, items, 0, function () {
+                            loadGatePasses();
+                        });
+                    });
+                })
+                .catch(function (err) { console.error(err); showError('Unable to save gate pass.'); });
+        });
+
+        // ---- Print ----
+        $(document).on('click', '.printGatePass', function () { printGatePassDocument(); });
+    });
+</script>

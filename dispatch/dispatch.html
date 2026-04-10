@@ -1,0 +1,3031 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<script src="pages/lib/bootstrap3-typeahead.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .typeahead.dropdown-menu {
+        z-index: 1060 !important;
+        background: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        border-radius: 4px;
+        padding: 4px 0;
+        min-width: 250px;
+        width: 100%;
+        max-height: 260px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: absolute !important;
+        top: 100% !important;
+        left: 0 !important;
+    }
+
+    .typeahead.dropdown-menu li>a {
+        display: block;
+        padding: 8px 16px;
+        clear: both;
+        font-weight: 400;
+        line-height: 1.42857143;
+        color: #333;
+        white-space: nowrap;
+        text-decoration: none;
+    }
+
+    .typeahead.dropdown-menu li>a:hover {
+        background-color: #f5f5f5;
+        color: #262626;
+    }
+
+    .typeahead.dropdown-menu .active>a {
+        background-color: #2563eb;
+        color: #fff;
+    }
+
+    #allDispatchTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #allDispatchTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    .selectRecordBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    .dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+        position: absolute !important;
+        transform: none !important;
+        will-change: auto;
+        z-index: 1050;
+    }
+
+    .dropdown {
+        position: relative;
+    }
+
+    .form-group .dropdown {
+        width: 100%;
+    }
+
+    .dropdown-menu.show {
+        display: block;
+        top: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        min-width: 100%;
+        transform: translate3d(0px, 0px, 0px) !important;
+    }
+
+    .dropdown-menu .form-control {
+        border: 0.5px solid #ddd;
+    }
+
+    .dropdown-menu .form-control:focus {
+        border-color: #6c757d;
+    }
+
+    .dropdown-items-container {
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* Keep typeahead dropdown visible above tables */
+    #newRecordPanel .table-responsive,
+    #editRecordPanel .table-responsive {
+        overflow: visible !important;
+    }
+</style>
+<!-- allDispatchPanel.html  Start -->
+<div class="qa-white-panel">
+
+    <div class="row animated fadeInRight aasaanPanel" id="allRecordPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Release <small>Dispatch</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-sm btn-secondary newRecordBtn"><i data-lucide="plus"></i>
+                            New Release</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="table-responsive">
+                        <table id="allDispatchTable" class="table table-hover table-bordered dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Customer</th>
+                                    <th>EPO Number</th>
+                                    <th>EPO Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="dataTableRecordList" id="allVendorTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- allDispatchPanel.html  End -->
+
+
+
+
+
+
+
+    <!-- editDispatchPanel.html     Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRecordTitle"></span> <small>Release</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-default btn-sm printSlip" style="display: none;"><i
+                                data-lucide="printer"></i> Print Packing Slip </button>
+                        <button type="button" class="btn btn-secondary btn-sm finalizeBtn" style="display: none;"><i
+                                data-lucide="check"></i> Send to Dispatch Instruction </button>
+                        <button type="button" class="btn btn-secondary btn-sm submitForApproval"
+                            style="display: none;"><i data-lucide="check"></i> Submit For Approval </button>
+                        <button type="button" class="btn btn-secondary btn-sm acceptBtn" style="display: none;"><i
+                                data-lucide="check"></i> Accept </button>
+                        <button type="button" class="btn btn-default btn-sm rejectBtn" style="display: none;"><i
+                                data-lucide="x"></i> Reject </button>
+                        <button type="button" class="btn btn-secondary btn-sm generateInvoice" style="display: none;"><i
+                                data-lucide="check"></i> Generate Invoice </button>
+                        <button type="button" class="btn btn-secondary btn-sm openInvoice" style="display: none;"><i
+                                data-lucide="upload"></i> Open Invoice </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="viewDispatchObj" id="viewDispatchForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Customer</label>
+                                    <input type="text" class="form-control" id="viewCustomer" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="viewEpoNumber">EPO Number</label>
+                                    <input type="text" class="form-control" id="viewEpoNumber" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="viewEpoDate">EPO Date</label>
+                                    <input type="text" class="form-control" id="viewEpoDate" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Packing Type</label>
+                                    <input type="text" class="form-control" id="viewPackingType" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="viewContainerSize">Container Size</label>
+                                    <input type="text" class="form-control" id="viewContainerSize" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="viewInnerPackingLabelCode">Inner Packing Label Code</label>
+                                    <input type="text" class="form-control" id="viewInnerPackingLabelCode" readonly>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="form-group">
+                                    <label>Remarks</label>
+                                    <textarea rows="3" class="form-control" id="viewRemarks" readonly></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Product Release Items Section -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="table-responsive">
+                                    <table class="table  table-bordered" id="viewReleaseItemsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Batch Number</th>
+                                                <th>Mfg Date</th>
+                                                <th>Retest Date</th>
+                                                <th>Container No.</th>
+                                                <th>Seal No.</th>
+                                                <th>Gross Wt</th>
+                                                <th>Tare Wt</th>
+                                                <th>Net Wt</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="viewReleaseItemsTableBody">
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted">No items found</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Generation Modal -->
+    <div class="modal fade" id="invoiceGenerationModal" tabindex="-1" role="dialog" aria-labelledby="invoiceModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="invoiceModalLabel">
+                        <i class="ti ti-file-invoice"></i> Generate Invoice
+                    </h5>
+                    <button type="button" class="close closeInvoiceModal" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="invoiceGenerationError" class="alert alert-danger" style="display: none;"></div>
+                    <form id="invoiceGenerationForm">
+                        <!-- Customer Selection -->
+                        <div class="form-group">
+                            <label for="invoiceCustomerSearch">
+                                <i class="ti ti-user"></i> Search Customer <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="invoiceCustomerSearch"
+                                placeholder="Type customer name to search..." autocomplete="off">
+                            <small class="form-text text-muted">Type at least 3 characters to search</small>
+
+                            <!-- Customer Search Results -->
+                            <div id="invoiceCustomerResults" class="mt-2" style="max-height: 200px; overflow-y: auto;">
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Invoice Date -->
+                        <div class="form-group">
+                            <label for="invoiceDate">
+                                <i class="ti ti-calendar"></i> Invoice Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="invoiceDate">
+                        </div>
+
+                        <!-- Distance (approx) -->
+                        <div class="form-group">
+                            <label for="invoiceDistance">
+                                <i class="ti ti-route"></i> Distance (approx) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="invoiceDistance" min="0" step="0.01" required
+                                placeholder="Enter distance (e.g. in km)">
+                        </div>
+
+                        <!-- Invoice Details Preview -->
+                        <div class="alert alert-info">
+                            <h6><i class="ti ti-info-circle"></i> Invoice Details</h6>
+                            <p class="mb-1"><strong>Dispatch Number:</strong> <span id="modalDispatchNumber">-</span>
+                            </p>
+                            <p class="mb-1"><strong>Items to Invoice:</strong> <span id="modalItemCount">0</span></p>
+                            <p class="mb-0"><strong>Customer:</strong> <span id="modalCustomerName">-</span></p>
+                        </div>
+
+                        <!-- Invoice Notes -->
+                        <div class="form-group">
+                            <label for="invoiceNotes">
+                                <i class="ti ti-note"></i> Invoice Notes
+                            </label>
+                            <textarea class="form-control" id="invoiceNotesText" rows="3"
+                                placeholder="Add any additional notes for this invoice..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary closeInvoiceModal" data-dismiss="modal">
+                        <i class="ti ti-x"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="confirmGenerateInvoice">
+                        <i class="ti ti-check"></i> Generate Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Custom styles for invoice modal */
+        #invoiceCustomerResults .list-group-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #invoiceCustomerResults .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        #invoiceCustomerResults .list-group-item.active {
+            background-color: #1ab394;
+            border-color: #1ab394;
+            color: white;
+        }
+
+        #invoiceGenerationModal .modal-header {
+            background-color: #1ab394;
+            color: white;
+        }
+
+        #invoiceGenerationModal .modal-header .close {
+            color: white;
+            opacity: 0.8;
+        }
+
+        #invoiceGenerationModal .modal-header .close:hover {
+            opacity: 1;
+        }
+    </style>
+
+    <!-- editDispatchPanel.html     End -->
+
+
+
+
+    <!-- newDispatchpanel.html      Start -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small>Release</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i
+                                data-lucide="x"></i> Cancel </button>
+                        <button type="button" class="btn btn-secondary btn-sm newDispatchSaveBtn"><i
+                                data-lucide="check"></i>
+                            Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="dispatchObj" id="newDispatchForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group" style="position: relative;">
+                                    <label for="productionRequestSearch">Production Request</label>
+                                    <input type="text" id="productionRequestSearch" class="form-control"
+                                        placeholder="Search Production Request..." autocomplete="off">
+                                    <input type="hidden" name="productionRequest.id"
+                                        class="productionRequestId newRecordInput" />
+                                    <div id="productionRequestResults" class="list-group"
+                                        style="position: absolute; z-index: 1000; max-height: 200px; overflow-y: auto; display: none; width: 100%; background: #fff; border: 1px solid #e5e6e7;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Customer</label>
+                                    <input type="text" placeholder="search.." readonly autocomplete="off"
+                                        class="typeahead_3 form-control selectSearchInputAutoComplete" />
+                                    <input type="hidden" name="account.id"
+                                        class="selectSearchInputAutoCompleteId newRecordInput"
+                                        aria-description="sales/customer/search" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="quantity">Quantity</label>
+                                    <input type="text" class="form-control " name="quantity" id="quantity" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="transportCompany">EPO Number</label>
+                                    <input type="text" class="form-control newRecordInput" name="epoNumber" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="epoDate">EPO Date</label>
+                                    <input type="text" class="form-control newRecordInput" name="epoDate" id="epoDate"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Packing Type</label>
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="packingTypeBtn" aria-haspopup="true"
+                                            aria-expanded="false">
+                                            <span>--none--</span>
+                                        </button>
+                                        <div class="dropdown-menu w-100" aria-labelledby="packingTypeBtn">
+                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                            <a class="dropdown-item" href="#" data-value="Bag">Bag</a>
+                                            <a class="dropdown-item" href="#" data-value="Drum">Drum</a>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" class="newRecordInput" name="packingType"
+                                        id="packingTypeSelect" value="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="gateEntryNumber">Container Size</label>
+                                    <input type="text" class="form-control newRecordInput" name="containerSize">
+                                </div>
+                                <div class="form-group">
+                                    <label for="deliveryDriver">Inner Packing Label Code</label>
+                                    <input type="text" class="form-control newRecordInput" name="innerPackingLabelCode"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="form-group">
+                                    <label>Remarks</label>
+                                    <textarea rows="3" class="form-control newRecordInput" name="remarks"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <hr>
+
+                        <!-- Product Release Items Section -->
+                        <div class="row">
+                            <div class="col-md-12">
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group" style="position: relative;">
+                                            <label for="productSearch">Search Product</label>
+                                            <input type="text" placeholder="search.." class="form-control productSearch"
+                                                id="productSearch" readonly autocomplete="off" />
+                                            <input type="hidden" name="Product.Id" class="productId" />
+                                            <div id="productSearchResults" class="list-group"
+                                                style="position: absolute; z-index: 1000; max-height: 200px; overflow-y: auto; display: none; width: 100%; background: #fff; border: 1px solid #e5e6e7;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="productLotSelect">Select Batch/Lot</label>
+                                            <select class="form-control" id="productLotSelect" disabled>
+                                                <option value="">Select a product first</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row" id="addItemButtonRow" style="display: none;">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-primary btn-sm" id="addReleaseItemBtn">
+                                            <i class="ti ti-plus"></i> Add Release Item
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <br>
+
+                                <!-- Release Items Table -->
+                                <div class="table-responsive">
+                                    <table class="table  table-bordered" id="releaseItemsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Batch Number</th>
+                                                <th>Mfg Date</th>
+                                                <th>Retest Date</th>
+                                                <th>Drum No.</th>
+                                                <th>Seal No.</th>
+                                                <th>Gross Wt</th>
+                                                <th>Tare Wt</th>
+                                                <th>Net Wt</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="releaseItemsTableBody">
+                                            <tr>
+                                                <td colspan="10" class="text-center text-muted">No items added yet</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- newDispatchPanel.html      End -->
+
+
+
+</div>
+<script>
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+    }
+    // newDispatchPanel.js      Start
+
+
+    // Global variables
+    var recordList = []; // populated from REST API in allDispatchPanel
+    var selectedProduct = null;
+    var selectedLot = null;
+    var releaseItems = [];
+    var productSearchTimeout = null;
+    var products = []
+    var selectedProductionRequest = null;
+    var productionRequestSearchTimeout = null;
+    // Initialize the dispatch panel
+    function initializeDispatchPanel() {
+        setupEventListeners();
+        clearForm();
+    }
+
+    // Setup all event listeners
+    function setupEventListeners() {
+        // Custom Packing Type dropdown - matching vendors.html pattern
+        $(document).on('click', '#packingTypeBtn', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var $menu = $(this).next('.dropdown-menu');
+            $('.dropdown-menu').not($menu).removeClass('show');
+            $menu.toggleClass('show');
+        });
+
+        // Packing Type option click - simplified approach
+        $(document).on('click', '#packingTypeBtn + .dropdown-menu .dropdown-item', function (e) {
+            e.preventDefault();
+            var value = $(this).data('value');
+            var text = $(this).text();
+            $('#packingTypeBtn span').text(text);
+            $('#packingTypeSelect').val(value);
+            $(this).addClass('active').siblings().removeClass('active');
+            $(this).closest('.dropdown-menu').removeClass('show');
+        });
+        // New Record button
+        $('.newRecordBtn').on('click', function () {
+            $('#allRecordPanel').hide();
+            $('#newRecordPanel').show();
+            clearForm();
+        });
+
+        // Production Request search
+        $('#productionRequestSearch').on('input', function () {
+            clearTimeout(productionRequestSearchTimeout);
+            var searchTerm = $(this).val().trim();
+
+            if (searchTerm.length >= 2) {
+                productionRequestSearchTimeout = setTimeout(function () {
+                    searchProductionRequests(searchTerm);
+                }, 300);
+            } else {
+                $('#productionRequestResults').hide();
+            }
+        });
+
+        // Product search
+        $('#productSearch').on('input', function () {
+            clearTimeout(productSearchTimeout);
+            var searchTerm = $(this).val().trim();
+
+            if (searchTerm.length >= 2) {
+                productSearchTimeout = setTimeout(function () {
+                    searchProducts(searchTerm);
+                }, 300);
+            } else {
+                $('#productSearchResults').hide();
+            }
+        });
+
+        // Close search results when clicking outside
+        $(document).on('click', function (e) {
+            if (!$(e.target).closest('#productSearch, #productSearchResults, #productionRequestSearch, #productionRequestResults').length) {
+                $('#productSearchResults').hide();
+                $('#productionRequestResults').hide();
+            }
+        });
+
+        // Initialize daterangepicker for EPO Date (safe check in case lib loads late)
+        if ($.fn.daterangepicker) {
+            $('#epoDate').daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                locale: {
+                    format: 'DD/MM/YYYY'
+                }
+            });
+        }
+        // Product lot selection - directly add item when lot is selected
+        $('#productLotSelect').on('change', function () {
+            var lotId = $(this).val();
+            if (lotId) {
+                loadLotDetails(lotId);
+            } else {
+                clearLotSelection();
+            }
+        });
+
+        // Add release item button
+        $('#addReleaseItemBtn').on('click', function () {
+            addReleaseItem();
+        });
+
+        // Save button
+        $('.newDispatchSaveBtn').on('click', function () {
+            saveDispatch();
+        });
+
+        // Cancel button
+        $('.newRecordCancelBtn').on('click', function () {
+            cancelDispatch();
+        });
+    }
+
+    // ============================================================
+    // NEW REST API: Search Production Requests
+    // OLD: POST /data/ProductionRequest/list with conditions/logic/fields
+    // NEW: GET /api/production-requests/search?number=xxx (try number first, then name)
+    // ============================================================
+    function searchProductionRequests(searchTerm) {
+        var upperTerm = searchTerm.toUpperCase();
+        // Try search by number first
+        JSUTIL.callAJAXGet('/api/production-requests/search?number=' + encodeURIComponent(upperTerm), function (response) {
+            var results = response || [];
+            if (!Array.isArray(results)) results = [results];
+
+            if (results.length > 0) {
+                displayProductionRequestResults(results);
+            } else {
+                // Fallback: try search by name
+                JSUTIL.callAJAXGet('/api/production-requests/search?name=' + encodeURIComponent(upperTerm), function (nameResponse) {
+                    var nameResults = nameResponse || [];
+                    if (!Array.isArray(nameResults)) nameResults = [nameResults];
+                    displayProductionRequestResults(nameResults);
+                });
+            }
+        });
+    }
+
+    // Display Production Request search results
+    function displayProductionRequestResults(list) {
+        var $resultsContainer = $('#productionRequestResults');
+        $resultsContainer.empty();
+
+        if (!list || !list.length) {
+            $resultsContainer.html('<a class="list-group-item">No production requests found</a>');
+        } else {
+            $.each(list, function (index, pr) {
+                var number = pr.number || pr.Number || '';
+                var product = pr.product || pr.Product || {};
+                var productName = product.name || product.Name || '';
+                var text = number;
+                if (productName) {
+                    text += ' - ' + productName;
+                }
+
+                var $item = $('<a href="javascript:void(0);" class="list-group-item list-group-item-action"></a>')
+                    .text(text || 'Production Request')
+                    .css({ background: '#fff', color: '#333' })
+                    .data('productionRequest', pr)
+                    .on('click', function () {
+                        selectProductionRequest($(this).data('productionRequest'));
+                        $resultsContainer.hide();
+                    });
+                $resultsContainer.append($item);
+            });
+        }
+
+        $resultsContainer.show();
+    }
+
+    // When a Production Request is chosen, autofill dependent fields and lock them
+    function selectProductionRequest(pr) {
+        selectedProductionRequest = pr;
+
+        var prId = pr.id || pr.Id || '';
+        var prNumber = pr.number || pr.Number || '';
+
+        $('.productionRequestId').val(prId);
+        // Reflect the chosen Production Request number in the search box for clarity
+        $('#productionRequestSearch').val(prNumber);
+
+        // Customer
+        var customer = pr.customer || pr.Customer || {};
+        var customerName = customer.name || customer.Name || '';
+        var customerId = customer.id || customer.Id || '';
+        $('.selectSearchInputAutoComplete').val(customerName).prop('readonly', true);
+        $('.selectSearchInputAutoCompleteId').val(customerId);
+
+        // EPO info
+        var epoNumber = pr.epoNumber || pr.EpoNumber || '';
+        $('input[name="epoNumber"]').val(epoNumber).prop('readonly', true);
+
+        var epoDateRaw = pr.epoDate || pr.EpoDate || '';
+        var epoDate = epoDateRaw ? JSUTIL.getDate(epoDateRaw) : '';
+        $('input[name="epoDate"]').val(epoDate).prop('readonly', true);
+
+        // Inner Packing Label Code
+        var innerCode = pr.name || pr.name || '';
+        $('input[name="innerPackingLabelCode"]').val(innerCode).prop('readonly', true);
+
+        // Product
+        var product = pr.product || pr.Product || {};
+        var productId = product.id || product.Id || '';
+        var productName = product.name || product.Name || '';
+        var productNumber = product.number || product.Number || '';
+        var productLabel = (productNumber && productName) ? (productNumber + ' - ' + productName) : (productName || productNumber);
+
+        selectedProduct = {
+            id: productId,
+            name: productName,
+            number: productNumber
+        };
+
+        $('.productSearch').val(productLabel).prop('readonly', true);
+        $('.productId').val(productId).trigger('change');
+        var originalquantity = pr.quantity
+        calculateRemainingQuantity(pr.id, originalquantity);
+        // Reset items and load batches for the chosen product
+        releaseItems = [];
+        updateReleaseItemsTable();
+        if (productId) {
+            loadProductLots(productId);
+        } else {
+            clearLotSelection();
+        }
+    }
+
+    // ============================================================
+    // NEW REST API: Calculate remaining quantity
+    // OLD: POST /data/ProductReleaseItem/list with conditions
+    // NEW: GET /api/product-release-items?productionRequestId=xxx then client-side sum
+    // ============================================================
+    function calculateRemainingQuantity(productionRequestId, originalQuantity) {
+        JSUTIL.callAJAXGet('/api/product-release-items?productionRequestId=' + encodeURIComponent(productionRequestId), function (response) {
+            console.log('release item call back', response);
+            var totalDispatchedWeight = 0;
+
+            if (response && response.length > 0) {
+                response.forEach(function (item) {
+                    totalDispatchedWeight += parseFloat(item.netWeight || 0);
+                });
+            }
+
+            var remainingQuantity = originalQuantity - totalDispatchedWeight;
+            $('#quantity').val(remainingQuantity.toFixed(2));
+        });
+    }
+
+    // ============================================================
+    // NEW REST API: Load Product Lots
+    // OLD: POST /data/ProductLot/list with conditions/logic/fields
+    // NEW: GET /api/product-lots/search?productId=xxx then client-side filter quantity > 0
+    // ============================================================
+    function loadProductLots(productId) {
+        JSUTIL.callAJAXGet('/api/product-lots/search?productId=' + encodeURIComponent(productId), function (response) {
+            console.log('res', response);
+            // Client-side filter: only lots with quantity > 0
+            var filtered = (response || []).filter(function (lot) {
+                return (lot.quantity || 0) > 0;
+            });
+            populateProductLots(filtered);
+        });
+    }
+
+    // Populate the product lot dropdown
+    function populateProductLots(lots) {
+        var $lotSelect = $('#productLotSelect');
+        $lotSelect.empty().append('<option value="">Select a batch/lot</option>');
+
+        if (lots && lots.length > 0) {
+            $.each(lots, function (index, lot) {
+                var displayText = lot.batchNumber + ' (Qty: ' + lot.quantity + ')';
+                $lotSelect.append($('<option></option>')
+                    .attr('value', lot.id)
+                    .text(displayText)
+                    .data('lot', lot));
+            });
+            $lotSelect.prop('disabled', false);
+        } else {
+            $lotSelect.append('<option value="">No lots available</option>');
+            JSUTIL.buildErrorModal('No lots found for this product');
+        }
+    }
+
+    // Load lot details when a lot is selected
+    function loadLotDetails(lotId) {
+        var $selectedOption = $('#productLotSelect option:selected');
+        selectedLot = $selectedOption.data('lot');
+
+        if (selectedLot) {
+            // Show add button
+            $('#addItemButtonRow').show();
+        }
+    }
+
+    // Clear lot selection
+    function clearLotSelection() {
+        selectedLot = null;
+        $('#addItemButtonRow').hide();
+    }
+
+    // Returns the sum of NetWeight across every current row, optionally skipping one index
+    function getTotalNetWeightOfAllItems(excludeIndex) {
+        var total = 0;
+        $.each(releaseItems, function (i, item) {
+            if (i !== excludeIndex) {
+                total += parseFloat(item.NetWeight) || 0;
+            }
+        });
+        return total;
+    }
+
+    // Validates a candidate net-weight for a given row against the Production Request
+    // remaining quantity shown in #quantity.  Returns true when the value is allowed.
+    function validateAgainstRemainingQuantity(candidateNetWeight, rowIndex) {
+        var remaining = parseFloat($('#quantity').val()) || 0;
+        var otherTotal = getTotalNetWeightOfAllItems(rowIndex);
+        var newTotal = otherTotal + candidateNetWeight;
+
+        if (newTotal > remaining) {
+            var maxAllowed = remaining - otherTotal;
+            JSUTIL.buildErrorModal(
+                'Total net weight (' + newTotal.toFixed(2) + ' kg) would exceed the remaining ' +
+                'Production Request quantity (' + remaining.toFixed(2) + ' kg).' +
+                '\nMaximum allowed for this item: ' + (maxAllowed > 0 ? maxAllowed.toFixed(2) : '0.00') + ' kg'
+            );
+            return false;   // reject
+        }
+        return true;        // allow
+    }
+
+    // Calculate total net weight already allocated for a specific batch
+    function getTotalAllocatedNetWeightForBatch(batchNumber, excludeIndex) {
+        var total = 0;
+        $.each(releaseItems, function (index, item) {
+            if (item.BatchNumber === batchNumber && index !== excludeIndex) {
+                total += parseFloat(item.NetWeight) || 0;
+            }
+        });
+        return total;
+    }
+
+    // Add release item to the table - with editable quantity and new fields
+    function addReleaseItem() {
+        if (!selectedProduct) {
+            JSUTIL.buildErrorModal('Please select a product first');
+            return;
+        }
+
+        if (!selectedLot) {
+            JSUTIL.buildErrorModal('Please select a batch/lot');
+            return;
+        }
+        console.log('asd', selectedLot, 'pro', selectedProduct)
+        // Calculate already allocated net weight for this batch
+        var alreadyAllocated = getTotalAllocatedNetWeightForBatch(selectedLot.batchNumber, -1);
+        var availableQuantity = selectedLot.quantity - alreadyAllocated;
+
+        // Check if there's any quantity left
+        if (availableQuantity <= 0) {
+            JSUTIL.buildErrorModal('This batch has been fully allocated. Total batch quantity: ' + selectedLot.quantity + ' kg');
+            return;
+        }
+
+        // Create release item object with all fields
+        var releaseItem = {
+            Product: selectedProduct,
+            ProductId: selectedProduct.id,
+            ProductLot: selectedLot,
+            ProductLotId: selectedLot.id,
+            BatchNumber: selectedLot.batchNumber,
+            ManufacturingDate: selectedLot.manufacturingDate || '',
+            RetestDate: selectedLot.retestDate || '',
+            ContainerNumber: '',
+            GrossWeight: '',
+            TareWeight: '',
+            NetWeight: '',
+            SealNo: '',
+            ProductReceiptItemId: selectedLot.productReceiptItemId || null
+        };
+
+        // Add to array
+        releaseItems.push(releaseItem);
+
+        // Update table
+        updateReleaseItemsTable();
+
+        // Clear lot selection but keep the Production Request product fixed
+        clearLotSelection();
+        $('#productLotSelect').val('');
+    }
+
+    // Update the release items table
+    function updateReleaseItemsTable() {
+        var $tbody = $('#releaseItemsTableBody');
+        $tbody.empty();
+
+        if (releaseItems.length === 0) {
+            $tbody.append('<tr><td colspan="9" class="text-center text-muted">No items added yet</td></tr>');
+            return;
+        }
+
+        $.each(releaseItems, function (index, item) {
+            var $row = $('<tr></tr>');
+
+            // Product name
+            $row.append($('<td></td>').text(item.Product.name));
+
+            // Batch number
+            $row.append($('<td></td>').text(item.BatchNumber));
+
+            // Manufacturing Date (display only, from ProductLot)
+            var mfgDate = item.ManufacturingDate ? JSUTIL.getDate(item.ManufacturingDate) : '-';
+            $row.append($('<td></td>').text(mfgDate));
+
+            // Retest Date (display only, from ProductLot)
+            var retestDate = item.RetestDate ? JSUTIL.getDate(item.RetestDate) : '-';
+            $row.append($('<td></td>').text(retestDate));
+
+            // Container Number (editable)
+            var $containerInput = $('<input type="text" class="form-control input-sm">')
+                .val(item.ContainerNumber)
+                .on('change', function () {
+                    item.ContainerNumber = $(this).val();
+                });
+            $row.append($('<td></td>').append($containerInput));
+            var $sealNoInput = $('<input type="text" class="form-control input-sm">')
+                .val(item.SealNo)
+                .on('change', function () {
+                    item.SealNo = $(this).val();
+                });
+            $row.append($('<td></td>').append($sealNoInput));
+            // Gross Weight (editable)
+            var $grossWeightInput = $('<input type="number" step="0.01" class="form-control input-sm">')
+                .val(item.GrossWeight)
+                .on('change', function () {
+                    item.GrossWeight = parseFloat($(this).val()) || 0;
+                    calculateNetWeight(index);
+                });
+            $row.append($('<td></td>').append($grossWeightInput));
+
+            // Tare Weight (editable)
+            var $tareWeightInput = $('<input type="number" step="0.01" class="form-control input-sm">')
+                .val(item.TareWeight)
+                .on('change', function () {
+                    item.TareWeight = parseFloat($(this).val()) || 0;
+                    calculateNetWeight(index);
+                });
+            $row.append($('<td></td>').append($tareWeightInput));
+
+            // Net Weight (auto-calculated, but editable with validation)
+            var $netWeightInput = $('<input type="number" step="0.01" class="form-control input-sm">')
+                .val(item.NetWeight)
+                .on('change', function () {
+                    var newNetWeight = parseFloat($(this).val()) || 0;
+                    var lotQty = item.ProductLot.quantity;
+
+                    // Calculate total allocated for this batch (excluding current item)
+                    var otherAllocated = getTotalAllocatedNetWeightForBatch(item.BatchNumber, index);
+                    var maxAllowed = lotQty - otherAllocated;
+
+                    if (newNetWeight > maxAllowed) {
+                        JSUTIL.buildErrorModal('Total net weight for batch ' + item.BatchNumber + ' cannot exceed ' + lotQty + ' kg' +
+                            '.\nAlready allocated: ' + otherAllocated.toFixed(2) + ' kg' +
+                            '\nMaximum allowed for this item: ' + maxAllowed.toFixed(2) + ' kg');
+                        $(this).val(item.NetWeight);
+                        return;
+                    }
+
+                    // Check against Production Request remaining quantity
+                    if (!validateAgainstRemainingQuantity(newNetWeight, index)) {
+                        $(this).val(item.NetWeight); // revert input to last valid value
+                        return;
+                    }
+
+                    item.NetWeight = newNetWeight;
+                });
+            $row.append($('<td></td>').append($netWeightInput));
+
+            // Action buttons
+            var $actionCell = $('<td></td>');
+            var $deleteBtn = $('<button class="btn btn-default btn-xs"></button>')
+                .html('<i class="ti ti-trash"></i>')
+                .on('click', function () {
+                    removeReleaseItem(index);
+                });
+            $actionCell.append($deleteBtn);
+            $row.append($actionCell);
+
+            $tbody.append($row);
+        });
+    }
+
+    // Calculate net weight based on gross and tare weights
+    function calculateNetWeight(index) {
+        var item = releaseItems[index];
+        var previousNetWeight = parseFloat(item.NetWeight) || 0;
+        var grossWeight = parseFloat(item.GrossWeight) || 0;
+        var tareWeight = parseFloat(item.TareWeight) || 0;
+        var newNetWeight = grossWeight - tareWeight;
+
+        // Check against Production Request remaining quantity before committing
+        if (!validateAgainstRemainingQuantity(newNetWeight, index)) {
+            // Revert to previous valid net weight so the table re-renders correctly
+            item.NetWeight = previousNetWeight;
+            updateReleaseItemsTable();
+            return;
+        }
+
+        item.NetWeight = newNetWeight;
+
+        // Update the input field
+        updateReleaseItemsTable();
+    }
+
+    // Remove release item from array
+    function removeReleaseItem(index) {
+        if (confirm('Are you sure you want to remove this release item?')) {
+            releaseItems.splice(index, 1);
+            updateReleaseItemsTable();
+        }
+    }
+
+    // Clear product selection
+    function clearProductSelection() {
+        selectedProduct = null;
+        selectedLot = null;
+        $('.productSearch').val('')
+        $('.productId').val('')
+        $('#productLotSelect').empty().append('<option value="">Select a product first</option>').prop('disabled', true);
+        $('#addItemButtonRow').hide();
+    }
+
+    // ============================================================
+    // NEW REST API: Generate next number for ProductRelease
+    // OLD: POST /data/ProductRelease/create_with_sequence?field=Number
+    // NEW: GET /api/product-releases to get last record, increment number, then POST /api/product-releases
+    // ============================================================
+    function generateNextNumber(allRecords, prefix) {
+        prefix = prefix || 'PR';
+        var maxNum = 0;
+        (allRecords || []).forEach(function (rec) {
+            var num = rec.number || '';
+            // Extract numeric part from the number string
+            var match = num.match(/(\d+)$/);
+            if (match) {
+                var n = parseInt(match[1], 10);
+                if (n > maxNum) maxNum = n;
+            }
+        });
+        var nextNum = maxNum + 1;
+        return prefix + String(nextNum).padStart(5, '0');
+    }
+
+    // Save dispatch with ProductRelease and ProductReleaseItems
+    function saveDispatch() {
+        // Validate all items before saving
+        var validationError = validateAllBatchNetWeights();
+        if (validationError) {
+            JSUTIL.buildErrorModal('Validation Error:\n' + validationError);
+            return;
+        }
+
+        var payload = JSUTIL.buildFormDataJSON('newRecordInput');
+        var productionRequestId = $('.productionRequestId').val() || (selectedProductionRequest ? (selectedProductionRequest.id || selectedProductionRequest.Id) : '');
+        if (productionRequestId) {
+            // Explicitly attach the production request reference so it is saved
+            payload.productionRequest = { id: productionRequestId };
+        }
+
+        // Fix epoDate: buildFormDataJSON picks up display format (DD/MM/YYYY),
+        // convert it back to ISO format for the API
+        if (payload.epoDate && selectedProductionRequest) {
+            // Use original ISO date from the production request
+            var originalEpoDate = selectedProductionRequest.epoDate || selectedProductionRequest.EpoDate || '';
+            if (originalEpoDate) {
+                payload.epoDate = originalEpoDate;
+            } else {
+                // Fallback: parse DD/MM/YYYY to ISO
+                var parts = String(payload.epoDate).split('/');
+                if (parts.length === 3) {
+                    payload.epoDate = new Date(parts[2], parts[1] - 1, parts[0], 5, 30, 0).toISOString();
+                }
+            }
+        } else if (payload.epoDate) {
+            // Fallback: parse DD/MM/YYYY to ISO
+            var parts = String(payload.epoDate).split('/');
+            if (parts.length === 3) {
+                payload.epoDate = new Date(parts[2], parts[1] - 1, parts[0], 5, 30, 0).toISOString();
+            }
+        }
+        payload.processStatus = "New";
+        payload.type = "Dispatch";
+        var remainingQty = parseFloat($('#quantity').val()) || 0;
+        var totalNetWeight = 0;
+        $.each(releaseItems, function (i, item) {
+            totalNetWeight += parseFloat(item.NetWeight) || 0;
+        });
+        if (totalNetWeight.toFixed(2) === remainingQty.toFixed(2)) {
+            payload.instructions = 'Last Dispatch';
+        }
+
+        // Fetch all product releases to generate next number, then create via REST API
+        JSUTIL.callAJAXGet('/api/product-releases', function (allReleases) {
+            payload.number = generateNextNumber(allReleases, 'PR');
+            console.log('aaaaaa', payload);
+
+            JSUTIL.callAJAXPost('/api/product-releases', JSON.stringify(payload), function (productRelease) {
+                // Now create ProductReleaseItems one by one
+                saveProductReleaseItems(productRelease.id);
+            });
+        });
+    }
+
+    // Validate that total net weights for each batch don't exceed batch totals
+    function validateAllBatchNetWeights() {
+        var batchTotals = {};
+
+        // Calculate totals for each batch
+        $.each(releaseItems, function (index, item) {
+            var batchNumber = item.BatchNumber;
+            if (!batchTotals[batchNumber]) {
+                batchTotals[batchNumber] = {
+                    total: 0,
+                    max: item.ProductLot.quantity
+                };
+            }
+            batchTotals[batchNumber].total += parseFloat(item.NetWeight) || 0;
+        });
+
+        // Check if any batch exceeds its maximum
+        for (var batchNumber in batchTotals) {
+            var data = batchTotals[batchNumber];
+            if (data.total > data.max) {
+                return 'Batch ' + batchNumber + ' total net weight (' + data.total.toFixed(2) + ' kg) exceeds available quantity (' + data.max + ' kg)';
+            }
+        }
+
+        return null; // No errors
+    }
+
+    // ============================================================
+    // NEW REST API: Save ProductReleaseItems one by one
+    // OLD: POST /data/ProductReleaseItem/create_multiple
+    // NEW: POST /api/product-release-items (one at a time, sequentially)
+    // ============================================================
+    function saveProductReleaseItems(productReleaseId) {
+        var itemsToCreate = [];
+
+        $.each(releaseItems, function (index, item) {
+            itemsToCreate.push({
+                productRelease: { id: productReleaseId },
+                product: { id: item.ProductId || (item.Product && item.Product.id) || (item.Product && item.Product.Id) },
+                productLot: { id: item.ProductLotId || (item.ProductLot ? item.ProductLot.id : null) },
+                productReceiptItem: item.ProductReceiptItemId ? { id: item.ProductReceiptItemId } : null,
+                batchNumber: item.BatchNumber,
+                manufacturingDate: item.ManufacturingDate || null,
+                retestDate: item.RetestDate || null,
+                containerNumber: item.ContainerNumber || null,
+                grossWeight: item.GrossWeight || null,
+                tareWeight: item.TareWeight || null,
+                netWeight: item.NetWeight || null,
+                remarks: item.SealNo || '-'
+            });
+        });
+
+        // Create items one by one sequentially
+        function createItemSequentially(idx) {
+            if (idx >= itemsToCreate.length) {
+                location.reload();
+                return;
+            }
+
+            JSUTIL.callAJAXPost('/api/product-release-items', JSON.stringify(itemsToCreate[idx]), function (response) {
+                console.log('Created release item:', idx, response);
+                createItemSequentially(idx + 1);
+            });
+        }
+
+        if (itemsToCreate.length === 0) {
+            location.reload();
+            return;
+        }
+
+        createItemSequentially(0);
+    }
+
+    // Cancel dispatch creation
+    function cancelDispatch() {
+        if (releaseItems.length > 0) {
+            if (!confirm('You have unsaved release items. Are you sure you want to cancel?')) {
+                return;
+            }
+        }
+
+        clearForm();
+        $('#newRecordPanel').hide();
+        $('#allRecordPanel').show();
+    }
+
+    // Clear the entire form
+    function clearForm() {
+        $('#newDispatchForm')[0].reset();
+        releaseItems = [];
+        selectedProduct = null;
+        selectedLot = null;
+        selectedProductionRequest = null;
+
+        $('#productionRequestSearch').val('');
+        $('.productionRequestId').val('');
+
+        // Keep auto-filled fields read-only but clear their values
+        $('.selectSearchInputAutoComplete').prop('readonly', true).val('');
+        $('.selectSearchInputAutoCompleteId').val('');
+        $('input[name="epoNumber"]').prop('readonly', true).val('');
+        $('input[name="epoDate"]').prop('readonly', true).val('');
+        $('input[name="innerPackingLabelCode"]').prop('readonly', true).val('');
+        $('.productSearch').prop('readonly', true).val('');
+        $('.productId').val('');
+        $('#productionRequestResults').hide();
+
+        clearProductSelection();
+        updateReleaseItemsTable();
+
+        $('#addItemButtonRow').hide();
+    }
+
+    // ============================================================
+    // NEW REST API: Load products for typeahead
+    // OLD: POST /data/Product/list with conditions/logic/fields
+    // NEW: GET /api/products then client-side filter type = 'Finished Goods'
+    // ============================================================
+    $(document).ready(function () {
+        initializeDispatchPanel();
+        var $productSearchInput = $('.productSearch');
+        var $productIdInput = $('.productId');
+
+        JSUTIL.callAJAXGet('/api/products', function (res) {
+            console.log(res);
+            // Client-side filter: only Finished Goods
+            products = (res || []).filter(function (p) {
+                return (p.type || '') === 'Finished Goods';
+            });
+            initProductSearch(products, $productSearchInput, $productIdInput);
+        });
+
+        $('.productId').on('change', function () {
+            var productId = $(this).val();
+            console.log('Product ID changed:', productId);
+            var matchedProduct = products.find(v => v.id == productId);
+            if (matchedProduct) {
+                selectedProduct = {
+                    id: matchedProduct.id || matchedProduct.Id,
+                    name: matchedProduct.name || matchedProduct.Name || '',
+                    number: matchedProduct.number || matchedProduct.Number || ''
+                };
+            } else if (selectedProductionRequest && productId) {
+                var prProduct = (selectedProductionRequest.product || selectedProductionRequest.Product || {});
+                selectedProduct = {
+                    id: productId,
+                    name: prProduct.name || prProduct.Name || '',
+                    number: prProduct.number || prProduct.Number || ''
+                };
+            } else {
+                selectedProduct = null;
+            }
+            if (productId) {
+                // Load product lots when a product is selected
+                loadProductLots(productId);
+            }
+        });
+    });
+
+
+    function initProductSearch(productList, $searchInput, $hiddenInput) {
+        if (!Array.isArray(productList) || !productList.length) {
+            return;
+        }
+        $searchInput = $searchInput || $('.productSearch');
+        $hiddenInput = $hiddenInput || $('.productId');
+
+        var mappedProducts = productList.map(function (p) {
+            var id = p.Id || p.id;
+            var name = p.Name || p.name || '';
+            var number = p.Number || p.number || '';
+            var text = number && name ? number + ' - ' + name : (name || number);
+
+            return {
+                id: id,
+                text: text,
+                name: name,
+                number: number,
+                search: (name + ' ' + number).toLowerCase()
+            };
+        });
+
+        // Use typeahead if available (loaded from pages/lib/bootstrap3-typeahead.min.js)
+        if ($.fn && typeof $.fn.typeahead === 'function') {
+            try { $searchInput.typeahead('destroy'); } catch (e) { /* ignore */ }
+
+            $searchInput.typeahead({
+                source: function (query, process) {
+                    var q = (query || '').toLowerCase();
+                    var matches = mappedProducts
+                        .filter(function (item) { return item.search.indexOf(q) !== -1; })
+                        .map(function (item) { return item.text; });
+                    process(matches);
+                },
+                afterSelect: function (selectedText) {
+                    var chosen = mappedProducts.find(function (item) { return item.text === selectedText; });
+                    var $targetHidden = $hiddenInput.length ? $hiddenInput : this.$element.closest('.form-group').find('.productId');
+                    $targetHidden.val(chosen && chosen.id ? chosen.id : '').trigger('change');
+                }
+            });
+        } else {
+            // Fallback: custom dropdown search
+            var $resultsContainer = $('#productSearchResults');
+
+            $searchInput.off('input.productSearch').on('input.productSearch', function () {
+                var q = ($(this).val() || '').toLowerCase().trim();
+                $resultsContainer.empty();
+
+                if (q.length < 1) { $resultsContainer.hide(); return; }
+
+                var matches = mappedProducts.filter(function (item) {
+                    return item.search.indexOf(q) !== -1;
+                });
+
+                if (matches.length === 0) {
+                    $resultsContainer.html('<a class="list-group-item disabled">No products found</a>');
+                } else {
+                    $.each(matches, function (i, item) {
+                        var $item = $('<a href="javascript:void(0);" class="list-group-item list-group-item-action"></a>')
+                            .text(item.text)
+                            .css({ background: '#fff', color: '#333', cursor: 'pointer' })
+                            .on('click', function () {
+                                $searchInput.val(item.text);
+                                var $targetHidden = $hiddenInput.length ? $hiddenInput : $searchInput.closest('.form-group').find('.productId');
+                                $targetHidden.val(item.id).trigger('change');
+                                $resultsContainer.hide();
+                            });
+                        $resultsContainer.append($item);
+                    });
+                }
+                $resultsContainer.show();
+            });
+
+            $(document).off('click.productSearchClose').on('click.productSearchClose', function (e) {
+                if (!$(e.target).closest('#productSearch, #productSearchResults').length) {
+                    $resultsContainer.hide();
+                }
+            });
+        }
+
+        // Keep id in sync if the user manually types/clears the search field
+        $searchInput.on('blur', function () {
+            setTimeout(function () {
+                var currentText = ($searchInput.val() || '').trim();
+                var match = mappedProducts.find(function (item) { return item.text === currentText; });
+                var $targetHidden = $hiddenInput.length ? $hiddenInput : $searchInput.closest('.form-group').find('.productId');
+                $targetHidden.val(match && match.id ? match.id : '');
+            }, 200);
+        });
+    }
+
+    // newDispatchPanel.js      End
+
+
+
+
+
+
+    // editDispatchPanel.js     Start
+
+    /**
+     * editDispatchPanel.js
+     * 
+     * Handles the dispatch panel functionality including:
+     * - Viewing and editing dispatch/product release records
+     * - Finalizing dispatches and updating inventory
+     * - Generating invoices from dispatches
+     * 
+     * IMPORTANT: When status changes to "Dispatch Instruction":
+     * 1. ProductLot.quantity and ProductLot.quantityOnHand are reduced by the dispatched amount
+     * 2. Product.quantityOnHand is reduced by the dispatched amount
+     * 3. ProductTransaction records are created to track the inventory movement
+     */
+
+    var currentDispatchId = '';
+    var currentDispatchData = {};
+    var currentReleaseItems = [];
+    var selectedCustomerForInvoice = null;
+    var selectedContactForInvoice = null;
+    var currentDispatchInstruction = null;
+    function showInvoiceModalError(message) {
+        $('#invoiceGenerationError').text(message || '').show();
+    }
+    function clearInvoiceModalError() {
+        $('#invoiceGenerationError').hide().text('');
+    }
+
+    $('#allVendorTable').on('click', '.selectRecordBtn', function () {
+        var id = $(this).closest('tr').data('id');
+        currentDispatchId = Number(id);
+
+        var currentDispatch = recordList.find(function (r) {
+            return r.id === currentDispatchId;
+        });
+
+        if (!currentDispatch) {
+            console.error('Could not find dispatch in recordList with ID:', currentDispatchId);
+            closeEditDispatchPanel();
+            return;
+        }
+
+        currentDispatchData = currentDispatch;
+
+        $('#editRecordPanel').show();
+        $('#allRecordPanel').hide();
+
+        loadDispatchData();
+    });
+
+    $('.editRecordCancelBtn').on('click', function () {
+        closeEditDispatchPanel();
+    });
+
+    $('.printSlip').on('click', function () {
+        printPackingSlips();
+    });
+
+    $('.generateInvoice').on('click', function () {
+        openInvoiceGenerationModal();
+    });
+
+    function openInvoiceGenerationModal() {
+        if (!currentDispatchData) {
+            showError('No dispatch data found');
+            return;
+        }
+
+
+
+        clearInvoiceModalError();
+        $('#invoiceCustomerSearch').val('');
+        selectedCustomerForInvoice = null;
+        $('#invoiceCustomerResults').empty();
+
+        var today = new Date().toISOString().split('T')[0];
+        $('#invoiceDate').val(today);
+        $('#invoiceDistance').val('');
+
+        $('#modalDispatchNumber').text(currentDispatchData.number || 'N/A');
+        $('#modalItemCount').text(currentReleaseItems.length || 0);
+        $('#modalCustomerName').text(currentDispatchData.account ? currentDispatchData.account.name : 'N/A');
+
+        if (currentDispatchData.account && currentDispatchData.account.id) {
+            selectedCustomerForInvoice = {
+                id: currentDispatchData.account.id,
+                name: currentDispatchData.account.name
+            };
+            $('#invoiceCustomerSearch').val(currentDispatchData.account.name);
+        }
+
+        var defaultNotes = `Generated from Dispatch - Number: ${currentDispatchData.number || 'N/A'}`;
+        if (currentDispatchData.epoNumber) {
+            defaultNotes += `\nEPO Number: ${currentDispatchData.epoNumber}`;
+        }
+        $('#invoiceNotesText').val(defaultNotes);
+
+        JSUTIL.callAJAXGet("/api/account/" + selectedCustomerForInvoice.id + "/details", function (res) {
+            console.log("Customer Details: ", res);
+            selectedContactForInvoice = res.contacts[0].id;
+        })
+
+        // Show modal (safe fallback if Bootstrap modal not available)
+        if ($.fn.modal) {
+            $('#invoiceGenerationModal').modal('show');
+        } else {
+            $('#invoiceGenerationModal').addClass('show').css('display', 'block');
+            $('body').addClass('modal-open');
+            if (!$('.modal-backdrop').length) {
+                $('body').append('<div class="modal-backdrop fade show"></div>');
+            }
+        }
+    }
+
+    $('#invoiceCustomerSearch').on('keyup', function () {
+        var searchParam = $('#invoiceCustomerSearch').val();
+        if (searchParam.length > 2) {
+            searchCustomerForInvoice();
+        } else {
+            $('#invoiceCustomerResults').empty();
+        }
+    });
+
+    // ============================================================
+    // NEW REST API: Customer search for invoice
+    // OLD: GET /sales/customer/search?searchParam=xxx
+    // NEW: GET /data/Account/search?type=Customer&search=xxx
+    // ============================================================
+    function searchCustomerForInvoice() {
+        var searchParam = $('#invoiceCustomerSearch').val();
+        JSUTIL.callAJAXGet('/data/Account/search?type=Customer&search=' + encodeURIComponent(searchParam), function (customerResponse) {
+            afterCustomerSearchForInvoice(customerResponse);
+        });
+    }
+
+    function afterCustomerSearchForInvoice(customerResponse) {
+        var $resultsDiv = $('#invoiceCustomerResults');
+        $resultsDiv.empty();
+
+        if (!customerResponse || customerResponse.length === 0) {
+            $resultsDiv.html('<p class="text-muted">No customers found</p>');
+            return;
+        }
+
+        var $resultsList = $('<div class="list-group"></div>');
+
+        $.each(customerResponse, function (index, customer) {
+            var $item = $('<a href="#" class="list-group-item list-group-item-action customer-result-item"></a>');
+            $item.attr('data-customer-id', customer.id);
+            $item.attr('data-customer-name', customer.name || customer.companyName);
+            $item.html(`
+            <strong>${customer.name || customer.companyName}</strong>
+            ${customer.email ? '<br><small class="text-muted">' + customer.email + '</small>' : ''}
+        `);
+            $resultsList.append($item);
+        });
+
+        $resultsDiv.append($resultsList);
+    }
+
+    $(document).on('click', '.customer-result-item', function (e) {
+        e.preventDefault();
+
+        var customerId = $(this).attr('data-customer-id');
+        var customerName = $(this).attr('data-customer-name');
+
+        selectedCustomerForInvoice = {
+            id: customerId,
+            name: customerName
+        };
+
+
+        $('#invoiceCustomerSearch').val(customerName);
+
+        $('#invoiceCustomerResults').empty();
+
+        $(this).addClass('active');
+    });
+
+    $('#confirmGenerateInvoice').on('click', function () {
+        if (!selectedCustomerForInvoice) {
+            showInvoiceModalError('Please select a customer');
+            return;
+        }
+
+        if (!$('#invoiceDate').val()) {
+            showInvoiceModalError('Please select an invoice date');
+            return;
+        }
+
+        var distanceVal = $('#invoiceDistance').val();
+        if (distanceVal === null || distanceVal === undefined || distanceVal === '') {
+            showInvoiceModalError('Please enter Distance (approx)');
+            return;
+        }
+        // JSUTIL.callAJAXGet("/api/account/" + selectedCustomerForInvoice.id + "/details", function (res) {
+        //     console.log("Customer Details: ", res);
+        //     selectedContactForInvoice = res.contacts[0].id;
+        // })
+
+        clearInvoiceModalError();
+        hideInvoiceModal();
+
+        JSUTIL.startSpinner();
+
+        var paymentTerms = $('#invoicePaymentTerms').val();
+        var invoiceNotes = $('#invoiceNotesText').val();
+        var invoiceDistance = Number(distanceVal);
+
+        createInvoiceWithItems(selectedCustomerForInvoice, paymentTerms, invoiceNotes, invoiceDistance);
+    });
+
+    $('.closeInvoiceModal').on('click', function () {
+        hideInvoiceModal();
+    });
+    $('#invoiceGenerationModal').on('hidden.bs.modal', function () {
+        clearInvoiceModalError();
+    });
+
+    function hideInvoiceModal() {
+        if ($.fn.modal) {
+            $('#invoiceGenerationModal').modal('hide');
+        } else {
+            $('#invoiceGenerationModal').removeClass('show').css('display', 'none');
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+        }
+        clearInvoiceModalError();
+    }
+
+    // ============================================================
+    // NEW REST API: Create Invoice with Items
+    // OLD: POST /data/Invoice/create_with_sequence, /data/InvoiceLineItem/create_multiple
+    // NEW: POST /api/sales/invoices (with auto-number), then POST /api/sales/invoices/{id}/items one by one
+    // ============================================================
+    function createInvoiceWithItems(customer, paymentTerms, invoiceNotes, invoiceDistance) {
+
+        // Ensure we have the latest DispatchInstruction (for LR details) before creating invoice
+        loadDispatchInstruction(function () {
+            if (!currentReleaseItems || currentReleaseItems.length === 0) {
+                JSUTIL.stopSpinner();
+                showError('No release items found to invoice');
+                return;
+            }
+
+            var dateValue = $('#invoiceDate').val();
+            var invoiceDateIso = dateValue ? dateValue + 'T00:00:00Z' : new Date().toISOString().split('.')[0] + 'Z';
+            var subTotal = 0.0;
+            var lineItems = [];
+            var lineItemsMap = {}; // key -> aggregated line item
+
+            $.each(currentReleaseItems, function (index, releaseItem) {
+                var productLot = releaseItem.productLot || {};
+                var productObj = productLot.product || {};
+                var batchNumber = releaseItem.batchNumber || '';
+                var productId = productObj.id || '';
+                var key = (productId || 'unknown') + '|' + batchNumber;
+
+                var quantity = Number(releaseItem.netWeight || 0);
+                var unitPrice = Number(productObj.unitPrice || productObj.sellingPrice || 0);
+
+                if (!lineItemsMap[key]) {
+                    var lineItem = {
+                        batchNumber: batchNumber,
+                        quantity: 0,
+                        uom: productObj.uom || '',
+                        itemPrice: unitPrice,
+                        priceAfterDiscount: unitPrice,
+                        discountPercent: 0,
+                        lineTotal: 0,
+                        taxAmount: 0,
+                        taxAmount2: 0
+                    };
+
+                    if (productObj && productObj.id) {
+                        lineItem.product = { id: productObj.id };
+                        lineItem.jobWorkItem = productObj.name;
+                    } else if (productObj && productObj.name) {
+                        lineItem.customItem = productObj.name;
+                    } else {
+                        lineItem.customItem = 'Unknown Product';
+                    }
+
+                    if (productLot && (productLot.id || productLot.Id)) {
+                        lineItem.productLot = { id: productLot.id || productLot.Id };
+                    }
+
+                    lineItemsMap[key] = lineItem;
+                }
+
+                // Aggregate quantities for same batch/productLot
+                lineItemsMap[key].quantity += quantity;
+                lineItemsMap[key].lineTotal = Number((lineItemsMap[key].itemPrice * lineItemsMap[key].quantity).toFixed(2));
+            });
+
+            // Build final list and subtotal
+            Object.keys(lineItemsMap).forEach(function (key) {
+                var item = lineItemsMap[key];
+                lineItems.push(item);
+                subTotal += item.lineTotal;
+            });
+
+            if (lineItems.length === 0) {
+                JSUTIL.stopSpinner();
+                showError('No valid line items to invoice');
+                return;
+            }
+
+            var lrNumberValue = currentDispatchInstruction ? (currentDispatchInstruction.lrNumber || currentDispatchInstruction.LrNumber || currentDispatchInstruction.LRNumber) : '';
+            var lrDateValue = currentDispatchInstruction ? (currentDispatchInstruction.lrDate || currentDispatchInstruction.LrDate || currentDispatchInstruction.LRDate) : '';
+            var orderDateValue = currentDispatchData.epoDate ? currentDispatchData.epoDate : null;
+            var termsValue = currentDispatchData.productionRequest.paymentTerms || paymentTerms || '';
+            var modeOfTransportValue = (currentDispatchData.productionRequest && currentDispatchData.productionRequest.modeOfTransport) || '';
+            var transportCodeMap = { road: 1, rail: 2, ship: 3, air: 4 };
+            var transportCode = transportCodeMap[(modeOfTransportValue || '').toString().trim().toLowerCase()] || null;
+
+
+            console.log("selectedContactForInvoice: ", selectedContactForInvoice);
+
+            var invoicePayload = {
+                customer: { id: customer.id },
+                contactId: selectedContactForInvoice,
+                invoiceDate: invoiceDateIso,
+                paymentStatus: 'New',
+                terms: termsValue,
+                notes: invoiceNotes || '',
+                subTotalAmount: Number(subTotal.toFixed(2)),
+                taxAmount: 0,
+                taxAmount2: 0,
+                totalAmount: Number(subTotal.toFixed(2)),
+                purchaseOrderNumber: currentDispatchData.epoNumber || '',
+                purchaseOrderDate: orderDateValue,
+                transporterName: currentDispatchData.transportCompany || '',
+                vehicleNumber: currentDispatchData.deliveryVehicle || '',
+                lrNumber: lrNumberValue || '',
+                lrDate: lrDateValue || '',
+                transportMode: transportCode,
+                distance: isNaN(invoiceDistance) ? null : invoiceDistance,
+                preparedBy: { id: FOX.employeeId }
+            };
+
+            var consigneeId = currentDispatchData.productionRequest.consignee && (currentDispatchData.productionRequest.consignee.id || currentDispatchData.productionRequest.consignee.Id);
+            if (consigneeId) {
+                invoicePayload.consignee = { id: consigneeId };
+            }
+            console.log("invoice", invoicePayload);
+
+            // Fetch all invoices to generate next number, then create via REST
+            JSUTIL.callAJAXGet('/api/sales/invoices', function (allInvoices) {
+                invoicePayload.number = generateNextNumber(allInvoices || [], 'FIOX-');
+
+                JSUTIL.callAJAXPost('/api/sales/invoices', JSON.stringify(invoicePayload), function (invoiceResponse) {
+                    console.log('res', invoiceResponse);
+                    if (!invoiceResponse || !invoiceResponse.invoice.id) {
+                        JSUTIL.stopSpinner();
+                        // showError('Failed to create invoice');
+                        return;
+                    }
+
+                    console.log('Invoice created with ID:', invoiceResponse.invoice.id);
+
+                    // Add invoice line items one by one
+                    var itemsToCreate = lineItems.map(function (item) {
+                        var payloadItem = Object.assign({}, item);
+                        payloadItem.invoice = { id: invoiceResponse.invoice.id };
+                        return payloadItem;
+                    });
+
+                    createInvoiceLineItemsSequentially(invoiceResponse.invoice.id, itemsToCreate, 0, function () {
+                        console.log('All invoice line items created successfully');
+                        createGatePassWithItems(invoiceResponse.invoice.id);
+                    });
+                });
+            });
+        });
+    }
+
+    // ============================================================
+    // NEW: Create invoice line items one by one
+    // OLD: POST /data/InvoiceLineItem/create_multiple
+    // NEW: POST /api/sales/invoices/{id}/items (one at a time)
+    // ============================================================
+    function createInvoiceLineItemsSequentially(invoiceId, items, idx, callback) {
+        if (idx >= items.length) {
+            callback();
+            return;
+        }
+
+        var sourceId = items[idx].product.id;
+
+        JSUTIL.callAJAXPost('/api/sales/invoices/' + invoiceId + '/items?type=Product&sourceId=' + sourceId, JSON.stringify(items[idx]), function (response) {
+            console.log('Created invoice line item:', idx, response);
+            createInvoiceLineItemsSequentially(invoiceId, items, idx + 1, callback);
+        });
+    }
+
+    // ============================================================
+    // Create GatePass with Items
+    // ============================================================
+    function createGatePassWithItems(invoiceId) {
+        var gatePassPayload = {
+            type: 'Dispatch',
+            productRelease: { id: currentDispatchData.id },
+            invoice: { id: invoiceId },
+            processStatus: 'New'
+        };
+
+        // Fetch all gate passes to generate next number
+        JSUTIL.callAJAXGet('/api/gate-passes', function (allGatePasses) {
+            gatePassPayload.number = generateNextNumber(allGatePasses || [], 'GP');
+
+            JSUTIL.callAJAXPost('/api/gate-passes', JSON.stringify(gatePassPayload), function (gatePassResponse) {
+                if (!gatePassResponse || !gatePassResponse.id) {
+                    JSUTIL.stopSpinner();
+                    showError('Invoice created but failed to create GatePass');
+                    return;
+                }
+
+                console.log('GatePass created with ID:', gatePassResponse.id);
+
+                // Create GatePassItems one by one
+                var gatePassItems = [];
+                $.each(currentReleaseItems, function (index, releaseItem) {
+                    gatePassItems.push({
+                        gatePass: { id: gatePassResponse.id },
+                        productReleaseItem: { id: releaseItem.id }
+                    });
+                });
+
+                createGatePassItemsSequentially(gatePassItems, 0, function () {
+                    console.log('All GatePassItems created successfully');
+                    JSUTIL.stopSpinner();
+                    showSuccess('Invoice and GatePass generated successfully!');
+                    finalizeDispatchAfterInvoice(invoiceId);
+                });
+            });
+        });
+    }
+
+    // Create GatePassItems one by one
+    function createGatePassItemsSequentially(items, idx, callback) {
+        if (idx >= items.length) {
+            callback();
+            return;
+        }
+
+        JSUTIL.callAJAXPost('/api/gate-pass-items', JSON.stringify(items[idx]), function (response) {
+            console.log('Created gate pass item:', idx, response);
+            createGatePassItemsSequentially(items, idx + 1, callback);
+        });
+    }
+
+    // ============================================================
+    // Finalize dispatch after invoice
+    // ============================================================
+    function finalizeDispatchAfterInvoice(invoiceId) {
+        var updateObj = {
+            invoice: {
+                id: invoiceId
+            },
+            processStatus: 'Closed'
+        };
+
+        JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchData.id, JSON.stringify(updateObj), function (updateResponse) {
+            JSUTIL.stopSpinner();
+            console.log('Dispatch updated:', updateResponse);
+
+            // JSUTIL.openInNewTab('/app/sales_cloud/invoices?id=' + invoiceId);
+
+            loadContentPage("sales/Invoices.html");
+
+            // Commenting out reload to preserve SPA state after navigation
+            // setTimeout(function () {
+            //     location.reload();
+            // }, 1500);
+        });
+    }
+
+    function parseDrumNumbers(containerNumber) {
+        if (!containerNumber) return [];
+
+        var drums = [];
+        var cleanStr = containerNumber.trim();
+
+        if (cleanStr.includes('-') || cleanStr.toLowerCase().includes('to')) {
+            var parts = cleanStr.split(/[-–—]|to/i);
+
+            if (parts.length === 2) {
+                var startNum = parseInt(parts[0].trim());
+                var endNum = parseInt(parts[1].trim());
+
+                if (!isNaN(startNum) && !isNaN(endNum) && startNum <= endNum) {
+                    for (var i = startNum; i <= endNum; i++) {
+                        drums.push(i);
+                    }
+                }
+            }
+        } else {
+            var drumNum = parseInt(cleanStr);
+            if (!isNaN(drumNum)) {
+                drums.push(drumNum);
+            }
+        }
+
+        return drums;
+    }
+
+    function getDrumNumberRange(drumNumbers) {
+        if (drumNumbers.length === 0) return '';
+
+        var uniqueDrums = [...new Set(drumNumbers)].sort(function (a, b) { return a - b; });
+
+        if (uniqueDrums.length === 1) {
+            return uniqueDrums[0].toString();
+        } else {
+            return uniqueDrums[0] + ' TO ' + uniqueDrums[uniqueDrums.length - 1];
+        }
+    }
+
+    function printPackingSlips() {
+        if (!currentReleaseItems || currentReleaseItems.length === 0) {
+            showError('No items to print');
+            return;
+        }
+
+        var groupedItems = {};
+
+        $.each(currentReleaseItems, function (index, item) {
+            var productName = item.productRelease?.productionRequest?.product?.name
+                || item.ProductRelease?.ProductionRequest?.Product?.Name
+                || item.product?.name
+                || item.Product?.name
+                || item.productLot?.product?.name
+                || item.productLot?.Product?.name
+                || item.ProductLot?.product?.name
+                || item.ProductLot?.Product?.name
+                || 'Unknown Product';
+
+            var batchNumber = item.batchNumber || 'N/A';
+            var key = productName + '|' + batchNumber;
+
+            if (!groupedItems[key]) {
+                groupedItems[key] = {
+                    product: item.product,
+                    productRelease: item.productRelease,
+                    productName: productName,
+                    batchNumber: batchNumber,
+                    mfgDate: item.manufacturingDate ? JSUTIL.getDate(item.manufacturingDate) : '-',
+                    retestDate: item.retestDate ? JSUTIL.getDate(item.retestDate) : '-',
+                    items: []
+                };
+            }
+
+            groupedItems[key].items.push(item);
+        });
+
+        var htmlContent = '';
+        var isFirst = true;
+
+        var today = new Date();
+        var plDate = String(today.getDate()).padStart(2, '0') + '/' +
+            String(today.getMonth() + 1).padStart(2, '0') + '/' +
+            today.getFullYear();
+
+        var plNumber = 'PL' + today.getFullYear() +
+            String(today.getMonth() + 1).padStart(2, '0') +
+            String(today.getDate()).padStart(2, '0') +
+            String(currentDispatchId).padStart(4, '0');
+
+        var companyName = 'SULESHVARI LABORATORIES LIMITED';
+        var location = currentDispatchData.location || '168 - ANKLESHWAR';
+        var consignee = currentDispatchData.account ? currentDispatchData.account.name : '';
+        var epoNumber = currentDispatchData.epoNumber || '';
+        var epoDate = currentDispatchData.epoDate ? JSUTIL.getDate(currentDispatchData.epoDate) : '';
+        var country = currentDispatchData.account ? currentDispatchData.account.billingCountry : '';
+        var packType = currentDispatchData.packingType || 'FIBRE DRUMS';
+        var drumSize = currentDispatchData.containerSize || '14 L x 14W x 16 H';
+        var innerPackingLabelCode = currentDispatchData.innerPackingLabelCode || '';
+        var unNumber = currentDispatchData.unNumber || '';
+
+        var grandTotalGross = 0;
+        var grandTotalTare = 0;
+        var grandTotalNet = 0;
+        var grandTotalDrums = 0;
+
+        var allDrumNumbers = [];
+        var hsnCode = '';
+
+        for (var key in groupedItems) {
+            var group = groupedItems[key];
+
+            if (!isFirst) {
+                htmlContent += '<div class="page-break"></div>';
+            }
+            isFirst = false;
+
+            var productName = group.productName;
+            var batchNumber = group.batchNumber;
+            var mfgDate = group.mfgDate;
+            var retestDate = group.retestDate;
+
+            var totalGross = 0;
+            var totalTare = 0;
+            var totalNet = 0;
+            var totalDrums = group.items.length;
+
+            var tableRows = '';
+            var batchDrumNumbers = [];
+
+            group.items.forEach(function (item) {
+                hsnCode = item.product?.hsn || '';
+                var grossWeight = Number(item.grossWeight || 0);
+                var tareWeight = Number(item.tareWeight || 0);
+                var netWeight = Number(item.netWeight || 0);
+                var containerNumber = item.containerNumber || '';
+
+                totalGross += grossWeight;
+                totalTare += tareWeight;
+                totalNet += netWeight;
+
+                if (containerNumber) {
+                    var parsedDrums = parseDrumNumbers(containerNumber);
+                    batchDrumNumbers = batchDrumNumbers.concat(parsedDrums);
+                    allDrumNumbers = allDrumNumbers.concat(parsedDrums);
+                }
+
+                var drumsInRow = containerNumber ? parseDrumNumbers(containerNumber).length : 0;
+
+                tableRows += `
+                <tr>
+                    <td>${mfgDate}</td>
+                    <td>${retestDate}</td>
+                    <td>${batchNumber}</td>
+                    <td>${containerNumber}</td>
+                    <td>Kgs.</td>
+                    <td style="text-align: right;">${grossWeight.toFixed(3)}</td>
+                    <td style="text-align: right;">${tareWeight.toFixed(3)}</td>
+                    <td style="text-align: right;">${netWeight.toFixed(3)}</td>
+                    <td style="text-align: center;">${drumsInRow}</td>
+                </tr>
+            `;
+            });
+
+            totalDrums = batchDrumNumbers.length;
+
+            tableRows += `
+            <tr style="font-weight: bold; background-color: #f5f5f5;">
+                <td colspan="5" style="text-align: right;">TOTAL :</td>
+                <td style="text-align: right;">${totalGross.toFixed(3)}</td>
+                <td style="text-align: right;">${totalTare.toFixed(3)}</td>
+                <td style="text-align: right;">${totalNet.toFixed(3)}</td>
+                <td style="text-align: center;">${totalDrums}</td>
+            </tr>
+        `;
+
+            grandTotalGross += totalGross;
+            grandTotalTare += totalTare;
+            grandTotalNet += totalNet;
+            grandTotalDrums += totalDrums;
+
+            var drumNumberRange = getDrumNumberRange(allDrumNumbers);
+
+            // Build container details table for this batch
+            var containerRows = '';
+            var containerCount = 0;
+
+            group.items.forEach(function (item) {
+                var containerNumber = item.containerNumber || '';
+                var grossWeight = Number(item.grossWeight || 0);
+                var tareWeight = Number(item.tareWeight || 0);
+                var netWeight = Number(item.netWeight || 0);
+
+                if (containerNumber) {
+                    var drumNumbers = parseDrumNumbers(containerNumber);
+
+                    if (drumNumbers.length > 0) {
+                        var itemProductName = item.productRelease?.productionRequest?.product?.name
+                            || item.ProductRelease?.ProductionRequest?.Product?.Name
+                            || item.product?.name
+                            || item.Product?.name
+                            || item.productLot?.product?.name
+                            || item.productLot?.Product?.name
+                            || item.ProductLot?.product?.name
+                            || item.ProductLot?.Product?.name
+                            || 'Unknown Product';
+
+                        var productCode = item.productRelease?.productionRequest?.product?.number
+                            || item.ProductRelease?.ProductionRequest?.Product?.Number
+                            || item.product?.number
+                            || item.Product?.number
+                            || item.productLot?.product?.number
+                            || item.productLot?.Product?.number
+                            || item.ProductLot?.product?.number
+                            || item.ProductLot?.Product?.number
+                            || 'N/A';
+
+                        var stockType = 'Finished Goods';
+
+                        var grossWeightPerDrum = drumNumbers.length > 0 ? (grossWeight / drumNumbers.length) : grossWeight;
+                        var tareWeightPerDrum = drumNumbers.length > 0 ? (tareWeight / drumNumbers.length) : tareWeight;
+                        var netWeightPerDrum = drumNumbers.length > 0 ? (netWeight / drumNumbers.length) : netWeight;
+
+                        drumNumbers.forEach(function (drumNum) {
+                            containerCount++;
+                            var containerLabel = `Cont ${drumNum}`;
+
+                            containerRows += `
+                            <tr>
+                                <td style="text-align: center;">${containerLabel}</td>
+                                <td>${batchNumber}</td>
+                                <td>${itemProductName}</td>
+                                <td style="text-align: center;">${productCode}</td>
+                                <td style="text-align: center;">${stockType}</td>
+                                <td style="text-align: right;">${grossWeightPerDrum.toFixed(3)} Kgs</td>
+                                <td style="text-align: right;">${tareWeightPerDrum.toFixed(3)} Kgs</td>
+                                <td style="text-align: right;">${netWeightPerDrum.toFixed(3)} Kgs</td>
+                            </tr>
+                        `;
+                        });
+                    }
+                }
+            });
+
+            htmlContent += `
+            <div class="packing-slip">
+                <div class="slip-header">
+                    <div style="text-align: center;">
+                        <h2 style="margin: 0;">${companyName}</h2>
+                    </div>
+                    <div style="text-align: center; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 8px 0; margin: 10px 0;">
+                        <h3 style="margin: 0; font-size: 20px;">EXPORT PACKING LIST - (API)&nbsp;&nbsp;&nbsp;&nbsp;AIR</h3>
+                    </div>
+                </div>
+                
+                <table style="width: 100%; margin-bottom: 15px; border: 1px solid #000;">
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #000; width: 15%;"><strong>P/L No.:</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 35%;">${plNumber}</td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 15%;"><strong>DATE :</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 35%;">${plDate}</td>
+                    </tr>
+                </table>
+                
+                <table style="width: 100%; margin-bottom: 15px; border: 1px solid #000;">
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #000; width: 15%;"><strong>PRODUCT :</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 35%;">${productName}</td>
+                         <td style="padding: 5px; border: 1px solid #000;width: 15%;""><strong>QUANTITY :</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000;width: 35%;"">${totalNet.toFixed(3)} Kgs.</td>
+                    </tr>
+                </table>
+                
+                <table style="width: 100%; margin-bottom: 15px; border: 1px solid #000;">
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #000; width: 15%;"><strong>CONSIGNEE :</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 35%;">${consignee}</td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 15%;"><strong>COUNTRY :</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 35%;">${country}</td>
+                    </tr>
+                </table>
+                
+                <table style="width: 100%; margin-bottom: 15px; border: 1px solid #000;">
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #000; width: 15%;"><strong>EPO NO :</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 35%;">${epoNumber}</td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 15%;"><strong>Date :</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 35%;">${epoDate}</td>
+                      
+                    </tr>
+                </table>
+                
+                <div class="product-details">
+                    <h4 style="margin: 15px 0 10px 0;">Material Details</h4>
+                    <table class="product-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #e0e0e0;">
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left;">MFG<br>DATE</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left;">RETEST<br>DATE</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left;">BATCH<br>NUMBER</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left;">DRUM<br>NUMBER</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left;">UOM</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right;">GROSS<br>WEIGHT</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right;">TARE<br>WEIGHT</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right;">NET<br>WEIGHT</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center;">NO<br>OF<br>DRUMS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="container-details" style="margin-top: 30px;">
+                    <h4 style="margin: 15px 0 10px 0;">Container Details (Total: ${containerCount})</h4>
+                    <table class="container-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #e0e0e0;">
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 10%;">Container</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left; width: 15%;">Batch Number</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left; width: 20%;">Product Name</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 10%;">Product Code</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 13%;">Stock Type</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 11%;">Gross Weight</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 11%;">Tare Weight</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 10%;">Net Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${containerRows}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 30px; margin-bottom: 30px;">
+                    <table style="width: 100%; border: 1px solid #000;">
+                        <tr>
+                            <td style="width: 50%; padding: 15px; border: 1px solid #000; vertical-align: top;">
+                                <div style="font-weight: bold; text-decoration: underline; margin-bottom: 10px;">SHIPPING MARKS</div>
+                                <div style="white-space: pre-line;">${currentDispatchData.remarks || ''}</div>
+                            </td>
+                            <td style="width: 50%; padding: 15px; border: 1px solid #000; vertical-align: top;">
+                                <div style="text-align: center; margin-top: 80px;">
+                                    <div style="margin-bottom: 50px;"><strong>For ${companyName}</strong></div>
+                                    <div style="border-top: 1px solid #000; display: inline-block; padding-top: 5px;">
+                                        <strong>(DISTRIBUTION INCHARGE)</strong>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <table style="width: 100%; border: 1px solid #000;">
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #000; width: 20%;"><strong>DRUM SIZE</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 30%;">${drumSize}</td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 20%;"><strong>UN NUMBER</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000; width: 30%;"></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #000;"><strong>PACK TYPE</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000;">${packType}</td>
+                        <td style="padding: 5px; border: 1px solid #000;"><strong>HSN CODE</strong></td>
+                        <td style="padding: 5px; border: 1px solid #000;">${hsnCode}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px; border: 1px solid #000;" colspan="2"><strong>INNER PACKING LABEL CODE</strong></td>
+                         <td style="padding: 5px; border: 1px solid #000;" colspan="2">${innerPackingLabelCode}</td>
+                    </tr>
+                </table>
+                
+                <div class="slip-footer" style="margin-top: 20px; text-align: center; font-size: 11px;">
+                    Fiscal OX Software Generated Report
+                </div>
+            </div>
+        `;
+        }
+
+        var iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        var doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Export Packing List</title>
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    padding: 10mm;
+                    background: white;
+                }
+                
+                .packing-slip {
+                    max-width: 210mm;
+                    margin: 0 auto;
+                    background: white;
+                    padding: 10px;
+                }
+                
+                .slip-header {
+                    margin-bottom: 15px;
+                }
+                
+                .slip-header h2 {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #000;
+                }
+                
+                .slip-number {
+                    font-size: 16px;
+                    color: #666;
+                    font-weight: bold;
+                }
+                
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                
+                th, td {
+                    border: 1px solid #000;
+                    padding: 5px;
+                }
+                
+                th {
+                    background-color: #e0e0e0;
+                    font-weight: bold;
+                }
+                
+                .page-break {
+                    page-break-after: always;
+                }
+                
+                @page {
+                    size: A4;
+                    margin: 15mm;
+                }
+                
+                @media print {
+                    body {
+                        padding: 0;
+                    }
+                    
+                    .packing-slip {
+                        margin: 0 auto;
+                        page-break-inside: avoid;
+                    }
+                    
+                    .page-break:last-child {
+                        display: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${htmlContent}
+        </body>
+        </html>
+    `);
+        doc.close();
+
+        var cleanup = function () {
+            try {
+                if (iframe && iframe.parentNode) {
+                    document.body.removeChild(iframe);
+                }
+            } catch (e) {
+                console.error('Error removing print iframe:', e);
+            }
+        };
+
+        iframe.onload = function () {
+            try {
+                setTimeout(function () {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+
+                    setTimeout(cleanup, 500);
+
+                    window.addEventListener('focus', function cleanupOnFocus() {
+                        setTimeout(function () {
+                            cleanup();
+                            window.removeEventListener('focus', cleanupOnFocus);
+                        }, { once: true });
+                    }, { once: true });
+
+                }, 100);
+            } catch (e) {
+                console.error('Error during print:', e);
+                cleanup();
+            }
+        };
+
+        setTimeout(cleanup, 5000);
+    }
+
+    function loadDispatchData() {
+        console.log(currentDispatchData);
+        invoiceId1 = currentDispatchData.invoice ? currentDispatchData.invoice.id : '';
+
+        $('#viewCustomer').val(currentDispatchData.account ? currentDispatchData.account.name : '');
+        $('#viewEpoNumber').val(currentDispatchData.epoNumber || '');
+        $('#viewEpoDate').val(currentDispatchData.epoDate ? JSUTIL.getDate(currentDispatchData.epoDate) : '');
+        $('#viewPackingType').val(currentDispatchData.packingType || '');
+        $('#viewContainerSize').val(currentDispatchData.containerSize || '');
+        $('#viewInnerPackingLabelCode').val(currentDispatchData.innerPackingLabelCode || '');
+        $('#viewRemarks').val(currentDispatchData.remarks || '');
+
+        if (currentDispatchData.processStatus === 'Finalized') {
+            $('.printSlip').hide();
+            $('.generateInvoice').show();
+            $('.finalizeBtn').hide();
+            $('.openInvoice').hide();
+            $('.submitForApproval').hide();
+            $('.acceptBtn').hide();
+            $('.rejectBtn').hide();
+        } else if (currentDispatchData.processStatus === 'New' || currentDispatchData.processStatus === 'Rejected') {
+            $('.printSlip').hide();
+            $('.generateInvoice').hide();
+            $('.finalizeBtn').hide();
+            $('.openInvoice').hide();
+            $('.submitForApproval').show();
+            $('.acceptBtn').hide();
+            $('.rejectBtn').hide();
+        } else if (currentDispatchData.processStatus === 'In Review') {
+            $('.printSlip').hide();
+            $('.generateInvoice').hide();
+            $('.finalizeBtn').hide();
+            $('.openInvoice').hide();
+            $('.submitForApproval').hide();
+            $('.acceptBtn').show();
+            $('.rejectBtn').show();
+        } else if (currentDispatchData.processStatus === 'Accepted') {
+            $('.printSlip').show();
+            $('.generateInvoice').hide();
+            $('.finalizeBtn').show();
+            $('.openInvoice').hide();
+            $('.submitForApproval').hide();
+            $('.acceptBtn').hide();
+            $('.rejectBtn').hide();
+        }
+        else if (currentDispatchData.processStatus.includes('Dispatch Instruction')) {
+            $('.printSlip').hide();
+            $('.generateInvoice').hide();
+            $('.finalizeBtn').hide();
+            $('.openInvoice').hide();
+            $('.submitForApproval').hide();
+            $('.acceptBtn').hide();
+            $('.rejectBtn').hide();
+        } else {
+            $('.printSlip').hide();
+            $('.generateInvoice').hide();
+            $('.finalizeBtn').hide();
+            $('.openInvoice').show();
+            $('.submitForApproval').hide();
+            $('.acceptBtn').hide();
+            $('.rejectBtn').hide();
+        }
+
+        // Fetch associated dispatch instruction (for LR details) before loading items
+        loadDispatchInstruction(function () {
+            loadProductReleaseItems();
+        });
+    }
+
+    // ============================================================
+    // NEW REST API: Submit for approval / Accept / Reject
+    // OLD: POST /data/ProductRelease/update/xxx
+    // NEW: PUT /api/product-releases/xxx
+    // ============================================================
+    $('.finalizeBtn').on('click', function () {
+        if (!currentDispatchId || !currentReleaseItems || currentReleaseItems.length === 0) {
+            showError('No dispatch data or items found to finalize');
+            return;
+        }
+
+        JSUTIL.startSpinner();
+        finalizeDispatch();
+    });
+
+    $('.submitForApproval').on('click', function () {
+        JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
+            JSON.stringify({ processStatus: 'In Review' }),
+            function () { location.reload(); }
+        );
+    });
+
+    $('.acceptBtn').on('click', function () {
+        JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
+            JSON.stringify({ processStatus: 'Accepted' }),
+            function () { location.reload(); }
+        );
+    });
+
+    $('.rejectBtn').on('click', function () {
+        JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
+            JSON.stringify({ processStatus: 'Rejected' }),
+            function () { location.reload(); }
+        );
+    });
+
+    $('.openInvoice').on('click', function () {
+        JSUTIL.openInNewTab('/app/sales_cloud/invoices?id=' + invoiceId1);
+    });
+
+    // ============================================================
+    // NEW REST API: Finalize Dispatch
+    // OLD: POST /data/ProductRelease/update/xxx
+    // NEW: PUT /api/product-releases/xxx
+    // ============================================================
+    function finalizeDispatch() {
+        var proceed = function () {
+            JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
+                JSON.stringify({ processStatus: 'Dispatch Instruction' }),
+                function (response) {
+                    if (currentDispatchData.instructions === 'Last Dispatch') {
+                        updateProductionRequestToDispatched(currentDispatchData.productionRequest.id, function () {
+                            processInventoryUpdates();
+                        });
+                    } else {
+                        processInventoryUpdates();
+                    }
+                }
+            );
+        };
+
+        if (!currentReleaseItems || currentReleaseItems.length === 0) {
+            loadProductReleaseItems(function () {
+                proceed();
+            });
+        } else {
+            proceed();
+        }
+    }
+
+    function processInventoryUpdates() {
+        var productBatchMap = {};
+
+        $.each(currentReleaseItems, function (index, item) {
+            var productObj = item.product || item.Product ||
+                (item.productLot && (item.productLot.product || item.productLot.Product)) ||
+                (item.ProductLot && (item.ProductLot.product || item.ProductLot.Product)) || {};
+            var productId = productObj.id || productObj.Id ||
+                (item.productLot && (item.productLot.product?.id || item.productLot.product?.Id || item.productLot.Product?.Id || item.productLot.Product?.id)) ||
+                (item.ProductLot && (item.ProductLot.product?.id || item.ProductLot.product?.Id || item.ProductLot.Product?.Id || item.ProductLot.Product?.id)) ||
+                null;
+
+            var batchNumber = item.batchNumber || item.BatchNumber;
+            var netWeight = Number(item.netWeight || item.NetWeight || 0);
+
+            var productLotObj = item.productLot || item.ProductLot || {};
+            var productLotId = productLotObj.id || productLotObj.Id || item.productLotId || item.ProductLotId || null;
+
+            var rawLotQty = productLotObj.quantityOnHand ?? productLotObj.QuantityOnHand ?? productLotObj.quantity ?? productLotObj.Quantity ?? null;
+            var lotQuantity = rawLotQty !== null && rawLotQty !== undefined ? Number(rawLotQty) : null;
+            lotQuantity = isNaN(lotQuantity) ? null : lotQuantity;
+
+            if (!productId || !batchNumber) {
+                console.warn('Skipping item with missing product or batch:', item);
+                return;
+            }
+
+            var key = productLotId || (productId + '|' + batchNumber);
+
+            if (!productBatchMap[key]) {
+                productBatchMap[key] = {
+                    productId: productId,
+                    productName: item.productLot?.product?.name || item.productLot?.Product?.name ||
+                        item.ProductLot?.product?.name || item.ProductLot?.Product?.name || '',
+                    batchNumber: batchNumber,
+                    productLotId: productLotId || null,
+                    currentLotQuantity: lotQuantity,
+                    totalQuantity: 0,
+                    items: []
+                };
+            } else if (productBatchMap[key].currentLotQuantity === null && lotQuantity !== null) {
+                productBatchMap[key].currentLotQuantity = lotQuantity;
+            }
+
+            productBatchMap[key].totalQuantity += netWeight;
+            productBatchMap[key].items.push(item);
+        });
+
+        var batchUpdates = [];
+        for (var key in productBatchMap) {
+            batchUpdates.push(productBatchMap[key]);
+        }
+
+        if (batchUpdates.length === 0) {
+            JSUTIL.stopSpinner();
+            showError('No valid items found to process');
+            return;
+        }
+
+        processBatchUpdate(0, batchUpdates);
+    }
+
+    // ============================================================
+    // NEW REST API: Update Production Request to Dispatched
+    // OLD: POST /data/ProductionRequest/update/xxx
+    // NEW: PUT /api/production-requests/xxx
+    // ============================================================
+    function updateProductionRequestToDispatched(productionRequestId, callback) {
+        console.log('Last Dispatch detected — updating ProductionRequest to Dispatched. ID:', productionRequestId);
+
+        JSUTIL.callAJAXPut('/api/production-requests/' + productionRequestId,
+            JSON.stringify({ processStatus: 'Dispatched' }),
+            function (response) {
+                console.log('ProductionRequest updated to Dispatched:', response);
+                callback();
+            }
+        );
+    }
+
+    function processBatchUpdate(index, batchUpdates) {
+        if (index >= batchUpdates.length) {
+            JSUTIL.stopSpinner();
+            showSuccess('Dispatch finalized successfully! Inventory quantities updated.');
+            console.log('All inventory updates completed successfully');
+            location.reload();
+            return;
+        }
+
+        var batch = batchUpdates[index];
+        console.log(`Processing batch ${index + 1}/${batchUpdates.length}: Product ${batch.productName}, Batch ${batch.batchNumber}, Quantity to reduce: ${batch.totalQuantity}`);
+
+        findAndUpdateProductLot(batch, function (success) {
+            if (success) {
+                console.log(`✓ ProductLot updated for batch: ${batch.batchNumber}`);
+                updateProductQuantity(batch, function (productSuccess) {
+                    if (productSuccess) {
+                        console.log(`✓ Product quantityOnHand updated for: ${batch.productName}`);
+                        createTransactionRecords(batch, function (transactionSuccess) {
+                            if (transactionSuccess) {
+                                console.log(`✓ Transaction records created for batch: ${batch.batchNumber}`);
+                            }
+                            processBatchUpdate(index + 1, batchUpdates);
+                        });
+                    } else {
+                        console.warn('⚠ Product update failed for batch:', batch.batchNumber);
+                        processBatchUpdate(index + 1, batchUpdates);
+                    }
+                });
+            } else {
+                console.warn('⚠ ProductLot update failed for batch:', batch.batchNumber);
+                processBatchUpdate(index + 1, batchUpdates);
+            }
+        });
+    }
+
+    // ============================================================
+    // NEW REST API: Find and Update ProductLot
+    // OLD: POST /data/ProductLot/list with conditions, POST /data/ProductLot/update/xxx
+    // NEW: GET /api/product-lots/{id} or GET /api/product-lots/search, PUT /api/product-lots/{id}
+    // ============================================================
+    function findAndUpdateProductLot(batch, callback) {
+        console.log(`Updating ProductLot for batch: ${batch.batchNumber}, ProductLot ID: ${batch.productLotId || 'N/A'}`);
+
+        if (batch.productLotId) {
+            var knownQuantity = batch.currentLotQuantity;
+
+            var proceedWithUpdate = function (baseQuantity) {
+                var newQuantity = Number(baseQuantity) - batch.totalQuantity;
+
+                if (isNaN(newQuantity)) {
+                    console.warn('Unable to compute new quantity for lot:', batch.productLotId);
+                    callback(false);
+                    return;
+                }
+
+                console.log(`ProductLot ${batch.productLotId}: Current: ${baseQuantity}, Reducing by: ${batch.totalQuantity}, New: ${newQuantity}`);
+
+                if (newQuantity < 0) {
+                    console.warn('Warning: Total Quantity would become negative for lot:', batch.productLotId, '- New quantity would be:', newQuantity);
+                }
+
+                var updateObj = {
+                    quantity: newQuantity,
+                    quantityOnHand: newQuantity
+                };
+
+                JSUTIL.callAJAXPut('/api/product-lots/' + batch.productLotId, JSON.stringify(updateObj), function (response) {
+                    console.log('ProductLot update response:', response);
+                    callback(true);
+                });
+            };
+
+            if (knownQuantity !== null && knownQuantity !== undefined && !isNaN(Number(knownQuantity))) {
+                console.log(`Using known quantity from release item: ${knownQuantity}`);
+                proceedWithUpdate(knownQuantity);
+                return;
+            }
+
+            console.log('Fetching ProductLot quantity from database...');
+            // Fallback: fetch by Id
+            JSUTIL.callAJAXGet('/api/product-lots/' + batch.productLotId, function (lot) {
+                if (!lot) {
+                    console.warn('No ProductLot found for Id:', batch.productLotId);
+                    callback(false);
+                    return;
+                }
+                var baseQty = lot.quantityOnHand ?? lot.QuantityOnHand ?? lot.quantity ?? lot.Quantity ?? 0;
+                console.log(`Fetched ProductLot quantity: ${baseQty}`);
+                proceedWithUpdate(baseQty);
+            });
+            return;
+        }
+
+        console.log('ProductLot ID not available, using legacy search by Product ID and Batch Number...');
+        // Legacy fallback: search by productId and batchNumber
+        JSUTIL.callAJAXGet('/api/product-lots/search?productId=' + encodeURIComponent(batch.productId) + '&batchNumber=' + encodeURIComponent(batch.batchNumber), function (lots) {
+            var lotsArr = Array.isArray(lots) ? lots : [lots];
+            if (!lotsArr || lotsArr.length === 0 || !lotsArr[0]) {
+                console.warn('No ProductLot found for batch:', batch.batchNumber);
+                callback(false);
+                return;
+            }
+
+            var lot = lotsArr[0];
+            var baseQty = lot.quantityOnHand ?? lot.QuantityOnHand ?? lot.quantity ?? lot.Quantity ?? 0;
+            var currentQuantity = Number(baseQty || 0);
+            var newQuantity = currentQuantity - batch.totalQuantity;
+
+            console.log(`Legacy search - ProductLot ${lot.id}: Current: ${currentQuantity}, Reducing by: ${batch.totalQuantity}, New: ${newQuantity}`);
+
+            if (newQuantity < 0) {
+                console.warn('Warning: Total Quantity would become negative for lot:', lot.id, '- New quantity would be:', newQuantity);
+            }
+
+            JSUTIL.callAJAXPut('/api/product-lots/' + lot.id,
+                JSON.stringify({ quantityOnHand: newQuantity, quantity: newQuantity }),
+                function (response) {
+                    console.log('ProductLot update response:', response);
+                    callback(true);
+                }
+            );
+        });
+    }
+
+    // ============================================================
+    // NEW REST API: Update Product Quantity
+    // OLD: POST /data/Product/list with conditions, POST /data/Product/update/xxx
+    // NEW: GET /api/products/{id}, PUT /api/products/{id}
+    // ============================================================
+    function updateProductQuantity(batch, callback) {
+        JSUTIL.callAJAXGet('/api/products/' + batch.productId, function (product) {
+            if (!product) {
+                console.warn('Product not found:', batch.productId);
+                callback(false);
+                return;
+            }
+
+            var currentQuantity = Number(product.quantityOnHand || product.QuantityOnHand || 0);
+            var newQuantity = currentQuantity - batch.totalQuantity;
+
+            console.log(`Updating Product: ${product.name || product.Name} - Current: ${currentQuantity}, Reducing by: ${batch.totalQuantity}, New: ${newQuantity}`);
+
+            if (newQuantity < 0) {
+                console.warn('Warning: Product QuantityOnHand would become negative:', product.id, '- New quantity would be:', newQuantity);
+            }
+
+            var updateObj = {
+                quantityOnHand: newQuantity
+            };
+
+            JSUTIL.callAJAXPut('/api/products/' + product.id, JSON.stringify(updateObj), function (response) {
+                console.log('Product update response:', response);
+                callback(true);
+            });
+        });
+    }
+
+    // ============================================================
+    // NEW REST API: Create Transaction Records
+    // OLD: POST /data/ProductTransaction/create
+    // NEW: POST /api/product-transactions (one at a time)
+    // ============================================================
+    function createTransactionRecords(batch, callback) {
+        var transactionsToCreate = batch.items.length;
+
+        if (transactionsToCreate === 0) {
+            callback(true);
+            return;
+        }
+
+        var items = batch.items.slice(); // copy
+
+        function createNext(idx) {
+            if (idx >= items.length) {
+                callback(true);
+                return;
+            }
+
+            var item = items[idx];
+            var transactionObj = {
+                product: {
+                    id: item.productLot.product.id
+                },
+                batchNumber: item.batchNumber,
+                quantityIssued: Number(item.netWeight || 0),
+                transactionDate: new Date().toISOString(),
+                docNumber: currentDispatchData.number || '',
+                type: 'Issue',
+                description: `Dispatched via ${currentDispatchData.number || 'dispatch'}`
+            };
+
+            JSUTIL.callAJAXPost('/api/product-transactions', JSON.stringify(transactionObj), function (response) {
+                console.log('Transaction created for item:', item.id);
+                createNext(idx + 1);
+            });
+        }
+
+        createNext(0);
+    }
+
+    function showSuccess(message) {
+        if (typeof toastr !== 'undefined') {
+            toastr.success(message);
+        } else {
+            JSUTIL.buildErrorModal(message);
+        }
+    }
+
+    function showError(message) {
+        if (typeof toastr !== 'undefined') {
+            toastr.error(message);
+        } else {
+            JSUTIL.buildErrorModal(message);
+        }
+    }
+
+    // ============================================================
+    // NEW REST API: Load Product Release Items
+    // OLD: POST /data/ProductReleaseItem/list with conditions/logic/fields
+    // NEW: GET /api/product-release-items?productReleaseId=xxx
+    // ============================================================
+    function loadProductReleaseItems(callback) {
+        JSUTIL.callAJAXGet('/api/product-release-items?productReleaseId=' + encodeURIComponent(currentDispatchId), function (response) {
+            console.log(response);
+            currentReleaseItems = response || [];
+            displayReleaseItems(currentReleaseItems);
+            if (typeof callback === 'function') {
+                callback(currentReleaseItems);
+            }
+        });
+    }
+
+    // ============================================================
+    // NEW REST API: Load Dispatch Instruction
+    // OLD: POST /data/DispatchInstruction/list with conditions/logic/fields
+    // NEW: GET /api/dispatch-instructions then client-side filter by productRelease.id
+    // ============================================================
+    function loadDispatchInstruction(callback) {
+        if (!currentDispatchData || !currentDispatchData.id) {
+            currentDispatchInstruction = null;
+            if (typeof callback === 'function') callback(null);
+            return;
+        }
+
+        JSUTIL.callAJAXGet('/api/dispatch-instructions', function (response) {
+            var matched = (response || []).filter(function (di) {
+                var prId = di.productRelease?.id || di.ProductRelease?.id || di.ProductRelease?.Id || '';
+                return String(prId) === String(currentDispatchData.id);
+            });
+
+            if (matched.length > 0) {
+                currentDispatchInstruction = matched[0];
+            } else {
+                currentDispatchInstruction = null;
+            }
+
+            if (typeof callback === 'function') {
+                callback(currentDispatchInstruction);
+            }
+        });
+    }
+
+    function displayReleaseItems(items) {
+        var $tbody = $('#viewReleaseItemsTableBody');
+        $tbody.empty();
+
+        if (!items || items.length === 0) {
+            $tbody.append('<tr><td colspan="8" class="text-center text-muted">No items found</td></tr>');
+            return;
+        }
+
+        $.each(items, function (index, item) {
+            var $row = $('<tr></tr>');
+
+            var productName = item.product?.name
+                || item.Product?.name
+                || item.productLot?.product?.name
+                || item.productLot?.Product?.name
+                || item.ProductLot?.product?.name
+                || item.ProductLot?.Product?.name
+                || 'N/A';
+            var batchNumber = item.batchNumber || 'N/A';
+            var mfgDate = item.manufacturingDate ? JSUTIL.getDate(item.manufacturingDate) : '-';
+            var retestDate = item.retestDate ? JSUTIL.getDate(item.retestDate) : '-';
+            var containerNumber = item.containerNumber || '-';
+            var grossWeight = item.grossWeight || '-';
+            var tareWeight = item.tareWeight || '-';
+            var netWeight = item.netWeight || '-';
+
+            $row.append($('<td></td>').text(productName));
+            $row.append($('<td></td>').text(batchNumber));
+            $row.append($('<td></td>').text(mfgDate));
+            $row.append($('<td></td>').text(retestDate));
+            $row.append($('<td></td>').text(containerNumber));
+            $row.append($('<td></td>').text(item.remarks || '-'));
+            $row.append($('<td></td>').text(grossWeight));
+            $row.append($('<td></td>').text(tareWeight));
+            $row.append($('<td></td>').text(netWeight));
+
+            $tbody.append($row);
+        });
+    }
+
+    function closeEditDispatchPanel() {
+        $('#editRecordPanel').hide();
+        $('#allRecordPanel').show();
+
+        currentDispatchId = '';
+        currentDispatchData = {};
+        currentReleaseItems = [];
+        currentDispatchInstruction = null;
+
+        $('#viewDispatchForm')[0].reset();
+        $('#viewReleaseItemsTableBody').empty().append('<tr><td colspan="8" class="text-center text-muted">No items found</td></tr>');
+    }
+
+    $(document).ready(function () {
+    });
+
+
+    // editDispatchPanel.js     End
+
+
+
+
+
+    // allDispatchPanel.js      Start
+
+    var dispatchTableSelector = '#allDispatchTable';
+
+    function initDispatchDataTable(retryCount) {
+        retryCount = typeof retryCount === 'number' ? retryCount : 0;
+        if ($.fn && $.fn.DataTable) {
+            if ($.fn.DataTable.isDataTable(dispatchTableSelector)) {
+                return;
+            }
+            $(dispatchTableSelector).DataTable({
+                order: [],
+                pageLength: 25
+            });
+            return;
+        }
+
+        if (window.JSUTIL && typeof JSUTIL.reinitializeDataTable === 'function') {
+            JSUTIL.reinitializeDataTable();
+        }
+
+        if (retryCount < 40) {
+            setTimeout(function () {
+                initDispatchDataTable(retryCount + 1);
+            }, 150);
+        }
+    }
+
+    function destroyDispatchTable() {
+        try {
+            if ($.fn.DataTable && $.fn.DataTable.isDataTable(dispatchTableSelector)) {
+                $(dispatchTableSelector).DataTable().clear().destroy();
+            }
+        } catch (e) {
+            console.warn('DataTable destroy warning:', e);
+        }
+        $('#allVendorTable').empty();
+    }
+
+    function renderDispatchTable(list) {
+        destroyDispatchTable();
+
+        var innerHtml = '';
+
+        $.each(list, function (i, val) {
+            var accountName = (val.account && val.account.name) ? val.account.name : '-';
+            var epoNumber = val.epoNumber || '-';
+            var epoDate = val.epoDate ? JSUTIL.getDate(val.epoDate) : '-';
+            var processStatus = val.processStatus || '-';
+
+            innerHtml += '<tr data-id="' + val.id + '">' +
+                '<td><a href="javascript:void(0);" class="selectRecordBtn">' + (val.number || '-') + '</a></td>' +
+                '<td>' + accountName + '</td>' +
+                '<td>' + epoNumber + '</td>' +
+                '<td>' + epoDate + '</td>' +
+                '<td>' + processStatus + '</td>' +
+                '</tr>';
+        });
+        $('#allVendorTable').html(innerHtml);
+
+        initDispatchDataTable();
+    }
+
+    $(document).ready(function () {
+        // Fetch all product releases via REST API
+        JSUTIL.callAJAXGet('/api/product-releases', function (response) {
+            // Client-side filter: only type = 'Dispatch'
+            recordList = (response || []).filter(function (r) {
+                return (r.type || '') === 'Dispatch';
+            });
+            renderDispatchTable(recordList);
+        });
+
+        $(window).off('load.dispatchDT').on('load.dispatchDT', function () {
+            initDispatchDataTable();
+        });
+    });
+
+    // allDispatchPanel.js      End
+</script>

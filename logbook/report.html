@@ -1,0 +1,823 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
+
+    #viewLogbooksPanel {
+        overflow-x: hidden;
+    }
+
+    #viewLogbooksPanel #viewLogbookArea {
+        overflow-x: hidden;
+    }
+
+    #viewLogbooksPanel #viewLogbookArea .table-responsive {
+        max-width: 100%;
+        overflow: visible;
+    }
+
+    #viewLogbooksPanel #viewLogbookArea .dataTables_wrapper {
+        max-width: 100%;
+        overflow: visible;
+    }
+
+    #viewLogbooksPanel #viewLogbookTable {
+        width: 100%;
+        min-width: 100%;
+        table-layout: fixed;
+    }
+
+    #viewLogbooksPanel #viewLogbookTable th,
+    #viewLogbooksPanel #viewLogbookTable td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+    #viewLogbooksPanel #viewLogbookTable th:not(:first-child),
+    #viewLogbooksPanel #viewLogbookTable td:not(:first-child) {
+        min-width: 150px;
+    }
+
+    #viewLogbooksPanel #viewLogbookTable th:first-child,
+    #viewLogbooksPanel #viewLogbookTable td:first-child {
+        width: 44px;
+        min-width: 44px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    #viewLogbooksPanel #viewLogbookTable tr.logbook-existing-row {
+        background: #f8f9fb;
+    }
+
+    #viewLogbooksPanel #viewLogbookTable tr.logbook-existing-row:hover {
+        background: #f3f5f8;
+    }
+
+    #viewLogbooksPanel .logbook-readonly-indicator {
+        color: #8a97a6;
+        text-align: center;
+        display: inline-block;
+        width: 100%;
+    }
+</style>
+
+<div class="qa-white-panel">
+
+    <div class="row animated fadeInRight aasaanPanel" id="viewLogbooksPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Logbook Report <small>View Entries</small></h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Select Logbook Template</label>
+                                <select class="form-control select2" id="viewLogbookTemplateSelect">
+                                    <option value="">-- Choose an approved template --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group mb-3">
+                                <label>From</label>
+                                <input type="date" class="form-control" id="viewLogbookFromDate">
+                            </div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="form-group mb-3">
+                                <label>To</label>
+                                <input type="date" class="form-control" id="viewLogbookToDate">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qa-white-panel" id="viewLogbookAreaWrap" style="display:none; margin-top: 16px;">
+                <div class="ibox float-e-margins" id="viewLogbookArea">
+                    <div class="ibox-content">
+                        <div class="row" id="viewLogbookActionRow" style="margin-bottom:10px; display:flex; justify-content:flex-end; gap:6px;">
+                            <div class="col-sm-12" id="viewLogbookActionBar" style="text-align:right;">
+                                <button type="button" class="btn btn-default btn-sm" id="viewLogbookPrintBtn" style="display:none;">
+                                    <i data-lucide="printer"></i> Print
+                                </button>
+                                <button type="button" class="btn btn-default btn-sm" id="viewLogbookDownloadBtn" style="display:none;">
+                                    <i data-lucide="download"></i> Download
+                                </button>
+                                <button type="button" class="btn btn-default btn-sm" id="viewLogbookCloseBtn" style="display:none;">
+                                    <i data-lucide="x"></i> Close
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="viewLogbookTable">
+                                <thead></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="text-muted" id="viewLogbookHint" style="margin-top:10px; display:none;">
+                            No fields found in this template.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    var viewLogbookTemplateRows = [];
+var selectedViewLogbookTemplate = null;
+var isViewLogbookLoading = false;
+// Expose entries of selected logbook for console inspection (mirrors recordList usage)
+var viewLogbookEntryList = [];
+
+function setViewLogbookEntryList(list) {
+    viewLogbookEntryList = Array.isArray(list) ? list.slice() : [];
+    window.viewLogbookEntryList = viewLogbookEntryList;
+    console.log('viewLogbookEntryList', viewLogbookEntryList);
+}
+
+function getViewLogbookDateRange() {
+    var from = ($('#viewLogbookFromDate').val() || '').trim();
+    var to = ($('#viewLogbookToDate').val() || '').trim();
+    return { from: from, to: to };
+}
+
+function destroyViewLogbookDataTable() {
+    moveViewLogbookActionsHome();
+    if (!window.$ || !$.fn || !$.fn.DataTable || !$.fn.DataTable.isDataTable) {
+        return;
+    }
+    var $table = $('#viewLogbookTable');
+    if ($table.length && $.fn.DataTable.isDataTable($table)) {
+        $table.DataTable().destroy();
+    }
+}
+
+function refreshViewLogbookPagination(moveToLastPage) {
+    if (!window.$ || !$.fn || !$.fn.DataTable) {
+        return;
+    }
+
+    var $table = $('#viewLogbookTable');
+    if (!$table.length || !$table.find('thead th').length) {
+        return;
+    }
+
+    destroyViewLogbookDataTable();
+    var dataTable = $table.DataTable({
+        paging: true,
+        searching: true,
+        ordering: false,
+        info: true,
+        lengthChange: true,
+        pageLength: 10,
+        autoWidth: false,
+        scrollX: true
+    });
+
+    placeViewLogbookActionsInToolbar();
+
+    if (moveToLastPage) {
+        dataTable.page('last').draw('page');
+        return;
+    }
+    dataTable.draw(false);
+}
+
+function placeViewLogbookCloseButtonInToolbar() {
+    var $btn = $('#viewLogbookCloseBtn');
+    if (!$btn.length) return;
+
+    var $wrapper = $('#viewLogbookTable').closest('.dataTables_wrapper');
+    var $topRow = $wrapper.find('> .row').first();
+    var $cols = $topRow.children('div');
+
+    if (!$cols.length) {
+        $btn.show();
+        return;
+    }
+
+    var $targetCol = $cols.last();
+    $targetCol.css('text-align', 'right');
+    $btn.detach().appendTo($targetCol).show();
+}
+
+function moveViewLogbookActionsHome() {
+    var $home = $('#viewLogbookActionBar');
+    if (!$home.length) return;
+    var $buttons = $('#viewLogbookPrintBtn, #viewLogbookDownloadBtn, #viewLogbookCloseBtn');
+    $buttons.detach().appendTo($home);
+    $('#viewLogbookActionRow').show();
+}
+
+function placeViewLogbookActionsInToolbar() {
+    var $wrapper = $('#viewLogbookTable').closest('.dataTables_wrapper');
+    var $topRow = $wrapper.find('> .row').first();
+    var $cols = $topRow.children('div');
+    var $buttons = $('#viewLogbookPrintBtn, #viewLogbookDownloadBtn, #viewLogbookCloseBtn');
+
+    if (!$cols.length) {
+        moveViewLogbookActionsHome();
+        return;
+    }
+
+    var $targetCol = $cols.last();
+    $targetCol.css({
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: '6px'
+    });
+    $buttons.detach().appendTo($targetCol);
+    $('#viewLogbookActionRow').hide();
+}
+
+function initSelect2InViewLogbook(context) {
+    if (!(window.$ && $.fn && typeof $.fn.select2 === 'function')) return;
+    var $context = context ? $(context) : $(document);
+    var $targets = $context.find('select.select2').addBack('select.select2');
+    $targets.each(function () {
+        var $el = $(this);
+        if ($el.hasClass('select2-hidden-accessible')) {
+            $el.select2('destroy');
+        }
+        $el.select2({
+            width: '100%',
+            minimumResultsForSearch: 0
+        });
+    });
+}
+
+function viewLogbookEscapeHtml(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function parseViewLogbookFields(rawFields) {
+    if (!rawFields) return [];
+    if (Array.isArray(rawFields)) return rawFields;
+    if (typeof rawFields === 'string') {
+        try {
+            var parsed = JSON.parse(rawFields);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+            return [];
+        }
+    }
+    return [];
+}
+
+function normalizeViewLogbookList(response) {
+    if (Array.isArray(response)) return response;
+    if (response && Array.isArray(response.data)) return response.data;
+    return [];
+}
+
+function refreshViewLogbookTemplateList(callback) {
+    var payload = {
+        fields: 'Id;Number;Name;Fields;ProcessStatus;ApplicableDepartments;PreparingDepartments;ReviewingDepartments;Header;Footer'
+    };
+
+    JSUTIL.callAJAXPost('/data/LogbookTemplate/list', JSON.stringify(payload), function (response) {
+        var list = normalizeViewLogbookList(response);
+        if (typeof callback === 'function') callback(true, list);
+    }, function () {
+        if (typeof callback === 'function') callback(false, []);
+    });
+}
+
+function getViewTemplateStatus(record) {
+    return (record && (record.processStatus || record.ProcessStatus) || '').toString().toLowerCase();
+}
+
+function getViewTemplateId(record) {
+    return (record && (record.id || record.Id || '')).toString();
+}
+
+function getViewTemplateName(record) {
+    return (record && (record.name || record.Name || '')).toString();
+}
+
+function normalizeViewDepartmentId(value) {
+    var raw = (value === null || value === undefined) ? '' : String(value).trim();
+    if (!raw) return '';
+    var num = Number(raw);
+    return Number.isFinite(num) ? String(num) : raw;
+}
+
+function parseViewTemplateApplicableDepartmentIds(record) {
+    var raw = record && (record.applicableDepartments || record.ApplicableDepartments || '');
+    if (!raw) return [];
+    if (Array.isArray(raw)) {
+        return raw.map(function (id) { return normalizeViewDepartmentId(id); }).filter(function (id) { return id.length > 0; });
+    }
+    return String(raw).split(',').map(function (id) { return normalizeViewDepartmentId(id); }).filter(function (id) { return id.length > 0; });
+}
+
+function isViewTemplateVisibleForCurrentDepartment(record) {
+    var currentDeptId = String(resolveViewDepartmentId() || '').trim();
+    if (!currentDeptId) return true; // Show all if dept not resolved
+    var applicableIds = parseViewTemplateApplicableDepartmentIds(record);
+    if (!applicableIds.length) return true; // Show if no dept restriction
+    return applicableIds.indexOf(currentDeptId) !== -1;
+}
+
+function getViewEntryStatus(entry) {
+    return (entry && (entry.processStatus || entry.ProcessStatus || '')).toString().trim().toLowerCase();
+}
+
+function filterApprovedViewEntries(entryList) {
+    return (entryList || []).filter(function (entry) {
+        var status = getViewEntryStatus(entry);
+        return status === 'approved' || status === 'modification rejected';
+    });
+}
+
+function isViewFieldRequired(field) {
+    var raw = field && (field.required !== undefined ? field.required : field.Required);
+    if (typeof raw === 'boolean') return raw;
+    var normalized = (raw === null || raw === undefined) ? '' : String(raw).trim().toLowerCase();
+    return normalized === 'true' || normalized === '1' || normalized === 'yes';
+}
+
+function parseViewDataEntryCsv(dataEntry, expectedCount) {
+    var raw = (dataEntry === null || dataEntry === undefined) ? '' : String(dataEntry);
+    // Support both pipe (new) and comma (legacy) separators
+    var separator = raw.indexOf('|') !== -1 ? '|' : ',';
+    var parts = raw.split(separator).map(function (part) {
+        return (part || '').toString().trim();
+    });
+    while (parts.length < expectedCount) {
+        parts.push('');
+    }
+    return parts.slice(0, expectedCount);
+}
+
+function formatViewLogbookDisplayValue(field, rawValue) {
+    var type = ((field && field.type) || '').toString().toLowerCase();
+    if (type === 'date' && rawValue) {
+        var parsed = new Date(rawValue);
+        if (!isNaN(parsed.getTime())) {
+            var dd = String(parsed.getDate()).padStart(2, '0');
+            var mm = String(parsed.getMonth() + 1).padStart(2, '0');
+            var yyyy = parsed.getFullYear();
+            return dd + '/' + mm + '/' + yyyy;
+        }
+    }
+    return rawValue || '';
+}
+
+function normalizeViewEntityId(value) {
+    var raw = (value === null || value === undefined) ? '' : String(value).trim();
+    if (!raw) return '';
+    var num = Number(raw);
+    return Number.isFinite(num) ? num : raw;
+}
+
+var _cachedViewDepartmentId = null;
+var _viewDepartmentListCache = null;
+
+function resolveViewDepartmentId() {
+    if (_cachedViewDepartmentId) return _cachedViewDepartmentId;
+    if (typeof FOX !== 'undefined' && FOX) {
+        if (FOX.employeeDepartmentId) {
+            _cachedViewDepartmentId = normalizeViewEntityId(FOX.employeeDepartmentId);
+            return _cachedViewDepartmentId;
+        }
+        if (FOX.employeeDepartment && typeof FOX.employeeDepartment === 'object' && (FOX.employeeDepartment.id || FOX.employeeDepartment.Id)) {
+            _cachedViewDepartmentId = normalizeViewEntityId(FOX.employeeDepartment.id || FOX.employeeDepartment.Id);
+            return _cachedViewDepartmentId;
+        }
+    }
+    if (typeof employeeDepartmentId !== 'undefined' && employeeDepartmentId) {
+        _cachedViewDepartmentId = normalizeViewEntityId(employeeDepartmentId);
+        return _cachedViewDepartmentId;
+    }
+    var deptName = '';
+    if (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartment) {
+        var raw = FOX.employeeDepartment;
+        if (typeof raw === 'string') deptName = raw.trim();
+        else if (typeof raw === 'object' && raw !== null) deptName = (raw.name || raw.Name || '').toString().trim();
+    }
+    if (deptName && Array.isArray(_viewDepartmentListCache)) {
+        for (var i = 0; i < _viewDepartmentListCache.length; i++) {
+            var d = _viewDepartmentListCache[i];
+            var name = (d.name || d.Name || '').toString().trim();
+            if (name.toLowerCase() === deptName.toLowerCase()) {
+                _cachedViewDepartmentId = normalizeViewEntityId(d.id || d.Id);
+                return _cachedViewDepartmentId;
+            }
+        }
+    }
+    return '';
+}
+
+function preloadViewDepartmentsAndResolve(callback) {
+    if (Array.isArray(_viewDepartmentListCache)) {
+        resolveViewDepartmentId();
+        if (typeof callback === 'function') callback();
+        return;
+    }
+    JSUTIL.callAJAXGet('/api/departments', function(res) {
+        _viewDepartmentListCache = Array.isArray(res) ? res : [];
+        resolveViewDepartmentId();
+        if (typeof callback === 'function') callback();
+    }, function() {
+        _viewDepartmentListCache = [];
+        if (typeof callback === 'function') callback();
+    });
+}
+
+function renderViewLogbookHeader(fields) {
+    var headerHtml = '<tr><th style="width:35px; text-align: center;">#</th>';
+    fields.forEach(function (field) {
+        var name = viewLogbookEscapeHtml((field && field.name) || 'Field');
+        var requiredMark = isViewFieldRequired(field) ? ' <span class="text-danger">*</span>' : '';
+        headerHtml += '<th>' + name + requiredMark + '</th>';
+    });
+    headerHtml += '</tr>';
+    $('#viewLogbookTable thead').html(headerHtml);
+}
+
+function renderViewLogbookEmptyRow(message, columnCount) {
+    var colspan = Number(columnCount) || 1;
+    var html = '<tr><td colspan="' + colspan + '" class="text-center text-muted">' + viewLogbookEscapeHtml(message) + '</td></tr>';
+    destroyViewLogbookDataTable();
+    $('#viewLogbookTable tbody').html(html);
+    $('#viewLogbookCloseBtn').show();
+    $('#viewLogbookPrintBtn, #viewLogbookDownloadBtn').hide();
+    moveViewLogbookActionsHome();
+}
+
+function renderViewLogbookEntries(entryList, fields) {
+    if (!Array.isArray(entryList) || !entryList.length) {
+        renderViewLogbookEmptyRow('No entries found.', (fields.length + 1));
+        return;
+    }
+
+    var sortedEntries = entryList.slice().sort(function (a, b) {
+        var aDate = new Date(a.createdDate || a.CreatedDate || 0).getTime();
+        var bDate = new Date(b.createdDate || b.CreatedDate || 0).getTime();
+        var aHasDate = Number.isFinite(aDate) && aDate > 0;
+        var bHasDate = Number.isFinite(bDate) && bDate > 0;
+
+        if (aHasDate && bHasDate && aDate !== bDate) {
+            return aDate - bDate;
+        }
+
+        var aId = Number(a.id || a.Id || 0);
+        var bId = Number(b.id || b.Id || 0);
+        if (Number.isFinite(aId) && Number.isFinite(bId) && aId !== bId) {
+            return aId - bId;
+        }
+        return 0;
+    });
+
+    var rowsHtml = '';
+    sortedEntries.forEach(function (entry, rowIndex) {
+        var values = parseViewDataEntryCsv(entry.dataEntry || entry.DataEntry || '', fields.length);
+        rowsHtml += '<tr class="logbook-existing-row">';
+        rowsHtml += '<td>' + (rowIndex + 1) + '</td>';
+        fields.forEach(function (field, idx) {
+            rowsHtml += '<td>' + viewLogbookEscapeHtml(formatViewLogbookDisplayValue(field, values[idx])) + '</td>';
+        });
+        rowsHtml += '</tr>';
+    });
+    $('#viewLogbookTable tbody').html(rowsHtml);
+    refreshViewLogbookPagination(false);
+    $('#viewLogbookPrintBtn, #viewLogbookDownloadBtn').show();
+}
+
+function findViewExistingLogbook(departmentId, templateId, callback) {
+    var payload = { Condition: "department.Id=" + Number(departmentId) + " AND template.Id=" + Number(templateId) };
+
+    JSUTIL.callAJAXPost('/data/Logbook/list', JSON.stringify(payload), function (response) {
+        var list = normalizeViewLogbookList(response);
+        if (list.length) {
+            callback(true, normalizeViewEntityId(list[0].id || list[0].Id || ''));
+            return;
+        }
+        callback(true, '');
+    }, function () {
+        callback(false, '');
+    });
+}
+
+function buildViewDateConditions(from, to) {
+    var conditions = [];
+    if (from) {
+        conditions.push("CreatedDate >= '" + String(from).replace(/'/g, "''") + " 00:00:00'");
+    }
+    if (to) {
+        conditions.push("CreatedDate <= '" + String(to).replace(/'/g, "''") + " 23:59:59'");
+    }
+    return conditions;
+}
+
+function buildLogicForConditions(count) {
+    if (count <= 0) return '';
+    var parts = [];
+    for (var i = 0; i < count; i++) {
+        parts.push('{' + i + '}');
+    }
+    return parts.join(' AND ');
+}
+
+function loadViewLogbookEntries(logbookId, dateRange, callback) {
+    var payload = { Condition: "logbook.Id=" + Number(logbookId) };
+
+    JSUTIL.callAJAXPost('/data/LogbookEntry/list', JSON.stringify(payload), function (response) {
+        var entries = normalizeViewLogbookList(response);
+        // Filter to approved/modification-rejected entries client-side
+        var filtered = filterApprovedViewEntries(entries);
+        // Apply date range filter client-side
+        var from = dateRange && dateRange.from ? dateRange.from : '';
+        var to = dateRange && dateRange.to ? dateRange.to : '';
+        if (from || to) {
+            filtered = filtered.filter(function(entry) {
+                var created = (entry.createdDate || entry.CreatedDate || '').toString();
+                if (!created) return true;
+                var d = new Date(created);
+                if (isNaN(d.getTime())) return true;
+                if (from && d < new Date(from + 'T00:00:00')) return false;
+                if (to && d > new Date(to + 'T23:59:59')) return false;
+                return true;
+            });
+        }
+        callback(true, filtered);
+    }, function () {
+        callback(false, []);
+    });
+}
+
+function renderViewLogbookArea(templateRecord) {
+    var fields = parseViewLogbookFields(templateRecord && (templateRecord.fields || templateRecord.Fields));
+    selectedViewLogbookTemplate = {
+        id: getViewTemplateId(templateRecord),
+        name: getViewTemplateName(templateRecord),
+        fields: fields
+    };
+    setViewLogbookEntryList([]);
+
+    // Sync Select2 display only — do not trigger 'change' which would call renderViewLogbookArea again
+    $('#viewLogbookTemplateSelect').val(String(selectedViewLogbookTemplate.id || ''));
+    if ($('#viewLogbookTemplateSelect').hasClass('select2-hidden-accessible')) {
+        $('#viewLogbookTemplateSelect').trigger('change.select2');
+    }
+
+    destroyViewLogbookDataTable();
+    $('#viewLogbookTable thead').empty();
+    $('#viewLogbookTable tbody').empty();
+    $('#viewLogbookHint').hide();
+    $('#viewLogbookCloseBtn').show();
+    moveViewLogbookActionsHome();
+    $('#viewLogbookAreaWrap').show();
+
+    if (!fields.length) {
+        $('#viewLogbookHint').show();
+        return;
+    }
+
+    renderViewLogbookHeader(fields);
+
+    var departmentId = resolveViewDepartmentId();
+    var templateId = normalizeViewEntityId(selectedViewLogbookTemplate.id);
+
+    if (!departmentId || !templateId) {
+        setViewLogbookEntryList([]);
+        renderViewLogbookEmptyRow('Unable to resolve department/template context.', fields.length + 1);
+        return;
+    }
+
+    isViewLogbookLoading = true;
+    renderViewLogbookEmptyRow('Loading...', fields.length + 1);
+
+    findViewExistingLogbook(departmentId, templateId, function (ok, logbookId) {
+        if (!ok) {
+            isViewLogbookLoading = false;
+            setViewLogbookEntryList([]);
+            renderViewLogbookEmptyRow('Unable to load logbook.', fields.length + 1);
+            return;
+        }
+
+        if (!logbookId) {
+            isViewLogbookLoading = false;
+            setViewLogbookEntryList([]);
+            renderViewLogbookEmptyRow('No data found for this logbook.', fields.length + 1);
+            return;
+        }
+
+        var dateRange = getViewLogbookDateRange();
+        loadViewLogbookEntries(logbookId, dateRange, function (loaded, entries) {
+            isViewLogbookLoading = false;
+            if (!loaded) {
+                setViewLogbookEntryList([]);
+                renderViewLogbookEmptyRow('Unable to load entries.', fields.length + 1);
+                return;
+            }
+            setViewLogbookEntryList(entries);
+            renderViewLogbookEntries(entries, fields);
+        });
+    });
+}
+
+function resetViewLogbookPanel() {
+    selectedViewLogbookTemplate = null;
+    isViewLogbookLoading = false;
+    setViewLogbookEntryList([]);
+    $('#viewLogbookTemplateSelect').val('');
+    $('#viewLogbookFromDate').val('');
+    $('#viewLogbookToDate').val('');
+    if ($('#viewLogbookTemplateSelect').hasClass('select2-hidden-accessible')) {
+        $('#viewLogbookTemplateSelect').trigger('change.select2');
+    }
+    destroyViewLogbookDataTable();
+    $('#viewLogbookCloseBtn').hide();
+    $('#viewLogbookAreaWrap').hide();
+    $('#viewLogbookTable thead').empty();
+    $('#viewLogbookTable tbody').empty();
+    $('#viewLogbookHint').hide();
+    $('#viewLogbookPrintBtn, #viewLogbookDownloadBtn').hide();
+    moveViewLogbookActionsHome();
+}
+
+function bindViewLogbookEvents() {
+    $('#viewLogbookCloseBtn').off('click').on('click', function () {
+        resetViewLogbookPanel();
+    });
+
+    $('#viewLogbookPrintBtn').off('click').on('click', function () {
+        if (!viewLogbookEntryList.length) {
+            JSUTIL.buildErrorModal('No entries to print.');
+            return;
+        }
+
+        var templateName = (selectedViewLogbookTemplate && selectedViewLogbookTemplate.name) ? selectedViewLogbookTemplate.name : 'Logbook';
+        var fields = (selectedViewLogbookTemplate && selectedViewLogbookTemplate.fields) || [];
+
+        var headerCells = '<th>#</th>' + fields.map(function (f) {
+            return '<th>' + viewLogbookEscapeHtml((f && f.name) || 'Field') + '</th>';
+        }).join('');
+
+        var sortedEntries = viewLogbookEntryList.slice().sort(function (a, b) {
+            var aDate = new Date(a.createdDate || a.CreatedDate || 0).getTime();
+            var bDate = new Date(b.createdDate || b.CreatedDate || 0).getTime();
+            if (aDate !== bDate) return aDate - bDate;
+            return Number(a.id || a.Id || 0) - Number(b.id || b.Id || 0);
+        });
+
+        var bodyRows = sortedEntries.map(function (entry, idx) {
+            var values = parseViewDataEntryCsv(entry.dataEntry || entry.DataEntry || '', fields.length);
+            var cells = '<td>' + (idx + 1) + '</td>' + values.map(function (v) {
+                return '<td>' + viewLogbookEscapeHtml(v) + '</td>';
+            }).join('');
+            return '<tr>' + cells + '</tr>';
+        }).join('');
+
+        var printHtml = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            + '<title>' + viewLogbookEscapeHtml(templateName) + '</title>'
+            + '<style>'
+            + 'body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }'
+            + 'h2 { margin-bottom: 10px; font-size: 15px; }'
+            + 'table { width: 100%; border-collapse: collapse; }'
+            + 'th, td { border: 1px solid #999; padding: 5px 8px; text-align: left; white-space: nowrap; }'
+            + 'th { background: #f0f0f0; font-weight: bold; }'
+            + 'tr:nth-child(even) { background: #f8f8f8; }'
+            + '</style></head><body>'
+            + '<h2>' + viewLogbookEscapeHtml(templateName) + ' \u2014 Logbook Entries</h2>'
+            + '<table><thead><tr>' + headerCells + '</tr></thead><tbody>' + bodyRows + '</tbody></table>'
+            + '</body></html>';
+
+        var printWin = window.open('', '_blank', 'width=900,height=600');
+        if (!printWin) {
+            JSUTIL.buildErrorModal('Pop-up was blocked. Please allow pop-ups and try again.');
+            return;
+        }
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+        printWin.onload = function () {
+            printWin.focus();
+            printWin.print();
+            printWin.close();
+        };
+    });
+
+    $('#viewLogbookDownloadBtn').off('click').on('click', function () {
+        if (!Array.isArray(viewLogbookEntryList) || !viewLogbookEntryList.length || !selectedViewLogbookTemplate) {
+            JSUTIL.buildErrorModal('No entries to download.');
+            return;
+        }
+
+        var fields = selectedViewLogbookTemplate.fields || [];
+        var header = ['Sr No'].concat(fields.map(function (f) { return f && f.name ? f.name : 'Field'; }));
+
+        var rows = viewLogbookEntryList.map(function (entry, idx) {
+            var values = parseViewDataEntryCsv(entry.dataEntry || entry.DataEntry || '', fields.length);
+            return [String(idx + 1)].concat(values);
+        });
+
+        var csvLines = [];
+        csvLines.push(header.map(function (v) { return '\"' + (v || '').replace(/\"/g, '\"\"') + '\"'; }).join(','));
+        rows.forEach(function (row) {
+            csvLines.push(row.map(function (v) { return '\"' + (v || '').replace(/\"/g, '\"\"') + '\"'; }).join(','));
+        });
+
+        var blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        var fileName = (selectedViewLogbookTemplate.name || 'logbook') + '_entries.csv';
+        if (navigator.msSaveBlob) { // IE 10+
+            navigator.msSaveBlob(blob, fileName);
+        } else {
+            var url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    });
+
+    $('#viewLogbookFromDate, #viewLogbookToDate').off('change').on('change', function () {
+        if (isViewLogbookLoading) return;
+        var templateId = ($('#viewLogbookTemplateSelect').val() || '').toString().trim();
+        if (!templateId) return;
+        var record = viewLogbookTemplateRows.find(function (item) {
+            return String(getViewTemplateId(item)) === templateId;
+        });
+        if (record) {
+            renderViewLogbookArea(record);
+        }
+    });
+
+    $('#viewLogbookTemplateSelect').off('change').on('change', function () {
+        var templateId = ($(this).val() || '').toString().trim();
+        if (!templateId) {
+            resetViewLogbookPanel();
+            return;
+        }
+
+        var record = viewLogbookTemplateRows.find(function (item) {
+            return String(getViewTemplateId(item)) === templateId;
+        });
+
+        if (!record) {
+            JSUTIL.buildErrorModal('Selected template not found.');
+            return;
+        }
+
+        renderViewLogbookArea(record);
+    });
+}
+
+function loadViewApprovedLogbookTemplates() {
+    refreshViewLogbookTemplateList(function (ok, list) {
+        if (!ok) {
+            JSUTIL.buildErrorModal('Unable to load logbook templates.');
+            return;
+        }
+
+        viewLogbookTemplateRows = (Array.isArray(list) ? list : []).filter(function (record) {
+            return getViewTemplateStatus(record) === 'approved' && isViewTemplateVisibleForCurrentDepartment(record);
+        });
+
+        var optionsHtml = '<option value="">-- Choose an approved template --</option>';
+        viewLogbookTemplateRows.forEach(function (row) {
+            var id = getViewTemplateId(row);
+            if (!id) return;
+            var number = (row.number || row.Number || '').toString().trim();
+            var name = getViewTemplateName(row);
+            var label = number ? (number + ' - ' + name) : name;
+            optionsHtml += '<option value="' + viewLogbookEscapeHtml(id) + '">' + viewLogbookEscapeHtml(label) + '</option>';
+        });
+
+        $('#viewLogbookTemplateSelect').html(optionsHtml);
+        initSelect2InViewLogbook('#viewLogbookTemplateSelect');
+    });
+}
+
+$(document).ready(function () {
+    if (window.lucide) lucide.createIcons();
+    setViewLogbookEntryList([]);
+    bindViewLogbookEvents();
+    preloadViewDepartmentsAndResolve(function() {
+        loadViewApprovedLogbookTemplates();
+    });
+    initSelect2InViewLogbook('#viewLogbookTemplateSelect');
+});
+</script>

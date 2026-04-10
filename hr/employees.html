@@ -1,0 +1,3594 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+
+<!-- allPoPanel.html    Start -->
+ <style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+     #POPanel thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+      #allPoPanelTable .selectPOBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+    #allPoPanelTable .selectPOBtn:hover,
+    #allPoPanelTable .selectPOBtn:focus {
+        color: #286090;
+        /* text-decoration: underline; */
+    }
+    #POPanel tbody tr:last-child td {
+        border-bottom: none !important;
+    } 
+    .modal-header-simple {
+        text-align: center;
+        border-bottom: 1px solid #e9ecef;
+        padding: 24px 32px 20px 32px;
+        background-color: #f8f9fa;
+        position: relative;
+    }
+
+    .modal-header-simple .modal-title {
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #495057;
+        display: block;
+        width: 100%;
+        line-height: 1.2;
+    }
+
+    .modal-header-simple small.font-bold {
+        display: block;
+        margin: 0;
+        font-size: 12px;
+        color: #6c757d;
+        font-weight: 400;
+        line-height: 1.4;
+        width: 100%;
+    }
+    .modal-header-simple * {
+        float: none !important;
+        flex: none !important;
+    }
+
+    .modal-header-simple {
+        display: block !important;
+        flex-direction: column !important;
+    }
+    .table.invoice-total {
+        width: 40%;
+        margin-left: auto;
+    }
+    .table.invoice-total td:last-child {
+        text-align: right;
+        white-space: nowrap;
+    }
+ </style>
+
+<style>
+    .process-flow-container {
+        margin: 5px auto;
+        background: white;
+        padding: 10px 5px;
+        max-width: 100%;
+        border-radius: 10px;
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch;
+        /* box-sizing: border-box; */
+    }
+    .flow-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: nowrap; /* prefer single-line with scroll; change to wrap if you prefer multiple rows */
+    }
+    .step-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 14px;
+        height: 32px;
+        background: #fed804;
+        border: 2px solid #fed804;
+        border-radius: 999px;
+        cursor: default;
+        font-size: 14px;
+        font-weight: 500;
+        color: #000;
+        transition: 0.2s ease;
+        justify-content: flex-start;
+        flex: 0 1 auto; /* allow shrinking on small widths */
+        min-width: 0; /* remove forced minimum */
+        white-space: nowrap; /* keep label on one line */
+    }
+
+    /* If you prefer wrapping to multiple rows instead of horizontal scroll, uncomment:
+    .flow-row { flex-wrap: wrap; }
+    */
+
+    @media (max-width: 480px) {
+        .flow-row { flex-wrap: wrap; gap: 8px; }
+        .step-button { padding: 6px 10px; font-size: 13px; }
+    }
+    .step-button.active {
+        background: #ff9800 !important;
+        border-color: #fed804;
+    }
+    .step-button .stepnumber {
+        width: 23px;
+        height: 23px;
+        background: white;
+        border: 2px solid #c5d4ff;
+        color: #000;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+    .step-button.active .stepnumber {
+        border-color: #ff9800;
+    }
+    .step-button p {
+        margin: 0;
+        font-size: 14px;
+    }
+    html[data-bs-theme="dark"] .process-flow-container {
+        background: #2d2f38 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    }
+</style>
+
+<div class="qa-white-panel">
+
+    <div class="row animated fadeInRight aasaanPanel" id="POPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h5>Purchase <small>Purchase Order</small></h5>
+                    <!-- Buttons are placed here so they are always visible regardless of active panel -->
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;" id="pageButtons">
+                        <button type="button" class="btn btn-sm btn-secondary newPOBtn"><i data-lucide="plus"></i>New
+                            PO</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtn" style="display: none;"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtnEdit" style="display: none;"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-sm btn-default printPoBtn" style="display: none;"><i
+                                data-lucide="printer"></i> Print</button>
+                          <!-- <button type="button" class="btn btn-sm btn-default emailOrderBtn" style="display: none;"><i
+                                data-lucide="mail"></i> Email</button> --> 
+                        <button type="button" class="btn btn-sm btn-default orderCancelBtn" style="display: none;"><i
+                                data-lucide="trash"></i> Cancel</button>
+                        <!-- <button type="button" class="btn btn-sm btn-default addCustomerModalBtn" style="display: none;"><i data-lucide="plus"></i>Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModalBtn" style="display: none;"><i data-lucide="plus"></i>Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;"><i data-lucide="plus"></i>Taxes</button> -->
+                        <button type="button" class="btn btn-sm btn-default addCustomerModalBtn" style="display: none;"
+                         data-bs-toggle="modal" data-bs-target="#addCustomerModal"><i data-lucide="plus"></i>Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModalBtn" style="display: none;" 
+                        data-bs-toggle="modal" data-bs-target="#addProductModal"><i data-lucide="plus"></i>Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;" 
+                        data-bs-toggle="modal" data-bs-target="#taxpanel_addTaxModal"><i data-lucide="plus"></i>Taxes</button>
+                        <button type="button" class="btn btn-sm btn-secondary invoiceSaveBtn" style="display: none;"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-sm btn-default orderEditBtn" style="display: none;"><i
+                                data-lucide="pencil"></i> Edit</button>
+                        <button type="button" class="btn btn-sm btn-secondary editOrderSaveBtn" style="display: none;"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-sm btn-default approvedBtn" style="display: none;"><i
+                                data-lucide="send"></i> Request Approval</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="table-responsive">
+                        <table id="allPoPanelTable" class="table  table-bordered table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Date / Time</th>
+                                    <th>Vendor</th>
+                                    <th>Total</th>
+                                    <th>Order Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="POTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- allPoPanel.html    End -->
+
+
+
+
+
+
+    <!-- editPoPanel.html   Start -->
+
+    <style type="text/css">
+        .lnItemInputVal,
+        .lnItemInputValTotal {
+            text-align: right;
+        }
+
+        .invoiceHiddenInputBox {
+            border: none;
+            outline: none;
+            text-align: right;
+        }
+    </style>
+    <div class="row animated fadeInRight aasaanPanel" id="EditPO" style="display: none;">
+        <!-- Process Flow Bar -->
+        <div class="process-flow-container">
+            <div class="flow-row">
+                <button class="step-button step-initiation active" data-step="0">
+                    <div class="stepnumber">1</div>
+                    <p>Initiation</p>
+                </button>
+                <button class="step-button step-hod-review" data-step="1">
+                    <div class="stepnumber">2</div>
+                    <p>Review</p>
+                </button>
+                <button class="step-button step-qa-approval" data-step="2">
+                    <div class="stepnumber">3</div>
+                    <p>Approval</p>
+                </button>
+            </div>
+    </div>
+    <div class="ibox float-e-margins">
+                <div class="ibox-title" style="display: flex; align-items: center; justify-content: space-between;">
+                    <!-- Buttons are placed here so they are always visible regardless of active panel -->
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;" id="pageButtons">
+                        <button type="button" class="btn btn-sm btn-secondary newPOBtn"><i data-lucide="plus"></i>New
+                            PO</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtn" style="display: none;"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtnEdit" style="display: none;"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-sm btn-default printPoBtn" style="display: none;"><i
+                                data-lucide="printer"></i> Print</button>
+                         <!-- <button type="button" class="btn btn-sm btn-default emailOrderBtn" style="display: none;"><i
+                                data-lucide="mail"></i> Email</button> -->
+                        <button type="button" class="btn btn-sm btn-default orderCancelBtn" style="display: none;"><i
+                                data-lucide="trash"></i> Cancel</button>
+                        <!-- <button type="button" class="btn btn-sm btn-default addCustomerModalBtn" style="display: none;"><i data-lucide="plus"></i>Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModalBtn" style="display: none;"><i data-lucide="plus"></i>Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;"><i data-lucide="plus"></i>Taxes</button> -->
+                        <button type="button" class="btn btn-sm btn-default addCustomerModalBtn" style="display: none;"
+                         data-bs-toggle="modal" data-bs-target="#addCustomerModal"><i data-lucide="plus"></i>Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModalBtn" style="display: none;" 
+                        data-bs-toggle="modal" data-bs-target="#addProductModal"><i data-lucide="plus"></i>Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;" 
+                        data-bs-toggle="modal" data-bs-target="#taxpanel_addTaxModal"><i data-lucide="plus"></i>Taxes</button>
+                        <button type="button" class="btn btn-sm btn-secondary invoiceSaveBtn" style="display: none;"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-sm btn-default orderEditBtn" style="display: none;"><i
+                                data-lucide="pencil"></i> Edit</button>
+                        <button type="button" class="btn btn-sm btn-secondary editOrderSaveBtn" style="display: none;"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-sm btn-default approvedBtn" style="display: none;"><i
+                                data-lucide="send"></i> Request Approval</button>
+                    </div>
+                </div>
+        <div class="col-lg-12">
+            <div class="ibox-content p-xl">
+                <!-- OLD: <form action="/purchase/po/update" method="post" id="editPoForm"> -->
+                <form action="/api/purchase/orders" method="post" id="editPoForm">
+                    <input type="hidden" id="custId">
+                    <input type="hidden" id="manuId">
+                    <input type="hidden" id="editTaxAccountId1">
+                    <input type="hidden" id="editTaxAccountId2">
+
+                    <!-- Band 1: PO Number + Company Address inline -->
+                    <div class="row" style="margin-bottom: 5px;">
+                        <div class="col-sm-12">
+                            <h4 style="margin: 0 0 4px 0;">PO No. <span class="text-navy" id="purchaseNumber"></span>
+                            </h4>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 6px 0 10px; border-color: #e5e5e5;">
+
+                    <!-- Band 2: Vendor (left) | Manufacturer (right) -->
+                    <div class="row" style="margin-bottom: 8px;">
+                        <div class="col-sm-6">
+                            <label style="font-weight: 600; color: #555; margin-bottom: 2px;">To (Vendor):</label>
+                            <address id="custAddress" style="margin: 0; font-style: normal; font-weight: 600;">
+                            </address>
+                        </div>
+                        <div class="col-sm-6">
+                            <label style="font-weight: 600; color: #555; margin-bottom: 2px;">Manufacturer:</label>
+                            <address id="manuAddress" style="margin: 0; font-style: normal; font-weight: 600;">
+                            </address>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 6px 0 10px; border-color: #e5e5e5;">
+
+                    <!-- Band 3: PO Date + Delivery Date (left) | Quotation No + Quotation Date (right) -->
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0 5px;">
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="width: 40%; padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            PO Date:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control datepicker" id="orderDate"
+                                                name="orderObj.OrderDate" placeholder="Enter PO Date" style="width: 100%;" disabled>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            Delivery Date:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control datepicker"
+                                                id="editDeliveryDate" name="orderObj.DeliveryDate" placeholder="DD/MM/YYYY" style="width: 100%;"
+                                                disabled>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-sm-6">
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0 5px;">
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style="width: 40%; padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            Indent No:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control" id="editQuotationNumber"
+                                                name="orderObj.QuoteNumber" placeholder="Enter Indent No" style="width: 100%;"
+                                                readonly>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                            Indent Date:</td>
+                                        <td style="padding: 4px 0;">
+                                            <input type="text" class="input-sm form-control datepicker"
+                                                id="editQuotationDate" name="orderObj.QuoteDate" placeholder="DD/MM/YYYY" style="width: 100%;"
+                                                disabled>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive m-t">
+                        <table class="table invoice-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;"> </th>
+                                    <th style="text-align: left;">Sr #</th>
+                                    <th style="text-align: left;">Product</th>
+                                    <th style="text-align: left;">UOM</th>
+                                    <th style="text-align: right;">Quantity</th>
+                                    <th style="text-align: right;">Unit Price</th>
+                                    <th style="text-align: right;">Discount</th>
+                                    <th style="text-align: right;">Total Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orderLnItemTable"></tbody>
+                        </table>
+                    </div>
+
+                    <table class="table invoice-total">
+                        <tbody id="editPO">
+                            <!-- <tr>
+                            <td><strong>Sub-Total:</strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="subTotal" readonly></td>
+                        </tr>
+                        <tr id="taxRow1" style="display: none;">
+                            <td><strong id="taxName1"></strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal" readonly></td>
+                        </tr>
+                        <tr id="taxRow2" style="display: none;">
+                            <td><strong id="taxName2"></strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal2" readonly></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total:</strong></td>
+                            <td><input type="text" class="invoiceHiddenInputBox" id="editInvoiceTotal" readonly></td>
+                        </tr> -->
+                        </tbody>
+                    </table>
+                    <div class="row">
+                        <div class="col-lg-12 col-md-6 col-sm-12">
+                            <label><strong>Payment Terms:</strong></label>
+                            <textarea type="text" class="input-sm form-control editRecordInput" id="editPoTerms"
+                                name="orderObj.PaymentTerms" placeholder="Enter Payment Terms"
+                                style="padding-top: 0.5rem;border-radius: 5px; transition: border 0.3s ease, box-shadow 0.3s ease;"
+                                rows="5" readonly></textarea>
+                        </div>
+                    </div>
+                </form>
+                <div class="tabs-container" style="margin-top: 10px;">
+                    <ul class="nav nav-tabs">
+                        <li class="active" ><a data-toggle="tab" href="#tab-1" aria-expanded="false" style="color: black;">Documents</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="tab-1" class="tab-pane active">
+                            <div class="panel-body">
+                                <div id="uploadContainer" style="padding: 15px; max-height: 76vh; overflow-y: auto;">
+                                    <div class="upload-toolbar" style="text-align: right; margin-bottom: 10px;">
+                                        <button class="btn btn-white" id="uploadFileBtn">
+                                            <i data-lucide="upload"></i> Upload File
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allDocumentsTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- editPoPanel.html   End -->
+
+
+
+
+
+
+    <!-- emailPanel.html    Start -->
+
+    <div class="modal inmodal fade" id="sendEmailModal" tabindex="-1" role="dialog"
+        style="display: none;">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <form role="form" name="email_modal_obj">
+                            <div class="mail-body">
+                                <div class="form-group row"><label class="col-sm-2 col-form-label">To:</label>
+                                    <div class="col-sm-10"><input type="text" class="form-control emailModalInput"
+                                            id="emailModalToAddress" name="toAddress" value="lekshmi.kcg@gmail.com" />
+                                    </div>
+                                </div>
+                                <div class="form-group row"><label class="col-sm-2 col-form-label">Subject:</label>
+                                    <div class="col-sm-10"><input type="text" class="form-control emailModalInput"
+                                            name="subject" value="Quotation" /></div>
+                                </div>
+                            </div>
+                            <div class="mail-text h-200">
+                                <textarea class="form-control emailModalInput" rows="10"
+                                    name="textBody">Your document is attached here.</textarea>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="mail-body text-left col-lg-6">
+                                    <i data-lucide="file" style="font-size: 30px;"></i> File.pdf
+                                </div>
+                                <div class="mail-body text-right tooltip-demo col-lg-6">
+                                    <a href="javascript:void(0)" class="btn btn-white" data-toggle="tooltip"
+                                        data-placement="top" title="Discard email" data-bs-dismiss="modal"> Discard </a>
+                                    <a href="javascript:void(0)" class="btn btn-secondary" data-toggle="tooltip"
+                                        data-placement="top" title="Send" id="email_modal_send_btn"> Send </a>
+                                </div>
+                            </div>
+                            <input type="hidden" id="emailModalFileName" value="Quote.pdf" />
+                            <input type="hidden" id="emailModalAttachmentPath" value="" />
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- emailPanel.html    End -->
+
+
+
+
+
+
+    <!-- newPoPanel.html    Start -->
+
+    <div class="row animated fadeInRight aasaanPanel" id="AddPO" style="display: none;">
+        <div class="col-lg-12">
+            <div class="ibox-title" style="display: flex; align-items: center; justify-content: space-between;">
+                    <h5>Purchase <small>Purchase Order</small></h5>
+                    <!-- Buttons are placed here so they are always visible regardless of active panel -->
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;" id="pageButtons">
+                        <button type="button" class="btn btn-sm btn-secondary newPOBtn"><i data-lucide="plus"></i>New
+                            PO</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtn" style="display: none;"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-sm btn-default CloseBtnEdit" style="display: none;"><i data-lucide="x"></i>Close</button>
+                        <button type="button" class="btn btn-sm btn-default printPoBtn" style="display: none;"><i
+                                data-lucide="printer"></i> Print</button>
+                          <!-- <button type="button" class="btn btn-sm btn-default emailOrderBtn" style="display: none;"><i
+                                data-lucide="mail"></i> Email</button> --> 
+                        <button type="button" class="btn btn-sm btn-default orderCancelBtn" style="display: none;"><i
+                                data-lucide="trash"></i> Cancel</button>
+                        <!-- <button type="button" class="btn btn-sm btn-default addCustomerModalBtn" style="display: none;"><i data-lucide="plus"></i>Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModalBtn" style="display: none;"><i data-lucide="plus"></i>Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;"><i data-lucide="plus"></i>Taxes</button> -->
+                        <button type="button" class="btn btn-sm btn-default addCustomerModalBtn" style="display: none;"
+                         data-bs-toggle="modal" data-bs-target="#addCustomerModal"><i data-lucide="plus"></i>Vendor</button>
+                        <button type="button" class="btn btn-sm btn-default addProductModalBtn" style="display: none;" 
+                        data-bs-toggle="modal" data-bs-target="#addProductModal"><i data-lucide="plus"></i>Product</button>
+                        <button type="button" class="btn btn-sm btn-default manageTaxesBtn" style="display: none;" 
+                        data-bs-toggle="modal" data-bs-target="#taxpanel_addTaxModal"><i data-lucide="plus"></i>Taxes</button>
+                        <button type="button" class="btn btn-sm btn-secondary invoiceSaveBtn" style="display: none;"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-sm btn-default orderEditBtn" style="display: none;"><i
+                                data-lucide="pencil"></i> Edit</button>
+                        <button type="button" class="btn btn-sm btn-secondary editOrderSaveBtn" style="display: none;"><i data-lucide="check"></i>Save</button>
+                        <button type="button" class="btn btn-sm btn-default approvedBtn" style="display: none;"><i
+                                data-lucide="send"></i> Request Approval</button>
+                    </div>
+                </div>
+            <div class="ibox-content p-xl">
+                <div class="alert alert-default" id="pageErrorPanel" style="display: none;"></div>
+                <input type="hidden" id="customerId">
+                <input type="hidden" id="manufacturerId">
+
+                <!-- Row 2: Vendor (left) | Manufacturer (right) -->
+                <div class="row" style="margin-bottom: 8px;">
+                    <div class="col-sm-6">
+                        <label style="font-weight: 600; color: #555; margin-bottom: 2px;">To (Vendor):</label>
+                        <address id="customerAddress" style="margin: 0; font-style: normal;"></address>
+                    </div>
+                    <div class="col-sm-6">
+                        <label style="font-weight: 600; color: #555; margin-bottom: 2px;">Manufacturer:</label>
+                        <address id="manufacturerAddress" style="margin: 0; font-style: normal;"></address>
+                    </div>
+                </div>
+
+                <hr style="margin: 6px 0 10px; border-color: #e5e5e5;">
+
+                <!-- Row 3: PO Date + Delivery Date (left) | Quotation No + Quotation Date (right) -->
+                <div class="row">
+                    <div class="col-sm-6">
+                        <table style="width: 100%; border-collapse: separate; border-spacing: 0 5px;">
+                            <tbody>
+                                <tr>
+                                    <td
+                                        style="width: 40%; padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                        PO Date:</td>
+                                    <td style="padding: 4px 0;">
+                                        <!-- <input type="text" class="input-sm form-control datepicker" name="OrderDate"
+                                            id="orderDate2" style="width: 100%;"> -->
+                                            <input type="text" class="input-sm form-control" name="OrderDate" placeholder="Enter PO Date" id="orderDate2" style="width: 100%;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td
+                                        style="padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                        Delivery Date:</td>
+                                    <td style="padding: 4px 0;">
+                                        <!-- <input type="text" class="input-sm form-control datepicker" name="DeliveryDate"
+                                            id="deliveryDate" style="width: 100%;"> -->
+                                            <input type="text" class="input-sm form-control" name="DeliveryDate" placeholder="DD/MM/YYYY" id="deliveryDate" style="width: 100%;">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-sm-6">
+                        <table style="width: 100%; border-collapse: separate; border-spacing: 0 5px;">
+                            <tbody>
+                                <tr>
+                                    <td
+                                        style="width: 40%; padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                        Indent No:</td>
+                                    <td style="padding: 4px 0;">
+                                        <input type="text" class="input-sm form-control" name="QuotationNumber"
+                                            id="quotationNumber" placeholder="Enter Indent No" style="width: 100%;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td
+                                        style="padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
+                                        Indent Date:</td>
+                                    <td style="padding: 4px 0;">
+                                        <!-- <input type="text" class="input-sm form-control datepicker" name="QuotationDate"
+                                            id="quotationDate" style="width: 100%;"> -->
+                                            <input type="text" class="input-sm form-control" name="QuotationDate" id="quotationDate" placeholder="DD/MM/YYYY" style="width: 100%;">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="table-responsive m-t">
+                    <table class="table invoice-table">
+                        <thead>
+                            <tr>
+                                <th>&nbsp;</th>
+                                <th style="text-align: left;">Product</th>
+                                <th>UOM</th>
+                                <th>Quantity</th>
+                                <th style="text-align: right;">Unit Price</th>
+                                <th style="text-align: right;">Discount</th>
+                                <th>Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoiceLnItemTable"></tbody>
+                    </table>
+                </div>
+
+                <table class="table invoice-total">
+                    <tbody>
+                        <tr id="invoiceSubTotalTr">
+                            <td><strong>SUBTOTAL :</strong></td>
+                            <td id="invoiceSubTotal">0.00</td>
+                        </tr>
+                        <tr id="invoiceTaxHeader1" style="display: none;">
+                            <td><strong id="taxDeduction1Name">Tax :</strong></td>
+                            <td id="taxDeduction1Amount">0.00</td>
+                        </tr>
+                        <tr id="invoiceTaxHeader2" style="display: none;">
+                            <td><strong id="taxDeduction2Name">Tax :</strong></td>
+                            <td id="taxDeduction2Amount">0.00</td>
+                        </tr>
+                        <tr id="invoiceTotalTr">
+                            <td><strong>TOTAL :</strong></td>
+                            <td id="invoiceTotal">0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="row">
+                    <div class="col-lg-12 col-md-6 col-sm-12">
+                        <label><strong>Payment Terms:</strong></label>
+                        <textarea type="text" class="input-sm form-control" name="PaymentTerms" placeholder="Enter Payment Terms" id="paymentTerms"
+                            style="padding-top: 0.5rem;border-radius: 5px; transition: border 0.3s ease, box-shadow 0.3s ease;"
+                            rows="5"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor Modal -->
+    <div class="modal inmodal fade" id="addCustomerModal" tabindex="-1" role="dialog" aria-label="Add Vendor">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header modal-header-simple">
+                    <h4 class="modal-title">Add Vendor</h4>
+                    <small class="font-bold">Search for vendors based on name, email or phone.</small>
+                </div>
+                <div class="modal-body">
+                    <div class="search-form">
+                        <div class="input-group">
+                            <input type="text" placeholder="Search.." name="search" class="form-control"
+                                id="customerSearchInput">
+                            <div class="input-group-btn">
+                                <button class="btn btn-secondary" type="submit" id="customerSearchBtn">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wrapper wrapper-content">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerSearchTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal" >Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal inmodal fade" id="addManufacturerModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header modal-header-simple">
+                    <h4 class="modal-title">Add Manufacturer</h4>
+                    <small class="font-bold">Search for manufacturer based on name.</small>
+                </div>
+                <div class="modal-body">
+                    <div class="search-form">
+                        <div class="input-group">
+                            <input type="text" placeholder="Search.." name="search" class="form-control"
+                                id="manufacturerSearchInput">
+                            <div class="input-group-btn">
+                                <button class="btn btn-secondary" type="submit" id="manufacturerSearchBtn">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wrapper wrapper-content">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manufacturerSearchTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal inmodal fade" id="addProductModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header modal-header-simple">
+                    <h4 class="modal-title">Add Product</h4>
+                    <small class="font-bold">Search for products to add to PO.</small>
+                </div>
+                <div class="modal-body">
+                    <div class="search-form">
+                        <div class="manuInfo tat-danger" style="display: none;">No Manufacturers for selected Product
+                        </div>
+
+                        <div class="input-group">
+                            <input type="text" placeholder="Search.." name="search" class="form-control"
+                                id="productSearchInput">
+                            <div class="input-group-btn">
+                                <button class="btn btn-secondary" type="submit" id="productSearchBtn">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="wrapper wrapper-content">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productSearchTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Qualified Manufacturer Picker Modal -->
+    <div class="modal inmodal fade" id="qualifiedManufacturerModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header modal-header-simple">
+                    <h4 class="modal-title">Select Qualified Manufacturer</h4>
+                    <small class="font-bold">Multiple QAU Approved manufacturers found for this product. Please select
+                        one.</small>
+                </div>
+                <div class="modal-body">
+                    <div class="wrapper wrapper-content">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qualifiedMfrTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- newPoPanel.html    End -->
+
+    <!-- Print preview panel (iframe) -->
+    <div class="row animated fadeInRight aasaanPanel" id="printRequestPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+        <div class="ibox-title">
+            <h5>Print</h5>
+            <div class="ibox-tools">
+            <button type="button" class="btn btn-default btn-sm closePrintScheduleBtn">Close</button>
+            <button type="button" class="btn btn-default btn-sm" id="printRequestScheduleBtn">Print</button>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div class="row" id="reportContent"></div>
+        </div>
+        </div>
+    </div>
+    </div>
+
+
+    <!-- documentUpload.html    Start -->
+    <div class="row animated fadeInRight aasaanPanel" id="vendorUploadFilesPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Upload Documents</h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label>File</label>
+                                <input type="file" class="form-control" id="fileInputVQ">
+                            </div>
+                        </div>
+                        <div class="col-lg-6"></div>
+                        <div class="col-sm-12" style="margin-top: 10px;">
+                            <button type="button" class="btn btn-default btn-sm showRequestOnCancel" id="vendorUploadClosebtn">
+                                <i data-lucide="x"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="processBtn">
+                                <i data-lucide="upload"></i> Upload
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- documentUpload.html    End -->
+
+
+
+
+
+
+
+    <!-- taxPanel.html  Start -->
+    <div class="modal inmodal fade" id="taxpanel_addTaxModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header modal-header-simple">
+                    <h4 class="modal-title">Manage Taxes</h4>
+                    <small class="font-bold">Choose the right taxes (up to 2) for this document</small>
+                </div>
+                <div class="modal-body">
+                    <div class="wrapper wrapper-content animated fadeInRight">
+                        <div class="row"
+                            style="overflow: scroll;height: 200px;background-color: #ffffff;border: 1px solid #dddddd;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th style="text-align: right">Percent (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="taxpanel_taxSearchTable"></tbody>
+                            </table>
+                        </div>
+                        <h4 style="padding-top: 30px;">Applied Taxes</h4>
+                        <div class="row" style="background-color: #ffffff;border: 1px solid #dddddd;">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>&nbsp;</th>
+                                        <th>Name</th>
+                                        <th style="text-align: right">Percent (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="appliedTaxTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" id="taxmodal_addtaxes">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- taxPanel.html  End -->
+</div>
+
+
+
+<script>
+    lucide.createIcons();
+    console.log("Start");
+    
+    // Declare missing variables
+    var recordList = [];
+    var dataflag = true;
+    FOX['financialDecimals'] =  2;
+    var state = "";
+    // Declared in outer scope so TAXPANEL.initialize() can reference it at click time
+    var assignTaxesCallback = null;
+       function normalizeUiDate(v) {
+            if (!v) return null; // or '' based on API contract
+            const m = moment(v, ['YYYY-MM-DD', 'DD/MM/YYYY'], true);
+            return m.isValid() ? m.format('YYYY-MM-DD') : null;
+            }
+    //allPoPanel.js     Start
+    $(document).ready(function () {
+        handlePanelVisibility();
+        loadPurchaseOrders(); // Use new data loading system
+    });
+
+
+    // $(document).on('click', '.newPOBtn', function () {
+    //     $('#POPanel').hide();
+    //     $('#AddPO').show();
+    //     handlePanelVisibility();
+    //     TAXPANEL.initialize(assignTaxesCallback);
+    //     state = "newRecordPanel";
+    //      // Use the correct selectors for your actual input fields
+    // $('input[name="OrderDate"], input[name="DeliveryDate"], input[name="QuotationDate"]').daterangepicker({
+    //     singleDatePicker: true,
+    //     showDropdowns: true,
+    //     autoUpdateInput: false,
+    //     locale: { format: 'DD/MM/YYYY' }
+    // });
+
+    // $('input[name="OrderDate"], input[name="DeliveryDate"], input[name="QuotationDate"]').on('apply.daterangepicker', function(ev, picker) {
+    //     $(this).val(picker.startDate.format('DD/MM/YYYY'));
+    // });
+    
+    // // Set default value for order date
+    // $('input[name="OrderDate"]').val(moment().format('DD/MM/YYYY'));
+    // });
+    $(document).on('click', '.newPOBtn', function () {
+    $('#POPanel').hide();
+    $('#AddPO').show();
+    handlePanelVisibility();
+    TAXPANEL.initialize(assignTaxesCallback);
+    state = "newRecordPanel";
+    
+    // Initialize daterangepicker after panel is visible
+    setTimeout(function() {
+        // Remove any existing daterangepicker instances
+        $('input[name="OrderDate"], input[name="DeliveryDate"], input[name="QuotationDate"]').each(function() {
+            if ($(this).data('daterangepicker')) {
+                $(this).data('daterangepicker').remove();
+            }
+        });
+        
+        // Initialize daterangepicker
+        $('input[name="OrderDate"], input[name="DeliveryDate"], input[name="QuotationDate"]').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: false,
+            locale: { format: 'DD/MM/YYYY' },
+            opens: 'left'
+        });
+
+        $('input[name="OrderDate"], input[name="DeliveryDate"], input[name="QuotationDate"]').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('DD/MM/YYYY'));
+        });
+        
+        // Set default value for order date
+        $('#orderDate2').val(moment().format('DD/MM/YYYY'));
+    }, 200);
+});
+
+    function handlePanelVisibility() {
+        //PO Panel
+        if ($('#POPanel').is(':visible')) {
+            //console.log('PO Panel visible');
+            if (dataflag == true) {
+                $('.newPOBtn').show()
+            }
+            else {
+                $('.newPOBtn').hide()
+            }
+            $('.addDeductionModal').hide();
+            $('.addProductModalBtn').hide();
+            $('.manageTaxesBtn').hide()
+            $('.invoiceSaveBtn').hide();
+            $('.addCustomerModalBtn').hide();
+            $('.addManufacturerModal').hide();
+            $('.CloseBtn').hide();
+            $('.emailOrderBtn').hide();
+            $('.printPoBtn').hide();
+            $('.orderCancelBtn').hide();
+            $('.CloseBtnEdit').hide();
+            $('#addButton').hide();
+            $('.orderEditBtn').hide();
+            $('.editOrderSaveBtn').hide();
+            $('.approvedBtn').hide();
+            $('.approveRejectBtn').hide();
+            //AddPo
+        } else if ($('#AddPO').is(':visible')) {
+            $('.newPOBtn').hide();
+            $('.addDeductionModal').show();
+            $('.addProductModalBtn').show();
+            $('.manageTaxesBtn').show()
+            $('.invoiceSaveBtn').show();
+            $('.addCustomerModalBtn').show();
+            $('.addManufacturerModal').show();
+            $('.CloseBtn').show();
+            $('.emailOrderBtn').hide();
+            $('.printPoBtn').hide();
+            $('.orderCancelBtn').hide();
+            $('.CloseBtnEdit').hide();
+            $('#addButton').show();
+            $('.orderEditBtn').hide();
+            $('.editOrderSaveBtn').hide();
+            $('.approvedBtn').hide();
+            $('.approveRejectBtn').hide();
+        }
+        else if ($('#EditPO').is(':visible')) {
+            $('.emailOrderBtn').show();
+            $('.printPoBtn').show();
+            $('.newPOBtn').hide();
+            $('.CloseBtnEdit').show();
+            $('#addButton').hide();
+            if (dataflag == false) {
+                $('.approveRejectBtn').show();
+            }
+            else {
+                $('.approveRejectBtn').hide();
+            }
+        }
+        else if ($('#vendorUploadFilesPanel').is(':visible')) {
+            // panel has its own Cancel / Upload buttons — no toolbar buttons needed
+        }
+    }
+
+
+    // OLD INIT FUNCTION - COMMENTED OUT
+    // function init() {
+    //      new DataTable('#allPoPanelTable');
+    //     var innerHtml = '';
+    //     $.each(recordList, function (i, val) {
+    //         innerHtml += '<tr>' +
+    //             '<td class="itemNum"><a href="javascript:void(0);" class="selectPOBtn" id="' + val.id + '">' + val.number + '</a></td>' +
+    //             '<td>' + JSUTIL.getDate(val.orderDate) + '</td>' +
+    //             '<td>' + (val.vendor ? val.vendor.name : '') + '</td>' +
+    //             '<td>' + val.totalAmount + '</td>' +
+    //             '<td>' + val.orderStatus + '</td>' +
+    //             '</tr>';
+    //     });
+    //     $('#POPanel table tbody').append(innerHtml);
+    //     JSUTIL.reinitializeDataTable();
+    //     $('.selectPOBtn').on('click', function () {
+    //         // ... click handler code
+    //     });
+    // }
+    // init(); // OLD - REMOVED
+    
+    // NEW IMPLEMENTATION - Load Purchase Orders from API
+    function getUserDepartmentName() {
+        if (!window.FOX) return '';
+        return String(FOX.employeeDepartment || '').trim();
+    }
+
+    function getRecordDepartmentName(record) {
+        if (!record) return '';
+        var deptObj = (record.employee && (record.employee.dept )) || "";
+        return String(deptObj.name || deptObj.Name || '').trim();
+    }
+
+    function applyDepartmentFilter(records) {
+        
+        var list = Array.isArray(records) ? records : [];
+        var deptName = getUserDepartmentName();
+        // if (!deptName) return list;
+        console.log("ssss",deptName)
+        return list.filter(function(record) {
+            return getRecordDepartmentName(record) === deptName;
+        });
+    }
+
+    function loadPurchaseOrders() {
+        JSUTIL.callAJAXGet('/api/purchase/orders', function (response) {
+            console.log('API response:', response);
+            // var allRecords = Array.isArray(response) ? response : (response && response.data ? response.data : []);
+            // var filteredRecords = applyDepartmentFilter(allRecords);
+
+            // // Keep active record list aligned with visible rows so pagination/redraw never falls back to unfiltered data.
+            // recordList = filteredRecords;
+            renderPurchaseOrderTable(response);
+        });
+    }
+
+    function renderPurchaseOrderTable(records) {
+        var safeRecords = applyDepartmentFilter(records);
+        console.log(safeRecords);
+
+        // Fully reset DataTable state before rebuilding rows.
+        if ($.fn.DataTable.isDataTable('#allPoPanelTable')) {
+            var dt = $('#allPoPanelTable').DataTable();
+            dt.clear();
+            dt.destroy();
+        }
+
+        $('#POTable').empty();
+        var innerHtml = '';
+        $.each(safeRecords, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td class="itemNum"><a href="javascript:void(0);" class="selectPOBtn" id="' + val.id + '">' + val.number + '</a></td>' +
+                '<td>' + JSUTIL.getDate(val.orderDate) + '</td>' +
+                '<td>' + (val.vendor ? val.vendor.name : '') + '</td>' +
+                '<td>' + val.totalAmount + '</td>' +
+                '<td>' + val.orderStatus + '</td>' +
+                '</tr>';
+        });
+
+        // Use correct tbody ID - #POTable
+        $('#POTable').html(innerHtml);
+        
+        // Initialize DataTable with proper configuration
+        new DataTable('#allPoPanelTable', {
+            order: [[0, 'desc']]
+        });
+
+        lucide.createIcons();
+    }
+    //allPoPanel.js     End
+
+
+
+
+
+
+
+    //editPoPanel.js    Start
+
+    var currentRecordId = '';
+    var orderObj = {};
+    var orderItemList = [];
+    quoteId = '';
+    var gst;
+
+    $(document).ready(function () {
+        flatpickr(".datepicker", {
+      dateFormat: "d/m/Y"
+  });
+
+        handlePanelVisibility();
+        EMAILPANEL.initialize();
+
+        // $('.manageTaxesBtn').on('click', function () {
+        //     var modal = new bootstrap.Modal($('#taxpanel_addTaxModal')[0]);
+        //     modal.show();
+        // });
+        // $('.emailOrderBtn').on('click', function () {
+        //     const emailData = {
+        //         to: customeremail,
+        //         subject: 'Order',
+        //         body: 'Check attachment for your order',
+        //         attachments: [{
+        //             name: 'PurchaseOrder.pdf',
+        //             path: '/print/PurchaseOrder?id=' + currentRecordId,
+        //         }]
+        //     };
+
+        //     EMAILPANEL.show(emailData);
+
+
+        // });
+        $(document).on('click', '#uploadFileBtn', function () {
+            $('#EditPO').hide();
+            $('#vendorUploadFilesPanel').show();
+            handlePanelVisibility();
+            // OLD (OneDrive): var postUrl = JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + companySettingMap.purchase_order);
+            // OLD (OneDrive): foVendorUploadFile('Upload Documents', postUrl, callbackAfterDocumentUpload);
+        });
+        // Use event delegation - Cancel button lives in a separately loaded HTML fragment
+        $(document).on('click', '.showRequestOnCancel', function () {
+            $('#vendorUploadFilesPanel').hide();
+            $('#EditPO').show();
+            handlePanelVisibility();
+        });
+        // $(document).on('click', '.deleteLnItem1', function () {
+        //     let itemId = $(this).attr('id');
+        //     // OLD: var postUrl = '/purchase/po/delete_item?id=' + itemId + '&poId=' + currentRecordId;
+        //     var postUrl = '/api/purchase/orders/' + currentRecordId + '/items/' + itemId;
+        //     JSUTIL.callAJAXGet(postUrl, callbackAfterDelete);
+        //     $(this).parent().parent().remove();
+        //     calculateTotals1();
+        // });
+        $(document).on('click', '.deleteLnItem1', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $btn = $(this);
+            var $row = $btn.closest('tr');
+            var itemId = $btn.attr('id');
+
+            if (!currentRecordId || !itemId) {
+                console.error('Missing poId or itemId');
+                return;
+            }
+
+            JSUTIL.startSpinner();
+
+            $.ajax({
+                url: JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/items/' + itemId),
+                method: 'DELETE',
+                success: function (response) {
+                    console.log('Line item deleted:', response);
+                    $row.remove();
+                    calculateTotals1();
+                },
+                error: function (xhr) {
+                    console.error('Delete failed:', xhr.status, xhr.responseText);
+                    JSUTIL.buildErrorModal('Unable to delete line item.');
+                },
+                complete: function () {
+                    JSUTIL.stopSpinner();
+                }
+            });
+
+        });
+    
+        
+     $('.approvedBtn').on('click', function () {
+        JSUTIL.startSpinner();
+
+        fetch('/api/purchase/orders/' + currentRecordId + '/status', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'text/plain' },
+            body: 'HOD Review'       
+        })
+        .then(function (response) {
+            if (!response.ok) throw new Error('Server error: ' + response.status);
+            return null;
+        })
+        .then(function () {
+            console.log('Status updated successfully');
+            JSUTIL.stopSpinner();
+            location.reload();
+        })
+        .catch(function (error) {
+            console.error('Status PATCH failed:', error);
+            JSUTIL.stopSpinner();
+        });
+    });
+        // $('.approvedBtn').on('click', function () {
+        //     var obj = {
+        //         orderStatus: 'In Review'
+        //     }
+        //     // OLD: var postUrl = JSUTIL.getUrl('/data/PurchaseOrder/update/' + currentRecordId);
+        //     var postUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+        //     JSUTIL.callAJAXPut(postUrl, JSON.stringify(obj), submitForApprovalCallback);
+        // });
+        $('.orderEditBtn').on('click', function () {
+            $('.lnItemInputVal1').removeAttr('readonly');
+            $('#orderDate').removeAttr('disabled');
+            $('#editDeliveryDate').removeAttr('disabled');
+            $('#editQuotationNumber').removeAttr('readonly');
+            $('#editQuotationDate').removeAttr('disabled');
+            $('#editPoTerms').removeAttr('readonly');
+            $('.deleteLnItem1').removeAttr('disabled');
+            $('.editOrderSaveBtn').show();
+            $('.orderEditBtn').hide();
+            $('.manageTaxesBtn').show()
+            $('#addButton').show();
+            $('.addCustomerModalBtn').hide();
+            $('.addManufacturerModal').hide();
+            $('.addProductModalBtn').show();
+
+            renderAppliedTax();
+        });
+     
+    //     $('.editOrderSaveBtn').on('click', function () {
+    //         // Build payload matching CreateOrderRequest exactly:
+    //         // vendorId(Long), manufacturerId(Long), orderDate(Date),
+    //         // paymentTerms, notes, subTotal, taxAmount, taxAmount2, totalAmount,
+    //         // taxAccountId1(Long), taxAccountId2(Long),
+    //         // quoteNumber(String), quoteDate(String), deliveryDate(String),
+    //         // items: [ { productId(Long), quantity, unitPrice, discountPercent, lineTotal } ]
+
+    //         var payload = {};
+
+    //         // IDs — Long fields must be Number, not string
+    //         payload['vendorId']        = Number($('#customerId').val())       || '';
+    //         payload['manufacturerId']  = Number($('#manuId').val())           || '';
+
+    //         // Tax account IDs — stored by getDetailsCallback
+    //         var taxId1 = $('#editTaxAccountId1').val();
+    //         var taxId2 = $('#editTaxAccountId2').val();
+    //         if (taxId1) payload['taxAccountId1'] = Number(taxId1);
+    //         if (taxId2) payload['taxAccountId2'] = Number(taxId2);
+
+    //         // Dates — API accepts String for quoteDate & deliveryDate, Date for orderDate
+    //         // Convert dd/MM/yyyy → ISO string (moment already loaded on this page)
+    //         var rawOrderDate = $('#orderDate').val();
+    //         payload['orderDate'] = rawOrderDate
+    //             ? moment(rawOrderDate, ['DD/MM/YYYY', 'YYYY-MM-DD'], true)
+    //                 .utc().startOf('day').format('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
+    //             : '';
+    //         payload['deliveryDate'] = $('#editDeliveryDate').val() || '';
+    //         payload['quoteDate']    = $('#editQuotationDate').val() || '';
+         
+    //         payload['quoteNumber']  = $('#editQuotationNumber').val() || '';
+    //         payload['paymentTerms'] = $('#editPoTerms').val()         || '';
+
+    //         // Totals — Double fields
+    //         payload['subTotal']    = Number($('#editSubTotal').val())     || 0;
+    //         payload['taxAmount']   = Number($('#deductionTotal').val())   || 0;
+    //         payload['taxAmount2']  = Number($('#deductionTotal2').val())  || 0;
+    //         payload['totalAmount'] = Number($('#editInvoiceTotal').val()) || 0;
+    //         payload['notes']       = '';
+    //         // Line items — productId(Long) stored in hidden .lnItemProductId1
+    //         payload['items'] = [];
+    //         $('#orderLnItemTable tr').each(function () {
+    //             var $row = $(this);
+    //             var productId = Number($row.find('.lnItemProductId1').val()) || '';
+    //             if (!productId) return; // skip empty rows
+    //             payload['items'].push({
+    //                 productId:       productId,
+    //                 quantity:        Number($row.find('.lnItemQuantity1').val())  || 0,
+    //                 unitPrice:       Number($row.find('.lnItemPrice1').val())     || 0,
+    //                 discountPercent: Number($row.find('.lnItemDiscount1').val())  || 0,
+    //                 lineTotal:       Number($row.find('.lnItemTotal1').val())     || 0
+    //             });
+    //         });
+
+    //         console.log('editOrderSaveBtn payload', JSON.stringify(payload));
+    //         var postUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+    //         JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), callbackAfterEditRequest);
+    //     });
+        
+    // });
+   
+    $('.editOrderSaveBtn').on('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            JSUTIL.startSpinner();
+
+            var headerPayload = {};
+            headerPayload['vendorId']       = Number($('#customerId').val())  || '';
+            headerPayload['manufacturerId'] = Number($('#manuId').val())      || '';
+
+            var taxId1 = $('#editTaxAccountId1').val();
+            var taxId2 = $('#editTaxAccountId2').val();
+            if (taxId1) headerPayload['taxAccountId1'] = Number(taxId1);
+            if (taxId2) headerPayload['taxAccountId2'] = Number(taxId2);
+
+            var rawOrderDate = $('#orderDate').val();
+            headerPayload['orderDate'] = rawOrderDate
+                ? moment(rawOrderDate, ['DD/MM/YYYY', 'YYYY-MM-DD'], true)
+                    .utc().startOf('day').format('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
+                : '';
+
+            headerPayload['deliveryDate'] = normalizeUiDate($('#editDeliveryDate').val());
+            headerPayload['quoteDate']    = normalizeUiDate($('#editQuotationDate').val());
+
+            headerPayload['quoteNumber']  = $('#editQuotationNumber').val() || '';
+            headerPayload['paymentTerms'] = $('#editPoTerms').val()         || '';
+            headerPayload['notes']        = '';
+
+            headerPayload['subTotalAmount']    = Number($('#editSubTotal').val())     || 0;
+            headerPayload['taxAmount']   = Number($('#deductionTotal').val())   || 0;
+            headerPayload['taxAmount2']  = Number($('#deductionTotal2').val())  || 0;
+            headerPayload['totalAmount'] = Number($('#editInvoiceTotal').val()) || 0;
+
+            var itemsPayload = [];
+            $('#orderLnItemTable tr').each(function () {
+                var $row      = $(this);
+                var itemId    = $row.find('.deleteLnItem1').attr('id');
+                var productId = Number($row.find('.lnItemProductId1').val()) || '';
+                if (!productId) return;
+                var obj  = {
+                    // itemId:          Number(itemId)                                   || '',
+                    purchaseOrder:{id:Number(currentRecordId)},
+                    product:  {id:     productId},
+                    quantity:        Number($row.find('.lnItemQuantity1').val())      || 0,
+                    itemPrice:       Number($row.find('.lnItemPrice1').val())         || 0,
+                    discountPercent: Number($row.find('.lnItemDiscount1').val())      || 0,
+                    lineTotal:       Number($row.find('.lnItemTotal1').val())         || 0
+                }
+                if(itemId){
+                    obj['id'] = itemId
+                }
+                itemsPayload.push(obj);
+            });
+            var headerUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+            var itemsUrl  = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/items');
+
+            JSUTIL.callAJAXPut(headerUrl, JSON.stringify(headerPayload), function (headerResponse) {
+                JSUTIL.callAJAXPut(itemsUrl, JSON.stringify(itemsPayload), function (itemsResponse) {
+                    JSUTIL.stopSpinner();
+                    callbackAfterEditRequest(itemsResponse);
+                });
+            });
+        });
+    });
+
+    // Print functionality — use event delegation so it fires reliably after panel switches
+    // $(document).on('click', '.printPoBtn', function () {
+    //     JSUTIL.openInNewTab('/print/PurchaseOrder?id=' + currentRecordId);
+    // });
+
+    /* Replace the old print handler */
+    // $(document).on('click', '.printPoBtn', async function () {
+    //     // Ensure we have order data
+    //     if (!orderObj || !orderItemList || !orderObj.number) {
+    //         try {
+    //             const res = await fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId));
+    //             if (!res.ok) throw new Error('Failed to load order');
+    //             const data = await res.json();
+    //             orderObj = data.order || data.orderObj || data;
+    //             orderItemList = data.items || data.orderItemList || [];
+    //         } catch (err) {
+    //             JSUTIL.buildErrorModal('Unable to load purchase order for printing.');
+    //             return;
+    //         }
+    //     }
+
+    //     const html = generatePurchaseOrderReportHTML(orderObj, orderItemList);
+    //     openAndPrint(html);
+    // });
+
+  function generatePurchaseOrderReportHTML(order, items) {
+console.log('Generating report HTML for order:', order,items);
+  function safe(v, fallback) { return (v === null || v === undefined || v === '') ? (fallback||'') : v; }
+  function toNumber(v){ var n=Number(v); return Number.isFinite(n)?n:0; }
+  function fmtDate(d){ if(!d) return 'N/A'; try { var dt=new Date(d); return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear(); } catch(e){return d;} }
+
+  items = Array.isArray(items) ? items : (items || []);
+  var o = order || {};
+  var v = o.vendor || {};
+  var taxName = (o.taxAccount1 && o.taxAccount1.name) ? String(o.taxAccount1.name) : '';
+  var showIGST = /igst/i.test(taxName);
+  var showCGSTSGST = /cgst|sgst/i.test(taxName);
+  if (!showIGST && !showCGSTSGST) { showIGST = true; showCGSTSGST = true; }
+  var totalCols = 10 + (showIGST ? 1 : 0) + (showCGSTSGST ? 2 : 0) + 1;
+    var taxAmount = o.taxAmount || '';
+    var taxAmount2 = o.taxAmount2 || '';
+  var itemsHtml = '';
+  if (items.length === 0) {
+    itemsHtml = '<tr><td colspan="' + totalCols + '" style="text-align:center; padding:10px;">No items available</td></tr>';
+  } else {
+    items.forEach(function(val, i){
+      var pr = val.product || {};
+      var itemPrice = toNumber(val.itemPrice);
+      var discPct = toNumber(val.discountPercent) || 0;
+      var netRate = itemPrice - (itemPrice * discPct / 100);
+      var taxA = taxAmount || 0;
+      var taxB = taxAmount || 0;
+      var taxC = taxAmount2 || 0;
+      var value = toNumber(val.value || val.totalValue) || (netRate + taxA + taxB + taxC);
+
+      itemsHtml += '<tr>' +
+        '<td style="text-align:center;">' + (i+1) + '</td>' +
+        '<td style="word-break:break-word;"><b>' + safe(pr.number,'') + '</b><br>' + safe(pr.name,'') + '</td>' +
+        '<td style="text-align:center;">' + safe(pr.hsn,'') + '</td>' +
+        '<td style="text-align:center;">' + safe(pr.uom,'') + '</td>' +
+        '<td style="text-align:center;">' + safe(val.quantity,'') + '</td>' +
+        '<td style="text-align:center;">' + safe(val.deliveryQty || val.quantity,'') + '</td>' +
+        '<td style="text-align:center;">' + safe(fmtDate(val.deliveryDate || o.orderDate),'') + '</td>' +
+        '<td style="text-align:right;">' + (itemPrice? itemPrice.toFixed(2): '') + '</td>' +
+        '<td style="text-align:right;">' + (discPct? discPct.toFixed(2): '') + '</td>' +
+        '<td style="text-align:right;">' + (netRate? netRate.toFixed(2) : '') + '</td>' +
+        (showIGST ? '<td style="text-align:right;">' + (taxA? taxA.toFixed(2): '') + '</td>' : '') +
+        (showCGSTSGST ? '<td style="text-align:right;">' + (taxB? taxB.toFixed(2): '') + '</td>' : '') +
+        (showCGSTSGST ? '<td style="text-align:right;">' + (taxC? taxC.toFixed(2): '') + '</td>' : '') +
+        '<td style="text-align:right;">' + (value? value.toFixed(2): '') + '</td>' +
+        '</tr>';
+    });
+  }
+
+  var totalHtml = (o && typeof o.totalAmount !== 'undefined') ? Number(o.totalAmount).toFixed(2) : '';
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Purchase Order - ${safe(o.number,'')}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  @page{size:A4;margin:8mm}
+  body{font-family:Arial, sans-serif;color:#000;font-size:11px;padding:8px}
+  .page{width:100%}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th,td{border:1px solid #000;padding:4px;vertical-align:top}
+  th{background:#f2f2f2;font-weight:700;text-align:center}
+  .section-note,.footer-bar{border:1px solid #000;padding:6px;margin-top:8px;font-size:10px}
+  .header-top td{border:none;padding:2px}
+  .company-right{font-size:11px}
+  .sign{margin-top:20px;height:50px}
+  .foot-right{float:right}
+  @media print{body{margin:0;padding:0}}
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- Header -->
+  <table style="table-layout:fixed;margin-bottom:6px">
+    <colgroup><col style="width:50%"><col style="width:30%"><col style="width:20%"></colgroup>
+    <tr>
+      <td style="text-align:center;font-weight:700;font-size:13px">PURCHASE ORDER</td>
+      <td colspan="2" class="company-right" style="font-weight:700;font-size:11px">Suleshvari Pharma Private Limited</td>
+    </tr>
+    <tr>
+      <td style="vertical-align:top;padding:6px">
+        <div><strong>P.O. No</strong> : ${safe(o.number,'')} &nbsp;&nbsp; <strong>Date</strong> : ${fmtDate(o.orderDate)} &nbsp; user Indent No</div>
+        <div><strong>Department</strong> : ${safe(o.department || '')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Budget No. :</div>
+        <div><strong>Indent No & Dt</strong> : ${safe(o.quoteNumber,'')} &nbsp; ${fmtDate(o.quoteDate)}</div>
+      </td>
+      <td colspan="2" style="vertical-align:top;padding:6px;font-size:10px">
+        <div><strong>Admin Office</strong> Plot No.: 4724, GIDC Estate, Ankleshwar Dist. Bharuch, Gujarat - 392002</div>
+        <div><strong>Phone</strong> : +91 22 6647 4747 &nbsp; <strong>Email</strong> : gami.sppl@gmail.com</div>
+        <div><strong>Web</strong> : www.suleshvaripharma.com &nbsp; <strong>PAN No.</strong> : AAACI1220M</div>
+        <div><strong>Location GST No</strong> : 24AAACI1220M2ZY</div>
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align:top;padding:6px">
+        <div><strong>Vendor's Name & Address</strong> : ${safe(v.name,'')}</div>
+        <div>${safe(v.billingStreet,'')}${v.billingStreet2? ', '+v.billingStreet2 : ''}</div>
+        <div>${safe(v.billingCity,'')} ${v.billingPostalCode? ' '+v.billingPostalCode : ''}</div>
+        <div>${safe(v.billingState||v.billingCountry,'')}</div>
+        <div><strong>Email</strong> : ${safe(v.email,'')}</div>
+        <div style="margin-top:6px"><strong>Registration No</strong> : ${safe(v.gst,'')}</div>
+      </td>
+      <td colspan="2" style="vertical-align:top;padding:6px;font-size:10px">
+        <div><strong>Bill To</strong> : Suleshvari Pharma Private Limited ANKLESHWAR</div>
+        <div>PLOT NO.4722,4723,4730,4731,4732 G.I.D.C. ESTATE, 393002 GUJARAT</div>
+        <div style="margin-top:12px"><strong>Registration No</strong> : ${safe(v.gst,'')}</div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="section-note">Please arrange to supply the following against this order in accordance with terms and conditions printed overleaf.</div>
+
+  <!-- Items -->
+  <table style="table-layout:fixed;margin-top:8px">
+    <colgroup>
+      <col style="width:3.5%"><col style="width:15%"><col style="width:5.5%"><col style="width:4.5%"><col style="width:5%"><col style="width:5.5%"><col style="width:6.5%"><col style="width:6%"><col style="width:5.5%"><col style="width:5.5%">
+      ${showIGST?'<col style="width:5%">':''}
+      ${showCGSTSGST?'<col style="width:5%">':''}
+      ${showCGSTSGST?'<col style="width:5%">':''}
+      <col style="width:6%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Sr. No</th><th>Item Code & Description</th><th>HSN Code</th><th>Uom</th><th>Total Quantity</th><th>Delivery Schedule Quantity</th><th>Date</th><th>Basic Price (Rs.)</th><th>Discount</th><th>Net Rate</th>
+        ${showIGST?'<th>IGST value</th>':''}
+        ${showCGSTSGST?'<th>CGST value</th><th>SGST value</th>':''}
+        <th>Value (Rs.)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsHtml}
+      <tr>
+        <td colspan="${totalCols-1}" style="text-align:right;font-weight:bold;padding:6px">Total :</td>
+        <td style="text-align:right;font-weight:bold;padding:6px">${totalHtml}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Footer -->
+  <table style="margin-top:8px">
+    <tr>
+      <td style="width:35%;vertical-align:top;padding:6px"><strong>Payment Terms</strong><div>${safe(o.paymentTerms,'')}</div></td>
+      <td style="width:35%;vertical-align:top;padding:6px"><strong>Transportation arrange by Supplier.</strong><div>Freight inclusive in basic price.</div></td>
+      <td style="width:30%;vertical-align:top;padding:6px;text-align:right"><div><strong>Total P.O. Value : Rs.</strong> ${totalHtml}</div></td>
+    </tr>
+    <tr>
+      <td colspan="3" style="vertical-align:top;padding:6px">
+        <div><strong>For Suleshvari Pharma Private Limited</strong></div>
+        <div style="height:40px"></div>
+        <div>${safe(o.signatory1,'Authorized Signatory')}</div>
+        <div style="font-size:10px">${safe(o.signatory1Title,'Designation')}</div>
+      </td>
+    </tr>
+  </table>
+
+  <div class="section-note" style="margin-top:8px">
+    <div><strong>Instructions For GST Compliances</strong></div>
+    <div>1. To issue duly signed Tax Invoice (E-invoice wherever applicable) with prescribed details (including proper HSN/SAC and applicable GST rate).</div>
+    <div>2. To file prescribed periodic returns and pay tax to Govt. within stipulated timeline.</div>
+    <div>3. If Company is unable to avail Input Tax Credit(ITC) due to non-compliance then we will hold payment of GST amount till compliance is done. If ITC is ultimately lapsed due to non-compliance / late compliance, GST amount will not be paid and if it is already paid then debit note will be issued. Company reserves the right to recover / adjust interest, penalty and incidental expenses.</div>
+  </div>
+
+  <div class="footer-bar"> <strong>Registered Office</strong> : Plot No.: 4724 GIDC Estate, Ankleshwar, Dist. Bharuch, Gujarat - 392002 <span style="float:right">Page 1 of 1</span></div>
+</div>
+</body>
+</html>`;
+}
+var reportIframe = null;
+
+async function showPurchaseOrderPreview() {
+  // Ensure latest order data
+  if (!orderObj || !orderObj.number) {
+    try {
+      const res = await fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId));
+      if (!res.ok) throw new Error('Failed to load order');
+      const data = await res.json();
+      orderObj = data.order || data.orderObj || data;
+      orderItemList = data.items || data.orderItemList || [];
+    } catch (err) {
+      JSUTIL.buildErrorModal('Unable to load purchase order for printing.');
+      return;
+    }
+  }
+
+  // Build HTML using existing generator
+  const reportHtml = generatePurchaseOrderReportHTML(orderObj, orderItemList);
+
+  // Render into iframe inside #reportContent
+  $('#reportContent').empty();
+  const iframe = document.createElement('iframe');
+  iframe.style.width = '100%';
+  iframe.style.height = '600px';
+  iframe.style.border = 'none';
+  $('#reportContent').append(iframe);
+
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write(reportHtml);
+  doc.close();
+
+  reportIframe = iframe;
+  $('#printRequestPanel').show();
+  $('#EditPO').hide();
+}
+
+$('#printRequestScheduleBtn').off('click').on('click', function () {
+  if (!reportIframe) { JSUTIL.buildErrorModal('Report not loaded.'); return; }
+  try {
+    reportIframe.contentWindow.focus();
+    reportIframe.contentWindow.print();
+  } catch (e) {
+    console.error('Print failed', e);
+    JSUTIL.buildErrorModal('Unable to print report. Please try again.');
+  }
+});
+
+$('.closePrintScheduleBtn').off('click').on('click', function () {
+  $('#printRequestPanel').hide();
+  $('#EditPO').show();
+  reportIframe = null;
+});
+
+// Replace popup-based print handler: show iframe preview instead
+$(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
+  if (!currentRecordId) {
+    JSUTIL.buildErrorModal('No purchase order selected for printing.');
+    return;
+  }
+  showPurchaseOrderPreview();
+});
+    /* Open a blank window and print the HTML */
+    function openAndPrint(html) {
+        const w = window.open('', '_blank', 'noopener');
+        if (!w) {
+            JSUTIL.buildErrorModal('Popup blocked. Allow popups for this site to print.');
+            return;
+        }
+        w.document.open();
+        w.document.write(html);
+        w.document.close();
+        w.focus();
+        // Wait briefly so resources settle, then print
+        setTimeout(function(){ 
+            try { w.print(); } catch(e) { console.error(e); }
+        }, 400);
+    }
+    $('.CloseBtnEdit').on('click', function () {
+        $('#EditPO').hide();
+        $('#POPanel').show();
+
+        handlePanelVisibility();
+
+    });
+    $(document).on('change', '.lnItemInputVal1', function () {
+        calculateTotals1();
+    });
+
+    // Prevent Enter key inside line item inputs from triggering any button (especially delete)
+    $(document).on('keydown', '.lnItemInputVal1', function (e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+
+
+    $(document).on('click', '.selectPOBtn', function () {
+        state = "editRecordPanel";
+        var currentId = $(this).attr('id');
+        currentRecordId = currentId;
+
+        // Find the record from recordList
+        const record = recordList.find(r => r.id == currentId);
+
+
+        // OLD: var postUrl = JSUTIL.getUrl('/purchase/po/page_data?id=' + currentRecordId);
+        var postUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+        JSUTIL.callAJAXGet(postUrl, getDetailsCallback);
+        // OLD: var postDocUrl = JSUTIL.getUrl('/data/upload/documents?referenceNumber=' + currentRecordId + '&additionalInfo=');
+        // OLD: var postDocUrl = JSUTIL.getUrl('/api/documents?referenceNumber=' + currentRecordId + '&additionalInfo=');
+        // OLD: JSUTIL.callAJAXGet(postDocUrl, callbackAfterGetDocuments);
+        // NEW: load documents from /api/files
+        loadPoDocuments(currentRecordId);
+
+        handlePanelVisibility();
+    }
+    );
+
+    function getDetailsCallback(response) {
+        console.log(response);
+        gst = response;
+        // API returns {order: {...}, items: [...]} — map to internal variables
+        orderItemList = response.items || response.orderItemList || [];
+        orderObj = response.order || response.orderObj;
+        customeremail = orderObj.vendor ? orderObj.vendor.email : '';
+
+        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "QA Review" || orderObj.orderStatus === "Approved") {
+            $('.approvedBtn').hide();
+            $('.orderEditBtn').hide();
+            $('.orderCancelBtn').hide();
+            $('#uploadFileBtn').hide();
+        } else {
+            $('.approvedBtn').show();
+            $('.orderEditBtn').show();
+            $('.orderCancelBtn').show();
+            $('#uploadFileBtn').show();
+        }
+
+        // Populate header information
+        $('#customerId').val(orderObj.vendor ? orderObj.vendor.id : '');
+        $('#custAddress').text(orderObj.vendor ? orderObj.vendor.name : '');
+        $('#manuAddress').text(orderObj.manufacturer ? orderObj.manufacturer.name : '');
+        // Store manufacturer id and tax account ids for save payload
+        $('#manuId').val(orderObj.manufacturer ? orderObj.manufacturer.id : '');
+        $('#editTaxAccountId1').val(orderObj.taxAccount1 ? orderObj.taxAccount1.id : '');
+        $('#editTaxAccountId2').val(orderObj.taxAccount2 ? orderObj.taxAccount2.id : '');
+        $('#purchaseNumber').text(orderObj.number);
+        $('#orderDate').val(JSUTIL.getDate(orderObj.orderDate));
+        $('#editDeliveryDate').val(orderObj.deliveryDate ? JSUTIL.getDate(orderObj.deliveryDate) : '');
+        $('#editQuotationNumber').val(orderObj.quoteNumber || '');
+        $('#editQuotationDate').val(orderObj.quoteDate ? JSUTIL.getDate(orderObj.quoteDate) : '');
+        $('#editPoTerms').val(orderObj.paymentTerms);
+
+        populateOrderItems();
+
+        // Activate the correct process flow step based on orderStatus
+        (function updateProcessFlowStep(status) {
+            var stepIndex = 0; // default: Initiation
+            if (status === 'HOD Review') {
+                stepIndex = 1;
+            } else if (status === 'QA Review' || status === 'Approved') {
+                stepIndex = 2;
+            }
+            $('.step-button').each(function (i) {
+                if (i === stepIndex) {
+                    $(this).addClass('active');
+                } else {
+                    $(this).removeClass('active');
+                }
+            });
+        })(orderObj.orderStatus);
+
+        $('#POPanel').hide();
+        $('#EditPO').show();
+        handlePanelVisibility();
+    }
+    // OLD (OneDrive document upload callbacks — kept for reference, replaced by loadPoDocuments/renderPoDocumentTable):
+    // function callbackAfterDocumentUpload(response) {
+    //     $('#vendorUploadFilesPanel').hide();
+    //     console.log(response);
+    //     var filename = $('#fileNameTextVQ').text()
+    //     var obj = {
+    //         path: String((JSON.parse(response)).data),
+    //         referenceNumber: String(currentRecordId),
+    //         name: String(filename)
+    //     }
+    //     // OLD: var docUploadUrl = JSUTIL.getUrl('/data/Document/create')
+    //     var docUploadUrl = JSUTIL.getUrl('/api/documents')
+    //     console.log(obj)
+    //     JSUTIL.callAJAXPost(docUploadUrl, JSON.stringify(obj), callbackAfterDocumentCreation);
+    // }
+
+    // function callbackAfterDocumentCreation(response) {
+    //     $('#fileNameTextVQ').empty();
+    //     // OLD: var postDocUrl = JSUTIL.getUrl('/data/upload/documents?referenceNumber=' + currentRecordId + '&additionalInfo=');
+    //     var postDocUrl = JSUTIL.getUrl('/api/documents?referenceNumber=' + currentRecordId + '&additionalInfo=');
+    //     JSUTIL.callAJAXGet(postDocUrl, callbackAfterGetDocuments);
+    // }
+
+    // function callbackAfterGetDocuments(objList) {
+    //     console.log(objList);
+    //     $('#EditPO').show();
+    //     $('#allDocumentsTable').empty();
+    //     var innerHtml = '';
+    //     if (!objList || objList.length === 0) {
+    //         innerHtml = '<tr><td colspan="3" class="text-center">No Data available</td></tr>';
+    //     } else {
+    //         $.each(objList, function (i, val) {
+    //             innerHtml += '<tr><td style="width: 12%;">';
+    //             // --- MODIFIED: Also check isCurrentRecordFinal ---
+    //             if (val.isLocked) {
+    //                 innerHtml += '<button type="button" class="btn btn-default deleteTrSelect deleteDocumentBtn" name="' + val.id + '" disabled><i data-lucide="trash"></i></button>';
+    //             } else {
+    //                 innerHtml += '<button type="button" class="btn btn-outline btn-default deleteTrSelect deleteDocumentBtn" name="' + val.id + '"><i data-lucide="trash"></i></button>';
+    //             }
+    //             innerHtml += '<button type="button" class="btn btn-outline btn-secondary deleteTrSelect viewDocumentBtn" id="' + val.path + '" name="' + val.contentType + '" style="margin-left: 5px;"><i data-lucide="eye"></i></button>' +
+    //                 '</td>' +
+    //                 '<td>' + (val.name || '') + '</td>' +
+    //                 '<td>' + JSUTIL.getDate(val.createdDate) + '</td>' +
+    //                 '</tr>';
+    //         });
+    //     }
+    //     $('#allDocumentsTable').append(innerHtml);
+    //     $('.deleteDocumentBtn').on('click', function () {
+    //         documentId = $(this).attr('name');
+    //         viewBtnId = $(this).closest('td').find('.viewDocumentBtn').attr('id');
+    //         elementToDelete = $(this).parent().parent();
+    //         MODALUTIL.deleteConfirmModal(deleteDocumentTrCallback);
+    //     });
+    //     $('.viewDocumentBtn').on('click', function () {
+    //         var documentPath = $(this).attr('id');
+    //         var getUrl = JSUTIL.getUrl('/onedrive/view/' + documentPath);
+    //         JSUTIL.callAJAXGet(getUrl, getDocumentViewCallback);
+    //     });
+    // }
+
+    // function getDocumentViewCallback(response) {
+    //     console.log(response);
+    //     window.open(response.data, '_blank');
+    // }
+
+    // function deleteDocumentTrCallback() {
+    //     var oneDriveUrl = JSUTIL.getUrl('/onedrive/delete_file/' + viewBtnId);
+    //     JSUTIL.callAJAXGet(oneDriveUrl, function (resp) { console.log("OneDrive delete response:", resp); });
+    //     // OLD: var postUrl = JSUTIL.getUrl('/data/Document/delete?id=' + documentId);
+    //     var postUrl = JSUTIL.getUrl('/api/documents/' + documentId);
+    //     JSUTIL.callAJAXDelete(postUrl, afterDeleteTrHandle);
+    // }
+
+    // function afterDeleteTrHandle(data) { elementToDelete.remove(); }
+
+    function populateOrderItems() {
+        $('#orderLnItemTable').empty();
+        let itemCount = 1;
+        $.each(orderItemList, function (index, item) {
+            var innerHtml = '<tr>' +
+                '<td><button type="button" class="btn btn-sm btn-default deleteLnItem1" style="padding: 3px 6px;" disabled id="' + item.id + '"><i data-lucide="trash"></i></button>' +
+                '<input type="hidden" class="lnItemProductId1" value="' + (item.product ? item.product.id : '') + '"/></td>' +
+                '<td style="text-align: left;">' + itemCount + '</td>' +
+                '<td style="text-align: left;"><strong>' + item.product?.name + '</strong></td>' +
+                '<td style="text-align: left;"><strong>' + item.product?.uom + '</strong></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" value="' + item?.quantity + '" class="form-control lnItemInputVal1 lnItemQuantity1"  name="poItemList[' + (itemCount - 1) + '].Quantity" readonly/></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemPrice1" value="' + item.itemPrice + '"  name="poItemList[' + (itemCount - 1) + '].ItemPrice" readonly/></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemDiscount1" value="' + (item.discountPercent || 0) + '"  name="poItemList[' + (itemCount - 1) + '].DiscountPercent" readonly/></td>' +
+                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemTotal1" value="' + item.lineTotal + '"  name="poItemList[' + (itemCount - 1) + '].LineTotal" readonly/></td>' +
+                '</tr>';
+
+            itemCount++;
+            $('#orderLnItemTable').append(innerHtml);
+            lucide.createIcons();
+
+        });
+
+
+        updateTotals();
+    }
+
+
+    function updateTotals() {
+        let summaryHTML = `
+          <tr>
+              <td><strong>Sub-Total :</strong></td>
+              <td><input type="text" class="invoiceHiddenInputBox" id="editSubTotal" value="${orderObj.subTotalAmount.toFixed(FOX.financialDecimals)}" name="orderObj.SubTotalAmount" readonly /></td>
+          </tr>
+          ${orderObj.taxAccount1 ? `
+          <tr>
+              <td><strong>${orderObj.taxAccount1.name} (${orderObj.taxAccount1.amount}%) :</strong></td>
+              <td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal" value="${orderObj.taxAmount.toFixed(FOX.financialDecimals)}" name="orderObj.TaxAmount" readonly /></td>
+          </tr>` : ''}
+          ${orderObj.taxAccount2 ? `
+          <tr>
+              <td><strong>${orderObj.taxAccount2.name} (${orderObj.taxAccount2.amount}%) :</strong></td>
+              <td><input type="text" class="invoiceHiddenInputBox" id="deductionTotal2" value="${orderObj.taxAmount2.toFixed(FOX.financialDecimals)}" name="orderObj.TaxAmount2" readonly /></td>
+          </tr>` : ''}
+          <tr>
+              <td><strong>Total :</strong></td>
+              <td><input type="text" class="invoiceHiddenInputBox" id="editInvoiceTotal" value="${orderObj.totalAmount.toFixed(FOX.financialDecimals)}" name="orderObj.TotalAmount" readonly /></td>
+          </tr>
+      `;
+        document.getElementById('editPO').innerHTML = summaryHTML;
+    }
+
+
+    // Cancel PO
+    $('.orderCancelBtn').on('click', function () {
+
+        JSUTIL.startSpinner();
+        // OLD: var postUrl = '/purchase/po/cancel?id=' + currentRecordId;
+        var postUrl = 'api/purchase/orders/' + currentRecordId + '/cancel';
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify({}), function (response) {
+            console.log(response)
+           
+        });
+        location.reload();
+    });
+   
+    function callbackAfterEditRequest(response) {
+        console.log(response);
+        location.reload();
+    }
+    function submitForApprovalCallback(response) {
+        console.log("Status:", response,response.orderStatus);
+        // location.reload();
+    }
+    function renderAppliedTax() {
+        var appliedTaxArray = [];
+        var _orderObj = gst.order || gst.orderObj || {};
+        if (_orderObj['taxAccount1']) {
+            appliedTaxArray.push(_orderObj['taxAccount1']);
+        }
+        if (_orderObj['taxAccount2']) {
+            appliedTaxArray.push(_orderObj['taxAccount2']);
+        }
+        console.log(TAXPANEL.taxArray)
+        TAXPANEL.initialize(assignTaxesCallback, appliedTaxArray);
+
+    }
+    function callbackAfterDelete() {
+        location.reload();
+    }
+
+    function calculateTotals1() {
+        var subTotal = 0.00;
+        var deductionTotal = 0.00;
+        var deductionTotal2 = 0.00;
+        var deductionAmount = (orderObj.taxAccount1 && orderObj.taxAccount1.amount) ? Number(orderObj.taxAccount1.amount) : 0;
+        var deductionAmount2 = (orderObj.taxAccount2 && orderObj.taxAccount2.amount) ? Number(orderObj.taxAccount2.amount) : 0;
+        $('.lnItemTotal1').each(function () {
+            var quantity = $(this).parent().parent().find('.lnItemQuantity1').val();
+            var unitPrice = $(this).parent().parent().find('.lnItemPrice1').val();
+            unitPrice = Number(quantity) * Number(unitPrice);
+            var discount = $(this).parent().parent().find('.lnItemDiscount1').val();
+            var newRate = Number(unitPrice) - (Number(unitPrice) * Number(discount) / 100);
+            $(this).val(newRate.toFixed(FOX.financialDecimals));
+            subTotal += newRate;
+        });
+        $('#editSubTotal').val(subTotal.toFixed(FOX.financialDecimals));
+        if (deductionAmount) {
+            deductionTotal = subTotal * deductionAmount / 100;
+        }
+        if (deductionAmount2) {
+            deductionTotal2 = subTotal * deductionAmount2 / 100;
+        }
+        $('#deductionTotal').val(deductionTotal.toFixed(FOX.financialDecimals));
+        $('#deductionTotal2').val(deductionTotal2.toFixed(FOX.financialDecimals));
+        var invoiceTotal = 0.00;
+        invoiceTotal += subTotal + deductionTotal + deductionTotal2;
+        $('#editInvoiceTotal').val(invoiceTotal.toFixed(FOX.financialDecimals));
+    }
+
+
+    //editPoPanel.js    End
+
+
+
+
+
+
+    // emailPanel.js    Start
+    var EMAILPANEL = {
+        sendCallback: null,
+        iniitCount: 0,
+
+        initialize: function (sendCallback) {
+            this.iniitCount++;
+            //console.log('Email panel initialized ',this.iniitCount,'times');
+
+            this.sendCallback = sendCallback;
+            this.bindEvents();
+        },
+
+        bindEvents: function () {
+
+            // bootstrap.Modal.getInstance($('#sendEmailModal')[0])?.hide();
+
+            // const postUrl = '/email/send_single';
+            // JSUTIL.callAJAXPost(postUrl, JSON.stringify(email_modal_obj), function (response) {
+            //     JSUTIL.stopSpinner();
+            //     // console.log('Email sent:', response);
+
+            //     if (EMAILPANEL.sendCallback) {
+            //         EMAILPANEL.sendCallback({
+            //             to: email_modal_obj.toAddress,
+            //             subject: email_modal_obj.subject,
+            //             body: email_modal_obj.textBody,
+            //             attachments: [{
+            //                 name: email_modal_obj.fileName,
+            //                 path: email_modal_obj.attachmentPath
+            //             }]
+            //         });
+            //     }
+            // });
+        },
+
+        show: function (emailData) {
+
+            $('#emailModalToAddress').val(emailData.to);
+            $('.emailModalInput[name="subject"]').val(emailData.subject);
+            $('.emailModalInput[name="textBody"]').val(emailData.body);
+
+            if (emailData.attachments && emailData.attachments.length > 0) {
+                const attachment = emailData.attachments[0];
+                $('#emailModalFileName').val(attachment.name || '');
+                $('#emailModalAttachmentPath').val(attachment.path || '');
+            }
+
+            var modal = bootstrap.Modal.getInstance($('#sendEmailModal')[0]) || new bootstrap.Modal($('#sendEmailModal')[0]);
+            modal.show();
+        }
+    };
+    //emailPanel.js     End
+
+
+
+
+
+
+        //newPoPanel.js     Start
+console.log("qwerty");
+        var deductionList = [];
+        var customerList = [];
+        var manufacturerList = [];
+        var deductionArray = [];
+        var deductionAmount = 0.00;
+        var deductionAmount2 = 0.00;
+        // state variable already declared at top
+        console.log('newPoPanel.js loaded, daterangepicker available:', typeof $.fn.daterangepicker);
+                $(document).ready(function () {
+        console.log('DOM ready, OrderDate input exists:', $('input[name="OrderDate"]').length);
+            $('#addProductModal').on('shown.bs.modal', function () {
+                // var manufacturerId = $('#manufacturerId').val();
+                // if (manufacturerId && state === 'newRecordPanel') {
+                //     // Auto-load all qualified products for this manufacturer
+                //     loadManufacturerProducts(manufacturerId);
+                // } else {
+                //     $('#productSearchInput').focus();
+                // }
+                 $(this).removeAttr('aria-hidden');
+                    var manufacturerId = $('#manufacturerId').val();
+                    if (manufacturerId && state === 'newRecordPanel') {
+                        loadManufacturerProducts(manufacturerId);
+                    } else {
+                        $('#productSearchInput').focus();
+                    }
+            });
+
+            $('#addProductModal').on('hidden.bs.modal', function () {
+                $(this).attr('aria-hidden', 'true');
+                $('#productSearchInput').prop('disabled', false).val('');
+                $('#productSearchBtn').prop('disabled', false);
+                $('#productSearchTable').empty();
+                // Restore headers in case manufacturer picker had changed them
+                $('#addProductModal .modal-title').text('Add Product');
+                $('#addProductModal small.font-bold').text('Search for products to add to PO.');
+                $('#productSearchTable').closest('table').find('thead th').eq(0).text('Name');
+                $('#productSearchTable').closest('table').find('thead th').eq(1).text('Number');
+                $('#productSearchTable').closest('table').find('thead th').eq(2).text('Price');
+            });
+
+            // $('.manageTaxesBtn').on('click', function () {
+            //     var modal = new bootstrap.Modal($('#taxpanel_addTaxModal')[0]);
+            //     modal.show();
+            // });
+            $(document).on('click', '.manageTaxesBtn', function () {
+                var modal = bootstrap.Modal.getInstance($('#taxpanel_addTaxModal')[0]) || new bootstrap.Modal($('#taxpanel_addTaxModal')[0]);
+                modal.show();
+            });
+            $('#addCustomerModal').on('shown.bs.modal', function () {
+                $(this).removeAttr('aria-hidden');
+                $('#customerSearchInput').focus();
+            });
+            $('#addCustomerModal').on('hidden.bs.modal', function() {
+                $(this).attr('aria-hidden', 'true');
+            });
+
+            // Global safety-net: clean up any orphan backdrops after every modal close
+            $(document).on('hidden.bs.modal', '.modal', function () {
+                $(this).attr('aria-hidden', 'true');
+                if ($('.modal.show').length === 0) {
+                    $('body').removeClass('modal-open').css('padding-right', '');
+                    $('.modal-backdrop').remove();
+                    setTimeout(function () { $('body').trigger('focus'); }, 50);
+                }
+            });
+
+            // $('.modal').modal({
+            //     show: false
+            // });
+
+        //    var datePickerConfig = {
+        //     singleDatePicker: true,
+        //     showDropdowns: true,
+        //     autoUpdateInput: false,
+        //     minYear: 1901,
+        //     maxYear: parseInt(moment().format('YYYY'), 10),
+        //     locale: { format: 'DD/MM/YYYY' }
+        // };
+
+        // $('input[name="OrderDate"], input[name="DeliveryDate"], input[name="QuotationDate"]').daterangepicker({
+        //     singleDatePicker: true,
+        //     showDropdowns: true,
+        //     autoUpdateInput: false,
+        //     locale: { format: 'DD/MM/YYYY' }
+        // });
+        // $('input[name="OrderDate"], input[name="DeliveryDate"], input[name="QuotationDate"]').on('apply.daterangepicker', function(ev, picker) {
+        //     $(this).val(picker.startDate.format('DD/MM/YYYY'));
+        // });
+
+        // $('#orderDate2').val(moment().format('DD/MM/YYYY'));
+            // Bind events
+            bindEvents();
+        });
+
+        function bindEvents() {
+            $(document).on('click', '.deleteLnItem', function () {
+                console.log('Delete item clicked');
+                $(this).closest('tr').remove();
+                calculateTotals();
+            });
+
+            $(document).on('change', '.lnItemInputVal', function () {
+                console.log('Value changed');
+                calculateTotals();
+            });
+
+
+            $('#customerSearchBtn').on('click', function (e) {
+                e.preventDefault();
+                $("#customerSearchTable").empty();
+                var searchParam = ($('#customerSearchInput').val() || '').trim();
+                if (searchParam.length < 1) return;
+
+                JSUTIL.startSpinner();
+                var getUrl = '/data/Account/search?type=Vendor&search=' + searchParam;
+                JSUTIL.callAJAXGet(getUrl, afterCustomerSearchHandle, function () {
+                    JSUTIL.stopSpinner();
+                    $('#customerSearchTable').html('<tr><td colspan="3" class="text-center tat-danger">Unable to fetch vendors.</td></tr>');
+                });
+            });
+
+            $('#productSearchBtn').on('click', function () {
+                $("#productSearchTable").empty();
+                var searchParam = $('#productSearchInput').val();
+                console.log('Product search initiated with param:', searchParam);
+                if (searchParam.length < 1) return;
+
+                var selectedManufacturerId = $('#manufacturerId').val();
+
+                // If a manufacturer is already selected, only show products they are qualified to produce
+                if (selectedManufacturerId) {
+                    JSUTIL.startSpinner();
+                    var apiUrl = '/api/vendor-qualification-items?manufacturerId=' + encodeURIComponent(selectedManufacturerId) +
+                                 '&processStatus=QAU Approved&approvalStatus=Approve' +
+                                 '&name=' + encodeURIComponent(searchParam);
+
+                    fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } })
+                    .then(async function(response) {
+                        if (!response.ok) { var t = await response.text(); throw new Error(t || 'HTTP ' + response.status); }
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        var items = Array.isArray(data) ? data
+                                  : (data && data.data ? data.data : (data && data.items ? data.items : []));
+                        JSUTIL.stopSpinner();
+                        if (!items || items.length === 0) {
+                            $('#productSearchTable').html('<tr><td colspan="3" class="text-muted text-center">No qualified products found for this manufacturer.</td></tr>');
+                            return;
+                        }
+                        // Build table rows and store normalized products
+                        var normalizedProducts = [];
+                        var innerHtml = '';
+                        $.each(items, function(i, item) {
+                            var rawProduct = item.product || item.Product;
+                            if (!rawProduct) return;
+                            var uomVal = rawProduct.Uom || rawProduct.uom;
+                            var np = {
+                                id:          rawProduct.Id          || rawProduct.id          || '',
+                                name:        rawProduct.Name        || rawProduct.name        || 'Unnamed Product',
+                                description: rawProduct.Description || rawProduct.description || '',
+                                number:      rawProduct.Number      || rawProduct.number      || '',
+                                uom:         (uomVal && typeof uomVal === 'object') ? (uomVal.Name || uomVal.name || '') : (uomVal || ''),
+                                unitPrice:   item.UnitPrice || item.unitPrice || rawProduct.UnitPrice || rawProduct.unitPrice || 0
+                            };
+                            normalizedProducts.push(np);
+                            innerHtml += '<tr>' +
+                                '<td><a href="javascript:void(0);" class="selectProductBtn" data-index="' + i + '" id="' + np.id + '">' + np.name + '</a></td>' +
+                                '<td>' + np.number + '</td>' +
+                                '<td>' + np.unitPrice + '</td>' +
+                                '</tr>';
+                        });
+                        $('#productSearchTable').html(innerHtml);
+                        $('.selectProductBtn').off('click').on('click', function() {
+                            var idx = $(this).data('index');
+                            addProductToTable(normalizedProducts[idx]);
+                            bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+                        });
+                    })
+                    .catch(function(err) {
+                        console.error('[ProductSearch] Error:', err);
+                        $('#productSearchTable').html('<tr><td colspan="3" class="tat-danger text-center">Error loading products</td></tr>');
+                        JSUTIL.stopSpinner();
+                    });
+                    return;
+                }
+
+                JSUTIL.startSpinner();
+                // var safeParam = searchParam.replace(/'/g, "''");
+                // var payload = {
+                //     fields: "Name;Description;Category;Hsn;Uom;Type;UnitPrice;CurrentAvailability;Number;RestockQuantity;CreatedDate;ModifiedDate;Quantity;QuantityOnHand;QuantityOnOrder;QuantityReserved;QuantityUnderInspection;QuantityRejected;ProcessStatus;Version;IsKsm",
+                //     conditions: [
+                //         `Number like '%${safeParam}%'`,
+                //         `Name like '%${safeParam}%'`
+                //     ],
+                //     logic: '{0} OR {1}'
+                // };
+                // var postUrl = JSUTIL.getUrl('/data/Product/list');
+                // JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), afterProductSearchHandle);
+                // var searchUrl = JSUTIL.getUrl(
+                //     '/api/products/search?name=' + encodeURIComponent(searchParam) +
+                //     '&number=' + encodeURIComponent(searchParam)
+                // );
+                //   JSUTIL.startSpinner();
+                // var searchUrl = JSUTIL.getUrl(
+                //     '/api/products/search?name=' + encodeURIComponent(searchParam) +
+                //     '&number=' + encodeURIComponent(searchParam)
+                // );
+                // JSUTIL.callAJAXGet(searchUrl, afterProductSearchHandle);
+
+                JSUTIL.startSpinner();
+
+                var nameUrl = JSUTIL.getUrl(
+                    '/api/products/search?name=' + encodeURIComponent(searchParam)
+                );
+                    JSUTIL.callAJAXGet(nameUrl, function (data) {
+                    var items = data && (data.data || data.items || data);
+                    if (items && items.length > 0) {
+                        afterProductSearchHandle(data);
+                        JSUTIL.stopSpinner();
+                        return;
+                    }
+                    var numberUrl = JSUTIL.getUrl(
+                        '/api/products/search?number=' + encodeURIComponent(searchParam)
+                    );
+
+                    JSUTIL.callAJAXGet(numberUrl, function (data2) {
+                        afterProductSearchHandle(data2);
+                        JSUTIL.stopSpinner();
+                    }, function () {
+                        JSUTIL.stopSpinner();
+                        $('#productSearchTable').html(
+                            '<tr><td colspan="3" class="text-muted text-center">No products found.</td></tr>'
+                        );
+                    });
+
+                }, function () {
+                    JSUTIL.stopSpinner();
+                    $('#productSearchTable').html(
+                        '<tr><td colspan="3" class="tat-danger text-center">Error loading products</td></tr>'
+                    );
+                });
+            });
+               
+            // $('.invoiceSaveBtn').on('click', function () {
+            //     console.log("Clicked");
+            //     if ($('#customerId').val() == null || $('#customerId').val() == '') {
+            //         $('#pageErrorPanel').text('Please select a vendor.');
+            //         $('#pageErrorPanel').show().delay(5000).hide(0);
+            //         return;
+            //     }
+            //     if ($('#manufacturerId').val() == null || $('#manufacturerId').val() == '') {
+            //         $('#pageErrorPanel').text('Please select a manufacturer.');
+            //         $('#pageErrorPanel').show().delay(5000).hide(0);
+            //         return;
+            //     }
+            //     JSUTIL.startSpinner();
+            //     console.log('start spinner');
+            //     var taxes = 0.00;
+            //     $('.deductionItem').each(function () {
+            //         taxes += Number($(this).text());
+            //     });
+            //     var invObj = {};
+            //     console.log('on the way to make obj');
+            //     invObj['items'] = [];
+            //     // invObj['orderDate'] = $('#orderDate2').val();
+            //     var rawOrderDate = $('#orderDate2').val();
+            //     invObj['orderDate'] = rawOrderDate
+            //     ? moment(rawOrderDate, ['DD/MM/YYYY', 'YYYY-MM-DD'], true)
+            //     .utc()
+            //     .startOf('day')
+            //     .format('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
+            //     : '';
+            //     invObj['deliveryDate'] = $('#deliveryDate').val();
+            //     invObj['quoteNumber'] = $('#quotationNumber').val();
+            //     invObj['quoteDate'] = $('#quotationDate').val();
+            //     invObj['orderNumber'] = $('#orderNumber').val();
+            //     invObj['paymentTerms'] = $('#paymentTerms').val();
+            //     invObj['vendorId'] = $('#customerId').val();
+            //     invObj['manufacturerId'] = Number($('#manufacturerId').val());
+            //     invObj['subTotal'] = 0.00;
+            //     invObj['taxAmount'] = 0.00;
+            //     invObj['taxAmount2'] = 0.00;
+            //     if (appliedTaxArray.length >= 1) {
+            //         invObj['taxAccountId1'] = appliedTaxArray[0].id.toString();
+            //     }
+            //     if (appliedTaxArray.length === 2) {
+            //         invObj['taxAccountId2'] = appliedTaxArray[1].id.toString();
+            //     }
+            //     invObj['totalAmount'] = Number($('#invoiceTotal').text());
+            //     $('.lnItemTotal').each(function () {
+            //         var lineItem = {};
+            //         lineItem['productId'] = $(this).parent().find('.lnItemId').val();
+            //         lineItem['quantity'] = Number($(this).parent().find('.lnItemQuantity').val());
+            //         lineItem['unitPrice'] = Number($(this).parent().find('.lnItemPrice').val());
+            //         lineItem['discountPercent'] = Number($(this).parent().find('.lnItemDiscount').val());
+            //         // lineItem['taxAmount'] = Number($('#taxDeduction1Amount').text()).toString();
+            //         invObj['taxAmount'] = Number($('#taxDeduction1Amount').text()).toString();
+            //         // lineItem['taxAmount2'] = Number($('#taxDeduction2Amount').text()).toString();
+            //         invObj['taxAmount2'] = Number($('#taxDeduction2Amount').text()).toString();
+            //         lineItem['lineTotal'] = Number($(this).text());
+            //         invObj['subTotal'] += lineItem['lineTotal'];
+            //         invObj['items'].push(lineItem);
+            //     });
+            //     console.log(invObj);
+            //     console.log(JSON.stringify(invObj));
+            //     postUrl = '/api/purchase/orders';
+            //     JSUTIL.callAJAXPost(postUrl, JSON.stringify(invObj), callbackAfterPoCreate);
+            // });
+
+            function normalizeDateForApi(v) {
+    if (!v) return '';
+    var m = moment(v, ['DD/MM/YYYY', 'YYYY-MM-DD'], true);
+    return m.isValid() ? m.format('YYYY-MM-DD') : '';
+}
+
+$('.invoiceSaveBtn').on('click', function () {
+    if ($('#customerId').val() == null || $('#customerId').val() == '') {
+        $('#pageErrorPanel').text('Please select a vendor.');
+        $('#pageErrorPanel').show().delay(5000).hide(0);
+        return;
+    }
+    if ($('#manufacturerId').val() == null || $('#manufacturerId').val() == '') {
+        $('#pageErrorPanel').text('Please select a manufacturer.');
+        $('#pageErrorPanel').show().delay(5000).hide(0);
+        return;
+    }
+
+    JSUTIL.startSpinner();
+
+    // Fetch all purchase orders to find the max number
+    JSUTIL.callAJAXGet('/api/purchase/orders', function (allOrders) {
+        var maxNumber = 0;
+        
+        // Find the largest number in existing orders
+         if (Array.isArray(allOrders)) {
+            $.each(allOrders, function (i, order) {
+                var numberStr = order.number || '';
+                var match = numberStr.match(/PO-(\d+)/);
+                if (match) {
+                    var num = parseInt(match[1], 10);
+                    if (num > maxNumber) {
+                        maxNumber = num;
+                    }
+                }
+            });
+        }
+        // Increment and generate new number
+        var newNumber = (maxNumber + 1).toString();
+        var newNumberValue = (maxNumber + 1).toString().padStart(5, '0');
+        var newNumber = 'PO-' + newNumberValue;
+        console.log('New auto-incremented number generated:', newNumber);
+        var invObj = {};
+        invObj['items'] = [];
+        invObj['number'] = newNumber;  // ← Set the auto-incremented number
+
+        var rawOrderDate = $('#orderDate2').val();
+        invObj['orderDate'] = rawOrderDate
+            ? moment(rawOrderDate, ['DD/MM/YYYY', 'YYYY-MM-DD'], true)
+                .utc().startOf('day').format('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
+            : '';
+
+        invObj['deliveryDate'] = normalizeDateForApi($('#deliveryDate').val());
+        invObj['quoteNumber'] = $('#quotationNumber').val();
+        invObj['quoteDate'] = normalizeDateForApi($('#quotationDate').val());
+
+        invObj['paymentTerms'] = $('#paymentTerms').val();
+        invObj['vendorId'] = Number($('#customerId').val()) || '';
+        invObj['manufacturerId'] = Number($('#manufacturerId').val()) || '';
+        invObj['subTotal'] = 0.00;
+        invObj['taxAmount'] = Number($('#taxDeduction1Amount').text()) || 0;
+        invObj['taxAmount2'] = Number($('#taxDeduction2Amount').text()) || 0;
+        invObj['employeeId'] = FOX.employeeId || null;
+
+        if (appliedTaxArray.length >= 1) invObj['taxAccountId1'] = Number(appliedTaxArray[0].id);
+        if (appliedTaxArray.length === 2) invObj['taxAccountId2'] = Number(appliedTaxArray[1].id);
+
+        invObj['totalAmount'] = Number($('#invoiceTotal').text()) || 0;
+
+        $('.lnItemTotal').each(function () {
+            var lineItem = {};
+            lineItem['productId'] = Number($(this).parent().find('.lnItemId').val()) || 0;
+            lineItem['quantity'] = Number($(this).parent().find('.lnItemQuantity').val()) || 0;
+            lineItem['unitPrice'] = Number($(this).parent().find('.lnItemPrice').val()) || 0;
+            lineItem['discountPercent'] = Number($(this).parent().find('.lnItemDiscount').val()) || 0;
+            lineItem['lineTotal'] = Number($(this).text()) || 0;
+            invObj['subTotal'] += lineItem['lineTotal'];
+            invObj['items'].push(lineItem);
+        });
+
+        JSUTIL.callAJAXPost('/api/purchase/orders', JSON.stringify(invObj), function (response) {
+            JSUTIL.stopSpinner();
+            callbackAfterPoCreate(response);
+        });
+    });
+});        // $('.addCustomerModalBtn, [data-type="addCustomerModal"]').on('click', function () {
+            //     console.log('Customer button clicked');
+            //     var modal = new bootstrap.Modal($('#addCustomerModal')[0]);
+            //     modal.show();
+            //     $('#customerSearchInput').focus();
+            // });
+            // $('.addProductModalBtn, [data-type="addProductModal"]').on('click', function () {
+            //     console.log('Product button clicked');
+            //     var modal = new bootstrap.Modal($('#addProductModal')[0]);
+            //     modal.show();
+            //     $('#productSearchInput').focus();
+            // });
+
+            // $('.addDeductionModal, [data-type="addDeductionModal"]').on('click', function () {
+            //     console.log('Deduction button clicked');
+            //     (bootstrap.Modal.getInstance($('#addDeductionModal')[0]) || new bootstrap.Modal($('#addDeductionModal')[0])).show();
+            //     $('#deductionSearchInput').focus();
+            // });
+            $(document).on('click', '.addCustomerModalBtn, [data-type="addCustomerModal"]', function () {
+                console.log('Customer button clicked');
+                var modal = bootstrap.Modal.getInstance($('#addCustomerModal')[0]) || new bootstrap.Modal($('#addCustomerModal')[0]);
+                modal.show();
+                $('#customerSearchInput').focus();
+            });
+            $(document).on('click', '.addProductModalBtn, [data-type="addProductModal"]', function () {
+                console.log('Product button clicked');
+                var modal = bootstrap.Modal.getInstance($('#addProductModal')[0]) || new bootstrap.Modal($('#addProductModal')[0]);
+                modal.show();
+                $('#productSearchInput').focus();
+            });
+
+            $(document).on('click', '.addDeductionModal, [data-type="addDeductionModal"]', function () {
+                console.log('Deduction button clicked');
+                var modalEl = $('#addDeductionModal')[0];
+                if (!modalEl) return;
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+                $('#deductionSearchInput').focus();
+            });
+        }
+
+        function calculateTotals() {
+            var subTotal = 0.00;
+            var taxTotal = 0.00;
+            $('.lnItemTotal').each(function () {
+                var quantity = $(this).parent().find('.lnItemQuantity').val();
+                var unitPrice = $(this).parent().find('.lnItemPrice').val();
+                var discount = $(this).parent().find('.lnItemDiscount').val();
+                unitPrice = Number(unitPrice) * Number(quantity);
+                var newRate = Number(unitPrice) - (Number(unitPrice) * Number(discount) / 100);
+                $(this).text(newRate.toFixed(FOX.financialDecimals));
+                subTotal += newRate;
+            });
+            $('#invoiceSubTotal').text(subTotal.toFixed(FOX.financialDecimals));
+            if (deductionAmount > 0) {
+                var currentTax = subTotal * deductionAmount / 100;
+                taxTotal += currentTax;
+                $('#taxDeduction1Amount').text(currentTax.toFixed(FOX.financialDecimals));
+            }
+            if (deductionAmount2 > 0) {
+                var currentTax = subTotal * deductionAmount2 / 100;
+                taxTotal += currentTax;
+                $('#taxDeduction2Amount').text(currentTax.toFixed(FOX.financialDecimals));
+            }
+            var invoiceTotal = 0.00;
+            invoiceTotal += subTotal + taxTotal;
+            $('#invoiceTotal').text(invoiceTotal.toFixed(FOX.financialDecimals));
+        }
+        var appliedTaxArray = [];
+        assignTaxesCallback = function(taxArray) {
+            console.info('-->taxArray: ', taxArray);
+            appliedTaxArray = taxArray;
+            $('#invoiceTaxHeader1').hide();
+            $('#invoiceTaxHeader2').hide();
+            $('#taxDeduction1Name').text('');
+            $('#taxDeduction2Name').text('');
+            deductionAmount = 0;
+            deductionAmount2 = 0;
+            if (state === 'newRecordPanel') {
+                $.each(taxArray, function (i, val) {
+                    if (taxArray.length == 1) {
+                        deductionAmount = val.amount;
+                        $('#taxDeduction1Name').text(val.name);
+                        $('#invoiceTaxHeader1').show();
+                    }
+                    else if (taxArray.length == 2) {
+                        if (i == 0) {
+                            deductionAmount = val.amount;
+                            $('#taxDeduction1Name').text(val.name);
+                            $('#invoiceTaxHeader1').show();
+                        } else if (i == 1) {
+                            deductionAmount2 = val.amount;
+                            $('#taxDeduction2Name').text(val.name);
+                            $('#invoiceTaxHeader2').show();
+                        }
+                    }
+                });
+                calculateTotals();
+            } else {
+            //     let parentTaxObj = {}
+            //     parentTaxObj['totalAmount'] = gst.orderObj.totalAmount;
+            //     parentTaxObj['taxAccounts'] = [];
+            //     $.each(taxArray, function (i, val) {
+            //         let curentTaxObj = {};
+            //         curentTaxObj['id'] = val.id;
+            //         curentTaxObj['amount'] = val.amount;
+            //         parentTaxObj['taxAccounts'].push(curentTaxObj);
+            //     });
+            //     // OLD: JSUTIL.callAJAXPost('/purchase/po/add_taxes?recordId=' + currentRecordId, JSON.stringify(parentTaxObj), function (response) {
+            //     JSUTIL.callAJAXPost('/api/purchase/orders/' + currentRecordId + '/taxes', JSON.stringify(parentTaxObj), function (response) {
+            //         console.log(response)
+            //         // OLD: var postUrl = JSUTIL.getUrl('/purchase/po/page_data?id=' + currentRecordId);
+            //         var postUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+
+            //         JSUTIL.callAJAXGet(postUrl, function (response) {
+            //             getDetailsCallback(response);
+            //             $('.lnItemInputVal1').removeAttr('readonly');
+            //             $('.deleteLnItem1').removeAttr('disabled');
+            //             $('.orderEditBtn').hide();
+            //             $('#addButton').show();
+            //         });
+            //     });
+            // }
+            var selectedTaxes = taxArray || [];
+            var subTotal = Number($('#editSubTotal').val()) || 0;
+
+            var tax1Percent = selectedTaxes.length >= 1 ? (Number(selectedTaxes[0].amount) || 0) : 0;
+            var tax2Percent = selectedTaxes.length >= 2 ? (Number(selectedTaxes[1].amount) || 0) : 0;
+
+            var taxAmount1 = subTotal * tax1Percent / 100;
+            var taxAmount2 = subTotal * tax2Percent / 100;
+            var totalAmount = subTotal + taxAmount1 + taxAmount2;
+
+            var rawOrderDate = $('#orderDate').val();
+
+            var headerPayload = {
+                vendorId: Number($('#customerId').val()) || '',
+                manufacturerId: Number($('#manuId').val()) || '',
+                orderDate: rawOrderDate
+                    ? moment(rawOrderDate, ['DD/MM/YYYY', 'YYYY-MM-DD'], true)
+                        .utc().startOf('day').format('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
+                    : '',
+                deliveryDate: normalizeUiDate($('#editDeliveryDate').val()),
+                quoteDate: normalizeUiDate($('#editQuotationDate').val()),
+                quoteNumber: $('#editQuotationNumber').val() || '',
+                paymentTerms: $('#editPoTerms').val() || '',
+                notes: '',
+                subTotal: subTotal,
+                taxAmount: taxAmount1,
+                taxAmount2: taxAmount2,
+                totalAmount: totalAmount
+            };
+
+            if (selectedTaxes.length >= 1) {
+                headerPayload.taxAccountId1 = Number(selectedTaxes[0].id);
+            }
+            if (selectedTaxes.length >= 2) {
+                headerPayload.taxAccountId2 = Number(selectedTaxes[1].id);
+            }
+
+            if (selectedTaxes.length === 0) {
+                headerPayload.taxAccountId1 = null;
+                headerPayload.taxAccountId2 = null;
+            } else if (selectedTaxes.length === 1) {
+                headerPayload.taxAccountId2 = null;
+            }
+
+            var putUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+            JSUTIL.callAJAXPut(putUrl, JSON.stringify(headerPayload), function (response) {
+                var getUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+                JSUTIL.callAJAXGet(getUrl, function (response) {
+                    getDetailsCallback(response);
+                    $('.lnItemInputVal1').removeAttr('readonly');
+                    $('.deleteLnItem1').removeAttr('disabled');
+                    $('.orderEditBtn').hide();
+                    $('#addButton').show();
+                });
+            });
+        }
+        }
+        function addProductToTable(product) {
+            console.log(product);
+            var innerHtml = `
+            <tr>
+                <td><a class="btn btn-sm btn-default deleteLnItem"><i data-lucide="trash"></i></a></td>
+                <td style="text-align:left">
+                    <div><strong>${product.name}</strong></div>
+                    <small>${product.description || ''}</small>
+                    <input type="hidden" class="lnItemId" value="${product.id}"/>
+                </td>
+                <td style="width: 12%;"><input style="text-align:right" type="text" value="${product.uom}" class="form-control" readonly/></td>
+                <td style="width: 12%;"><input type="number" value="${1.00.toFixed(FOX.financialDecimals)}" class="form-control lnItemInputVal lnItemQuantity"/></td>
+                <td style="width: 12%;"><input type="number" class="form-control lnItemInputVal lnItemPrice" value="${Number(product.unitPrice)}"></td>
+                <td style="width: 12%;"><input type="number" class="form-control lnItemInputVal lnItemDiscount" value="${0.00.toFixed(FOX.financialDecimals)}"></td>
+                <td class="lnItemTotal">0.00</td>
+            </tr>
+        `;
+
+            $('#invoiceLnItemTable').append(innerHtml);
+            calculateTotals();
+             lucide.createIcons();
+        }
+
+        // Close button - Use both event delegation and direct binding for reliability
+        $(document).on('click', '.CloseBtn', function () {
+            console.log('CloseBtn clicked - event delegation');
+            $('#AddPO').hide();
+            $('#POPanel').show();
+            handlePanelVisibility();
+        });
+        $('.CloseBtn').on('click', function () {
+            console.log('CloseBtn clicked - direct binding');
+            $('#AddPO').hide();
+            $('#POPanel').show();
+            handlePanelVisibility();
+        });
+        function afterCustomerSearchHandle(response) {
+            console.log('after vendor search ', response);
+            JSUTIL.stopSpinner();
+
+            var vendors = Array.isArray(response)
+                ? response
+                : (response && (response.data || response.items || []));
+
+            vendors = Array.isArray(vendors) ? vendors : [];
+
+            // Show only approved vendors.
+            customerList = vendors.filter(function (v) {
+                if (!v) return false;
+                var status = v.accountStatus || v.AccountStatus || '';
+                return String(status).toLowerCase() === 'approved';
+            });
+
+            var innerHtml = '';
+            $('#customerSearchTable').empty();
+
+            if (!customerList.length) {
+                $('#customerSearchTable').html('<tr><td colspan="3" class="text-center text-muted">No approved vendors found.</td></tr>');
+                return;
+            }
+
+            $.each(customerList, function (i, val) {
+                innerHtml += '<tr>' +
+                    '<td><a href="javascript:void(0);" class="selectCustomerBtn" style="color: #337AB7;">' + (val.number || '') + '</a></td>' +
+                    '<td>' + (val.name || '') + '</td>' +
+                    '<td>' + (val.phone || '') + '</td>' +
+                    '</tr>';
+            });
+
+            $('#customerSearchTable').append(innerHtml);
+
+            // Handle vendor selection
+            $('.selectCustomerBtn').off('click').on('click', function () {
+                var selectedVendor = customerList[$(this).closest('tr').index()];
+                if (!selectedVendor) return;
+
+                $('#customerId').val(selectedVendor.id || '');
+                $('#customerAddress').html(
+                    '<strong>(' + (selectedVendor.number || '') + ') ' + (selectedVendor.name || '') + '</strong>'
+                );
+
+                var modalInstance = bootstrap.Modal.getInstance($('#addCustomerModal')[0]);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            });
+        }
+
+        // function afterProductSearchHandle(response) {
+        //     console.log('after product ', response)
+        //     var innerHtml = '';
+        //     $('#productSearchTable').empty();
+
+        //     $.each(response, function (i, val) {
+        //         innerHtml += '<tr>' +
+        //             '<td><a href="javascript:void(0);" class="selectProductBtn" id="' + val.id + '">' +
+        //             val.name + '</a></td>' +
+        //             '<td>' + val.number + '</td>' +
+        //             '<td>' + val.unitPrice + '</td>' +
+        //             '</tr>';
+        //     });
+
+        //     $('#productSearchTable').append(innerHtml);
+
+        //     if (state === "newRecordPanel") {
+        //         $('.selectProductBtn').on('click', function () {
+        //             var selectedProduct = response[$(this).closest('tr').index()];
+        //             var manufacturerId = $('#manufacturerId').val();
+
+        //             if (manufacturerId) {
+        //                 // Manufacturer already selected, just add product directly
+        //                 addProductToTable(selectedProduct);
+        //                 bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+        //             } else {
+        //                 // No manufacturer yet — fetch qualified manufacturers for this product first
+        //                 fetchQualifiedManufacturers(selectedProduct, function () {
+        //                     // Called after manufacturer is selected
+        //                     addProductToTable(selectedProduct);
+        //                 });
+        //             }
+        //         });
+        //     }
+        //      function afterProductSearchHandle(response) {
+        //         console.log('after product ', response)
+        //         var innerHtml = '';
+        //         $('#productSearchTable').empty();
+
+        //         // Handle both array response and object with data property
+        //         var products = Array.isArray(response) ? response : (response && response.data ? response.data : []);
+                
+        //         $.each(products, function (i, val) {
+        //             // Handle undefined values gracefully
+        //             var productName = val.name || 'undefined';
+        //             var productNumber = val.number || 'undefined'; 
+        //             var productPrice = val.unitPrice || 'undefined';
+        //             var productId = val.id || '';
+                    
+        //             innerHtml += '<tr>' +
+        //                 '<td><a href="javascript:void(0);" class="selectProductBtn" data-index="' + i + '" id="' + productId + '">' +
+        //                 productName + '</a></td>' +
+        //                 '<td>' + productNumber + '</td>' +
+        //                 '<td>' + productPrice + '</td>' +
+        //                 '</tr>';
+        //         });
+
+        //         $('#productSearchTable').append(innerHtml);
+
+        //         if (state === "newRecordPanel") {
+        //             $('.selectProductBtn').on('click', function () {
+        //                 var index = $(this).data('index');
+        //                 var selectedProduct = products[index];
+        //                 console.log('Selected product:', selectedProduct);
+                        
+        //                 var manufacturerId = $('#manufacturerId').val();
+
+        //                 if (manufacturerId) {
+        //                     // Manufacturer already selected, just add product directly
+        //                     addProductToTable(selectedProduct);
+        //                     bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+        //                 } else {
+        //                     // No manufacturer yet — fetch qualified manufacturers for this product first
+        //                     fetchQualifiedManufacturers(selectedProduct, function () {
+        //                         addProductToTable(selectedProduct);
+        //                     });
+        //                 }
+        // })}else {
+        //         $('.selectProductBtn').on('click', function () {
+        //             JSUTIL.startSpinner();
+        //             bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+        //             var productId = $(this).attr('id');
+        //             var getUrl = "/purchase/po/add_new_product?id=" + currentRecordId + '&productId=' + productId + '&type=Product';
+        //             JSUTIL.callAJAXGet(getUrl, function (response) {
+        //                 console.log(response)
+        //                 var postUrl = JSUTIL.getUrl('/purchase/po/page_data?id=' + currentRecordId);
+
+        //                 JSUTIL.callAJAXGet(postUrl, function (response) {
+        //                     getDetailsCallback(response);
+        //                     $('.lnItemInputVal1').removeAttr('readonly');
+        //                     $('.deleteLnItem1').removeAttr('disabled');
+        //                     $('.orderEditBtn').hide();
+        //                     $('#addButton').show();
+        //                 });
+        //             });
+
+        //             // $('#productSearchInput').val('');
+        //             // $("#productSearchTable").empty();
+        //         });
+        //     }
+        // }
+
+        // function afterProductSearchHandle(response) {
+        //     console.log('after product ', response)
+        //     var innerHtml = '';
+        //     $('#productSearchTable').empty();
+
+        //     var products = Array.isArray(response) ? response : (response && response.data ? response.data : []);
+            
+        //     $.each(products, function (i, val) {
+        //         var productName = val.name || 'undefined';
+        //         var productNumber = val.number || 'undefined'; 
+        //         var productPrice = val.unitPrice || 'undefined';
+        //         var productId = val.id || '';
+                
+        //         innerHtml += '<tr>' +
+        //             '<td><a href="javascript:void(0);" class="selectProductBtn" data-index="' + i + '" id="' + productId + '">' +
+        //             productName + '</a></td>' +
+        //             '<td>' + productNumber + '</td>' +
+        //             '<td>' + productPrice + '</td>' +
+        //             '</tr>';
+        //     });
+
+        //     $('#productSearchTable').append(innerHtml);
+
+        //     if (state === "newRecordPanel") {
+        //         $('.selectProductBtn').off('click').on('click', function () {
+        //             var index = $(this).data('index');
+        //             var selectedProduct = products[index];
+        //             console.log('Selected product:', selectedProduct);
+                    
+        //             // Simply add product to table without manufacturer validation
+        //             addProductToTable(selectedProduct);
+        //             bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+        //         });
+        //     } else {
+        //         // Existing order edit functionality
+        //         $('.selectProductBtn').off('click').on('click', function () {
+        //             var productId = $(this).attr('id');
+        //             var postUrl = "/api/purchase/orders/" + currentRecordId + "/items";
+        //             var itemData = {
+        //                 productId: productId,
+        //                 type: 'Product'
+        //             };
+        //             JSUTIL.callAJAXPost(postUrl, JSON.stringify(itemData), function(response) {
+        //                 // Reload order details
+        //                 var getUrl = '/api/purchase/orders/' + currentRecordId;
+        //                 JSUTIL.callAJAXGet(getUrl, getDetailsCallback);
+        //             });
+        //             bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+        //         });
+        //     }
+        // }
+
+        function afterProductSearchHandle(response) {
+    console.log('after product ', response)
+    var innerHtml = '';
+    $('#productSearchTable').empty();
+
+    var products = Array.isArray(response) ? response : (response && response.data ? response.data : []);
+    
+    $.each(products, function (i, val) {
+        var productName = val.name || 'undefined';
+        var productNumber = val.number || 'undefined'; 
+        var productPrice = val.unitPrice || 'undefined';
+        var productId = val.id || '';
+        
+        innerHtml += '<tr>' +
+            '<td><a href="javascript:void(0);" class="selectProductBtn" data-index="' + i + '" id="' + productId + '">' +
+            productName + '</a></td>' +
+            '<td>' + productNumber + '</td>' +
+            '<td>' + productPrice + '</td>' +
+            '</tr>';
+    });
+
+    $('#productSearchTable').append(innerHtml);
+
+    if (state === "newRecordPanel") {
+        $('.selectProductBtn').off('click').on('click', function () {
+            var index = $(this).data('index');
+            var selectedProduct = products[index];
+            console.log('Selected product:', selectedProduct);
+            
+            var manufacturerId = $('#manufacturerId').val();
+
+            if (manufacturerId) {
+                // Manufacturer already selected, just add product directly
+                addProductToTable(selectedProduct);
+                bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+            } else {
+                // No manufacturer yet — fetch qualified manufacturers for this product first
+                fetchQualifiedManufacturers(selectedProduct, function () {
+                    // Called after manufacturer is selected
+                    addProductToTable(selectedProduct);
+                });
+            }
+        });
+    } else {
+        // Existing order edit functionality
+        $('.selectProductBtn').off('click').on('click', function () {
+            var productId = $(this).attr('id');
+            // API expects productId as a query parameter (Long), not JSON body
+            var postUrl = "/api/purchase/orders/" + currentRecordId + "/items?productId=" + Number(productId);
+            JSUTIL.callAJAXPost(postUrl, JSON.stringify({}), function(response) {
+                // Reload order details
+                var getUrl = '/api/purchase/orders/' + currentRecordId;
+                JSUTIL.callAJAXGet(getUrl, getDetailsCallback);
+            });
+            bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+        });
+    }
+}
+        function callbackAfterPoCreate(response) {
+            console.log(response);
+            location.reload();
+        }
+
+
+        // function loadManufacturerProducts(manufacturerId) {
+        //     JSUTIL.startSpinner();
+        //     $('#productSearchTable').empty();
+        //     $('#productSearchInput').val('').prop('disabled', true);
+        //     $('#productSearchBtn').prop('disabled', true);
+
+        //     var payload = {
+        //         fields: "Id;Product;Qualification;Type;UnitPrice",
+        //         conditions: [
+        //             "Qualification.Vendor.Id = '" + manufacturerId + "'",
+        //             "Qualification.ProcessStatus = 'QAU Approved'"
+        //         ],
+        //         logic: '{0} AND {1}'
+        //     };
+        //     console.log('[ManufacturerProducts] Loading products for manufacturerId:', manufacturerId);
+        //     var postUrl = JSUTIL.getUrl('/api/vendor-qualification-items');
+        //     JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (items) {
+        //         console.log('[ManufacturerProducts] VendorQualificationItem API not available - skipping');
+        //         $('#productSearchTable').html('<tr><td colspan="3" class="text-muted text-center">Manufacturer qualification check disabled - all products available.</td></tr>');
+        //         return;
+        //             console.log('[ManufacturerProducts] Response:', items);
+        //             $('#productSearchInput').prop('disabled', false);
+        //             $('#productSearchBtn').prop('disabled', false);
+
+        //             if (!items || items.length === 0) {
+        //                 $('#productSearchTable').html('<tr><td colspan="3" class="text-muted text-center">No qualified products found for this manufacturer.</td></tr>');
+        //                 return;
+        //             }
+
+        //             var products = [];
+        //             var productIds = [];
+        //             $.each(items, function (i, item) {
+        //                 var product = item.product || item.Product;
+        //                 if (product) {
+        //                     var pid = product.Id || product.id;
+        //                     if (pid && productIds.indexOf(pid) === -1) {
+        //                         productIds.push(pid);
+        //                         products.push(product);
+        //                     }
+        //                 }
+        //             });
+
+        //             console.log('[ManufacturerProducts] Products:', products);
+        //             afterProductSearchHandle(products);
+        //     });
+        // }
+        function loadManufacturerProducts(manufacturerId) {
+            JSUTIL.startSpinner();
+            $('#productSearchTable').empty();
+            $('#productSearchInput').val('').prop('disabled', true);
+            $('#productSearchBtn').prop('disabled', true);
+
+            console.log('[ManufacturerProducts] Loading products for manufacturerId:', manufacturerId);
+            
+            // Use GET with query parameters
+            var apiUrl = '/api/vendor-qualification-items?manufacturerId=' + encodeURIComponent(manufacturerId) + 
+                        '&processStatus=QAU Approved&approvalStatus=Approve';
+            
+            fetch(apiUrl, { 
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(async function (response) {
+                if (!response.ok) {
+                    var text = await response.text();
+                    throw new Error(text || ('HTTP ' + response.status));
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                console.log('[ManufacturerProducts] Response:', data);
+                
+                // Handle different response structures
+                var items = [];
+                if (Array.isArray(data)) {
+                    items = data;
+                } else if (data && data.data && Array.isArray(data.data)) {
+                    items = data.data;
+                } else if (data && data.items && Array.isArray(data.items)) {
+                    items = data.items;
+                } else {
+                    console.warn('Unexpected manufacturer products response format:', data);
+                    items = [];
+                }
+
+                var innerHtml = '';
+                if (items.length === 0) {
+                    innerHtml = '<tr><td colspan="3" class="text-center">No qualified products found</td></tr>';
+                } else {
+                    $.each(items, function (i, item) {
+                        var product = item.product || item.Product;
+                        if (product) {
+                            var pId = product.Id || product.id || '';
+                            var pName = product.Name || product.name || 'Unnamed Product';
+                            var pNumber = product.Number || product.number || 'N/A';
+                            var pPrice = item.UnitPrice || item.unitPrice || product.UnitPrice || product.unitPrice || '0.00';
+                            
+                            innerHtml += '<tr>' +
+                                '<td><a href="javascript:void(0);" class="selectProductBtn" data-index="' + i + '" id="' + pId + '">' +
+                                pName + '</a></td>' +
+                                '<td>' + pNumber + '</td>' +
+                                '<td>' + pPrice + '</td>' +
+                                '</tr>';
+                        }
+                    });
+                }
+
+                $('#productSearchTable').html(innerHtml);
+                $('#productSearchInput').prop('disabled', false);
+                $('#productSearchBtn').prop('disabled', false);
+                JSUTIL.stopSpinner();
+
+                // Bind click events for product selection
+                $('.selectProductBtn').off('click').on('click', function () {
+                    var index = $(this).data('index');
+                    var selectedItem = items[index];
+                    var rawProduct = selectedItem.product || selectedItem.Product;
+
+                    if (rawProduct) {
+                        // Normalize all fields to lowercase keys expected by addProductToTable
+                        var uomVal = rawProduct.Uom || rawProduct.uom;
+                        var normalizedProduct = {
+                            id:          rawProduct.Id          || rawProduct.id          || '',
+                            name:        rawProduct.Name        || rawProduct.name        || 'Unnamed Product',
+                            description: rawProduct.Description || rawProduct.description || '',
+                            number:      rawProduct.Number      || rawProduct.number      || '',
+                            uom:         (uomVal && typeof uomVal === 'object')
+                                             ? (uomVal.Name || uomVal.name || '')
+                                             : (uomVal || ''),
+                            // Prefer VQI-level unitPrice; fall back to product-level
+                            unitPrice:   selectedItem.UnitPrice || selectedItem.unitPrice
+                                         || rawProduct.UnitPrice || rawProduct.unitPrice || 0
+                        };
+
+                        addProductToTable(normalizedProduct);
+                        bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+                    }
+                });
+            })
+            .catch(function (error) {
+                console.error('Manufacturer products fetch failed:', error);
+                var errorHtml = '<tr><td colspan="3" class="text-center tat-danger">Error loading products</td></tr>';
+                $('#productSearchTable').html(errorHtml);
+                $('#productSearchInput').prop('disabled', false);
+                $('#productSearchBtn').prop('disabled', false);
+                JSUTIL.stopSpinner();
+            });
+        }
+        // function fetchQualifiedManufacturers(product, onManufacturerSelected) {
+        //     var productId = product.Id || product.id;
+        //     var payload = {
+        //         fields: "Id;Name;Number;Product;Qualification;ApprovalStatus;Type;UnitPrice",
+        //         conditions: [
+        //             "Product.Id = '" + productId + "'",
+        //             "Qualification.ProcessStatus = 'QAU Approved'",
+        //             "ApprovalStatus='Approve'"
+        //         ],
+        //         logic: '{0} AND {1} AND {2}'
+        //     };
+        //     console.log('[QualifiedMfr] Fetching VendorQualificationItems for productId:', productId);
+        //     var postUrl = JSUTIL.getUrl('/data/VendorQualificationItem/list'); 
+        //     JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (items) {
+        //         console.log('[QualifiedMfr] VendorQualificationItem API not available - calling callback directly');
+        //         if (onManufacturerSelected) onManufacturerSelected();
+        //         return;
+        //             console.log('[QualifiedMfr] VendorQualificationItem response:', items);
+
+        //             if (!items || items.length === 0) {
+        //                 console.log('[QualifiedMfr] No items found, adding product without manufacturer.');
+        //                 $('.manuInfo').show()
+        //                 if (onManufacturerSelected) onManufacturerSelected();
+        //                 return;
+        //             }
+        //             $('.manuInfo').hide()
+
+        //             // Collect unique vendors directly from qualification.vendor
+        //             var vendorIds = [];
+        //             var qualifiedVendors = [];
+        //             $.each(items, function (i, item) {
+        //                 var qual = item.qualification || item.Qualification;
+        //                 if (qual) {
+        //                     var vendor = qual.vendor || qual.Vendor;
+        //                     if (vendor) {
+        //                         var vid = vendor.Id || vendor.id;
+        //                         if (vid && vendorIds.indexOf(vid) === -1) {
+        //                             vendorIds.push(vid);
+        //                             qualifiedVendors.push(vendor);
+        //                         }
+        //                     }
+        //                 }
+        //             });
+
+        //             console.log('[QualifiedMfr] Qualified vendors:', qualifiedVendors);
+
+        //             if (qualifiedVendors.length === 0) {
+        //                 console.log('[QualifiedMfr] No vendors found, adding product without manufacturer.');
+        //                 if (onManufacturerSelected) onManufacturerSelected();
+        //                 return;
+        //             }
+
+        //             if (qualifiedVendors.length === 1) {
+        //                 console.log('[QualifiedMfr] Single vendor, auto-selecting:', qualifiedVendors[0]);
+        //                 selectManufacturer(qualifiedVendors[0]);
+        //                 if (onManufacturerSelected) onManufacturerSelected();
+        //             } else {
+        //                 console.log('[QualifiedMfr] Multiple vendors, showing picker:', qualifiedVendors);
+        //                 showManufacturerPicker(qualifiedVendors, onManufacturerSelected);
+        //             }
+        //     });
+        // }
+
+    //     function fetchQualifiedManufacturers(product, onManufacturerSelected) {
+    //     var productId = product.Id || product.id;
+    //     var payload = {
+    //         fields: "Id;Name;Number;Product;Qualification;ApprovalStatus;Type;UnitPrice",
+    //         conditions: [
+    //             "Product.Id = '" + productId + "'",
+    //             "Qualification.ProcessStatus = 'QAU Approved'",
+    //             "ApprovalStatus='Approve'"
+    //         ],
+    //         logic: '{0} AND {1} AND {2}'
+    //     };
+    //     console.log('[QualifiedMfr] Fetching VendorQualificationItems for productId:', productId);
+    //     var postUrl = JSUTIL.getUrl('/api/vendor-qualification-items'); 
+    //     JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (items) {
+    //         // REMOVE THIS EARLY RETURN TO ENABLE THE LOGIC:
+    //         // console.log('[QualifiedMfr] VendorQualificationItem API not available - calling callback directly');
+    //         // if (onManufacturerSelected) onManufacturerSelected();
+    //         // return;
+            
+    //         console.log('[QualifiedMfr] VendorQualificationItem response:', items);
+
+    //         if (!items || items.length === 0) {
+    //             console.log('[QualifiedMfr] No items found, adding product without manufacturer.');
+    //             $('.manuInfo').show(); // Shows "No Manufacturers for selected Product"
+    //             if (onManufacturerSelected) onManufacturerSelected();
+    //             return;
+    //         }
+    //         $('.manuInfo').hide();
+
+    //         // Collect unique vendors directly from qualification.vendor
+    //         var vendorIds = [];
+    //         var qualifiedVendors = [];
+    //         $.each(items, function (i, item) {
+    //             var qual = item.qualification || item.Qualification;
+    //             if (qual) {
+    //                 var vendor = qual.vendor || qual.Vendor;
+    //                 if (vendor) {
+    //                     var vid = vendor.Id || vendor.id;
+    //                     if (vid && vendorIds.indexOf(vid) === -1) {
+    //                         vendorIds.push(vid);
+    //                         qualifiedVendors.push(vendor);
+    //                     }
+    //                 }
+    //             }
+    //         });
+
+    //         console.log('[QualifiedMfr] Qualified vendors:', qualifiedVendors);
+
+    //         if (qualifiedVendors.length === 0) {
+    //             console.log('[QualifiedMfr] No vendors found, adding product without manufacturer.');
+    //             $('.manuInfo').show(); // Shows "No Manufacturers for selected Product"
+    //             if (onManufacturerSelected) onManufacturerSelected();
+    //             return;
+    //         }
+
+    //         if (qualifiedVendors.length === 1) {
+    //             console.log('[QualifiedMfr] Single vendor, auto-selecting:', qualifiedVendors[0]);
+    //             selectManufacturer(qualifiedVendors[0]);
+    //             $('.manuInfo').hide();
+    //             if (onManufacturerSelected) onManufacturerSelected();
+    //         } else {
+    //             console.log('[QualifiedMfr] Multiple vendors, showing picker:', qualifiedVendors);
+    //             showManufacturerPicker(qualifiedVendors, onManufacturerSelected);
+    //         }
+    //     });
+    // }
+
+        function fetchQualifiedManufacturers(product, onManufacturerSelected) {
+        var productId = product.Id || product.id;
+        console.log('[QualifiedMfr] Fetching VendorQualificationItems for productId:', productId);
+        
+        // Use GET with query parameters instead of complex payload
+        var apiUrl = '/api/vendor-qualification-items?productId=' + encodeURIComponent(productId) + 
+                    '&processStatus=QAU Approved&approvalStatus=Approve';
+        
+        fetch(apiUrl, { 
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(async function (response) {
+            if (!response.ok) {
+                var text = await response.text();
+                throw new Error(text || ('HTTP ' + response.status));
+            }
+            return response.json();
+        })
+        .then(function (data) {
+            console.log('[QualifiedMfr] VendorQualificationItem response:', data);
+
+            // Handle different response structures
+            var items = [];
+            if (Array.isArray(data)) {
+                items = data;
+            } else if (data && data.data && Array.isArray(data.data)) {
+                items = data.data;
+            } else if (data && data.items && Array.isArray(data.items)) {
+                items = data.items;
+            } else {
+                console.warn('Unexpected qualification response format:', data);
+                items = [];
+            }
+
+            if (!items || items.length === 0) {
+                console.log('[QualifiedMfr] No items found, adding product without manufacturer.');
+                $('.manuInfo').show();
+                if (onManufacturerSelected) onManufacturerSelected();
+                return;
+            }
+            $('.manuInfo').hide();
+
+            // FIXED: Extract vendors directly from items (not from qualification.vendor)
+            var vendorIds = [];
+            var qualifiedVendors = [];
+            // $.each(items, function (i, item) {
+            //     // The vendor is directly on the item, not nested under qualification
+            //     var vendor = item.vendor || item.Vendor;
+            //     if (vendor) {
+            //         var vid = vendor.id || vendor.Id;
+            //         if (vid && vendorIds.indexOf(vid) === -1) {
+            //             vendorIds.push(vid);
+            //             qualifiedVendors.push(vendor);
+            //         }
+            //     }
+            // });
+            $.each(items, function (i, item) {
+                var qual = item.qualification || item.Qualification;
+                if (qual) {
+                    var vendor = qual.vendor || qual.Vendor;
+                    if (vendor) {
+                        var vid = vendor.Id || vendor.id;
+                        if (vid && vendorIds.indexOf(vid) === -1) {
+                            vendorIds.push(vid);
+                            qualifiedVendors.push(vendor);
+                        }
+                    }
+                }
+            });
+        console.log('[QualifiedMfr] Qualified vendors:', qualifiedVendors);
+
+        if (qualifiedVendors.length === 0) {
+            console.log('[QualifiedMfr] No vendors found, adding product without manufacturer.');
+            $('.manuInfo').show();
+            if (onManufacturerSelected) onManufacturerSelected();
+            return;
+        }
+
+        if (qualifiedVendors.length === 1) {
+            console.log('[QualifiedMfr] Single vendor, auto-selecting:', qualifiedVendors[0]);
+            selectManufacturer(qualifiedVendors[0]);
+            $('.manuInfo').hide();
+            if (onManufacturerSelected) onManufacturerSelected();
+        } else {
+            console.log('[QualifiedMfr] Multiple vendors, showing picker:', qualifiedVendors);
+            showManufacturerPicker(qualifiedVendors, onManufacturerSelected);
+        }
+    })
+    .catch(function (error) {
+        console.error('Qualified manufacturers fetch failed:', error);
+        $('.manuInfo').show();
+        if (onManufacturerSelected) onManufacturerSelected();
+    });
+}
+        function selectManufacturer(vendor) {
+            console.log('Selected manufacturer:', vendor);
+            var id = vendor.id || vendor.Id;
+            var name = vendor.Name || vendor.name || '';
+
+            $('#manufacturerId').val(id);
+            $('#manufacturerAddress').html(
+                '<strong>' + "(" + vendor.number + ") " + name +  '</strong><br>'
+            );
+        }
+
+        function showManufacturerPicker(vendors, onManufacturerSelected) {
+            var rows = '';
+            $.each(vendors, function (i, v) {
+                var name = v.Name || v.name || '';
+                var phone = v.Phone || v.phone || '';
+                rows += '<tr>' +
+                    '<td><a href="javascript:void(0);" class="selectQualifiedMfrBtn" data-index="' + i + '">' + name + '</a></td>' +
+                    '<td>' + v.number + '</td>' +
+                    '</tr>';
+            });
+
+            // Transform the product modal to show manufacturer list
+            $('#addProductModal .modal-title').text('Select Qualified Manufacturer');
+            $('#addProductModal small.font-bold').text('Multiple QAU Approved manufacturers found. Please select one.');
+            $('#productSearchTable').closest('thead').find('th').eq(0).text('Name');
+            $('#productSearchTable').closest('thead').find('th').eq(1).text('Phone');
+            $('#productSearchTable').closest('thead').find('th').eq(2).text('');
+            $('#productSearchTable').html(rows);
+            $('#addProductModal').data('vendors', vendors);
+
+            $(document).off('click', '.selectQualifiedMfrBtn').on('click', '.selectQualifiedMfrBtn', function () {
+                var idx = $(this).data('index');
+                var selectedVendors = $('#addProductModal').data('vendors');
+                selectManufacturer(selectedVendors[idx]);
+
+                // Restore modal to original product state and close
+                $('#addProductModal .modal-title').text('Add Product');
+                $('#addProductModal small.font-bold').text('Search for products to add to PO.');
+                $('#productSearchTable').closest('thead').find('th').eq(0).text('Name');
+                $('#productSearchTable').closest('thead').find('th').eq(1).text('Number');
+                $('#productSearchTable').closest('thead').find('th').eq(2).text('Price');
+                $('#productSearchTable').empty();
+                $('#productSearchInput').val('');
+                bootstrap.Modal.getInstance($('#addProductModal')[0])?.hide();
+
+
+                // Now add the product to the table
+                if (onManufacturerSelected) onManufacturerSelected();
+            });
+        }
+        // newPoPanel.js    End
+
+
+
+
+
+    // documentUpload.js    Start
+
+    // OLD (OneDrive approach — kept for reference):
+    // var multipartFile = '';
+    // var uploadtableId = '';
+    // var userDefineSuccessCallBack = '';
+    // function foVendorUploadFile(panelTitle, actionUrl, successCallBack) {
+    //     $('#uploadFileTitle').html(panelTitle);
+    //     $('#fileFormVQ').attr('action', actionUrl);
+    //     userDefineSuccessCallBack = successCallBack;
+    // }
+    // document.addEventListener("DOMContentLoaded", function () {
+    //     $('#fileInputVQ').on('change', function (e) {
+    //         $('#fileNameTextVQ').text(e.target.files[0].name);
+    //         multipartFile = e.target.files[0];
+    //     });
+    //     $('#processBtn').on('click', function () {
+    //         $('#loadingError').hide();
+    //         $('#importResults').hide();
+    //         $('#insertedTable').empty();
+    //         var formData = new FormData();
+    //         formData.append('file', multipartFile);
+    //         var callback = userDefineSuccessCallBack || defaultSuccessCallback;
+    //         JSUTIL.callAJAXFilePost($('#fileFormVQ').attr('action'), formData, callback, null);
+    //     });
+    // });
+    // function defaultSuccessCallback(response) {
+    //     console.log(response);
+    //     // location.reload();
+    // }
+
+    // NEW: Upload file directly from device using POST /api/files/upload
+    $(document).on('click', '#processBtn', function () {
+        var files = $('#fileInputVQ')[0].files;
+        if (!files || files.length === 0) {
+            JSUTIL.buildErrorModal('Please select a file to upload.');
+            return;
+        }
+        console.log("currentRecordId in upload: ", currentRecordId);
+        var formData = new FormData();
+        formData.append('file', files[0]);
+        formData.append('folder', 'PO');
+        formData.append('description', 'po_document');
+        formData.append('patientId', String(currentRecordId));
+        formData.append('uploadedAt', new Date().toISOString().slice(0, 19));
+        JSUTIL.startSpinner();
+        $.ajax({
+            url: JSUTIL.getUrl('/api/files/upload'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                $('#fileInputVQ').val('');
+                JSUTIL.stopSpinner();
+                loadPoDocuments(currentRecordId);
+            },
+            error: function (err) {
+                console.error('Upload failed:', err);
+                JSUTIL.stopSpinner();
+                JSUTIL.buildErrorModal('File upload failed. Please try again.');
+            }
+        });
+    });
+
+    // Load documents for a PO: GET /api/files?patient={id}&folder=PO
+    function loadPoDocuments(poId) {
+    $('#vendorUploadFilesPanel').hide();
+    $('#EditPO').show();
+    handlePanelVisibility();
+    var url = JSUTIL.getUrl('/api/files?patientId=' + poId + '&folder=PO');
+    JSUTIL.callAJAXGet(url, function (res) {
+        renderPoDocumentTable(res || []);
+    });
+}
+
+    function renderPoDocumentTable(files) {
+        files = (files || []).slice().sort(function (a, b) {
+            return (b.id || 0) - (a.id || 0);
+        });
+        var tbody = $('#allDocumentsTable');
+        tbody.empty();
+        if (!files || files.length === 0) {
+            tbody.append('<tr><td colspan="3" class="text-center">No Data available</td></tr>');
+            return;
+        }
+        files.forEach(function (f) {
+            var row =
+                '<tr>' +
+                '<td style="width:12%;">' +
+                '<button type="button" class="btn btn-sm btn-outline btn-default viewPoDocumentBtn" data-id="' + f.id + '" style="margin-right:4px;"><i data-lucide="eye"></i></button>' +
+                '<button type="button" class="btn btn-sm btn-outline btn-default deletePoDocumentBtn" data-id="' + f.id + '"><i data-lucide="trash"></i></button>' +
+                '</td>' +
+                '<td>' + (f.originalName || f.name || '') + '</td>' +
+                '<td>' + (f.uploadedAt ? JSUTIL.getDate(f.uploadedAt) : (f.createdAt ? JSUTIL.getDate(f.createdAt) : '')) + '</td>' +
+                '</tr>';
+            tbody.append(row);
+        });
+        lucide.createIcons();
+    }
+
+    // View/download document
+    $(document).on('click', '.viewPoDocumentBtn', function () {
+        var fileId = $(this).data('id');
+        window.open(JSUTIL.getUrl('/api/files/download/' + fileId), '_blank');
+    });
+
+    // Delete document
+   $(document).on('click', '.deletePoDocumentBtn', function () {
+    var fileId = $(this).data('id');
+    var $row = $(this).closest('tr');
+        $.ajax({
+            url: JSUTIL.getUrl('/api/files/' + fileId),
+            type: 'DELETE',
+            success: function () { $row.remove(); },
+            error: function (err) { console.error('Delete failed:', err); }
+        });
+});
+
+    // documentUpload.js    End
+
+
+
+
+
+
+
+    // taxPanel.js      Start
+    var TAXPANEL = {
+        taxArray: [],
+        appliedTaxArray: [],
+        assignTaxesCallback: '',
+        initialize: function (assignTaxesCallback, appliedTaxes) {
+            //console.log(this.taxArray,"First console")
+            var getUrl = JSUTIL.getUrl('/data/Account/search?type=Tax');
+            // JSUTIL.callAJAXGet(getUrl, this.afterGetTaxHandle);
+            JSUTIL.callAJAXGet(getUrl, TAXPANEL.afterGetTaxHandle.bind(TAXPANEL));
+            this.assignTaxesCallback = assignTaxesCallback;
+            if (appliedTaxes) {
+                this.appliedTaxArray = appliedTaxes;
+                this.populateAppliedTaxes();
+            }
+        },
+        getTaxArray: function () {
+            return this.taxArray;
+        },
+        afterGetTaxHandle: function (response) {
+            // console.info(response);
+            this.taxArray = response;
+            // console.log(this.taxArray)
+            var innerHtml = '';
+            $("#taxpanel_taxSearchTable").empty();
+            $.each(response, function (i, val) {
+                innerHtml += '<tr>' +
+                    '<td class="itemNum"><a href="javascript:void(0);" class="taxpanel_selectTaxBtn" name="' + val.id + '">' + val.name + '</a></td>' +
+                    '<td style="text-align: right">' + val.amount + '</td>' +
+                    '</tr>';
+            });
+            $("#taxpanel_taxSearchTable").append(innerHtml);
+            $('.taxpanel_selectTaxBtn').on('click', function () {
+                var currentId = $(this).attr('name');
+                console.info(currentId);
+                $.each(TAXPANEL.taxArray, function (i, val) {
+                    if (Number(currentId) === val.id && TAXPANEL.appliedTaxArray.length < 2) {
+                        TAXPANEL.appliedTaxArray.push(val);
+                        TAXPANEL.populateAppliedTaxes();
+                    }
+                });
+
+            });
+        },
+        populateAppliedTaxes: function () {
+            var innerHtml = '';
+            $("#appliedTaxTable").empty();
+            $.each(TAXPANEL.appliedTaxArray, function (i, val) {
+                innerHtml += '<tr>' +
+                    '<td><button type="button" class="btn btn-outline btn-default deleteTrSelect deleteDeductionBtn" name="' + val.id + '"><i data-lucide="trash"></i></button></td>' +
+                    '<td class="itemNum selectDeductionBtn">' + val.name + '</td>' +
+                    '<td style="text-align: right">' + val.amount + '</td>' +
+                    '</tr>';
+            });
+            $("#appliedTaxTable").append(innerHtml);
+            lucide.createIcons();
+            $('.deleteDeductionBtn').unbind('click');
+            this.appliedTaxTableEvents();
+            
+        },
+        taxmodal_addtaxes: function (taxes) {
+            if (typeof this.assignTaxesCallback === 'function') {
+                this.assignTaxesCallback(this.appliedTaxArray);
+            } else {
+                console.error('[TAXPANEL] assignTaxesCallback is not a function. Was TAXPANEL.initialize() called?');
+            }
+            // Close the modal after saving
+            var modalEl = document.getElementById('taxpanel_addTaxModal');
+            var modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modalInstance.hide();
+        },
+        appliedTaxTableEvents: function () {
+            $('#appliedTaxTable').on('click', '.deleteDeductionBtn', function () {
+                let currentVal = $(this).attr('name');
+                let newArray = [];
+                $.each(TAXPANEL.appliedTaxArray, function (i, val) {
+                    if (Number(currentVal) !== val.id) {
+                        newArray.push(val);
+                    }
+                });
+                TAXPANEL.appliedTaxArray = newArray;
+                TAXPANEL.populateAppliedTaxes();
+            });
+        }
+    }
+    // Use event delegation - works regardless of when script runs
+    $(document).on('click', '#taxmodal_addtaxes', function () {
+        TAXPANEL.taxmodal_addtaxes();
+    });
+
+    // taxPanel.js      End
+</script>

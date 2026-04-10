@@ -1,0 +1,449 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    #newCategoryPanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #newCategoryPanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    } 
+    #newCategoryPanelTable .selectRecordBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+
+    /* Ensure the DataTables search input has a visible border */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+</style>
+<!-- allCategorypanel.html  Start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="Categorypage">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Product Category <small>Master Data</small></h5>
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;">
+                        <button type="button" class="btn btn-sm btn-secondary newCategoryBtn"><i data-lucide="plus"></i> New Category</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px;">
+                        <i class="ti ti-loader ti-spin fs-22"></i>
+                        <div style="margin-top: 10px;">Loading categories...</div>
+                    </div>
+                
+                <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+                
+                <div id="debugInfo" style="display: none; padding: 10px; background: #f8f9fa; margin: 10px 0;">
+                    <pre></pre>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="newCategoryPanelTable" class="table  table-bordered table-hover dataTables">
+                        <thead>
+                            <tr>
+                                <th>Product Category</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allCategoryTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- allCategoryPanel.html  End -->
+
+
+
+
+
+
+
+<!-- editCategoryPanel.html     Start -->
+
+<div class="row animated fadeInRight aasaanPanel" id="EditCategory" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="categoryName"></span></h5>
+                
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box editCategoryCancelBtn">
+                        <i data-lucide="x"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm editCategoryDeleteBtn">
+                       <i data-lucide="trash"></i>   Delete
+                    </button>
+                    <button type="button" class="btn btn-default btn-sm editCategoryEditBtn">
+                     <i data-lucide="pencil"></i>   Edit
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm saveCategoryBtn">
+                       <i data-lucide="check"></i>   Save
+                    </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="editCategoryObj">
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control editCategoryInput" name="name" disabled required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" class="form-control editCategoryInput" name="description"  disabled required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Code (Optional)</label>
+                                <input type="text" class="form-control editCategoryInput" name="code" disabled>
+                            </div>
+                        </div>
+                        <input type="hidden" id="editCategoryId" name="id" class="editCategoryInput"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editCategoryPanel.html     End -->
+
+
+
+
+
+
+
+<!-- newCategoryPanel.html      Start -->
+
+<div class="row animated fadeInRight aasaanPanel" id="AddCategory" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>New <small>Product Category</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i data-lucide="x"></i>  Close </button>
+                    <button type="button" class="btn btn-secondary btn-sm newCategorySaveBtn"><i data-lucide="check"></i>Save </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="stObj" >
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control categoryinput" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" class="form-control categoryinput" name="description" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Code (Optional)</label>
+                                <input type="text" class="form-control categoryinput" id="newShortCodeInput" name="code" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- newCategoryPanel.html      End -->
+
+</div>
+
+<script>
+    lucide.createIcons();
+// allCategoryPanel.js  Start   
+var recordList = Array.isArray(window.recordList) ? window.recordList : [];
+
+function populateTable(categories) {
+    const tableBody = document.getElementById('allCategoryTable');
+    tableBody.innerHTML = ''; // Clear existing content
+    
+    categories.forEach(category => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><a href="javascript:void(0);" class="selectRecordBtn" id="${category.id}">${category.name || ''}</a></td>
+            <td>${category.description || ''}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+    function populateEditCategoryForm(category) {
+        $('.editCategoryInput[name="name"]').val(category.name);
+        console.log('Setting realname to:', category.name); // Debug log
+        // $('#realname').text(category.name)
+        // $('#realname').text(category.name);
+        $('.editCategoryInput[name="description"]').val(category.description);
+        $('.editCategoryInput[name="code"]').val(category.code);
+        $('#editCategoryId').val(category.id);
+    }
+
+    // Add click handler for category name links
+    $('.selectRecordBtn').on('click', function(){
+        // console.log('wooo');
+        const categoryId = $(this).attr('id');
+        const category = recordList.find(c => c.id == categoryId);
+        
+        if (category) {
+            $('#EditCategory').show();
+            $('#Categorypage').hide();
+            populateEditCategoryForm(category);
+        }
+    });
+}
+
+function loadCategoryRecords() {
+    var request = { fields: 'Name' };
+    JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/ProductCategory/list'), JSON.stringify(request), function (response) {
+        recordList = Array.isArray(response) ? response : [];
+        window.recordList = recordList;
+        populateTable(recordList);
+        JSUTIL.reinitializeDataTable();
+    }, function () {
+        recordList = [];
+        window.recordList = [];
+        populateTable(recordList);
+        JSUTIL.reinitializeDataTable();
+    });
+}
+
+$('.newCategoryBtn').on('click', function(){
+    console.log('you touched new category');
+    var currentId = $(this).attr('id');
+    
+    $('#AddCategory').show();
+    $('#Categorypage').hide();
+}); 
+
+$(document).ready(function() {
+    loadCategoryRecords();
+    console.log(recordList);
+});
+
+
+
+
+
+// allCategoryPanel.js  End
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//editCategoryPanel.js  Start
+var currentRecordId = '';
+
+
+$(document).ready(function() {
+    
+    $('.saveCategoryBtn').hide();
+
+
+
+    // Handle category selection
+    
+        
+        // // Fetch category details
+        // var postUrl = JSUTIL.getUrl('/data/ProductCategory/get/' + currentRecordId);
+        // JSUTIL.callAJAXGet(postUrl, populateEditCategoryForm);
+    });
+    $('#allCategoryTable').on('click', '.selectRecordBtn', function() {
+        currentRecordId = $(this).attr('id');
+        const list = recordList.find(c => c.id == currentRecordId);
+        console.log('list is here',list)
+        $('#categoryName').text(list.name)
+    // Handle Edit Button Click
+    $('.editCategoryEditBtn').on('click', function() {
+        $('.editCategoryInput').prop('disabled', false);
+        $('.saveCategoryBtn').show();
+        $(this).hide();
+    });
+
+    $('.saveCategoryBtn').on('click', function() {
+        updateCategory();
+        $('.editCategoryInput').prop('disabled', true);
+        $('.editCategoryEditBtn').show();
+        $(this).hide();
+    });
+
+    $('.editCategoryCancelBtn').on('click', function() {
+        $('#EditCategory').hide();
+        $('#Categorypage').show();
+        resetForm();
+    });
+
+    $('.editCategoryDeleteBtn').on('click', function() {
+         {
+    
+            MODALUTIL.deleteConfirmModal(deleteCategory);
+        }
+    });
+});
+
+function deleteCategory() {
+    var postUrl = JSUTIL.getUrl('/data/ProductCategory/delete?id=' + currentRecordId);
+    console.log('file to delete'+currentRecordId);
+
+
+    JSUTIL.callAJAXPost(postUrl, {}, function(response) {
+        $('#EditCategory').hide();
+        $('#Categorypage').show();
+         location.reload();
+    }, function(error) {
+        console.log('Failed to delete category. Please try again.');
+    });
+}
+
+//batch delete 
+// function deleteCategory() {
+//     const idsToDelete = [
+  
+//     ];
+
+//     for(let i = 0; i < idsToDelete.length; i++) {
+//         const id = idsToDelete[i];
+//         const postUrl = JSUTIL.getUrl('/data/ProductCategory/delete?id=' + id);
+//         console.log('Deleting ID:', id);
+
+//         JSUTIL.callAJAXPost(postUrl, {}, 
+//             function(response) {
+//                 console.log('Successfully deleted ID:', id);
+                
+//                 // If it's the last item, refresh the page
+//                 if(i === idsToDelete.length - 1) {
+//                     $('#EditCategory').hide();
+//                     $('#Categorypage').show();
+//                     location.reload();
+//                 }
+//             }, 
+//             function(error) {
+//                 console.log('Failed to delete ID:', id);
+//             }
+//         );
+//     }
+// }
+
+
+// function populateEditCategoryForm(category) {
+//     $('.editCategoryInput[name="name"]').val(category.name);
+//     $('.editCategoryInput[name="description"]').val(category.description);
+//     $('.editCategoryInput[name="code"]').val(category.code);
+//     $('#editCategoryId').val(category.id);
+//     $('#realname').text(category.name);
+
+
+
+//     $('#EditCategory').show();
+//     $('#Categorypage').hide();
+// }
+
+function updateCategory() {
+    var categoryPayload = JSUTIL.buildFormDataJSON('editCategoryInput');
+    var postUrl = JSUTIL.getUrl('/data/ProductCategory/update/' + currentRecordId);
+    
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(categoryPayload), function(response) {
+        $('#EditCategory').hide();
+        $('#Categorypage').show();
+        location.reload();
+    });
+}
+function collectRecordIds() {
+    var recordIds = [];
+    $('#allCategoryTable .selectRecordBtn').each(function() {
+        var recordId = $(this).attr('id');
+        if (recordId) {
+            recordIds.push(recordId);
+        }
+    });
+    return recordIds;
+}
+
+
+
+function resetForm() {
+    $('.editCategoryInput').val('').prop('disabled', true);
+    $('.editCategoryEditBtn').show();
+    $('.saveCategoryBtn').hide();
+}
+
+//editCategoryPanel.js  End
+
+
+
+
+
+
+
+
+
+    // newCategoryPanel.js  Start
+    $(document).ready(function(){   
+    $('.newCategorySaveBtn').on('click', function() {
+        createProduct();
+
+    
+    });
+
+    $('.newRecordCancelBtn').on('click', function() {
+        $('#AddCategory').hide();
+         $('#Categorypage').show();
+         //location.reload();
+    });
+
+
+});
+
+function createProduct(){
+    var categoryPayload = JSUTIL.buildFormDataJSON('categoryinput');
+    var postUrl = JSUTIL.getUrl('/data/ProductCategory/create');
+    JSUTIL.callAJAXPost(postUrl,JSON.stringify(categoryPayload), callbackSuccessCreateProduct)
+
+}
+function callbackSuccessCreateProduct(response){
+    console.log(response);
+    location.reload();
+}  
+
+    // newCategoryPanel.js  End
+</script>

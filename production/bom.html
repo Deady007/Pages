@@ -1,0 +1,3812 @@
+<script src="/lib/jquery-3.7.1.js"></script>
+<script src="/lib/dataTables.js"></script>
+<script src="/lib/moment.min.js"></script>
+<link rel="stylesheet" href="/lib/daterangepicker.css">
+<script src="/lib/daterangepicker.min.js"></script>
+<script src="/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="/lib/dataTables.dataTables.css">
+<link rel="stylesheet" href="/pages/lib/choices.min.css" />
+<script src="/pages/lib/choices.min.js"></script>
+<script src="/pages/lib/bootstrap3-typeahead.min.js"></script>
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"></script> -->
+<style>
+  .typeahead.dropdown-menu {
+    z-index: 1060 !important;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    border-radius: 4px;
+    padding: 4px 0;
+    min-width: 250px;
+    width: 100%;
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+  }
+
+  .typeahead.dropdown-menu li>a {
+    display: block;
+    padding: 8px 16px;
+    clear: both;
+    font-weight: 400;
+    line-height: 1.42857143;
+    color: #333;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .typeahead.dropdown-menu li>a:hover {
+    background-color: #f5f5f5;
+    color: #262626;
+  }
+
+  .typeahead.dropdown-menu .active>a {
+    background-color: #2563eb;
+    color: #fff;
+  }
+</style>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   BOM DARK MODE — reference: departments.html
+   Activate by adding class="dark-mode" to <body> or any ancestor.
+═══════════════════════════════════════════════════════════════════ */
+.dark-mode {
+  --bom-bg:           #1a1d23;
+  --bom-bg-secondary: #22262f;
+  --bom-bg-card:      #2a2f3b;
+  --bom-bg-input:     #1e2230;
+  --bom-bg-input-ro:  #181c27;
+  --bom-bg-thead:     #252a36;
+  --bom-border:       #3a4055;
+  --bom-border-light: #2e3347;
+  --bom-text:         #e2e8f0;
+  --bom-text-muted:   #8892a4;
+  --bom-text-label:   #a0aec0;
+  --bom-accent:       #4f8ef7;
+  --bom-accent-green: #34d399;
+  --bom-shadow:       0 2px 8px rgba(0,0,0,0.4);
+}
+
+/* ── Base panel ── */
+.dark-mode .qa-white-panel,
+.dark-mode #allBOMPanel,
+.dark-mode #editBOMPanel,
+.dark-mode #newBOMPanel {
+  background: var(--bom-bg) !important;
+  color: var(--bom-text) !important;
+}
+
+/* ── ibox ── */
+.dark-mode .ibox,
+.dark-mode .ibox.float-e-margins {
+  background: var(--bom-bg-secondary) !important;
+  border-color: var(--bom-border) !important;
+  box-shadow: var(--bom-shadow) !important;
+}
+.dark-mode .ibox-title {
+  background: var(--bom-bg-secondary) !important;
+  border-bottom-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+.dark-mode .ibox-content {
+  background: var(--bom-bg-secondary) !important;
+  border-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+
+/* ── Cards ── */
+.dark-mode .bom-lot-card,
+.dark-mode .bom-history-card {
+  background: var(--bom-bg-card) !important;
+  border-color: var(--bom-border) !important;
+  box-shadow: var(--bom-shadow) !important;
+}
+
+/* ── Titles ── */
+.dark-mode .details-subtitle {
+  color: var(--bom-accent) !important;
+  border-left-color: var(--bom-accent) !important;
+}
+
+/* ── Labels ── */
+.dark-mode label,
+.dark-mode .form-group label {
+  color: var(--bom-text-label) !important;
+}
+
+/* ── Inputs ── */
+.dark-mode .form-control,
+.dark-mode input.form-control,
+.dark-mode select.form-control,
+.dark-mode textarea.form-control {
+  background-color: var(--bom-bg-input) !important;
+  border-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+.dark-mode .form-control:focus {
+  background-color: var(--bom-bg-input) !important;
+  border-color: var(--bom-accent) !important;
+  color: var(--bom-text) !important;
+  box-shadow: 0 0 0 2px rgba(79,142,247,0.25) !important;
+}
+.dark-mode .form-control[readonly],
+.dark-mode .form-control:disabled,
+.dark-mode input[readonly],
+.dark-mode select:disabled {
+  background-color: var(--bom-bg-input-ro) !important;
+  color: var(--bom-text-muted) !important;
+  border-color: var(--bom-border-light) !important;
+  opacity: 1 !important;
+}
+
+/* ── Material row inputs ── */
+.dark-mode .material-product-code,
+.dark-mode .material-product-search,
+.dark-mode .material-uom,
+.dark-mode .material-type-display,
+.dark-mode .material-qty-input {
+  background-color: var(--bom-bg-input) !important;
+  border-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+
+/* ── Tables ── */
+.dark-mode .table {
+  color: var(--bom-text) !important;
+  border-color: var(--bom-border) !important;
+}
+.dark-mode .table thead th {
+  background: var(--bom-bg-thead) !important;
+  color: var(--bom-text-muted) !important;
+  border-color: var(--bom-border) !important;
+}
+.dark-mode .table tbody td,
+.dark-mode .table tbody th {
+  border-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+.dark-mode .table-bordered,
+.dark-mode .table-bordered td,
+.dark-mode .table-bordered th { border-color: var(--bom-border) !important; }
+.dark-mode .table tbody tr.info,
+.dark-mode .table tbody tr.info td {
+  background: rgba(79,142,247,0.12) !important;
+  color: var(--bom-text) !important;
+}
+.dark-mode .table-responsive { border-color: var(--bom-border) !important; }
+
+/* ── DataTables — matches departments.html dark style ── */
+.dark-mode .dataTables_wrapper { color: var(--bom-text) !important; }
+
+.dark-mode .dataTables_wrapper .dataTables_length,
+.dark-mode .dataTables_wrapper .dataTables_filter {
+  color: var(--bom-text-muted) !important;
+  padding: 8px 4px;
+}
+.dark-mode .dataTables_wrapper .dataTables_length label,
+.dark-mode .dataTables_wrapper .dataTables_filter label {
+  color: var(--bom-text-muted) !important;
+  font-size: 13px;
+}
+.dark-mode .dataTables_wrapper .dataTables_length select {
+  background: var(--bom-bg-input) !important;
+  border: 1px solid var(--bom-border) !important;
+  color: var(--bom-text) !important;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+.dark-mode .dataTables_wrapper .dataTables_filter input {
+  background: var(--bom-bg-input) !important;
+  border: 1px solid var(--bom-border) !important;
+  color: var(--bom-text) !important;
+  border-radius: 4px;
+  padding: 4px 8px;
+  outline: none;
+}
+.dark-mode .dataTables_wrapper .dataTables_filter input:focus {
+  border-color: var(--bom-accent) !important;
+  box-shadow: 0 0 0 2px rgba(79,142,247,0.2) !important;
+}
+.dark-mode .dataTables_wrapper .dataTables_info {
+  color: var(--bom-text-muted) !important;
+  font-size: 13px;
+  padding-top: 10px;
+}
+.dark-mode .dataTables_wrapper .dataTables_paginate { padding-top: 8px; }
+.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--bom-text-muted) !important;
+  border-radius: 4px;
+  padding: 4px 10px !important;
+  margin: 0 1px;
+  font-size: 13px;
+}
+.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--bom-bg-card) !important;
+  border-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+  background: var(--bom-accent) !important;
+  border-color: var(--bom-accent) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: #444c60 !important;
+  cursor: default;
+}
+.dark-mode table.dataTable thead .sorting:after,
+.dark-mode table.dataTable thead .sorting_asc:after,
+.dark-mode table.dataTable thead .sorting_desc:after,
+.dark-mode table.dataTable thead .sorting:before,
+.dark-mode table.dataTable thead .sorting_asc:before,
+.dark-mode table.dataTable thead .sorting_desc:before {
+  color: var(--bom-text-muted) !important;
+  opacity: 0.6;
+}
+/* odd/even stripe removed — matches departments.html (no row background, transparent) */
+.dark-mode table.dataTable tbody tr.odd,
+.dark-mode table.dataTable tbody tr.even { background: transparent !important; }
+.dark-mode table.dataTable tbody tr:hover,
+.dark-mode table.dataTable tbody tr.odd:hover,
+.dark-mode table.dataTable tbody tr.even:hover { background: rgba(79,142,247,0.07) !important; }
+
+/* ── BOM list link ── */
+.dark-mode #allBOMDataTable .selectBOMRecord { color: var(--bom-accent) !important; }
+
+/* ── Buttons ── */
+.dark-mode .btn-default,
+.dark-mode .btn-white {
+  background: var(--bom-bg-card) !important;
+  border-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+.dark-mode .btn-default:hover,
+.dark-mode .btn-white:hover {
+  background: #343a4a !important;
+  border-color: var(--bom-accent) !important;
+}
+.dark-mode .btn-secondary {
+  background: var(--bom-accent) !important;
+  border-color: var(--bom-accent) !important;
+  color: #fff !important;
+}
+.dark-mode .btn-primary  { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
+.dark-mode .btn-warning  { background: #d97706 !important; border-color: #d97706 !important; color: #fff !important; }
+/* ── Lot collapse panels ── */
+.dark-mode .panel-default { background: var(--bom-bg-card) !important; border-color: var(--bom-border) !important; }
+.dark-mode .panel-default > .panel-heading {
+  background: var(--bom-bg-card) !important;
+  border-bottom-color: var(--bom-border) !important;
+  color: var(--bom-text) !important;
+}
+.dark-mode .panel-default > .panel-heading a { color: var(--bom-text) !important; }
+.dark-mode .panel-body { background: var(--bom-bg-card) !important; color: var(--bom-text) !important; }
+
+/* ── Step type badges ── */
+.dark-mode .label-success { background: #065f46 !important; color: #a7f3d0 !important; }
+.dark-mode .label-primary { background: #1e3a8a !important; color: #bfdbfe !important; }
+.dark-mode .label-info    { background: #164e63 !important; color: #a5f3fc !important; }
+
+/* ── Misc ── */
+.dark-mode .text-muted { color: var(--bom-text-muted) !important; }
+.dark-mode .border-bottom { border-bottom-color: var(--bom-border) !important; }
+.dark-mode .material-empty-row td {
+  color: var(--bom-text-muted) !important;
+  background: var(--bom-bg-card) !important;
+}
+.dark-mode .delete-material-row {
+  background: transparent !important;
+  border-color: var(--bom-border) !important;
+  color: #f87171 !important;
+}
+.dark-mode .delete-material-row:hover {
+  background: rgba(248,113,113,0.15) !important;
+  border-color: #f87171 !important;
+}
+.approvalRemarksPanel {
+    border: 2px solid #dc3545 !important;
+    border-radius: 10px !important;
+    background: #fff5f5 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15), 0 4px 12px rgba(220, 53, 69, 0.1) !important;
+    margin-bottom: 20px;
+    animation: remarksAttention 0.6s ease-in-out;
+}
+@keyframes remarksAttention {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.01); }
+    100% { transform: scale(1); }
+}
+.approvalRemarksPanel .panel-heading {
+    background: #dc3545 !important;
+    border-bottom: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    padding: 12px 16px !important;
+}
+.approvalRemarksPanel .panel-heading a,
+.approvalRemarksPanel .panel-heading .panel-title a {
+    color: #fff !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    text-decoration: none !important;
+}
+.approvalRemarksPanel .panel-heading .fa-exclamation-triangle {
+    color: #fff !important;
+    margin-right: 6px;
+}
+.approvalRemarksPanel .panel-body {
+    background: #fff5f5 !important;
+    color: #991b1b !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    padding: 14px 18px !important;
+    border-radius: 0 0 8px 8px !important;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+.dark-mode .approvalRemarksPanel,
+html[data-bs-theme="dark"] .approvalRemarksPanel {
+    background: #2d1215 !important;
+    border-color: #f87171 !important;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2), 0 4px 12px rgba(248, 113, 113, 0.1) !important;
+}
+
+.dark-mode .approvalRemarksPanel .panel-heading,
+html[data-bs-theme="dark"] .approvalRemarksPanel .panel-heading {
+    background: #991b1b !important;
+}
+
+.dark-mode .approvalRemarksPanel .panel-body,
+html[data-bs-theme="dark"] .approvalRemarksPanel .panel-body {
+    background: #2d1215 !important;
+    color: #fca5a5 !important;
+}
+/* ── Approval remarks ── */
+.dark-mode .approvalRemarksPanel { background: #2d2010 !important; border-color: #7c4a00 !important; }
+.dark-mode .approvalRemarksPanel .panel-heading { background: #3b2a10 !important; border-color: #7c4a00 !important; }
+
+/* ── Typeahead dropdown ── */
+.dark-mode .typeahead.dropdown-menu {
+  background: var(--bom-bg-card) !important;
+  border-color: var(--bom-border) !important;
+}
+.dark-mode .typeahead.dropdown-menu li > a { color: var(--bom-text) !important; }
+.dark-mode .typeahead.dropdown-menu li > a:hover { background: var(--bom-bg-input) !important; }
+.dark-mode .typeahead.dropdown-menu .active > a { background: var(--bom-accent) !important; color: #fff !important; }
+
+/* ── Choices.js ── */
+.dark-mode .choices__inner { background: var(--bom-bg-input) !important; border-color: var(--bom-border) !important; color: var(--bom-text) !important; }
+.dark-mode .choices__list--dropdown,
+.dark-mode .choices__list[aria-expanded] { background: var(--bom-bg-card) !important; border-color: var(--bom-border) !important; }
+.dark-mode .choices__list--dropdown .choices__item { background: var(--bom-bg-card) !important; color: var(--bom-text) !important; }
+.dark-mode .choices__list--dropdown .choices__item--selectable.is-highlighted { background: var(--bom-accent) !important; color: #fff !important; }
+.dark-mode .choices__item.choices__item--selectable { background: #3b4160 !important; color: var(--bom-text) !important; }
+.dark-mode .choices__input { background: transparent !important; color: var(--bom-text) !important; }
+.dark-mode .choices__button { border-left-color: rgba(255,255,255,0.2) !important; filter: invert(1); }
+
+/* ── Modals ── */
+.dark-mode .modal-content { background: var(--bom-bg-secondary) !important; border-color: var(--bom-border) !important; color: var(--bom-text) !important; }
+.dark-mode .modal-header,
+.dark-mode .modal-header-simple { background: var(--bom-bg-card) !important; border-bottom-color: var(--bom-border) !important; }
+.dark-mode .modal-header .modal-title,
+.dark-mode .modal-header-simple .modal-title { color: var(--bom-text) !important; }
+.dark-mode .modal-footer { background: var(--bom-bg-card) !important; border-top-color: var(--bom-border) !important; }
+
+/* ── Scrollbars ── */
+.dark-mode ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dark-mode ::-webkit-scrollbar-track { background: var(--bom-bg); }
+.dark-mode ::-webkit-scrollbar-thumb { background: var(--bom-border); border-radius: 3px; }
+.dark-mode ::-webkit-scrollbar-thumb:hover { background: #5a6280; }
+
+/* .dark-mode .btn-secondary {
+    background: var(--bom-accent) !important;
+    border-color: var(--bom-accent) !important;
+    color: #fff !important;
+} */
+</style>
+<!-- allBOMPanel.html start -->
+<div class="qa-white-panel">
+  <style>
+    .qa-white-panel .ibox-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 15px 20px;
+    }
+
+    .qa-white-panel .ibox-title h5 {
+      margin: 0;
+      font-size: 16px;
+      /* font-weight: 600; */
+    }
+
+    .qa-white-panel .ibox-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      float: none !important;
+    }
+
+    .qa-white-panel .ibox-tools .btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .qa-white-panel .ibox-tools .btn i {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.5;
+    }
+
+    .qa-white-panel .form-group {
+      margin-bottom: 12px;
+    }
+
+    .section-header2 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+      margin-bottom: 15px;
+      margin-top: 20px;
+    }
+
+    .details-subtitle {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0;
+      color: #2563eb;
+      border-left: 3px solid #2563eb;
+      border-bottom: none;
+      padding-left: 8px;
+    }
+
+    #allBOMTable thead th {
+      border-bottom: 1px solid #eee !important;
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+    #allBOMPanel .ibox {
+      background-color: var(--ins-secondary-bg);
+      border: var(--ins-border-width, 1px) solid var(--ins-border-color);
+      border-radius: 8px;
+      box-shadow: var(--ins-box-shadow-sm);
+      margin-bottom: 0;
+  }
+
+  #allBOMPanel .ibox-title {
+      background-color: var(--ins-secondary-bg);
+      border-bottom: var(--ins-border-width, 1px) solid var(--ins-border-color);
+      border-radius: 8px 8px 0 0;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+  }
+
+  #allBOMPanel .ibox-content {
+      background-color: var(--ins-secondary-bg);
+      border-radius: 0 0 8px 8px;
+      padding: 16px;
+  }
+
+  #allBOMPanel .ibox-title h5 {
+      margin: 0;
+  }
+
+  #allBOMDataTable thead th {
+      border-bottom: 1px solid #eee !important;
+  }
+
+  #allBOMDataTable tbody tr:last-child td {
+      border-bottom: none !important;
+  }
+
+  #allBOMDataTable .selectBOMRecord {
+      color: #337ab7;
+      text-decoration: none;
+  }
+
+  #allBOMDataTable .selectBOMRecord:hover,
+  #allBOMDataTable .selectBOMRecord:focus {
+      color: #286090;
+  }
+  html[data-bs-theme="dark"] body,
+html[data-bs-theme="dark"] .qa-white-panel,
+html[data-bs-theme="dark"] .ibox,
+html[data-bs-theme="dark"] .ibox-content,
+html[data-bs-theme="dark"] .ibox-title {
+    background: #181a20 !important;
+    color: #eee !important;
+    border-color: #444 !important;
+}
+
+html[data-bs-theme="dark"] .form-control,
+html[data-bs-theme="dark"] input,
+html[data-bs-theme="dark"] select,
+html[data-bs-theme="dark"] textarea {
+    background: #23272f !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+}
+
+html[data-bs-theme="dark"] .form-control:focus,
+html[data-bs-theme="dark"] input:focus,
+html[data-bs-theme="dark"] select:focus,
+html[data-bs-theme="dark"] textarea:focus {
+    background: #23272f !important;
+    color: #fff !important;
+    border-color: #2196f3 !important;
+}
+
+html[data-bs-theme="dark"] .dropdown-menu {
+    background: #23272f !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+}
+
+html[data-bs-theme="dark"] .dropdown-item {
+    color: #bfc9da !important;
+}
+
+html[data-bs-theme="dark"] .dropdown-item:hover,
+html[data-bs-theme="dark"] .dropdown-item.active {
+    background: #2d3139 !important;
+    color: #fff !important;
+}
+
+html[data-bs-theme="dark"] table,
+html[data-bs-theme="dark"] th,
+html[data-bs-theme="dark"] td {
+    /* background: #23272f !important; */
+    color: #eee !important;
+    /* border-color: #444 !important; */
+}
+
+html[data-bs-theme="dark"] .table thead th {
+    color: #8b95a5 !important;
+    /* background: #23272f !important; */
+}
+
+html[data-bs-theme="dark"] .btn {
+    background: #23272f !important;
+    color: #bfc9da !important;
+    border: 1px solid #444 !important;
+}
+
+html[data-bs-theme="dark"] .btn-primary,
+html[data-bs-theme="dark"] .btn-primary:focus {
+    background: #2196f3 !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+html[data-bs-theme="dark"] .btn-primary:hover {
+    background: #1769aa !important;
+    color: #fff !important;
+}
+
+html[data-bs-theme="dark"] .modal-content {
+    background: #23272f !important;
+    color: #eee !important;
+    border-color: #444 !important;
+}
+
+html[data-bs-theme="dark"] .section-header2,
+html[data-bs-theme="dark"] .details-subtitle {
+    color: #bfc9da !important;
+}
+
+html[data-bs-theme="dark"] .typeahead.dropdown-menu {
+    background: #23272f !important;
+    color: #eee !important;
+    border: 1px solid #444 !important;
+}
+
+html[data-bs-theme="dark"] .typeahead.dropdown-menu li>a {
+    color: #bfc9da !important;
+}
+
+html[data-bs-theme="dark"] .typeahead.dropdown-menu li>a:hover,
+html[data-bs-theme="dark"] .typeahead.dropdown-menu .active>a {
+    background-color: #2196f3 !important;
+    color: #fff !important;
+}
+html[data-bs-theme="dark"] .bom-lot-card , html[data-bs-theme="dark"] .bom-history-card {
+    background: #23272f !important;
+    color: #bfc9da !important;
+    border: 1px solid #444 !important;
+}
+/* 1. Modal Dialogs (Bootstrap/Custom) */
+.dark-mode .modal-content,
+html[data-bs-theme="dark"] .modal-content {
+    background: #23272f !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #3a4055 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+}
+.dark-mode .modal-header,
+html[data-bs-theme="dark"] .modal-header {
+    background: #2a2f3b !important;
+    border-bottom: 1px solid #3a4055 !important;
+    color: #e2e8f0 !important;
+}
+.dark-mode .modal-title,
+html[data-bs-theme="dark"] .modal-title {
+    color: #e2e8f0 !important;
+}
+.dark-mode .modal-footer,
+html[data-bs-theme="dark"] .modal-footer {
+    background: #2a2f3b !important;
+    border-top: 1px solid #3a4055 !important;
+}
+.dark-mode .modal-content input,
+.dark-mode .modal-content select,
+.dark-mode .modal-content textarea,
+html[data-bs-theme="dark"] .modal-content input,
+html[data-bs-theme="dark"] .modal-content select,
+html[data-bs-theme="dark"] .modal-content textarea {
+    background: #181c27 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #3a4055 !important;
+}
+.dark-mode .modal-content input:focus,
+.dark-mode .modal-content select:focus,
+.dark-mode .modal-content textarea:focus,
+html[data-bs-theme="dark"] .modal-content input:focus,
+html[data-bs-theme="dark"] .modal-content select:focus,
+html[data-bs-theme="dark"] .modal-content textarea:focus {
+    border-color: #4f8ef7 !important;
+    color: #fff !important;
+}
+
+/* 2. Choices.js Multi-Select Dropdown */
+.dark-mode .choices__inner,
+html[data-bs-theme="dark"] .choices__inner {
+    background: #181c27 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #3a4055 !important;
+}
+.dark-mode .choices__list--dropdown,
+.dark-mode .choices__list[aria-expanded],
+html[data-bs-theme="dark"] .choices__list--dropdown,
+html[data-bs-theme="dark"] .choices__list[aria-expanded] {
+    background: #23272f !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #3a4055 !important;
+}
+.dark-mode .choices__item.choices__item--selectable,
+html[data-bs-theme="dark"] .choices__item.choices__item--selectable {
+    background: #2a2f3b !important;
+    color: #e2e8f0 !important;
+}
+.dark-mode .choices__item.choices__item--selectable.is-highlighted,
+html[data-bs-theme="dark"] .choices__item.choices__item--selectable.is-highlighted {
+    background: #4f8ef7 !important;
+    color: #fff !important;
+}
+.dark-mode .choices__input,
+html[data-bs-theme="dark"] .choices__input {
+    background: transparent !important;
+    color: #e2e8f0 !important;
+}
+.dark-mode .choices__button,
+html[data-bs-theme="dark"] .choices__button {
+    border-left: 1px solid #3a4055 !important;
+    filter: invert(1);
+}
+.dark-mode .choices__list--multiple .choices__item,
+html[data-bs-theme="dark"] .choices__list--multiple .choices__item {
+    background: #0e7490 !important;
+    color: #fff !important;
+    border: none !important;
+}
+.btn-secondary,
+html[data-bs-theme="dark"] .btn-secondary,
+.dark-mode .btn-secondary {
+    background: #2196f3 !important;   /* or your preferred blue */
+    border-color: #2196f3 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+
+.btn-secondary:hover,
+html[data-bs-theme="dark"] .btn-secondary:hover,
+.dark-mode .btn-secondary:hover,
+.btn-secondary:focus,
+html[data-bs-theme="dark"] .btn-secondary:focus,
+.dark-mode .btn-secondary:focus {
+    background: #1769aa !important;   /* a slightly darker blue for hover/focus */
+    border-color: #1769aa !important;
+    color: #fff !important;
+}
+/* .btn-warning,
+html[data-bs-theme="dark"] .btn-warning,
+.dark-mode .btn-warning {
+    background: #f4c542 !important;   
+    border-color: #f4c542 !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+
+.btn-warning:hover,
+html[data-bs-theme="dark"] .btn-warning:hover,
+.dark-mode .btn-warning:hover,
+.btn-warning:focus,
+html[data-bs-theme="dark"] .btn-warning:focus,
+.dark-mode .btn-warning:focus {
+    background: #d9a900 !important;   
+    border-color: #d9a900 !important;
+    color: #fff !important;
+} */
+  </style>
+  <div class="row animated fadeInRight aasaanPanel" id="allBOMPanel">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <!-- <h5 class="details-subtitle">BOM <small>Management</small></h5> -->
+           <h5>BOM <small>Management</small></h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-sm btn-secondary newRecipesButton"><i data-lucide="plus"></i>New
+              BOM</button>
+          </div>
+        </div>
+        <div class="ibox-content m-b-sm border-bottom">
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered" id="allBOMDataTable">
+              <thead>
+                <tr>
+                  <th>BOM ID</th>
+                  <th>BPCR</th>
+                  <th>Type</th>
+                  <th>Product</th>
+                  <th>Stage</th>
+                  <!-- <th>Quantity</th> -->
+                  <!-- <th>Material & Equipment Cost</th> -->
+                  <!-- <th>Is Active</th> -->
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="allBOMTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- allBOMPanel.html end -->
+
+
+
+
+  <!-- editBOMPanel.html start -->
+  <div class="row animated fadeInRight aasaanPanel" id="editBOMPanel" style="display:none;">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5 id="editBOMName"></h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-default btn-sm close-box editBOMCancelBtn">
+              <i data-lucide="x"></i> Close
+            </button>
+            <button type="button" class="btn btn-warning btn-sm" id="reviseBOMBtn" style="display:none;">
+              <i data-lucide="rotate-ccw"></i> Revise
+            </button>
+            <button type="button" class="btn btn-default btn-sm editBOMEditBtn">
+              <i data-lucide="pencil"></i> Edit
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm saveBOMEditBtn">
+              <i data-lucide="check"></i> Save
+            </button>
+            <button type="button" class="btn btn-default btn-sm add-step-btn">
+              <i data-lucide="plus"></i> Add Lot
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm submitBOMReview"><i data-lucide="check"></i>
+              Submit for Review </button>
+            <button type="button" class="btn btn-warning btn-sm rejectBOMBtn" style="display: none;"><i
+                data-lucide="undo-2"></i>
+              Return </button>
+            <button type="button" class="btn btn-secondary btn-sm approveBOMBtn" style="display: none;"><i
+                data-lucide="check"></i>
+              Approve </button>
+          </div>
+        </div>
+        <div class="ibox-content">
+          <div class="panel panel-warning approvalRemarksPanel" style="display: none; margin-bottom: 20px;">
+            <div class="panel-heading">
+              <h5 class="panel-title">
+                <a data-toggle="collapse" data-bs-toggle="collapse" data-target="#approvalRemarksCollapse"
+                  data-bs-target="#approvalRemarksCollapse" aria-expanded="true" class="" style="color: #676a6c;">
+                  <i class="fa fa-exclamation-triangle" style="color: #676a6c;"></i> Remarks
+                </a>
+              </h5>
+            </div>
+            <div id="approvalRemarksCollapse" class="panel-collapse collapse in show" aria-expanded="true">
+              <div class="panel-body" id="approvalRemarksText"></div>
+            </div>
+          </div>
+          <form role="form" name="editBOMForm" id="editBOMForm">
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>BPCR</label>
+                  <input type="text" class="form-control editBOMInput" name="masterBatchRecord" readonly>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Revision Number</label>
+                  <input type="number" class="form-control editBOMInput" name="version" min="0" step="1" readonly>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Type</label>
+                  <select class="select2 form-control editBOMInput" name="type" disabled>
+                    <option value="">--none--</option>
+                    <option value="Manufacture">Manufacture</option>
+                    <option value="Sub-Contract">Sub-Contract</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Stage</label>
+                  <select class="select2 form-control editBOMInput" name="productStage" id="editStageId" disabled>
+                    <option value="">--none--</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Product Name</label>
+                  <input type="text" class="form-control" id="editBOMProductName" readonly>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Product Code</label>
+                  <input type="text" class="form-control" id="editBOMProductCode" readonly>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Plants</label>
+                  <select class="form-control editBOMInput" id="editBOMPlantSelect" name="plantId" multiple data-choices
+                    data-choices-removeItem disabled>
+                    <!-- <option value="">--none--</option> -->
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>Batch Size</label>
+                  <input type="number" class="form-control editBOMInput" name="productQuantity" min="0" step="any"
+                    readonly>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>Batch Variation</label>
+                  <input type="number" class="form-control editBOMInput" name="quantityVariation" min="0" step="any"
+                    value="0" readonly>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>UOM</label>
+                  <input type="text" class="form-control" id="editBOMProductUom" readonly>
+                </div>
+              </div>
+              <!-- <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Process Status</label>
+                                <input type="text" class="form-control editBOMInput" name="processStatus" readonly>
+                            </div>
+                        </div> -->
+              <input type="hidden" class="editBOMInput" name="id" id="editBOMId">
+            </div>
+          </form>
+
+          <div class="bom-lot-card">
+            <div class="section-header2">
+              <h6 class="details-subtitle">Product Lots</h6>
+            </div>
+            <div class="edit-bom-steps-container">
+              <div id="editStepListContainer" class="panel-group"></div>
+            </div>
+          </div>
+          <style>
+            /* Borrowed styling cues from STP change history */
+            .bom-history-card {
+              background: #fff;
+              border-radius: 10px;
+              border: 1px solid #e5e7eb;
+              padding: 14px 16px;
+              margin-bottom: 15px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .bom-history-head {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 10px;
+              color: #2563eb;
+            }
+
+            .bom-history-head h5 {
+              margin: 0;
+              font-size: 15px;
+              font-weight: 600;
+              border-left: 3px solid #2563eb;
+              padding-left: 8px;
+            }
+
+            .bom-history-table thead th {
+              font-size: 12px;
+              color: #6b7280;
+              border-bottom: 1px solid #e5e7eb;
+            }
+
+            .bom-history-table tbody td {
+              vertical-align: middle;
+            }
+
+            /* Product Lot container using similar card idea */
+            .bom-lot-card {
+              background: #fff;
+              border-radius: 10px;
+              border: 1px solid #e5e7eb;
+              padding: 14px 16px;
+              margin-bottom: 15px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .bom-lot-head {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 10px;
+              color: #2563eb;
+              border-left: 3px solid #2563eb;
+              padding-left: 8px;
+            }
+
+            .bom-lot-head h4 {
+              margin: 0;
+              font-size: 16px;
+              font-weight: 600;
+              color: #2563eb;
+            }
+            .modal-header-simple {
+              text-align: center;
+              border-bottom: 1px solid #e9ecef;
+              padding: 24px 32px 20px 32px;
+              background-color: #f8f9fa;
+              position: relative;
+          }
+
+          .modal-header-simple .modal-title {
+              margin: 0 0 8px 0;
+              font-size: 24px;
+              font-weight: 600;
+              color: #495057;
+              display: block;
+              width: 100%;
+              line-height: 1.2;
+          }
+          </style>
+          <div class="bom-history-card">
+            <div class="section-header2">
+              <h6 class="details-subtitle">Version History</h6>
+            </div>
+            <div class="table-responsive" style="margin-bottom: 0;">
+              <table class="table table-bordered " style="margin-bottom: 0;">
+                <thead>
+                  <tr>
+                    <th style="width: 100px;">Version</th>
+                    <th style="width: 150px;">Status</th>
+                    <th>Name</th>
+                    <th style="width: 200px;">Created Date</th>
+                    <th style="width: 200px;">Approved Date</th>
+                  </tr>
+                </thead>
+                <tbody id="bomVersionHistoryBody">
+                  <tr class="text-muted">
+                    <td colspan="5">No versions found.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal inmodal fade" id="addStepModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm-6">
+      <div class="modal-content">
+        <div class="modal-header modal-header-simple">
+          <!-- <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true">&times;</button> -->
+          <h4 class="modal-title">Add Step</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="addStepNameInput">Step Name</label>
+            <input type="text" class="form-control" id="addStepNameInput" placeholder="Enter step name">
+            <div class="text-danger small m-t-xs" id="addStepNameError" style="display:none;">Please enter a
+              step name.</div>
+          </div>
+          <div class="form-group">
+            <label for="addStepTypeSelect">Type</label>
+            <select class="form-control" id="addStepTypeSelect">
+              <option value="">--select type--</option>
+              <option value="Raw Material">Raw Material Lot</option>
+              <option value="Packaging Material">Packaging Material Lot</option>
+              <option value="General Material">General Material Lot</option>
+            </select>
+            <div class="text-danger small m-t-xs" id="addStepTypeError" style="display:none;">Please select a type.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-sm" data-bs-dismiss="modal"><i data-lucide="x"></i>
+            Cancel</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="confirmAddStepBtn"><i data-lucide="plus"></i> Add
+            Step</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal inmodal fade" id="returnBOMModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Reject Revision</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group mb-3">
+            <label for="returnCommentInput">Comment</label>
+            <textarea class="form-control" id="returnCommentInput" rows="4"
+              placeholder="Enter return comments"></textarea>
+            <div class="text-danger small m-t-xs" id="returnCommentError" style="display:none;">Please enter a
+              comment before returning.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal"><i data-lucide="x"></i>
+            Cancel</button>
+          <button type="button" class="btn btn-warning btn-sm" id="confirmReturnBOMBtn"><i data-lucide="undo-2"></i>
+            Return</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- editBOMPanel.html end -->
+
+
+
+  <!-- newBOMPanel.html start -->
+  <div class="row animated fadeInRight aasaanPanel" id="newBOMPanel" style="display:none;">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5 class="details-subtitle">New BOM</h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-default btn-sm close-box newBOMCancelBtn"><i data-lucide="x"></i> Close
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm saveBOMData"><i data-lucide="check"></i> Save
+            </button>
+          </div>
+        </div>
+        <div class="ibox-content">
+          <form role="form" name="newBOMObj" action="" method="post" id="newBOMForm">
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="form-group mb-3">
+                  <label>BPCR</label>
+                  <input type="text" class="form-control newBOMInput" name="masterBatchRecord" required>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Revision Number</label>
+                  <input type="number" class="form-control newBOMInput" name="version" min="1" step="1" value="1">
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Type</label>
+                  <select class="select2 form-control newBOMInput" name="type" required>
+                    <option value="">--none--</option>
+                    <option value="Manufacture">Manufacture</option>
+                    <option value="Sub-Contract">Sub-Contract</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Stage</label>
+                  <select class="select2 form-control" name="stage.id" id="stageId" required>
+                  </select>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Product Name</label>
+                  <input type="text" class="form-control" id="newBOMProductName" readonly>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Product Code</label>
+                  <input type="text" class="form-control" id="newBOMProductCode" readonly>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Plants</label>
+                  <select class="form-control newBOMInput" id="newBOMPlantSelect" name="plantId" multiple data-choices
+                    data-choices-removeItem required>
+                    <option value="">--none--</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>Batch Size</label>
+                  <input type="number" class="form-control newBOMInput" name="productQuantity" min="0" step="any"
+                    required>
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>Batch Variation</label>
+                  <input type="number" class="form-control newBOMInput" name="quantityVariation" min="0" step="any">
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label>UOM</label>
+                  <input type="text" class="form-control" id="newBOMProductUom" readonly>
+                </div>
+              </div>
+              <!-- <div class="col-sm-6">
+                        <div class="form-group">
+                            <label>UOM</label>
+                            <select class="select2 form-control newBOMInput uomList" name="uom" required>
+                                <option value="">--none--</option>
+                            </select>
+                        </div>
+                    </div> -->
+              <!-- <div class="col-sm-6">
+                        <div class="form-group">
+                            <label>Total Recipe Cost</label>
+                            <input type="number" class="form-control newBOMInput" name="totalRecipeCost">
+                        </div>
+                    </div> -->
+              <!-- <div class="col-sm-6">
+                        <div class="form-group">
+                            <label>Is Active</label>
+                            <div class="checkbox " style="margin-top: auto; margin-bottom: auto;">
+                                <input type="checkbox" checked="" class="newBOMInput" name="isActive"><label></label>
+                            </div>
+                        </div>
+                    </div> -->
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- newBOMPanel.html end  -->
+<script>
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+
+
+
+
+
+  window.FOX.userGroupNames = ['production_head', 'production'];
+  window.recordList = [];
+
+  function getNextBOMNumber() {
+    // Format: TI-XXXX-RR  (XXXX = base 4-digit, RR = revision 2-digit)
+    // New BOM always gets RR = 00  e.g. TI-0001-00, TI-0002-00
+    var maxBase = 0;
+    (window.recordList || []).forEach(function (item) {
+      var name = item.name || item.Name || '';
+      // Match TI-XXXX  OR  TI-XXXX-RR
+      var m = String(name).match(/^TI-0*(\d+)(?:-\d+)?$/);
+      if (m) {
+        var base = parseInt(m[1], 10);
+        if (!isNaN(base) && base > maxBase) { maxBase = base; }
+      }
+    });
+    return 'TI-' + String(maxBase + 1).padStart(4, '0') + '-00';
+  }
+
+  // Returns the next revision name for an existing BOM name.
+  // TI-0001-00  →  TI-0001-01
+  // TI-0001-03  →  TI-0001-04
+  // TI-0001     →  TI-0001-01  (legacy format fallback)
+  function getNextRevisionName(currentName) {
+    var name = String(currentName || '').trim();
+    var m = name.match(/^(TI-\d{4})-(\d+)$/);
+    if (m) {
+      var nextRev = parseInt(m[2], 10) + 1;
+      return m[1] + '-' + String(nextRev).padStart(2, '0');
+    }
+    // Legacy format without suffix
+    var m2 = name.match(/^(TI-\d{4})$/);
+    if (m2) { return m2[1] + '-01'; }
+    // Unknown – just append -01
+    return name + '-01';
+  }
+  window.recipeStepList = [];
+
+  function renderBOMTable(data) {
+    try {
+      if ($.fn.DataTable && $.fn.DataTable.isDataTable('.dataTables')) {
+        $('.dataTables').DataTable().destroy();
+      }
+      $('#allBOMTable').empty();
+      var innerHtml = "";
+
+      (data || []).forEach(function (val) {
+        var displayName = val.name || val.Name || '';
+        var bpcrNumber = val.masterBatchRecord || val.MasterBatchRecord || '';
+        var product = val.productStage && (val.productStage.product || val.productStage.Product) || {};
+        var stage = val.productStage || {};
+        var productCode = product.number || product.Number || '';
+        var productName = product.name || product.Name || '';
+        var stageCode = stage.number || stage.Number || '';
+        var stageName = stage.name || stage.Name || '';
+
+        innerHtml += `
+            <tr data-id="${val.id || val.Id || ''}" class="bom-record-row">
+                <td><a href="javascript:void(0);" class="selectBOMRecord" data-id="${val.id || val.Id || ''}">${displayName}</a></td>
+                <td>${bpcrNumber}</td>
+                <td>${val.type || val.Type || ''}</td>
+                <td>${productCode} | ${productName}</td>
+                <td>${stageCode} | ${stageName}</td>
+                <td>${val.processStatus || val.ProcessStatus || ''}</td>
+            </tr>
+        `;
+      });
+
+      $('#allBOMTable').html(innerHtml);
+      // Single clean DataTable init (matches departments.html pattern)
+      if ($.fn && $.fn.DataTable) {
+        if ($.fn.DataTable.isDataTable('#allBOMDataTable')) {
+          $('#allBOMDataTable').DataTable().clear().destroy();
+        }
+        $('#allBOMDataTable').DataTable({
+          order: [[0, 'desc']],
+          pageLength: 10
+        });
+      }
+    } catch (e) {
+      console.error('Error rendering BOM table:', e);
+    }
+  }
+
+  function fetchBOMList(onDone) {
+    fetch('/api/product-recipes', { method: 'GET' })
+      .then(async function (response) {
+        if (!response.ok) {
+          var text = await response.text();
+          throw new Error(text || ('HTTP ' + response.status));
+        }
+        return response.json();
+      })
+      .then(function (recipes) {
+        window.recordList = Array.isArray(recipes) ? recipes : [];
+        renderBOMTable(window.recordList);
+        if (typeof onDone === 'function') {
+          onDone(window.recordList);
+        }
+      })
+      .catch(function (error) {
+        console.error('BOM list load failed:', error);
+        if (typeof onDone === 'function') {
+          onDone([]);
+        }
+      });
+  }
+
+  $(document).ready(function () {
+    if (typeof $.fn.select2 === 'function') {
+      $('.select2').select2();
+    }
+    fetchBOMList(function () {
+      syncViewWithHash();
+    });
+
+    $('#allBOMTable').on('click', '.selectBOMRecord', function (event) {
+      event.preventDefault();
+      openBOMEditor($(this).data('id'));
+      $('.newRecipesButton').hide();
+    });
+
+    $('#allBOMTable').on('click', '.bom-record-row', function (event) {
+      if ($(event.target).closest('.selectBOMRecord').length) {
+        return;
+      }
+      openBOMEditor($(this).data('id'));
+    });
+  });
+
+  function openBOMEditor(recordId) {
+    if (!recordId) return;
+    window.location.hash = 'edit/' + recordId;
+  }
+
+  function syncViewWithHash() {
+    var hash = window.location.hash.substring(1); // remove #
+    if (!hash || hash === 'list') {
+      showListPanel();
+    } else if (hash === 'new') {
+      showNewPanel();
+    } else if (hash.indexOf('edit/') === 0) {
+      var recordId = hash.split('/')[1];
+      showEditPanel(recordId);
+    }
+  }
+
+  function showListPanel() {
+    $('#newBOMPanel').hide();
+    $('#editBOMPanel').hide();
+    $('#allBOMPanel').show();
+    $('.newRecipesButton').show();
+  }
+
+  function showNewPanel() {
+    $('#allBOMPanel').hide();
+    $('#editBOMPanel').hide();
+    $('#newBOMPanel').show();
+    loadPlantOptions();
+    fetchDetails();
+  }
+
+  function showEditPanel(recordId) {
+    if (!recordId) return;
+
+    var attemptShow = function () {
+      var record = (window.recordList || []).find(function (item) {
+        return String(item.id || item.Id) === String(recordId);
+      });
+
+      if (record) {
+        if (typeof showEditBOMPanel === 'function') {
+          showEditBOMPanel(record);
+        }
+      } else {
+        // If not found, maybe list isn't loaded yet? Wait for fetchBOMList
+        console.warn('Record not found for hash routing. Waiting for data...');
+      }
+    };
+
+    if (window.recordList && window.recordList.length) {
+      attemptShow();
+    } else {
+      fetchBOMList(attemptShow);
+    }
+  }
+
+  // Handle back/forward navigation
+  $(window).on('hashchange', function () {
+    syncViewWithHash();
+  });
+
+  // allBOMPanel.js end
+
+
+
+  // editBOMPanel.js start
+  var currentBOMRecordId = '';
+  var currentBOMRecord = null;
+  var cachedStageList = null;
+  // Isolated cache for edit BOM plant options (avoid clashes with other panels)
+  var editPlantOptionsCache = null;
+  var isRevisingBOM = false;
+  var productSearchCacheByType = {};
+  var recipeStepList = [];
+  var stepMaterialsMap = {};
+  var stepMaterialDeleteQueue = {};
+  var UNASSIGNED_STEP_KEY = 'unassigned';
+  var MATERIAL_DEFAULT_META = {
+    typeaheadClass: 'typeahead_material',
+    typeValue: 'general-material',
+    label: 'Material',
+    emptyStateText: 'No materials found for this step.'
+  };
+  var MATERIAL_TYPE_OPTIONS = [
+    { value: 'Raw Material', label: 'Raw Material' },
+    { value: 'Packaging Material', label: 'Packaging Material' },
+    { value: 'General Material', label: 'General Material' }
+  ];
+
+  function getMaterialTypeLabel(typeValue) {
+    var normalized = String(typeValue || '').toLowerCase();
+    var match = MATERIAL_TYPE_OPTIONS.find(function (opt) {
+      return String(opt.value || '').toLowerCase() === normalized;
+    });
+    return match ? match.label : (typeValue || '');
+  }
+
+  function getUserGroupNames() {
+    if (window.FOX && Array.isArray(FOX.userGroupNames)) {
+      return FOX.userGroupNames.map(function (name) {
+        return String(name || '').toLowerCase();
+      });
+    }
+    return [];
+  }
+
+  function getBOMPermissionFlags() {
+    var groups = getUserGroupNames();
+    var isFox = groups.indexOf('fox') !== -1;
+    var isProductionHead = groups.indexOf('qa_head') !== -1 || groups.indexOf('production_head') !== -1 || isFox;
+    var isProduction = groups.indexOf('qa') !== -1 || groups.indexOf('production') !== -1 || isFox;
+    return {
+      isProduction: isProduction,
+      isProductionHead: isProductionHead,
+      canSubmit: isProduction,
+      canApprove: isProductionHead
+    };
+  }
+
+  function getStepKey(stepId) {
+    if (!stepId) {
+      return UNASSIGNED_STEP_KEY;
+    }
+    return String(stepId);
+  }
+
+  function getStepType(stepKey) {
+    if (!stepKey || !Array.isArray(recipeStepList)) {
+      return '';
+    }
+    var match = recipeStepList.find(function (step) {
+      return getStepKey(step.id || step.Id) === getStepKey(stepKey);
+    });
+    return match ? (match.type || match.Type || '') : '';
+  }
+
+  function ensureStepMaterialStore(stepKey) {
+    if (!stepMaterialsMap[stepKey]) {
+      stepMaterialsMap[stepKey] = [];
+    }
+    if (!stepMaterialDeleteQueue[stepKey]) {
+      stepMaterialDeleteQueue[stepKey] = [];
+    }
+  }
+
+  function isBOMLocked() {
+    var status = (currentBOMRecord && (currentBOMRecord.processStatus || currentBOMRecord.ProcessStatus) || '').toLowerCase();
+    return status === 'in-review' || status === 'approved' || status === 'deprecated';
+  }
+
+  function isBOMApproved() {
+    var status = (currentBOMRecord && (currentBOMRecord.processStatus || currentBOMRecord.ProcessStatus) || '').toLowerCase();
+    return status === 'approved';
+  }
+
+  function isBOMDeprecated() {
+    var status = (currentBOMRecord && (currentBOMRecord.processStatus || currentBOMRecord.ProcessStatus) || '').toLowerCase();
+    return status === 'deprecated';
+  }
+
+  function clearStepMaterialStores() {
+    stepMaterialsMap = {};
+    stepMaterialDeleteQueue = {};
+  }
+
+  function getMaterialTableBodyId(stepKey) {
+    return 'step-' + stepKey + '-materials-table';
+  }
+
+  function sanitizeInputValue(value) {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    return String(value).replace(/"/g, '&quot;');
+  }
+
+  function hideApprovalRemarksPanel() {
+    $('#approvalRemarksText').text('');
+    $('.approvalRemarksPanel').hide();
+  }
+
+  function showApprovalRemarksPanel(remarks) {
+    if (remarks && remarks.trim() !== '') {
+      $('#approvalRemarksText').html(
+        '<strong style="display:block; margin-bottom:6px; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; color:#dc3545;">Rejection Reason:</strong>' +
+        '<span>' + $('<span>').text(remarks).html() + '</span>'
+      );
+      $('.approvalRemarksPanel').show();
+
+      // Scroll into view so user doesn't miss it
+      setTimeout(function () {
+        var panel = $('.approvalRemarksPanel')[0];
+        if (panel && typeof panel.scrollIntoView === 'function') {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
+    } else {
+      hideApprovalRemarksPanel();
+    }
+  }
+
+  function getActivityTimestamp(activity) {
+    var dateValue = activity && (activity.createdDate || activity.CreatedDate || activity.modifiedDate || activity.ModifiedDate) || '';
+    var parsed = Date.parse(dateValue);
+    if (!isNaN(parsed)) {
+      return parsed;
+    }
+    var idValue = Number(activity && (activity.id || activity.Id));
+    return isNaN(idValue) ? 0 : idValue;
+  }
+
+  function getLatestReturnReason(activityList) {
+    if (!Array.isArray(activityList) || !activityList.length) {
+      return '';
+    }
+    var normalized = activityList.filter(function (item) {
+      var reason = (item && (item.reason || item.Reason) || '').trim();
+      // var status = (item && (item.status || item.Status) || '').toLowerCase();
+      if (!reason) {
+        return false;
+      }
+      return true;
+    });
+    var listToUse = normalized.length ? normalized : activityList;
+    listToUse.sort(function (a, b) {
+      return getActivityTimestamp(b) - getActivityTimestamp(a);
+    });
+    var latest = listToUse[0] || {};
+    return (latest.reason || latest.Reason || '').trim();
+  }
+
+  function fetchReturnRemarks(bomId) {
+    hideApprovalRemarksPanel();
+    if (!bomId) {
+      return;
+    }
+    // NOTE: /api/process-activities/list POST with conditions body returns [] (not supported).
+    // Use GET /api/process-activities/parent/{id} and filter client-side for latest return reason.
+    // var payload_unused_post = {
+    //   fields: 'Id;Reason;Status;ParentRecordId',
+    //   conditions: ["ParentRecordId = '" + bomId + "'"],
+    //   orderBy: 'Id DESC LIMIT 1',
+    //   logic: '{0}'
+    // };
+    // JSUTIL.callAJAXPost('/api/process-activities/list', JSON.stringify(payload_unused_post), ...)
+    JSUTIL.callAJAXGet('/api/process-activities/parent/' + bomId, function (response) {
+      var remarks = getLatestReturnReason(response || []);
+      if (remarks) {
+        showApprovalRemarksPanel(remarks);
+        if (currentBOMRecord) {
+          currentBOMRecord.approvalRemarks = remarks;
+        }
+      }
+    });
+  }
+
+  function resetReturnModalState() {
+    $('#returnCommentInput').val('');
+    $('#returnCommentError').hide();
+    $('#confirmReturnBOMBtn').prop('disabled', false);
+  }
+
+  function openReturnBOMModal() {
+    if (!currentBOMRecordId) {
+      return;
+    }
+    resetReturnModalState();
+    (bootstrap.Modal.getInstance($('#returnBOMModal')[0]) || new bootstrap.Modal($('#returnBOMModal')[0])).show();
+  }
+
+  function submitReturnBOM() {
+    if (!currentBOMRecordId) {
+      return;
+    }
+    var comment = ($('#returnCommentInput').val() || '').trim();
+    if (!comment) {
+      $('#returnCommentError').show();
+      $('#returnCommentInput').focus();
+      return;
+    }
+    var $confirmBtn = $('#confirmReturnBOMBtn');
+    if ($confirmBtn.prop('disabled')) {
+      return;
+    }
+    $confirmBtn.prop('disabled', true);
+    var activityPayload = {
+      reason: comment,
+      parentRecordId: String(currentBOMRecordId),
+      // status: 'Returned'
+    };
+    JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify(activityPayload), function () {
+      bootstrap.Modal.getInstance($('#returnBOMModal')[0])?.hide();
+      updateBOMProcessStatus('Returned');
+    }, function () {
+      $confirmBtn.prop('disabled', false);
+      JSUTIL.buildErrorModal('Unable to return BOM. Please try again.');
+    });
+  }
+
+  $(document).ready(function () {
+    $('.saveBOMEditBtn').hide();
+    setBOMEditState(false);
+    hideApprovalRemarksPanel();
+    clearStepMaterialStores();
+    bindUppercaseInput('.editBOMInput[name="masterBatchRecord"]');
+    loadStageList();
+    setupMaterialTabHandlers();
+    renderStepList();
+    $('#editStageId').on('change', function () {
+      updateEditProductDetailsFromStage($(this).val());
+    });
+
+    $('.submitBOMReview').on('click', function () {
+      var permissions = getBOMPermissionFlags();
+      if (!permissions.canSubmit || !currentBOMRecordId) {
+        return;
+      }
+      if (currentBOMRecord && currentBOMRecord.processStatus === 'Approved') {
+        return;
+      }
+      updateBOMProcessStatus('In-Review');
+    });
+
+    $('.approveBOMBtn').on('click', function () {
+      var permissions = getBOMPermissionFlags();
+      if (!permissions.canApprove || !currentBOMRecordId) {
+        return;
+      }
+      if (!currentBOMRecord || currentBOMRecord.processStatus !== 'In-Review') {
+        return;
+      }
+      updateBOMProcessStatus('Approved');
+    });
+
+    $('.rejectBOMBtn').on('click', function () {
+      var permissions = getBOMPermissionFlags();
+      if (!permissions.canApprove || !currentBOMRecordId) {
+        return;
+      }
+      if (!currentBOMRecord || currentBOMRecord.processStatus !== 'In-Review') {
+        return;
+      }
+      openReturnBOMModal();
+    });
+
+    $('#confirmReturnBOMBtn').on('click', function () {
+      submitReturnBOM();
+    });
+
+    $('#returnCommentInput').on('input', function () {
+      $('#returnCommentError').hide();
+    });
+
+    $('#returnBOMModal').on('hidden.bs.modal', function () {
+      resetReturnModalState();
+    });
+
+    $('#returnBOMModal').on('shown.bs.modal', function () {
+      $('#returnCommentInput').focus();
+    });
+
+    $('.editBOMCancelBtn').on('click', function () {
+      resetEditBOMForm();
+      $('#editBOMPanel').hide();
+      $('#newBOMPanel').hide();
+      $('#allBOMPanel').show();
+      $('.newRecipesButton').show();
+    });
+
+    $('.editBOMEditBtn').on('click', function () {
+      var permissions = getBOMPermissionFlags();
+      if (!permissions.canSubmit) {
+        return;
+      }
+      if (currentBOMRecord && (currentBOMRecord.processStatus === 'Approved' || currentBOMRecord.processStatus === 'In-Review')) {
+        return;
+      }
+      setBOMEditState(true);
+      $('.saveBOMEditBtn').show();
+      $(this).hide();
+    });
+
+    $('.saveBOMEditBtn').on('click', function () {
+      saveBOMRecord();
+    });
+
+    $('#reviseBOMBtn').on('click', function () {
+      startBOMRevision();
+    });
+
+    $('.editBOMCancelBtn').on('click', function () {
+      window.location.hash = 'list';
+    });
+
+    loadPlantList();
+  });
+
+  function setBOMEditState(isEditable) {
+    $('.editBOMInput').each(function () {
+      var $input = $(this);
+      if ($input.attr('type') === 'hidden') {
+        return;
+      }
+      if ($input.is('select')) {
+        $input.prop('disabled', !isEditable);
+        if ($input.data('choices-instance')) {
+          var choices = $input.data('choices-instance');
+          if (isEditable) {
+            choices.enable();
+          } else {
+            choices.disable();
+          }
+        }
+      } else {
+        $input.prop('readonly', !isEditable);
+      }
+    });
+  }
+
+  function resetEditBOMForm() {
+    var editForm = document.getElementById('editBOMForm');
+    if (editForm) {
+      editForm.reset();
+    }
+    $('#editStageId').val('').trigger('change');
+    setEditProductFields({ code: '', name: '', uom: '', plantId: '', plantIds: [], plantName: '' });
+    $('.editBOMEditBtn').show();
+    $('.saveBOMEditBtn').hide();
+    setBOMEditState(false);
+    currentBOMRecordId = '';
+    currentBOMRecord = null;
+    hideApprovalRemarksPanel();
+    $('#editBOMName').text('');
+    recipeStepList = [];
+    clearStepMaterialStores();
+    renderStepList();
+    renderBOMVersionHistory([]);
+  }
+
+  function populateEditBOMForm(record) {
+    var masterBatchRecord = record.masterBatchRecord || record.MasterBatchRecord || record.name || record.Name || '';
+    $('.editBOMInput[name="masterBatchRecord"]').val(masterBatchRecord);
+    $('.editBOMInput[name="type"]').val(record.type || '').trigger('change');
+    $('.editBOMInput[name="productQuantity"]').val(record.productQuantity || '');
+    $('.editBOMInput[name="processStatus"]').val(record.processStatus || '');
+    $('.editBOMInput[name="version"]').val(record.version || record.Version || '');
+    var quantityVariation = record.quantityVariation;
+    if (quantityVariation === undefined || quantityVariation === null) {
+      quantityVariation = record.QuantityVariation;
+    }
+    if (quantityVariation === undefined || quantityVariation === null) {
+      quantityVariation = 0;
+    }
+    $('.editBOMInput[name="quantityVariation"]').val(quantityVariation);
+    $('#editBOMId').val(record.id || '');
+    setEditProductFields(extractProductInfoFromRecord(record));
+
+    populateStageDropdown(record);
+    fetchBOMVersionHistory(record);
+  }
+
+  function populateStageDropdown(record) {
+    var dropdown = $('#editStageId');
+    var selectedStageId = '';
+    var selectedStageName = '';
+
+    if (record.stage && record.stage.id) {
+      selectedStageId = record.stage.id;
+      selectedStageName = record.stage.name || '';
+    } else if (record.productStage && record.productStage.id) {
+      selectedStageId = record.productStage.id;
+      selectedStageName = record.productStage.name || '';
+    } else if (record.stageId) {
+      selectedStageId = record.stageId;
+    } else if (record.productStage && typeof record.productStage === 'string') {
+      selectedStageName = record.productStage;
+    }
+
+    loadStageList(function (stageList) {
+      dropdown.empty();
+      dropdown.append('<option value="">--none--</option>');
+
+      stageList.forEach(function (stage) {
+        var name = (stage.name || stage.Name || '').padEnd(15, ' ').replace(/ /g, '\u00A0');
+        var product = stage.product || stage.Product || {};
+        var productName = product.name || product.Name || '';
+        var productCode = product.number || product.Number || '';
+        var optionLabel = stage.number + ' | ' + name + ' | ' + (productCode ? productCode + ' | ' : '') + productName;
+        dropdown.append('<option value="' + (stage.id || stage.Id) + '">' + optionLabel + '</option>');
+      });
+
+      if (!selectedStageId && selectedStageName) {
+        var match = stageList.find(function (stage) {
+          return stage.name === selectedStageName;
+        });
+        if (match) {
+          selectedStageId = match.id;
+        }
+      }
+
+      dropdown.val(selectedStageId || '');
+      dropdown.trigger('change');
+      if (!updateEditProductDetailsFromStage(selectedStageId)) {
+        setEditProductFields(extractProductInfoFromRecord(record));
+      }
+    });
+  }
+
+  function loadStageList(callback) {
+    if (cachedStageList) {
+      if (typeof callback === 'function') {
+        callback(cachedStageList);
+      }
+      return;
+    }
+
+    var postUrl = '/data/ProductStage/list';
+    var postData = {
+      fields: 'Name;Product.Id;Product.Name;Product.Number;Product.Uom;Plant.Id;Plant.Name;Plant.Number;Number;ProcessStatus'
+    };
+
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(postData), function (response) {
+      // Filter to only show Approved stages
+      cachedStageList = (response || []).filter(function (item) {
+        var status = (item.processStatus || item.ProcessStatus || '').trim();
+        return status === 'Approved';
+      });
+      if (typeof callback === 'function') {
+        callback(cachedStageList);
+      }
+    });
+  }
+
+  function setReviseButtonState(isDisabled) {
+    $('#reviseBOMBtn').prop('disabled', !!isDisabled);
+  }
+
+  function resolveNextRevisionVersion(record) {
+    var currentVersion = Number(record && (record.version || record.Version || 0));
+    if (isNaN(currentVersion)) {
+      currentVersion = 0;
+    }
+    return currentVersion + 1;
+  }
+
+  function startBOMRevision() {
+    if (isRevisingBOM) {
+      return;
+    }
+    if (!currentBOMRecordId || !currentBOMRecord) {
+      JSUTIL.buildErrorModal('Select a BOM before revising.');
+      return;
+    }
+    var permissions = getBOMPermissionFlags();
+    if (!permissions.canSubmit) {
+      return;
+    }
+    if (!isBOMApproved()) {
+      JSUTIL.buildErrorModal('Only an approved BOM can be revised.');
+      return;
+    }
+    isRevisingBOM = true;
+    setReviseButtonState(true);
+    var nextVersion = resolveNextRevisionVersion(currentBOMRecord);
+    fetchRevisionBlueprint(currentBOMRecordId, function (steps, materials) {
+      createRevisedBOMRecord(nextVersion, steps, materials);
+    }, function (msg) {
+      handleRevisionError(msg || 'Unable to prepare BOM revision.');
+    });
+  }
+
+  function fetchRevisionBlueprint(bomId, onSuccess, onError) {
+    fetchRevisionSteps(bomId, function (steps) {
+      fetchRevisionMaterials(bomId, function (materials) {
+        if (typeof onSuccess === 'function') {
+          onSuccess(steps, materials);
+        }
+      }, onError);
+    }, onError);
+  }
+
+  function fetchRevisionSteps(bomId, callback, onError) {
+    fetch('/api/product-recipe-steps/product-recipe/' + Number(bomId))
+      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        var sorted = (res || []).sort(function (a, b) {
+          var seqA = Number(a.sequence || a.Sequence || 0);
+          var seqB = Number(b.sequence || b.Sequence || 0);
+          return seqA - seqB;
+        });
+        if (typeof callback === 'function') {
+          callback(sorted);
+        }
+      })
+      .catch(function () {
+        if (typeof onError === 'function') {
+          onError('Unable to fetch steps for revision.');
+        }
+      });
+  }
+
+  function fetchRevisionMaterials(bomId, callback, onError) {
+    // NOTE: /api/product-recipe-byproducts/list POST with conditions body returns [] (not supported).
+    // Use the dedicated GET endpoint: /api/product-recipe-byproducts/product-recipe/{id}
+    // var payload_unused_post = {
+    //   fields: 'Id;Type;Quantity;Product.Id;Product.Name;Product.Number;Product.Uom;Step.Id;Step.Name;Step.Sequence;ProductRecipe.Id',
+    //   conditions: ['ProductRecipe.Id = ' + Number(bomId)],
+    //   logic: '{0}'
+    // };
+    JSUTIL.callAJAXGet('/api/product-recipe-byproducts/product-recipe/' + Number(bomId), function (res) {
+      if (typeof callback === 'function') {
+        callback(res || []);
+      }
+    }, function () {
+      if (typeof onError === 'function') {
+        onError('Unable to fetch materials for revision.');
+      }
+    });
+  }
+
+  function buildRevisionPayload(nextVersion) {
+    var record = currentBOMRecord || {};
+    var stage = record.productStage || record.ProductStage || record.stage || record.Stage || {};
+    var plantIds = getPlantIdsFromData(record);
+    if (!plantIds.length) {
+      plantIds = getPlantIdsFromData(stage);
+    }
+    var quantityVariation = record.quantityVariation;
+    if (quantityVariation === undefined || quantityVariation === null) {
+      quantityVariation = record.QuantityVariation;
+    }
+    var currentName = record.name || record.Name || '';
+    var masterBatchRecord = record.masterBatchRecord || record.MasterBatchRecord || currentName;
+    // Name format: TI-XXXX-RR — getNextRevisionName increments the RR suffix
+    // e.g. TI-0006-00 → TI-0006-01, TI-0006-01 → TI-0006-02
+    var revisedName = getNextRevisionName(currentName);
+    // version field stays the same as the source record (name suffix tracks iteration)
+    var sourceVersion = Number(record.version || record.Version || 1) || 1;
+    var payload = {
+      masterBatchRecord: toUpperSafe(masterBatchRecord),
+      name: toUpperSafe(revisedName),
+      type: record.type || '',
+      productQuantity: Number(record.productQuantity || record.ProductQuantity || 0) || 0,
+      quantityVariation: Number(quantityVariation || 0) || 0,
+      version: sourceVersion,
+      processStatus: 'New',
+      createdDate: new Date().toISOString()
+    };
+    var stageId = stage.id || stage.Id || record.stageId;
+    if (stageId) {
+      payload.productStage = { id: stageId };
+    }
+    if (plantIds.length) {
+      payload.plants = plantIds.join(';');
+    }
+    return payload;
+  }
+
+  function formatRevisionName(currentName, nextVersion) {
+    // Derive the new name purely from currentName, ignoring nextVersion.
+    // Delegates to getNextRevisionName so both Revise and Submit-for-Review
+    // use the same naming logic.
+    return getNextRevisionName(currentName);
+  }
+
+  function createRevisedBOMRecord(nextVersion, steps, materials) {
+    var payload = buildRevisionPayload(nextVersion);
+    var token = $("meta[name='_csrf']").attr("content");
+    var header = $("meta[name='_csrf_header']").attr("content");
+    var headers = {
+      "Content-Type": "application/json"
+    };
+    if (token && header) {
+      headers[header] = token;
+    }
+
+    console.log('Creating revised BOM with payload:', JSON.stringify(payload));
+    fetch('/api/product-recipes', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(payload)
+    }).then(async function (response) {
+      if (!response.ok) {
+        var text = await response.text();
+        throw new Error('Server ' + response.status + ': ' + (text || 'Unknown error'));
+      }
+      return response.json();
+    }).then(function (res) {
+      var newId = res && (res.id || res.Id);
+      if (!newId) {
+        console.error('createRevisedBOMRecord: server response had no id:', res);
+        handleRevisionError('Unable to create revised BOM');
+        return;
+      }
+      createRevisionSteps(newId, steps, function (stepIdMap) {
+        copyMaterialsToRevision(newId, materials, stepIdMap, function () {
+          markOriginalBOMDeprecated().then(function () {
+            openRevisedBOM(newId, nextVersion, res);
+          });
+        }, handleRevisionError);
+      }, handleRevisionError);
+    }).catch(function (error) {
+      console.error('Revision Failed:', error);
+      handleRevisionError('Unable to create revised BOM: ' + error.message);
+    });
+  }
+
+  function createRevisionSteps(newRecipeId, steps, callback, onError) {
+    // Strategy:
+    //  1. Create all steps sequentially via POST (POST returns full list - cannot trust response for id)
+    //  2. After ALL steps are created, do ONE GET /product-recipe-steps/product-recipe/{newRecipeId}
+    //  3. Build stepIdMap by matching each old step (name + sequence) → new step id
+    var oldStepMeta = (steps || []).map(function (s) {
+      return {
+        oldKey:  getStepKey(s.id || s.Id),
+        name:    String(s.name || s.Name || '').trim(),
+        seq:     Number(s.sequence || s.Sequence || 0),
+        type:    s.type || s.Type || ''
+      };
+    });
+
+    var queue = oldStepMeta.slice();
+
+    function postNextStep() {
+      if (!queue.length) {
+        // All POSTs done — now GET the created steps and build the map
+        resolveStepIdMap();
+        return;
+      }
+      var meta = queue.shift();
+      var payload = {
+        name:          meta.name,
+        productRecipe: { id: Number(newRecipeId) },
+        type:          meta.type,
+        sequence:      meta.seq
+      };
+      JSUTIL.callAJAXPost('/api/product-recipe-steps', JSON.stringify(payload), function () {
+        // Ignore response — POST returns full list; we resolve ids via GET after all are created
+        postNextStep();
+      }, function () {
+        if (typeof onError === 'function') {
+          onError('Unable to copy steps to revised BOM.');
+        }
+      });
+    }
+
+    function resolveStepIdMap() {
+      fetch('/api/product-recipe-steps/product-recipe/' + Number(newRecipeId))
+        .then(function (r) { return r.json(); })
+        .then(function (newSteps) {
+          var stepIdMap = {};
+          oldStepMeta.forEach(function (meta) {
+            // Match by name + sequence against the newly created steps
+            var match = (newSteps || []).find(function (ns) {
+              return String(ns.name || ns.Name || '').trim() === meta.name &&
+                     Number(ns.sequence || ns.Sequence || 0) === meta.seq;
+            });
+            if (match && (match.id || match.Id)) {
+              stepIdMap[meta.oldKey] = match.id || match.Id;
+              console.log('stepIdMap:', meta.oldKey, '→', stepIdMap[meta.oldKey], '(', meta.name, ')');
+            } else {
+              console.warn('No match for step:', meta.name, 'seq:', meta.seq);
+            }
+          });
+          if (typeof callback === 'function') {
+            callback(stepIdMap);
+          }
+        })
+        .catch(function (err) {
+          console.error('resolveStepIdMap GET failed:', err);
+          // Return empty map so materials still get created (just without step assignment)
+          if (typeof callback === 'function') {
+            callback({});
+          }
+        });
+    }
+
+    postNextStep();
+  }
+
+  function copyMaterialsToRevision(newRecipeId, materials, stepIdMap, callback, onError) {
+    var payload = (materials || []).map(function (item) {
+      var productId = getMaterialProductId(item);
+      var qtyValue = Number(getMaterialQuantityValue(item) || 0);
+      if (!productId || !qtyValue) {
+        return null;
+      }
+      var sourceStepId = getMaterialStepId(item);
+      var mappedStepId = sourceStepId ? stepIdMap[getStepKey(sourceStepId)] : '';
+      var entry = {
+        productRecipe: { id: Number(newRecipeId) },
+        product: { id: Number(productId) || productId },
+        type: item.type || item.Type || MATERIAL_DEFAULT_META.typeValue,
+        quantity: qtyValue,
+        name: getMaterialProductName(item) || item.name || item.Name || ''
+      };
+      if (mappedStepId) {
+        entry.step = { id: Number(mappedStepId) || mappedStepId };
+      }
+      return entry;
+    }).filter(Boolean);
+
+    if (!payload.length) {
+      if (typeof callback === 'function') {
+        callback();
+      }
+      return;
+    }
+
+    JSUTIL.callAJAXPost('/api/product-recipe-byproducts/create_multiple', JSON.stringify(payload), function () {
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }, function () {
+      if (typeof onError === 'function') {
+        onError('Unable to copy materials to revised BOM.');
+      }
+    });
+  }
+
+  function markOriginalBOMDeprecated() {
+    if (!currentBOMRecordId) {
+      return Promise.resolve();
+    }
+    var originalId = currentBOMRecordId;
+    // Full GET then PUT so no fields are wiped by a partial payload
+    return fetch('/api/product-recipes/' + originalId, { method: 'GET' })
+      .then(function (res) { return res.json(); })
+      .then(function (r) {
+        var deprecatedPayload = {
+          id:                r.id,
+          name:              r.name              || '',
+          masterBatchRecord: r.masterBatchRecord || '',
+          type:              r.type              || '',
+          productQuantity:   r.productQuantity   || 0,
+          quantityVariation: r.quantityVariation || 0,
+          version:           r.version           || 1,
+          plants:            r.plants            || '',
+          processStatus:     'Deprecated',
+          createdDate:       r.createdDate       || r.CreatedDate  || null,
+          approvedDate:      r.approvedDate      || r.ApprovedDate || null
+        };
+        if (r.productStage && r.productStage.id) {
+          deprecatedPayload.productStage = { id: r.productStage.id };
+        }
+        var token  = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = { 'Content-Type': 'application/json' };
+        if (token && header) { headers[header] = token; }
+        return fetch('/api/product-recipes/' + originalId, {
+          method:  'PUT',
+          headers: headers,
+          body:    JSON.stringify(deprecatedPayload)
+        });
+      })
+      .then(function () {
+        // Update local cache
+        if (Array.isArray(window.recordList)) {
+          var existing = window.recordList.find(function (item) {
+            return String(item.id || item.Id) === String(originalId);
+          });
+          if (existing) { existing.processStatus = 'Deprecated'; }
+        }
+        console.log('Original BOM marked Deprecated:', originalId);
+      })
+      .catch(function (err) {
+        console.warn('Failed to deprecate original BOM:', err);
+      });
+  }
+
+  function openRevisedBOM(newId, newVersion, createResponse) {
+    isRevisingBOM = false;
+    setReviseButtonState(false);
+    // Reload the page with the new record's hash so:
+    //  1. The BOM list is re-fetched fresh from the server (old record shows as Deprecated)
+    //  2. The new revised record is opened directly from server data
+    var newHash = 'edit/' + newId;
+    if (window.location.hash.replace('#', '') !== newHash) {
+      window.location.hash = newHash;
+    }
+    location.reload();
+  }
+
+  function handleRevisionError(message) {
+    isRevisingBOM = false;
+    setReviseButtonState(false);
+    if (message) {
+      JSUTIL.buildErrorModal(message);
+    }
+  }
+
+  function updateBOMProcessStatus(nextStatus) {
+    if (!currentBOMRecordId) {
+      return;
+    }
+    // Problem: sending only { processStatus } in PUT wipes all other fields (backend does full replacement).
+    // Fix: GET the full record first, then PUT back all fields with only processStatus changed.
+    // GET response shape (from API): { id, name, type, productQuantity, quantityVariation,
+    //   masterBatchRecord, version, processStatus, plants, productStage: { id, ... } }
+    fetch('/api/product-recipes/' + currentBOMRecordId, { method: 'GET' })
+      .then(function (res) { return res.json(); })
+      .then(function (r) {
+        var postData = {
+          id:                r.id,
+          name:              r.name              || '',
+          type:              r.type              || '',
+          productQuantity:   r.productQuantity   || 0,
+          quantityVariation: r.quantityVariation || 0,
+          masterBatchRecord: r.masterBatchRecord || '',
+          version:           r.version           || 1,
+          plants:            r.plants            || '',
+          processStatus:     nextStatus         
+        };
+        // Preserve the productStage relation using just its id (avoid sending the full nested object)
+        if (r.productStage && r.productStage.id) {
+          postData.productStage = { id: r.productStage.id };
+        }
+        if (String(nextStatus || '').toLowerCase() === 'approved') {
+          postData.approvedDate = new Date().toISOString();
+        }
+        var token  = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = { 'Content-Type': 'application/json' };
+        if (token && header) { headers[header] = token; }
+        return fetch('/api/product-recipes/' + currentBOMRecordId, {
+          method:  'PUT',
+          headers: headers,
+          body:    JSON.stringify(postData)
+        });
+      })
+      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        console.log('Status updated:', res);
+        if (currentBOMRecord) {
+          currentBOMRecord.processStatus = nextStatus;
+          if (String(nextStatus || '').toLowerCase() === 'approved') {
+            currentBOMRecord.approvedDate = new Date().toISOString();
+          }
+        }
+        location.reload();
+      })
+      .catch(function (err) {
+        console.error('Failed to update process status:', err);
+        JSUTIL.buildErrorModal('Failed to update status: ' + (err.message || err));
+      });
+  }
+
+  function fetchBOMVersionHistory(record) {
+    var masterBatchRecord = record && (record.masterBatchRecord || record.MasterBatchRecord);
+    if (!masterBatchRecord || !String(masterBatchRecord).trim()) {
+      renderBOMVersionHistory([]);
+      return;
+    }
+    // NOTE: /api/product-recipes/list POST with conditions body returns [] (not supported).
+    // Use GET /api/product-recipes and filter client-side by masterBatchRecord.
+    // var payload_unused_post = {
+    //   fields: 'Id;Name;MasterBatchRecord;Version;ProcessStatus;ApprovedDate;CreatedDate',
+    //   conditions: ["MasterBatchRecord = '" + safeMBR + "'"],
+    //   orderBy: 'Version DESC',
+    //   logic: '{0}'
+    // };
+    // JSUTIL.callAJAXPost('/api/product-recipes/list', JSON.stringify(payload_unused_post), ...)
+    JSUTIL.callAJAXGet('/api/product-recipes', function (res) {
+      // Filter client-side: only show records with the same masterBatchRecord (case-insensitive)
+      var mbrLower = masterBatchRecord.trim().toLowerCase();
+      var filtered = (res || []).filter(function (item) {
+        var itemMBR = (item.masterBatchRecord || item.MasterBatchRecord || '').trim().toLowerCase();
+        return itemMBR === mbrLower;
+      });
+      filtered.sort(function (a, b) {
+        return Number(b.version || b.Version || 0) - Number(a.version || a.Version || 0);
+      });
+      renderBOMVersionHistory(filtered);
+    }, function () {
+      renderBOMVersionHistory([]);
+    });
+  }
+
+  function renderBOMVersionHistory(list) {
+    var $body = $('#bomVersionHistoryBody');
+    if (!$body.length) {
+      return;
+    }
+    $body.empty();
+    if (!list || !list.length) {
+      $body.append('<tr class="text-muted"><td colspan="5">No versions found.</td></tr>');
+      return;
+    }
+    var currentId = currentBOMRecord && (currentBOMRecord.id || currentBOMRecord.Id);
+    list.sort(function (a, b) {
+      return Number(b.version || b.Version || 0) - Number(a.version || a.Version || 0);
+    });
+    list.forEach(function (item) {
+      var version = item.version || item.Version || '';
+      var status = item.processStatus || item.ProcessStatus || '';
+      var name = item.name || item.Name || '';
+      var rowId = item.id || item.Id || '';
+      var approvedDate = item.approvedDate || item.ApprovedDate || '';
+      var createdDate = item.createdDate || item.CreatedDate || '';
+      var isCurrent = currentId && rowId && String(currentId) === String(rowId);
+      var approvedDisplay = approvedDate ? formatDisplayDate(approvedDate) : '';
+      var createdDisplay = createdDate ? formatDisplayDate(createdDate) : '';
+      var rowHtml = '' +
+        '<tr class="' + (isCurrent ? 'info' : '') + '">' +
+        '<td>' + sanitizeInputValue(version) + (isCurrent ? ' (current)' : '') + '</td>' +
+        '<td>' + sanitizeInputValue(status) + '</td>' +
+        '<td>' + sanitizeInputValue(name) + '</td>' +
+        '<td>' + sanitizeInputValue(createdDisplay) + '</td>' +
+        '<td>' + sanitizeInputValue(approvedDisplay) + '</td>' +
+        '</tr>';
+      $body.append(rowHtml);
+    });
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  }
+
+  function formatDisplayDate(dateValue) {
+    if (!dateValue) {
+      return '';
+    }
+    var parsed = Date.parse(dateValue);
+    if (!isNaN(parsed)) {
+      var d = new Date(parsed);
+      return d.toLocaleString();
+    }
+    return String(dateValue);
+  }
+
+  function renderStepList(activeStepId) {
+    var $container = $('#editStepListContainer');
+    if (!$container.length) {
+      return;
+    }
+    $container.empty();
+    var hasSteps = recipeStepList && recipeStepList.length;
+    var normalizedActive = activeStepId ? getStepKey(activeStepId) : '';
+    if (!hasSteps) {
+      $container.append('<div class="text-muted">No steps yet. Use Add Lot to create your first step.</div>');
+      applyMaterialPermissions();
+      return;
+    }
+    (recipeStepList || []).forEach(function (step, idx) {
+      var stepKey = getStepKey(step.id || step.Id);
+      ensureStepMaterialStore(stepKey);
+      var collapseId = 'collapse-' + stepKey;
+      var safeName = sanitizeInputValue(step.name || step.Name || ('Lot ' + (idx + 1)));
+      var stepTypeValue = step.type || step.Type || '';
+      var stepTypeLabel = stepTypeValue ? getMaterialTypeLabel(stepTypeValue) : '';
+      var badgeClass = 'label-info';
+      var normalizedType = String(stepTypeValue).toLowerCase();
+      if (normalizedType.indexOf('raw') !== -1) badgeClass = 'label-success';
+      else if (normalizedType.indexOf('packing') !== -1) badgeClass = 'label-primary';
+      else if (normalizedType.indexOf('general') !== -1) badgeClass = 'label-info';
+
+      var stepTypeBadge = stepTypeLabel ? ('<span class="label ' + badgeClass + ' step-type-badge pull-right">' + sanitizeInputValue(stepTypeLabel) + '</span>') : '';
+      var isOpen = normalizedActive ? normalizedActive === stepKey : idx === 0;
+      var panelHtml = '' +
+        '<div class="panel panel-default step-panel">' +
+        '<div class="panel-heading">' +
+        '<h5 class="panel-title clearfix">' +
+        '<a data-toggle="collapse" data-bs-toggle="collapse" data-parent="#editStepListContainer" data-bs-parent="#editStepListContainer" href="#' + collapseId + '" data-target="#' + collapseId + '" data-bs-target="#' + collapseId + '" aria-expanded="' + (isOpen ? 'true' : 'false') + '">' +
+        '<i class="fa ' + (isOpen ? 'fa-caret-down' : 'fa-caret-right') + ' step-toggle-icon" style="margin-right:6px; pointer-events: none;"></i>' +
+        'Lot - ' + safeName +
+        '</a>  ' + stepTypeBadge +
+        '</h5>' +
+        '</div>' +
+        '<div id="' + collapseId + '" class="panel-collapse collapse ' + (isOpen ? 'in show' : '') + '">' +
+        '<div class="panel-body">' +
+        '<div class="row" style="padding-bottom:10px;">' +
+        '<div class="col-sm-6 text-muted">Add materials to this step.</div>' +
+        '<div class="col-sm-6" align="right">' +
+        '<button type="button" class="btn btn-default btn-sm material-add-btn" data-step-id="' + stepKey + '"><i data-lucide="plus"></i> Add Material</button> ' +
+        '<button type="button" class="btn btn-sm btn-secondary material-save-btn" data-step-id="' + stepKey + '"><i data-lucide="check"></i> Save</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="table-responsive">' +
+        '<table class="table table-bordered table-hover">' +
+        '<thead><tr><th style="width:50px;"></th><th>Product Code</th><th>Product Name</th><th>Product UOM</th><th>Type</th><th>Standard Qty</th></tr></thead>' +
+        '<tbody id="' + getMaterialTableBodyId(stepKey) + '" data-step-key="' + stepKey + '"></tbody>' +
+        '</table>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+      $container.append(panelHtml);
+    });
+    (recipeStepList || []).forEach(function (step) {
+      var stepKey = getStepKey(step.id || step.Id);
+      buildMaterialTableRows(stepKey, stepMaterialsMap[stepKey] || []);
+    });
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    applyMaterialPermissions();
+  }
+
+  function applyMaterialPermissions() {
+    if (!currentBOMRecord) {
+      return;
+    }
+    var permissions = getBOMPermissionFlags();
+    var isLocked = isBOMLocked();
+    var isInReview = currentBOMRecord && currentBOMRecord.processStatus === 'In-Review';
+    var isApproved = currentBOMRecord && currentBOMRecord.processStatus === 'Approved';
+    var isDeprecated = isBOMDeprecated();
+    var showEditActions = permissions.canSubmit && !isLocked;
+    var canRevise = permissions.canSubmit && !!currentBOMRecordId && !isRevisingBOM && isApproved;
+
+    $('.material-add-btn').toggle(showEditActions);
+    $('.material-save-btn').toggle(showEditActions);
+    $('.add-step-btn').toggle(showEditActions);
+    $('.submitBOMReview').toggle(permissions.canSubmit && !isLocked);
+    $('.approveBOMBtn, .rejectBOMBtn').toggle(permissions.canApprove && isInReview);
+    $('.material-qty-input').prop('disabled', !!isLocked);
+    $('.material-product-search').prop('disabled', !!isLocked);
+    $('.material-product-code').prop('disabled', !!isLocked);
+    $('.delete-material-row').toggle(!isLocked && !isDeprecated);
+    $('#reviseBOMBtn').toggle(canRevise).prop('disabled', !canRevise);
+  }
+
+  function resetAddStepModalState() {
+    $('#addStepNameInput').val('');
+    $('#addStepNameError').hide();
+    $('#addStepTypeSelect').val('');
+    $('#addStepTypeError').hide();
+    $('#confirmAddStepBtn').prop('disabled', false);
+  }
+
+  function handleAddStep() {
+    if (!currentBOMRecordId) {
+      JSUTIL.buildErrorModal('Please save or select a BOM before adding steps.');
+      return;
+    }
+    if (isBOMLocked()) {
+      return;
+    }
+    resetAddStepModalState();
+    (bootstrap.Modal.getInstance($('#addStepModal')[0]) || new bootstrap.Modal($('#addStepModal')[0])).show();
+  }
+
+  function submitAddStep() {
+    if (!currentBOMRecordId) {
+      JSUTIL.buildErrorModal('Please save or select a BOM before adding steps.');
+      bootstrap.Modal.getInstance($('#addStepModal')[0])?.hide();
+      return;
+    }
+    if (isBOMLocked()) {
+      bootstrap.Modal.getInstance($('#addStepModal')[0])?.hide();
+      return;
+    }
+
+    if ($('#confirmAddStepBtn').prop('disabled')) {
+      return;
+    }
+
+    var stepName = ($('#addStepNameInput').val() || '').trim();
+    if (!stepName) {
+      $('#addStepNameError').show();
+      $('#addStepNameInput').focus();
+      return;
+    }
+    var stepType = ($('#addStepTypeSelect').val() || '').trim();
+    if (!stepType) {
+      $('#addStepTypeError').show();
+      $('#addStepTypeSelect').focus();
+      return;
+    }
+    $('#addStepNameError').hide();
+    $('#addStepTypeError').hide();
+    $('#confirmAddStepBtn').prop('disabled', true);
+
+    var payload = {
+      name: stepName,
+      productRecipe: { id: Number(currentBOMRecordId) },
+      type: stepType,
+      sequence: (recipeStepList.length || 0) + 1
+    };
+    var enableModalActions = function () {
+      $('#confirmAddStepBtn').prop('disabled', false);
+    };
+
+    JSUTIL.callAJAXPost('/api/product-recipe-steps', JSON.stringify(payload), function (res) {
+      enableModalActions();
+      bootstrap.Modal.getInstance($('#addStepModal')[0])?.hide();
+      loadRecipeSteps(currentBOMRecordId, function () {
+        var newStepId = (res && (res.id || res.Id)) || '';
+        ensureStepMaterialStore(getStepKey(newStepId));
+        renderStepList(newStepId || '');
+        fetchRecipeItems(currentBOMRecordId);
+      });
+    }, function () {
+      enableModalActions();
+      JSUTIL.buildErrorModal('Unable to add step. Please try again.');
+    });
+  }
+
+  function loadRecipeSteps(recipeId, callback) {
+    if (!recipeId) {
+      recipeStepList = [];
+      renderStepTabs();
+      if (typeof callback === 'function') {
+        callback([]);
+      }
+      return;
+    }
+    fetch('/api/product-recipe-steps/product-recipe/' + Number(recipeId))
+      .then(function (res) { return res.json(); })
+      .then(function (res) {
+        recipeStepList = (res || []).sort(function (a, b) {
+          var seqA = Number(a.sequence || a.Sequence || 0);
+          var seqB = Number(b.sequence || b.Sequence || 0);
+          return seqA - seqB;
+        });
+        renderStepList();
+        if (typeof callback === 'function') {
+          callback(recipeStepList);
+        }
+      });
+  }
+
+  function saveBOMRecord() {
+    if (!currentBOMRecordId) {
+      return;
+    }
+
+    var $form = $('#editBOMForm');
+    var payload = {
+      id: Number($('#editBOMId').val()) || currentBOMRecordId,
+      masterBatchRecord: toUpperSafe($form.find('[name="masterBatchRecord"]').val()),
+      version: Number($form.find('[name="version"]').val()) || 0,
+      type: $form.find('[name="type"]').val(),
+      productQuantity: Number($form.find('[name="productQuantity"]').val()) || 0,
+      quantityVariation: Number($form.find('[name="quantityVariation"]').val()) || 0,
+      productStage: {
+        id: Number($('#editStageId').val())
+      }
+    };
+
+    var selectedPlantIds = normalizePlantIdArray($('#editBOMPlantSelect').val());
+    payload.plants = selectedPlantIds.join(';');
+
+    var token = $("meta[name='_csrf']").attr("content");
+    var header = $("meta[name='_csrf_header']").attr("content");
+    var headers = {
+      "Content-Type": "application/json"
+    };
+    if (token && header) {
+      headers[header] = token;
+    }
+
+    fetch('/api/product-recipes/' + currentBOMRecordId, {
+      method: 'PUT',
+      headers: headers,
+      body: JSON.stringify(payload)
+    }).then(async function (response) {
+      if (!response.ok) {
+        var text = await response.text();
+        throw new Error(text || ('HTTP ' + response.status));
+      }
+      return response.text();
+    }).then(function (responseText) {
+      setBOMEditState(false);
+      console.log('Update Success:', responseText);
+      window.location.hash = 'list';
+      location.reload();
+    }).catch(function (error) {
+      console.error('Update Failed:', error);
+      JSUTIL.buildErrorModal('Update failed: ' + error.message);
+    });
+  }
+
+  function setupMaterialTabHandlers() {
+    var isAddingMaterial = false;
+    $(document).on('click', '.add-step-btn', function () {
+      handleAddStep();
+    });
+
+    $(document).on('click', '#confirmAddStepBtn', function () {
+      submitAddStep();
+    });
+
+    $(document).on('shown.bs.modal', '#addStepModal', function () {
+      $('#addStepNameInput').focus();
+    });
+
+    $(document).on('hidden.bs.modal', '#addStepModal', function () {
+      resetAddStepModalState();
+    });
+
+    $(document).on('input', '#addStepNameInput', function () {
+      $('#addStepNameError').hide();
+    });
+    $(document).on('change', '#addStepTypeSelect', function () {
+      $('#addStepTypeError').hide();
+    });
+
+    $(document).on('keypress', '#addStepNameInput', function (event) {
+      if (event.which === 13) {
+        event.preventDefault();
+        submitAddStep();
+      }
+    });
+
+    $(document).on('click', '.material-add-btn', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isAddingMaterial) { return; }
+      isAddingMaterial = true;
+
+      var stepKey = $(this).data('step-id');
+      if (isBOMLocked()) { isAddingMaterial = false; return; }
+      if (!currentBOMRecordId) {
+        JSUTIL.buildErrorModal('Select a BOM record before adding materials.');
+        isAddingMaterial = false;
+        return;
+      }
+      if (!stepKey) {
+        JSUTIL.buildErrorModal('Create a step before adding materials.');
+        isAddingMaterial = false;
+        return;
+      }
+      addMaterialRow(stepKey);
+
+      // Reset guard after a short delay to allow UI to settle
+      setTimeout(function () { isAddingMaterial = false; }, 300);
+    });
+
+    $(document).on('click', '.material-save-btn', function () {
+      var stepKey = $(this).data('step-id');
+      handleMaterialSave(stepKey);
+    });
+
+    $(document).on('show.bs.collapse', '.step-panel .panel-collapse', function () {
+      var $icon = $(this).closest('.step-panel').find('.step-toggle-icon');
+      $icon.removeClass('fa-caret-right').addClass('fa-caret-down');
+    });
+
+    $(document).on('hide.bs.collapse', '.step-panel .panel-collapse', function () {
+      var $icon = $(this).closest('.step-panel').find('.step-toggle-icon');
+      $icon.removeClass('fa-caret-down').addClass('fa-caret-right');
+    });
+  }
+
+  function addMaterialRow(stepKey, itemData) {
+    var tableBody = $('#' + getMaterialTableBodyId(stepKey));
+    if (!tableBody.length) {
+      return;
+    }
+    tableBody.find('.material-empty-row').remove();
+    var rowHtml = buildMaterialRowHtml(itemData, stepKey);
+    var $row = $(rowHtml);
+    $row.attr('data-step-key', stepKey);
+    tableBody.append($row);
+    initializeMaterialRow($row, itemData, stepKey);
+
+    // Defer icon creation to avoid event re-triggering
+    setTimeout(function () {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    }, 50);
+  }
+
+  function buildMaterialRowHtml(itemData, stepKey) {
+    var rowId = (itemData && (itemData.id || itemData.Id)) || '';
+    var productName = getMaterialProductName(itemData) || '';
+    var productCode = getMaterialProductCode(itemData) || '';
+    var uomValue = getMaterialProductUom(itemData) || '';
+    var qtyValue = getMaterialQuantityValue(itemData) || '';
+    var productId = getMaterialProductId(itemData) || '';
+    var safeProductName = sanitizeInputValue(productName);
+    var safeQty = sanitizeInputValue(qtyValue);
+    var safeProductId = sanitizeInputValue(productId);
+    var safeRowId = sanitizeInputValue(rowId);
+    var safeUomValue = sanitizeInputValue(uomValue);
+    var safeStepId = sanitizeInputValue(stepKey || getMaterialStepId(itemData));
+    var itemType = (itemData && (itemData.type || itemData.Type)) || MATERIAL_DEFAULT_META.typeValue;
+    var typeLabel = sanitizeInputValue(getMaterialTypeLabel(itemType));
+    var safeProductCode = sanitizeInputValue(productCode);
+
+    return '' +
+      '<tr class="material-data-row" data-material-type="single">' +
+      '<td>' +
+      '<button type="button" class="btn btn-xs btn-default delete-material-row" title="Delete">' +
+      '<i data-lucide="trash"></i>' +
+      '</button>' +
+      '</td>' +
+      '<td>' +
+      '<div class="typeahead-container" style="position: relative;">' +
+      '<input type="text" class="form-control material-product-code" placeholder="Search code" autocomplete="off" value="' + safeProductCode + '">' +
+      '</div>' +
+      '</td>' +
+      '<td>' +
+      '<div class="typeahead-container" style="position: relative;">' +
+      '<input type="text" class="form-control material-product-search ' + MATERIAL_DEFAULT_META.typeaheadClass + '" placeholder="Search product" autocomplete="off" value="' + safeProductName + '">' +
+      '</div>' +
+      '<input type="hidden" class="material-product-id" value="' + safeProductId + '">' +
+      '<input type="hidden" class="material-item-id" value="' + safeRowId + '">' +
+      '<input type="hidden" class="material-step-id" value="' + safeStepId + '">' +
+      '</td>' +
+      '<td>' +
+      '<input type="text" class="form-control material-uom" readonly value="' + safeUomValue + '">' +
+      '</td>' +
+      '<td>' +
+      '<input type="text" class="form-control material-type-display" readonly value="' + typeLabel + '">' +
+      '<input type="hidden" class="material-type" value="' + sanitizeInputValue(itemType) + '">' +
+      '</td>' +
+      '<td>' +
+      '<input type="number" class="form-control material-qty-input" min="0" placeholder="Standard quantity" value="' + safeQty + '">' +
+      '</td>' +
+      '</tr>';
+  }
+
+  function buildMaterialTypeOptions(selectedValue) {
+    var normalized = selectedValue || MATERIAL_DEFAULT_META.typeValue;
+    var optionsHtml = '';
+    (MATERIAL_TYPE_OPTIONS || []).forEach(function (opt) {
+      var isSelected = String(normalized || '').toLowerCase() === String(opt.value || '').toLowerCase();
+      optionsHtml += '<option value="' + opt.value + '"' + (isSelected ? ' selected' : '') + '>' + opt.label + '</option>';
+    });
+    return optionsHtml;
+  }
+  function setMaterialTypeValue($row, typeValue) {
+    var normalizedType = typeValue || '';
+    var label = getMaterialTypeLabel(normalizedType);
+    $row.find('.material-type').val(normalizedType || '');
+    $row.find('.material-type-display').val(label || '');
+  }
+
+  function initializeMaterialRow($row, itemData, stepKey) {
+    var stepType = getStepType(stepKey);
+    initializeMaterialTypeahead($row.find('.material-product-search'), { mode: 'name', allowedType: stepType });
+    initializeMaterialTypeahead($row.find('.material-product-code'), { mode: 'code', allowedType: stepType });
+    var typeVal = ($row.find('.material-type').val() || MATERIAL_DEFAULT_META.typeValue);
+    if (!itemData && stepType) {
+      typeVal = stepType;
+      $row.find('.material-type').val(stepType);
+    }
+    setMaterialTypeValue($row, typeVal);
+  }
+
+  function initializeMaterialTypeahead($input, options) {
+    options = options || {};
+    var mode = options.mode || 'name';
+    loadProductsForMaterialType(options.allowedType, function (results) {
+      try {
+        $input.typeahead('destroy');
+      } catch (e) {
+        // ignore destroy errors
+      }
+
+      $input.typeahead({
+        appendTo: $input.parent(),
+        fitToElement: true,
+        source: function (query, process) {
+          query = (query || '').toLowerCase();
+          var filteredItems = results.filter(function (item) {
+            if (!query) {
+              return true;
+            }
+            var matchesSearch = item.search.indexOf(query) !== -1;
+            var matchesNumber = item.numberLower.indexOf(query) !== -1;
+            var matchesName = item.nameLower.indexOf(query) !== -1;
+            return matchesSearch || matchesNumber || matchesName;
+          }).map(function (item) {
+            return mode === 'code' ? item.codeLabel : item.text;
+          });
+          process(filteredItems);
+        },
+        afterSelect: function (selectedText) {
+          var chosen = results.find(function (item) {
+            return item.text === selectedText || item.codeLabel === selectedText;
+          });
+          var $row = $input.closest('tr');
+          var productId = chosen ? chosen.id : '';
+          var productCode = chosen ? (chosen.number || '') : '';
+          var productName = '';
+          if (chosen) {
+            productName = chosen.name || '';
+            if (!productName && chosen.text) {
+              productName = chosen.text.split('|')[0].trim();
+            }
+          }
+          var productUom = chosen ? (chosen.uom || '') : '';
+          $row.find('.material-product-id').val(productId);
+          $row.find('.material-product-code').val(productCode);
+          $row.find('.material-product-search').val(productName);
+          $row.find('.material-uom').val(productUom);
+          setMaterialTypeValue($row, chosen ? chosen.type : '');
+          if (mode === 'code') {
+            $input.val(productCode);
+          } else {
+            $input.val(productName);
+          }
+        }
+      });
+    });
+  }
+
+  function filterProductsByType(list, allowedType) {
+    var normalized = (allowedType || '').toLowerCase();
+    if (!normalized) {
+      return (list || []).slice();
+    }
+    return (list || []).filter(function (item) {
+      return String(item.type || '').toLowerCase() === normalized;
+    });
+  }
+
+  function loadProductsForMaterialType(allowedType, callback) {
+    var normalizedType = (allowedType || '').toLowerCase();
+    var cacheKey = normalizedType ? ('type-' + normalizedType) : 'all';
+
+    if (productSearchCacheByType[cacheKey]) {
+      if (typeof callback === 'function') {
+        callback(productSearchCacheByType[cacheKey]);
+      }
+      return;
+    }
+
+    if (productSearchCacheByType['all']) {
+      productSearchCacheByType[cacheKey] = filterProductsByType(productSearchCacheByType['all'], normalizedType);
+      if (typeof callback === 'function') {
+        callback(productSearchCacheByType[cacheKey]);
+      }
+      return;
+    }
+
+    JSUTIL.callAJAXGet('/api/products', function (res) {
+      var mapped = (res || []).map(function (item) {
+        var id = item.Id || item.id;
+        var name = item.Name || item.name || '';
+        var type = item.Type || item.type || '';
+        var uom = item.Uom || item.uom || '';
+        var number = item.Number || item.number || '';
+        var nameLower = (name || '').toLowerCase();
+        var numberLower = (number || '').toLowerCase();
+        var searchTokens = [name, type, id, number].filter(Boolean).join(' ').toLowerCase();
+        var labelParts = [name, "|", number];
+        var displayText = labelParts.join(' ');
+        var codeLabelParts = [];
+        if (number) {
+          codeLabelParts.push(number);
+        }
+        if (name) {
+          if (codeLabelParts.length) {
+            codeLabelParts.push('|');
+          }
+          codeLabelParts.push(name);
+        }
+        var codeLabel = codeLabelParts.join(' ');
+        return {
+          id: id,
+          text: displayText,
+          codeLabel: codeLabel || displayText,
+          search: searchTokens,
+          name: name,
+          nameLower: nameLower,
+          numberLower: numberLower,
+          number: number,
+          uom: uom,
+          type: type
+        };
+      });
+      productSearchCacheByType['all'] = mapped;
+      productSearchCacheByType[cacheKey] = filterProductsByType(mapped, normalizedType);
+      if (typeof callback === 'function') {
+        callback(productSearchCacheByType[cacheKey]);
+      }
+    });
+  }
+
+  function collectMaterialPayload(stepKey) {
+    var tableBody = $('#' + getMaterialTableBodyId(stepKey));
+    if (!tableBody.length) {
+      return [];
+    }
+    var rows = tableBody.find('tr.material-data-row');
+    var payload = [];
+    var isValid = true;
+
+    rows.each(function () {
+      var $row = $(this);
+      var productId = $row.find('.material-product-id').val();
+      var qty = $row.find('.material-qty-input').val();
+      var qtyValue = Number(qty);
+      if (!productId) {
+        JSUTIL.buildErrorModal('Please select a product for this step.');
+        isValid = false;
+        return false;
+      }
+
+      if (!qty || isNaN(qtyValue) || qtyValue <= 0) {
+        JSUTIL.buildErrorModal('Please enter a valid quantity for this step.');
+        isValid = false;
+        return false;
+      }
+
+      var recordId = $row.find('.material-item-id').val();
+      var productName = ($row.find('.material-product-search').val() || '').trim();
+      var rowIndex = $row.index();
+      var itemType = $row.find('.material-type').val() || MATERIAL_DEFAULT_META.typeValue;
+      $row.find('.material-type').val(itemType);
+
+      var record = buildByproductPayload(rowIndex, productId, productName, qtyValue, $row.find('.material-step-id').val() || stepKey, itemType);
+
+      if (recordId) {
+        record.id = Number(recordId);
+      }
+
+      payload.push(record);
+    });
+
+    if (!isValid) {
+      return null;
+    }
+
+    return payload;
+  }
+
+  function buildByproductPayload(rowIndex, productId, productName, qtyValue, stepId, typeValue) {
+    var position = rowIndex + 1;
+    var payload = {
+      productRecipe: { id: Number(currentBOMRecordId) },
+      product: { id: Number(productId) },
+      type: typeValue || MATERIAL_DEFAULT_META.typeValue,
+      quantity: qtyValue,
+      name: productName || (MATERIAL_DEFAULT_META.label + ' ' + position)
+    };
+    if (stepId && stepId !== UNASSIGNED_STEP_KEY) {
+      payload.step = { id: Number(stepId) || stepId };
+    }
+    return payload;
+  }
+
+  function handleMaterialSave(stepKey) {
+    if (!currentBOMRecordId) {
+      JSUTIL.buildErrorModal('Select a BOM record first.');
+      return;
+    }
+    if (isBOMLocked()) {
+      return;
+    }
+    if (!stepKey) {
+      JSUTIL.buildErrorModal('Select a step before saving materials.');
+      return;
+    }
+
+    ensureStepMaterialStore(stepKey);
+
+    var payload = collectMaterialPayload(stepKey);
+    if (payload === null) {
+      return;
+    }
+
+    // Split into NEW records (no id → create) and EXISTING records (has id → update)
+    var newRecords      = payload.filter(function (r) { return !r.id; });
+    var existingRecords = payload.filter(function (r) { return !!r.id; });
+
+    var processDeletesAndRefresh = function () {
+      processMaterialDeletes(stepKey, function () {
+        fetchRecipeItems(currentBOMRecordId);
+      });
+    };
+
+    // Chain: update existing → create new → process deletes → refresh
+    function updateExistingThenCreate() {
+      if (!existingRecords.length) {
+        createNewRecords();
+        return;
+      }
+      // PUT each existing record individually
+      var queue = existingRecords.slice();
+      function updateNext() {
+        if (!queue.length) {
+          createNewRecords();
+          return;
+        }
+        var rec = queue.shift();
+        var token  = $("meta[name='_csrf']").attr("content");
+        var header = $("meta[name='_csrf_header']").attr("content");
+        var headers = { 'Content-Type': 'application/json' };
+        if (token && header) { headers[header] = token; }
+        fetch('/api/product-recipe-byproducts/' + rec.id, {
+          method:  'PUT',
+          headers: headers,
+          body:    JSON.stringify(rec)
+        }).then(function () {
+          updateNext();
+        }).catch(function (err) {
+          console.warn('Update material failed:', err);
+          updateNext(); // continue even if one fails
+        });
+      }
+      updateNext();
+    }
+
+    function createNewRecords() {
+      if (!newRecords.length) {
+        processDeletesAndRefresh();
+        return;
+      }
+      // POST only genuinely new rows (no id)
+      JSUTIL.callAJAXPost('/api/product-recipe-byproducts/create_multiple', JSON.stringify(newRecords), function () {
+        processDeletesAndRefresh();
+      }, function () {
+        JSUTIL.buildErrorModal('Failed to save new materials. Please try again.');
+        processDeletesAndRefresh();
+      });
+    }
+
+    updateExistingThenCreate();
+  }
+
+  function processMaterialDeletes(stepKey, callback) {
+    ensureStepMaterialStore(stepKey);
+    var queue = stepMaterialDeleteQueue[stepKey] || [];
+    if (!queue.length) {
+      if (typeof callback === 'function') {
+        callback();
+      }
+      return;
+    }
+
+    var ids = queue.slice(0);
+    stepMaterialDeleteQueue[stepKey] = [];
+
+    var processNext = function () {
+      if (!ids.length) {
+        if (typeof callback === 'function') {
+          callback();
+        }
+        return;
+      }
+
+      var currentId = ids.shift();
+      if (!currentId) {
+        processNext();
+        return;
+      }
+
+      fetch('/api/product-recipe-byproducts/' + currentId, {
+        method: 'DELETE'
+      })
+        .then(function (response) {
+          if (!response.ok) console.warn('Delete failed for byproduct ' + currentId);
+          processNext();
+        })
+        .catch(function (error) {
+          console.warn('Delete error for byproduct ' + currentId, error);
+          processNext();
+        });
+    };
+
+    processNext();
+  }
+
+  function fetchRecipeItems(recipeId) {
+    if (!recipeId) {
+      return;
+    }
+
+    // NOTE: /api/product-recipe-byproducts/list POST with conditions body returns [] (not supported).
+    // Use the dedicated GET endpoint: /api/product-recipe-byproducts/product-recipe/{id}
+    // var payload_unused_post = {
+    //   fields: 'Id;Type;Quantity;Product.Id;Product.Name;Product.Number;Product.Uom;Step.Id;Step.Name;Step.Sequence;ProductRecipe.Id',
+    //   conditions: ['ProductRecipe.Id = ' + Number(recipeId)],
+    //   logic: '{0}'
+    // };
+    // JSUTIL.callAJAXPost('/api/product-recipe-byproducts/list', JSON.stringify(payload_unused_post), ...)
+
+    JSUTIL.callAJAXGet('/api/product-recipe-byproducts/product-recipe/' + Number(recipeId), function (response) {
+      renderMaterialTables(response || []);
+    });
+  }
+
+  function ensureStepExists(stepKey, stepName, stepType) {
+    var exists = recipeStepList.some(function (step) {
+      return getStepKey(step.id || step.Id) === stepKey;
+    });
+    if (!exists) {
+      recipeStepList.push({
+        id: stepKey,
+        name: stepName || ('Step ' + stepKey),
+        type: stepType || ''
+      });
+      return true;
+    }
+    return false;
+  }
+
+  function syncStepsFromMaterials(items) {
+    var added = false;
+    var hasUnassigned = false;
+    (items || []).forEach(function (item) {
+      var step = item && (item.step || item.Step || item.productRecipeStep || item.ProductRecipeStep);
+      var stepId = step && (step.id || step.Id);
+      if (!stepId) {
+        hasUnassigned = true;
+        return;
+      }
+      var stepKey = getStepKey(stepId);
+      var stepName = step.name || step.Name;
+      var stepType = step.type || step.Type || '';
+      if (ensureStepExists(stepKey, stepName, stepType)) {
+        added = true;
+      }
+    });
+    if (hasUnassigned) {
+      added = ensureStepExists(UNASSIGNED_STEP_KEY, 'Unassigned') || added;
+    }
+    return added;
+  }
+
+  function renderMaterialTables(items) {
+    console.info('-->items: ', items);
+    currentMaterial = items
+    var addedSteps = syncStepsFromMaterials(items);
+    if (addedSteps) {
+      renderStepList();
+    }
+    clearStepMaterialStores();
+    (recipeStepList || []).forEach(function (step) {
+      ensureStepMaterialStore(getStepKey(step.id));
+    });
+
+    (items || []).forEach(function (item) {
+      var stepKey = getStepKey(getMaterialStepId(item));
+      ensureStepMaterialStore(stepKey);
+      stepMaterialsMap[stepKey].push(item);
+    });
+
+    Object.keys(stepMaterialsMap).forEach(function (stepKey) {
+      buildMaterialTableRows(stepKey, stepMaterialsMap[stepKey] || []);
+    });
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    applyMaterialPermissions();
+  }
+
+  function buildMaterialTableRows(stepKey, list) {
+    var tableBody = $('#' + getMaterialTableBodyId(stepKey));
+    if (!tableBody.length) {
+      return;
+    }
+
+    tableBody.empty();
+
+    if (!list || !list.length) {
+      tableBody.html('<tr class="material-empty-row"><td colspan="' + getMaterialColumnCount(tableBody) + '" class="text-center text-muted">' + MATERIAL_DEFAULT_META.emptyStateText + '</td></tr>');
+      return;
+    }
+
+    list.forEach(function (item) {
+      addMaterialRow(stepKey, item);
+    });
+  }
+
+  function getMaterialProductName(item) {
+    if (item && item.product) {
+      return item.product.name || item.product.Name || '';
+    }
+    if (item) {
+      return item.name || item.Name || '';
+    }
+    return '';
+  }
+
+  function getMaterialProductId(item) {
+    if (item && item.product) {
+      return item.product.id || item.product.Id;
+    }
+    return item && (item.productId || item.productID || item.ProductId || item.ProductID) || '';
+  }
+
+  function getMaterialProductCode(item) {
+    if (item && item.product) {
+      return item.product.number || item.product.Number || '';
+    }
+    return item && (item.productNumber || item.ProductNumber || item.number || item.Number) || '';
+  }
+
+  function getMaterialProductUom(item) {
+    if (item && item.product) {
+      return item.product.uom || item.product.Uom || '';
+    }
+    return item && (item.uom || item.Uom) || '';
+  }
+
+  function getMaterialQuantityValue(item) {
+    if (!item) {
+      return '';
+    }
+    if (item.quantity !== undefined && item.quantity !== null) {
+      return item.quantity;
+    }
+    if (item.minimumQuantity !== undefined && item.minimumQuantity !== null) {
+      return item.minimumQuantity;
+    }
+    if (item.minQuantity !== undefined && item.minQuantity !== null) {
+      return item.minQuantity;
+    }
+    return '';
+  }
+
+  function getMaterialStepId(item) {
+    if (!item) {
+      return '';
+    }
+    var direct = item.stepId || item.StepId || item.productRecipeStepId || item.ProductRecipeStepId;
+    if (direct) {
+      return direct;
+    }
+    var step = item.step || item.Step || item.productRecipeStep || item.ProductRecipeStep;
+    if (step) {
+      return step.id || step.Id || '';
+    }
+    return '';
+  }
+
+  $(document).on('click', '.delete-material-row', function (event) {
+    event.preventDefault();
+    var $row    = $(this).closest('tr');
+    var recordId = $row.find('.material-item-id').val();
+    var stepKey  = $row.data('step-key') || $row.closest('tbody').data('step-key') || UNASSIGNED_STEP_KEY;
+
+    // Remove the row from the UI immediately
+    $row.remove();
+    var tableBody = $('#' + getMaterialTableBodyId(stepKey));
+    if (tableBody && !tableBody.find('tr').length) {
+      buildMaterialTableRows(stepKey, []);
+    }
+
+    if (!recordId) {
+      // Row was unsaved (no id) — nothing to delete on the server
+      return;
+    }
+
+    // Saved record → DELETE immediately via API
+    var token  = $("meta[name='_csrf']").attr("content");
+    var header = $("meta[name='_csrf_header']").attr("content");
+    var headers = {};
+    if (token && header) { headers[header] = token; }
+
+    fetch('/api/product-recipe-byproducts/' + Number(recordId), {
+      method:  'DELETE',
+      headers: headers
+    })
+    .then(function (response) {
+      if (!response.ok) {
+        console.warn('DELETE failed for byproduct id=' + recordId + ', status=' + response.status);
+      } else {
+        console.log('Deleted byproduct id=' + recordId);
+      }
+    })
+    .catch(function (err) {
+      console.warn('DELETE error for byproduct id=' + recordId, err);
+    });
+  });
+
+  $(document).on('input', '.material-product-search', function () {
+    var $row = $(this).closest('tr');
+    $row.find('.material-product-id').val('');
+    $row.find('.material-uom').val('');
+    setMaterialTypeValue($row, '');
+  });
+
+  $(document).on('input', '.material-product-code', function () {
+    var $row = $(this).closest('tr');
+    $row.find('.material-product-id').val('');
+    $row.find('.material-product-search').val('');
+    $row.find('.material-uom').val('');
+    setMaterialTypeValue($row, MATERIAL_DEFAULT_META.typeValue);
+  });
+
+  function getMaterialColumnCount(tableBody) {
+    var headerCount = tableBody.closest('table').find('thead th').length;
+    return headerCount || 3;
+  }
+
+  function findStageById(list, id) {
+    if (!id) {
+      return null;
+    }
+    return (list || []).find(function (stage) {
+      return String(stage.id || stage.Id) === String(id);
+    }) || null;
+  }
+
+  function extractStageProductInfo(stage) {
+    var product = stage && (stage.product || stage.Product) || {};
+    var plant = stage && (stage.plant || stage.Plant) || {};
+    var plantIds = getPlantIdsFromData(stage);
+    var primaryPlantId = plantIds.length ? plantIds[0] : '';
+    return {
+      code: product.number || product.Number || '',
+      name: product.name || product.Name || '',
+      uom: product.uom || product.Uom || '',
+      plantId: primaryPlantId,
+      plantIds: plantIds,
+      plantName: plant.name || plant.Name || ''
+    };
+  }
+
+  function extractProductInfoFromRecord(record) {
+    if (!record) {
+      return { code: '', name: '', uom: '', plantId: '', plantIds: [], plantName: '' };
+    }
+    var stage = record.productStage || record.ProductStage || record.stage || record.Stage || {};
+    var product = stage.product || stage.Product || record.product || record.Product || {};
+    var plantIds = getPlantIdsFromData(record);
+    if (!plantIds.length) {
+      plantIds = getPlantIdsFromData(stage);
+    }
+    var plant = stage.plant || stage.Plant || record.plant || record.Plant || {};
+    return {
+      code: product.number || product.Number || '',
+      name: product.name || product.Name || '',
+      uom: product.uom || product.Uom || '',
+      plantId: plantIds[0] || '',
+      plantIds: plantIds,
+      plantName: plant.name || plant.Name || ''
+    };
+  }
+
+  function setEditProductFields(productInfo) {
+    $('#editBOMProductCode').val((productInfo && productInfo.code) || '');
+    $('#editBOMProductName').val(productInfo.name || '');
+    $('#editBOMProductUom').val((productInfo && productInfo.uom) || '');
+    setEditPlantSelection((productInfo && productInfo.plantIds) || []);
+  }
+
+  function updateEditProductDetailsFromStage(stageId) {
+    var stage = findStageById(cachedStageList, stageId);
+    if (!stage) {
+      setEditProductFields({ code: '', name: '', uom: '', plantId: '', plantIds: [], plantName: '' });
+      return false;
+    }
+    var productInfo = extractStageProductInfo(stage);
+    // Stage payload sometimes omits plant; fall back to the record's plant so we don't lose selection
+    if ((!productInfo.plantIds || !productInfo.plantIds.length || !productInfo.plantName) && currentBOMRecord) {
+      var recordPlantIds = getPlantIdsFromData(currentBOMRecord);
+      if (recordPlantIds.length) {
+        productInfo.plantIds = recordPlantIds;
+        productInfo.plantId = recordPlantIds[0];
+      }
+      var recordInfo = extractProductInfoFromRecord(currentBOMRecord);
+      productInfo.plantName = productInfo.plantName || recordInfo.plantName;
+    }
+    setEditProductFields(productInfo);
+    return Boolean(productInfo.code || productInfo.name || productInfo.uom || (productInfo.plantIds && productInfo.plantIds.length));
+  }
+
+  function loadPlantList(callback) {
+    if (editPlantOptionsCache && editPlantOptionsCache.length) {
+      if (typeof callback === 'function') {
+        callback(editPlantOptionsCache);
+      } else {
+        renderEditPlantOptions();
+      }
+      return;
+    }
+    var payload = {
+      fields: 'Id;Name;Number'
+    };
+    JSUTIL.callAJAXPost('/data/Plant/list', JSON.stringify(payload), function (res) {
+      editPlantOptionsCache = res || [];
+      if (typeof callback === 'function') {
+        callback(editPlantOptionsCache);
+        return;
+      }
+      renderEditPlantOptions();
+    });
+  }
+
+  function renderEditPlantOptions(selectedIds) {
+    var dropdown = $('#editBOMPlantSelect');
+    if (!dropdown.length) {
+      return;
+    }
+    var selectedValues = normalizePlantIdArray(selectedIds);
+    dropdown.empty();
+    dropdown.append('<option value="">--none--</option>');
+    (editPlantOptionsCache || []).forEach(function (item) {
+      var id = item.id || item.Id;
+      if (!id) {
+        return;
+      }
+      var name = item.name || item.Name || '';
+      var number = item.number || item.Number || '';
+      var label = number ? (number + ' | ' + name) : name;
+      dropdown.append('<option value="' + id + '">' + (label || id) + '</option>');
+    });
+    if (dropdown.data('choices-instance')) {
+      dropdown.data('choices-instance').destroy();
+    }
+    var choices = new Choices(dropdown[0], {
+      removeItemButton: true,
+      placeholderValue: 'Select plants',
+      searchPlaceholderValue: 'Search plants...'
+    });
+    dropdown.data('choices-instance', choices);
+    choices.setChoiceByValue(selectedValues);
+  }
+
+  function setEditPlantSelection(plantIds) {
+    var normalizedIds = normalizePlantIdArray(plantIds);
+    var dropdown = $('#editBOMPlantSelect');
+    if (!normalizedIds.length) {
+      var choices = dropdown.data('choices-instance');
+      if (choices) {
+        choices.removeActiveItems();
+      } else {
+        dropdown.val(null);
+      }
+      return;
+    }
+    if (!editPlantOptionsCache) {
+      loadPlantList(function () {
+        setEditPlantSelection(normalizedIds);
+      });
+      return;
+    }
+    normalizedIds.forEach(function (plantId) {
+      if (dropdown.find('option[value="' + plantId + '"]').length) {
+        return;
+      }
+      var plant = (editPlantOptionsCache || []).find(function (p) {
+        return String(p.id || p.Id) === String(plantId);
+      });
+      var name = plant ? (plant.name || plant.Name || '') : '';
+      var number = plant ? (plant.number || plant.Number || '') : '';
+      var label = number ? (number + ' | ' + name) : (name || plantId);
+      dropdown.append('<option value="' + plantId + '">' + label + '</option>');
+    });
+    var choices = dropdown.data('choices-instance');
+    if (choices) {
+      choices.setChoiceByValue(normalizedIds);
+    } else {
+      dropdown.val(normalizedIds).trigger('change');
+    }
+  }
+
+  function normalizePlantIdArray(value) {
+    if (value === undefined || value === null) {
+      return [];
+    }
+    if (Array.isArray(value)) {
+      return value.reduce(function (acc, item) {
+        return acc.concat(normalizePlantIdArray(item));
+      }, []).filter(function (id) { return id !== ''; }).map(String);
+    }
+    if (typeof value === 'object') {
+      var objectId = value.id || value.Id;
+      return objectId ? normalizePlantIdArray(objectId) : [];
+    }
+    var strVal = String(value);
+    if (!strVal) {
+      return [];
+    }
+    if (strVal.indexOf(';') !== -1) {
+      return strVal.split(';').map(function (id) { return id.trim(); }).filter(function (id) { return id !== ''; });
+    }
+    return [strVal];
+  }
+
+  function getPlantIdsFromData(data) {
+    if (!data) {
+      return [];
+    }
+    var ids = [];
+    ids = ids.concat(normalizePlantIdArray(data.plants || data.Plants));
+    ids = ids.concat(normalizePlantIdArray(data.plant || data.Plant));
+    var seen = {};
+    return ids.filter(function (id) {
+      if (!id) {
+        return false;
+      }
+      if (seen[id]) {
+        return false;
+      }
+      seen[id] = true;
+      return true;
+    });
+  }
+
+  function bindUppercaseInput(selector) {
+    $(document).on('input', selector, function () {
+      var current = $(this).val() || '';
+      var upper = current.toUpperCase();
+      if (upper !== current) {
+        $(this).val(upper);
+      }
+    });
+  }
+
+  function toUpperSafe(value) {
+    return (value || '').toString().toUpperCase();
+  }
+
+  window.showEditBOMPanel = function (record) {
+    if (!record) {
+      console.error('No BOM record supplied to edit panel');
+      return;
+    }
+
+    currentBOMRecord = record;
+    currentBOMRecordId = record.id || record.Id;
+    hideApprovalRemarksPanel();
+    populateEditBOMForm(record);
+    var displayName = record.name || record.Name || '';
+    var bpcr = record.masterBatchRecord || record.MasterBatchRecord || '';
+    var title = (displayName ? displayName : '') + (bpcr ? ' | ' + bpcr : '');
+    $('#editBOMName').text(title ? title : '');
+    var permissions = getBOMPermissionFlags();
+    var isLocked = isBOMLocked();
+    var canEdit = permissions.canSubmit;
+    $('.editBOMEditBtn').toggle(canEdit && !isLocked);
+    $('.saveBOMEditBtn').hide();
+    setBOMEditState(false);
+    $('#allBOMPanel').hide();
+    $('#newBOMPanel').hide();
+    $('#editBOMPanel').show();
+    isRevisingBOM = false;
+    setReviseButtonState(false);
+    recipeStepList = [];
+    clearStepMaterialStores();
+    renderStepList();
+    applyMaterialPermissions();
+    var status = (record.processStatus || record.ProcessStatus || '').toLowerCase();
+    var recordRemarks = record.approvalRemarks || record.ApprovalRemarks || '';
+    recordRemarks = recordRemarks && recordRemarks.toString ? recordRemarks.toString().trim() : '';
+    if (recordRemarks) {
+      showApprovalRemarksPanel(recordRemarks);
+    } else if (status === 'returned') {
+      fetchReturnRemarks(currentBOMRecordId);
+    }
+    loadRecipeSteps(currentBOMRecordId, function () {
+      fetchRecipeItems(currentBOMRecordId);
+    });
+  };
+  // editBomPanel.js end
+
+
+
+  // newBOMPanel.js start 
+  var stageOptionsCache = [];
+  var plantOptionsCache = [];
+
+  $(document).ready(function () {
+
+    bindUppercaseInput('.newBOMInput[name="masterBatchRecord"]');
+
+    $('.newRecipesButton').on("click", function () {
+      window.location.hash = 'new';
+    });
+    $('.newBOMCancelBtn').on("click", function () {
+      window.location.hash = 'list';
+    });
+    $('#stageId').on('change', function () {
+      updateNewBOMProductDetails($(this).val());
+    });
+    $('.saveBOMData').on("click", function () {
+      var $form = $('#newBOMForm');
+      var compoundObj = {
+        masterBatchRecord: toUpperSafe($form.find('[name="masterBatchRecord"]').val()),
+        version: Number($form.find('[name="version"]').val()) || 1,
+        type: $form.find('[name="type"]').val(),
+        productQuantity: Number($form.find('[name="productQuantity"]').val()) || 0,
+        quantityVariation: Number($form.find('[name="quantityVariation"]').val()) || 0,
+        productStage: {
+          id: Number($('#stageId').val())
+        },
+        name: getNextBOMNumber(),
+        processStatus: 'New'
+      };
+
+      var selectedPlantIds = normalizePlantIdArray($('#newBOMPlantSelect').val());
+      if (selectedPlantIds.length) {
+        compoundObj.plants = selectedPlantIds.join(';');
+      }
+
+      console.log('BOM Payload:', compoundObj);
+      createBOMApi(compoundObj);
+    });
+  });
+  function fetchDetails() {
+    var postUrl = '/data/ProductStage/list'
+    var postData = {
+      fields: "Name;Product.Id;Plant.Id;Number;ProcessStatus",
+    }
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(postData), function (res) {
+      console.log(res)
+      // Filter to only show Approved stages
+      stageOptionsCache = (res || []).filter(function (item) {
+        var status = (item.processStatus || item.ProcessStatus || '').trim();
+        return status === 'Approved';
+      });
+      var dropdown = $('select[name="stage.id"]');
+      dropdown.empty();
+      dropdown.append('<option value="">--none--</option>');
+
+      var list = stageOptionsCache;
+
+      list.forEach(function (item) {
+        const id = item.id || item.Id;
+        const stageName = item.name || item.Name || '';
+        const stageCode = item.number || item.Number || '';
+        const product = item.product || item.Product || {};
+        const productName = product.name || product.Name || '';
+        const productCode = product.number || product.Number || '';
+        const paddedStage = stageName.padEnd(15, ' ').replace(/ /g, '\u00A0');
+        const productLabel = (productCode ? productCode + ' | ' : '') + productName;
+        dropdown.append(`<option value="${id}">${stageCode} | ${paddedStage} </option>`);
+      });
+
+      dropdown.trigger('change');
+      updateNewBOMProductDetails(dropdown.val());
+    })
+  }
+
+  function updateNewBOMProductDetails(stageId) {
+    var stage = findStageById(stageOptionsCache, stageId);
+    var productInfo = extractStageProductInfo(stage);
+    $('#newBOMProductCode').val(productInfo.code);
+    $('#newBOMProductName').val(productInfo.name);
+    $('#newBOMProductUom').val(productInfo.uom);
+    setNewBOMPlantSelection(productInfo.plantIds || []);
+  }
+
+  function loadPlantOptions(selectedIds) {
+    if (plantOptionsCache && plantOptionsCache.length) {
+      renderPlantOptions(selectedIds);
+      return;
+    }
+    var postUrl = '/data/Plant/list';
+    var postData = {
+      fields: 'Id;Name;Number'
+    };
+    JSUTIL.callAJAXPost(postUrl, JSON.stringify(postData), function (res) {
+      plantOptionsCache = res || [];
+      renderPlantOptions(selectedIds);
+    });
+  }
+
+  function renderPlantOptions(selectedIds) {
+    var dropdown = $('#newBOMPlantSelect');
+    if (!dropdown.length) {
+      return;
+    }
+    var selectedValues = normalizePlantIdArray(selectedIds);
+    dropdown.empty();
+    dropdown.append('<option value="">--none--</option>');
+    (plantOptionsCache || []).forEach(function (item) {
+      var id = item.id || item.Id;
+      if (!id) {
+        return;
+      }
+      var name = item.name || item.Name || '';
+      var number = item.number || item.Number || '';
+      var label = number ? (number + ' | ' + name) : name;
+      dropdown.append('<option value="' + id + '">' + (label || id) + '</option>');
+    });
+    if (dropdown.data('choices-instance')) {
+      dropdown.data('choices-instance').destroy();
+    }
+    var choices = new Choices(dropdown[0], {
+      removeItemButton: true,
+      placeholderValue: 'Select plants',
+      searchPlaceholderValue: 'Search plants...'
+    });
+    dropdown.data('choices-instance', choices);
+    choices.setChoiceByValue(selectedValues);
+  }
+
+  function setNewBOMPlantSelection(plantIds) {
+    var normalizedIds = normalizePlantIdArray(plantIds);
+    var dropdown = $('#newBOMPlantSelect');
+    if (!normalizedIds.length) {
+      var choices = dropdown.data('choices-instance');
+      if (choices) {
+        choices.removeActiveItems();
+      } else {
+        dropdown.val(null);
+      }
+      return;
+    }
+    // Ensure options are loaded before setting value
+    if (!plantOptionsCache || !plantOptionsCache.length) {
+      loadPlantOptions(normalizedIds);
+      return;
+    }
+    normalizedIds.forEach(function (plantId) {
+      if (dropdown.find('option[value="' + plantId + '"]').length) {
+        return;
+      }
+      var plant = (plantOptionsCache || []).find(function (p) {
+        return String(p.id || p.Id) === String(plantId);
+      });
+      var name = plant ? (plant.name || plant.Name || '') : '';
+      var number = plant ? (plant.number || plant.Number || '') : '';
+      var label = number ? (number + ' | ' + name) : (name || plantId);
+      dropdown.append('<option value="' + plantId + '">' + label + '</option>');
+    });
+    var choices = dropdown.data('choices-instance'); if (choices) { choices.setChoiceByValue(normalizedIds); } else { dropdown.val(normalizedIds); }
+  }
+
+
+  function createBOMApi(postData) {
+    var token = $("meta[name='_csrf']").attr("content");
+    var header = $("meta[name='_csrf_header']").attr("content");
+    var headers = {
+      "Content-Type": "application/json"
+    };
+    if (token && header) {
+      headers[header] = token;
+    }
+
+    fetch('/api/product-recipes', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(postData)
+    }).then(async function (response) {
+      if (!response.ok) {
+        var text = await response.text();
+        throw new Error(text || ('HTTP ' + response.status));
+      }
+      return response.text();
+    }).then(function (responseText) {
+      var parsed = {};
+      try {
+        parsed = responseText ? JSON.parse(responseText) : {};
+      } catch (e) { }
+      console.log('BOM created:', parsed);
+      window.location.hash = 'list';
+      location.reload();
+    }).catch(function (error) {
+      console.error('Error creating BOM:', error);
+      JSUTIL.buildErrorModal('Error creating BOM: ' + error.message);
+    });
+  }
+  // newBOMPanel.js end 
+</script>

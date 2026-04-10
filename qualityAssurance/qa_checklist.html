@@ -1,0 +1,1735 @@
+<script src="pages/lib/lucide.min.js"></script>
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #qaChecklistDataTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #qaChecklistDataTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    .selectQaChecklistBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    .selectQaChecklistBtn:hover,
+    .selectQaChecklistBtn:focus {
+        color: #286090 !important;
+    }
+
+    /* ── Checklist editor styles ── */
+    .qa-checklist-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+    .qa-checklist-table thead th {
+        background: #f5f5f5;
+        text-transform: uppercase;
+        font-size: 12px;
+    }
+    .qa-checklist-scroll {
+        overflow-y: auto;
+        border-radius: 4px;
+    }
+    .qa-status-option {
+        display: inline-block;
+        margin-right: 12px;
+        margin-bottom: 4px;
+    }
+    .qa-checklist-meta label { font-weight: 600; }
+    .qa-checklist-meta .form-control[readonly] { background: #f9fafb; }
+    .qa-sub-seq { font-size: 11px; line-height: 1.2; }
+    .qa-reject-note-panel {
+        padding: 8px 12px;
+        border: 1px solid #f2c0c0;
+        background: #fff5f5;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+    .qa-reject-note-panel .title { font-weight: 700; color: #c0392b; margin-right: 6px; }
+    .qa-label-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .qa-label-card {
+        border: 1px solid #e7eaec;
+        border-radius: 6px;
+        padding: 8px;
+        background: #fff;
+        text-align: center;
+    }
+    .qa-label-card img { max-width: 100%; border: 1px solid #f1f1f1; padding: 6px; background: #fafafa; }
+    .qa-label-caption { font-weight: 600; font-size: 12px; margin-bottom: 6px; }
+
+    /* ── Tab styling — blue, matching PO/manufacturer pages ── */
+    #editQAChecklistPanel .nav-tabs .nav-link {
+        color: #337AB7 !important;
+        font-weight: 500;
+    }
+    #editQAChecklistPanel .nav-tabs .nav-link:hover {
+        color: #286090 !important;
+    }
+    #editQAChecklistPanel .nav-tabs .nav-link.active {
+        color: #337AB7 !important;
+        font-weight: 600;
+    }
+
+    /* ── Tab panel body spacing ── */
+    #editQAChecklistPanel .tab-content .panel-body {
+        padding: 15px;
+    }
+    #editQAChecklistPanel .tab-content .table {
+        margin-bottom: 0;
+    }
+    #editQAChecklistPanel .tab-content .table th {
+        background: #f5f5f5;
+        font-size: 13px;
+    }
+    #editQAChecklistPanel .tab-content .table td,
+    #editQAChecklistPanel .tab-content .table th {
+        padding: 8px 12px;
+        vertical-align: middle;
+    }
+</style>
+
+<!--allQAChecklistPanel.html start -->
+<div class="qa-white-panel" style="background: #fff; padding: 16px; border-radius: 8px;">
+
+    <div class="row animated fadeInRight aasaanPanel" id="allQAChecklistPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>QA Checklist <small>Quality Assurance</small></h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="alert alert-info" id="qaChecklistEmptyState" style="display: none;">
+                        No QA checklist templates found. Create one to get started.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover dataTables" id="qaChecklistDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Batch</th>
+                                    <th>Process Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qaChecklistTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--allQAChecklistPanel.html end -->
+
+
+    <!-- editQAChecklistPanel.html start -->
+    <div class="row animated fadeInRight aasaanPanel" id="editQAChecklistPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5 id="qaChecklistTitle">QA Checklist</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm qa-checklist-back-btn"><i data-lucide="x"></i> Close</button>
+                        <button type="button" class="btn btn-default btn-sm" id="printTransferNoteReportBtn" style="display: none;"><i data-lucide="printer"></i> Print Report</button>
+                        <button type="button" class="btn btn-default btn-sm qa-checklist-edit-btn"><i data-lucide="pencil"></i> Edit</button>
+                        <button type="button" class="btn btn-secondary btn-sm qa-checklist-save-btn" style="display:none;"><i data-lucide="check"></i> Save</button>
+                        <button type="button" class="btn btn-secondary btn-sm qa-checklist-submit-btn" style="display:none;"><i data-lucide="send"></i> Submit for Approval</button>
+                        <button type="button" class="btn btn-default btn-sm qa-checklist-reject-btn" style="display:none;"><i data-lucide="undo"></i> Return</button>
+                        <button type="button" class="btn btn-secondary btn-sm qa-checklist-approve-btn" style="display:none;"><i data-lucide="check"></i> Submit</button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="qa-reject-note-panel" style="display:none;">
+                        <span class="title">Remark:</span>
+                        <span id="qaRejectNoteText"></span>
+                    </div>
+                    <div class="qa-checklist-grid" style="margin-bottom: 10px;">
+                        <div class="form-group">
+                            <label>Product Code</label>
+                            <input type="text" class="form-control qa-checklist-meta-input" id="qaProductCode" placeholder="e.g. FM3">
+                        </div>
+                        <div class="form-group">
+                            <label>Batch No.</label>
+                            <input type="text" class="form-control qa-checklist-meta-input" id="qaBatchNumber" placeholder="Enter batch number">
+                        </div>
+                    </div>
+                    <div class="qa-checklist-scroll">
+                        <table class="table table-bordered qa-checklist-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 6%;">No.</th>
+                                    <th style="width: 48%;">Particular</th>
+                                    <th style="width: 22%;">Status</th>
+                                    <th style="width: 24%;">Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody id="qaChecklistQuestionTable">
+                                <tr><td colspan="4" class="text-center text-muted">No questions found for this checklist.</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="form-group" id="qaChecklistRemarksGroup" style="margin-top:12px;">
+                            <label for="qaChecklistRemarks"><strong>Remarks</strong></label>
+                            <textarea id="qaChecklistRemarks" class="form-control" rows="3" placeholder="Enter remarks"></textarea>
+                        </div>
+                    </div>
+                    <div class="tabs-container" style="margin-top: 20px;">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-1" aria-expanded="true">Batch Details</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-2" aria-expanded="false">QC Details</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-3" aria-expanded="false">Packing List</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-4" aria-expanded="false">Labels</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-5" aria-expanded="false">History</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="tab-1" class="tab-pane active show">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <tbody id="qaBatchDetailsTableBody">
+                                                <tr><td colspan="4" class="text-center text-muted">Batch details will load automatically.</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="table-responsive" style="margin-top:15px;">
+                                        <table class="table table-bordered table-hover">
+                                            <thead><tr><th colspan="4">Output Product Details</th></tr></thead>
+                                            <tbody id="qaOutputProductTableBody">
+                                                <tr><td colspan="4" class="text-center text-muted">Output product details will load automatically.</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="tab-2" class="tab-pane"><div class="panel-body"><p class="text-muted">QC details will appear here.</p></div></div>
+                            <div id="tab-3" class="tab-pane">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width:10%;">Container No.</th>
+                                                    <th style="width:12%;">Seal Number</th>
+                                                    <th style="width:22%;">Product Inside</th>
+                                                    <th style="width:10%;">Net Wt</th>
+                                                    <th style="width:10%;">Tare Wt</th>
+                                                    <th style="width:10%;">Gross Wt</th>
+                                                    <th style="width:8%;">UOM</th>
+                                                    <th style="width:9%;">Mfg Date</th>
+                                                    <th style="width:9%;">Expiry/Retest</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="qaPackingListTableBody">
+                                                <tr><td colspan="9" class="text-center text-muted">Packing list will load automatically.</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="tab-4" class="tab-pane">
+                                <div class="panel-body">
+                                    <div id="qaLabelPreviewMessage" class="text-muted" style="margin-bottom:10px;">Label preview will load automatically.</div>
+                                    <div style="margin-bottom:10px;">
+                                        <button type="button" class="btn btn-default btn-sm" id="qaRefreshLabelPreviewBtn"><i data-lucide="refresh-cw"></i> Refresh Preview</button>
+                                    </div>
+                                    <div id="qaLabelPreviewGrid" class="qa-label-grid"></div>
+                                </div>
+                            </div>
+                            <div id="tab-5" class="tab-pane">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 20%;">Date</th>
+                                                    <th style="width: 20%;">Flag</th>
+                                                    <th>Remark</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="qaHistoryTableBody">
+                                                <tr><td colspan="3" class="text-center text-muted">No history available.</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject modal -->
+    <div class="modal inmodal fade" id="qaChecklistRejectModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Reject Checklist</h4>
+                    <small class="font-bold">Provide a reason for returning this checklist.</small>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Remark (required)</label>
+                        <textarea class="form-control" id="qaRejectRemark" rows="3" placeholder="Enter reason for rejection"></textarea>
+                        <div class="text-danger small" id="qaRejectError" style="display:none;margin-top:4px;">Remark is required.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default btn-sm" id="qaRejectModalCloseBtn">Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="qaRejectConfirmBtn"><i data-lucide="undo"></i> Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- editQAChecklistPanel.html end -->
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // allQAChecklistPanel.js — List panel logic
+        // ═══════════════════════════════════════════════════════════
+
+        var qaChecklistTemplates = Array.isArray(window.recordList) ? window.recordList.slice() : [];
+
+        var qaChecklistTableSelector = '#qaChecklistDataTable';
+
+        function destroyQAChecklistTable() {
+            try {
+                if ($.fn.DataTable && $.fn.DataTable.isDataTable(qaChecklistTableSelector)) {
+                    $(qaChecklistTableSelector).DataTable().clear().destroy();
+                }
+            } catch (e) {
+                console.warn('DataTable destroy warning:', e);
+            }
+            $('#qaChecklistTableBody').empty();
+        }
+
+        function initQAChecklistDataTable(retryCount) {
+            retryCount = typeof retryCount === 'number' ? retryCount : 0;
+            if (typeof $.fn.DataTable === 'function') {
+                if (!$.fn.DataTable.isDataTable(qaChecklistTableSelector)) {
+                    $(qaChecklistTableSelector).DataTable({ order: [], pageLength: 25 });
+                }
+                return;
+            }
+            if (retryCount < 40) {
+                setTimeout(function () { initQAChecklistDataTable(retryCount + 1); }, 150);
+            }
+        }
+
+        function loadQaChecklists(onDone) {
+            JSUTIL.callAJAXGet(
+                JSUTIL.getUrl('/api/question-groups'),
+                function (res) {
+                    var list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+                    qaChecklistTemplates.length = 0;
+                    list.forEach(function (item) { qaChecklistTemplates.push(item); });
+                    // Sync to window.recordList so editQAChecklistPanel.js can find them
+                    window.recordList = qaChecklistTemplates.slice();
+                    // Also sync qaChecklistTemplateList used by showQAChecklistEditor
+                    qaChecklistTemplateList.length = 0;
+                    qaChecklistTemplates.forEach(function(item) { qaChecklistTemplateList.push(item); });
+                    if (typeof onDone === 'function') onDone();
+                },
+                function () {
+                    if (typeof onDone === 'function') onDone();
+                }
+            );
+        }
+
+        $(document).ready(function () {
+            // Initialize DataTable on window load, then load data
+            $(window).off('load.checklistDT').on('load.checklistDT', function () {
+                initQAChecklistDataTable();
+            });
+            setTimeout(function () {
+                loadQaChecklists(buildQaChecklistTable);
+            }, 300);
+
+            $('#qaChecklistTableBody').on('click', '.selectQaChecklistBtn', function (event) {
+                event.preventDefault();
+                var checklistId = $(this).data('id');
+                if (typeof window.showQAChecklistEditor === 'function') {
+                    window.showQAChecklistEditor(checklistId);
+                } else {
+                    console.warn('QA checklist editor is not available yet.');
+                }
+            });
+
+            $('.newQaChecklistBtn').on('click', function () {
+                var batchNumber = (prompt('Enter the batch number for this checklist:') || '').trim();
+                if (!batchNumber) {
+                    qaNotify('info', 'Batch number is required to start a checklist.');
+                    return;
+                }
+                startChecklistForBatch(batchNumber);
+            });
+        });
+
+        function buildQaChecklistTable() {
+            destroyQAChecklistTable();
+
+            if (!qaChecklistTemplates.length) {
+                $('#qaChecklistEmptyState').show();
+                initQAChecklistDataTable();
+                return;
+            }
+
+            $('#qaChecklistEmptyState').hide();
+
+            var rows = qaChecklistTemplates
+                .map(function (item) {
+                    var checklistName = item.name || 'QA Checklist';
+                    var sequence = item.number || '';
+                    var processStatus = item.processStatus || '';
+                    return '<tr data-id="' + item.id + '">' +
+                        '<td><a href="javascript:void(0);" class="selectQaChecklistBtn" data-id="' + item.id + '">' +
+                        sequence +
+                        '</a></td>' +
+                        '<td>' + checklistName + '</td>' +
+                        '<td>' + processStatus + '</td>' +
+                        '</tr>';
+                })
+                .join('');
+
+            $('#qaChecklistTableBody').html(rows);
+            initQAChecklistDataTable();
+        }
+
+        function startChecklistForBatch(batchNumber) {
+            if (typeof window.showQAChecklistEditor !== 'function') {
+                console.warn('QA checklist editor is not available yet.');
+                return;
+            }
+            var sanitizedBatchNumber = (batchNumber || '').replace(/'/g, "''");
+            fetchBatchProductCode(sanitizedBatchNumber, function (details) {
+                var productDisplay = details.productDisplay || details.productCode || '';
+                var batchName = details.batchName || details.batchNumber || batchNumber;
+                var batchId = details.orderId || details.batchNumber || batchNumber;
+                createChecklistForBatch(batchId, batchName, productDisplay);
+            }, function () {
+                qaNotify('warning', 'Could not fetch batch details. Creating checklist without product code.');
+                createChecklistForBatch(batchNumber, batchNumber, '');
+            });
+        }
+
+        function createChecklistForBatch(batchId, batchName, productCode) {
+            createQaQuestionGroup(batchId, batchName, function (group) {
+                qaNotify('info', 'Adding default checklist questions...');
+                createQaDefaultQuestions(group, function (success) {
+                    if (!success) {
+                        qaNotify('warning', 'Checklist created but some questions may be missing.');
+                    }
+                    openQaChecklistEditor(group, batchId, productCode, batchName);
+                });
+                if (group && batchName && !group.name) {
+                    group.name = batchName;
+                }
+            });
+        }
+
+        function createQaQuestionGroup(batchId, batchName, onSuccess) {
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/question-groups'), function (allGroups) {
+                var maxNumber = 0;
+                if (Array.isArray(allGroups)) {
+                    $.each(allGroups, function (i, group) {
+                        var numberStr = group.number || '';
+                        var match = numberStr.match(/CL-(\d+)/);
+                        if (match) {
+                            var num = parseInt(match[1], 10);
+                            if (num > maxNumber) maxNumber = num;
+                        }
+                    });
+                }
+                var newNumber = 'CL-' + (maxNumber + 1).toString().padStart(4, '0');
+                var payload = {
+                    number: newNumber,
+                    name: batchId || batchName,
+                    version: '1',
+                    processStatus: 'Draft'
+                };
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/question-groups'), JSON.stringify(payload), function (res) {
+                    var created = normalizeQuestionGroupResponse(res, payload);
+                    if (!created.id) {
+                        qaNotify('error', 'Checklist parent created but no identifier returned.');
+                        return;
+                    }
+                    qaChecklistTemplates.push(created);
+                    if (Array.isArray(window.recordList)) {
+                        var exists = window.recordList.some(function (item) { return String(item.id) === String(created.id); });
+                        if (!exists) window.recordList.push(created);
+                    }
+                    if (typeof window.registerQaChecklistTemplate === 'function') {
+                        window.registerQaChecklistTemplate(created);
+                    }
+                    if (typeof onSuccess === 'function') onSuccess(created);
+                }, function () {
+                    qaNotify('error', 'Unable to create checklist. Please try again.');
+                });
+            });
+        }
+
+        function createQaDefaultQuestions(group, done) {
+            var defaults = getQaDefaultQuestionsList();
+            if (!defaults.length) { if (typeof done === 'function') done(false); return; }
+            var payload = defaults.map(function (item, index) { return buildQaQuestionPayload(item, index, group.id); });
+            JSUTIL.callAJAXPost('/data/Question/upsert_multiple', JSON.stringify(payload), function () {
+                if (typeof done === 'function') done(true);
+            }, function () {
+                if (typeof done === 'function') done(false);
+            });
+        }
+
+        function openQaChecklistEditor(group, batchNumber, productCode, batchName) {
+            if (typeof window.registerQaChecklistTemplate === 'function') {
+                window.registerQaChecklistTemplate(group);
+            }
+            if (typeof window.showQAChecklistEditor === 'function') {
+                window.showQAChecklistEditor(group.id, false, batchNumber, productCode, batchName);
+            }
+        }
+
+        function fetchBatchProductCode(sanitizedBatchNumber, onSuccess, onFailure) {
+            var isNumericId = !Number.isNaN(Number(sanitizedBatchNumber));
+            var idCondition = isNumericId ? 'Id = ' + Number(sanitizedBatchNumber) : "Id = '" + sanitizedBatchNumber + "'";
+            var payload = {
+                fields: 'Id;Number;Name;ProductRecipe.Product.Number;ProductRecipe.Product.Code;ProductRecipe.Product.Name;ProductRecipe.ProductStage.Product.Number;ProductRecipe.ProductStage.Product.Code',
+                conditions: ["Number = '" + sanitizedBatchNumber + "'", "Name = '" + sanitizedBatchNumber + "'", idCondition],
+                logic: '{0} OR {1} OR {2}'
+            };
+            JSUTIL.callAJAXPost('/data/ProductionOrder/list', JSON.stringify(payload), function (res) {
+                var list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+                var order = list[0] || {};
+                var product = order.productRecipe?.product || order.ProductRecipe?.Product || order.product || order.Product || order.productRecipe?.productStage?.product || order.ProductRecipe?.ProductStage?.Product || {};
+                var productCode = product.number || product.Number || product.code || product.Code || '';
+                var productName = product.name || product.Name || '';
+                if (typeof onSuccess === 'function') {
+                    onSuccess({ orderId: order.id || order.Id || '', productCode: productCode, productDisplay: formatProductDisplay(productCode, productName), batchNumber: order.number || order.Number || '', batchName: order.name || order.Name || '' });
+                }
+            }, function () { if (typeof onFailure === 'function') onFailure(); });
+        }
+
+        function buildQaQuestionPayload(questionTemplate, index, groupId) {
+            return { id: questionTemplate.id || null, body: questionTemplate.body, options: questionTemplate.options || '', type: questionTemplate.type || 'Text', sequence: questionTemplate.sequence || (index + 1), required: !!questionTemplate.required, enableComment: questionTemplate.enableComment !== false, group: { id: groupId }, helpText: questionTemplate.helpText || '', status: questionTemplate.status || '', category: questionTemplate.category || '', name: '' };
+        }
+
+        function getQaDefaultQuestionsList() {
+            if (typeof window.getDefaultQaChecklistQuestions === 'function') return window.getDefaultQaChecklistQuestions();
+            return [
+                { sequence: 1, body: 'QA review status of BPCR.', options: 'OK;Not OK', type: 'Yes/No' },
+                { sequence: 2.1, body: 'Deviation reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 2.2, body: 'If Yes, Deviation No.:', type: 'Text' },
+                { sequence: 2.3, body: 'Final fate of the batch as per deviation:', type: 'Text' },
+                { sequence: 3.1, body: 'TCCP/CCP reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 3.2, body: 'If Yes, TCCP/CCP No.:', type: 'Text' },
+                { sequence: 3.3, body: 'Final fate of the batch as per TCCP/CCP:', type: 'Text' },
+                { sequence: 4.1, body: 'OOS/OOT/Lab incident reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 4.2, body: 'If Yes, OOS/OOT/Lab incident No.:', type: 'Text' },
+                { sequence: 4.3, body: 'Final fate of the batch as per OOS/OOT:', type: 'Text' },
+                { sequence: 5.1, body: 'Batch is Reprocessed/Reworked:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 5.2, body: 'If Yes, Reprocessed/Reworked No.:', type: 'Text' },
+                { sequence: 5.3, body: 'Evaluation of Reprocessed/Reworked:', type: 'Text' },
+                { sequence: 6.1, body: 'Extraneous matter disc filter', options: 'OK;Not OK', type: 'Yes/No' },
+                { sequence: 7.1, body: 'Analytical report along with worksheet and relevant supporting data received from QC and reviewed by QA:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 7.2, body: 'A.R. No. of Batch:', type: 'Text' },
+                { sequence: 7.3, body: 'Specification No :', type: 'Text' },
+                { sequence: 8.1, body: 'Certificate of analysis with remark/ Opinion :', type: 'Text' },
+                { sequence: 9.1, body: 'Manufacturing License', options: 'OK;Not OK', type: 'Yes/No' },
+                { sequence: 10.1, body: 'Meeting requirements with respect to technical or Quality Agreement /DMF/CEP', options: 'OK;Not OK;NA', type: 'Yes/No' },
+                { sequence: 11.1, body: 'Stability study sample required*', options: 'Yes;No;NA', type: 'Yes/No' },
+                { sequence: 12.1, body: 'Any Other', type: 'Text' },
+                { sequence: 13.1, body: 'Batch approval flag', options: 'Approved;Unapproved;Rejected;Hold;Under Quarantine;Unhold', type: 'Dropdown' }
+            ];
+        }
+
+        function normalizeQuestionGroupResponse(response, fallbackPayload) {
+            var group = response && response.data ? response.data : (response || {});
+            var fallback = fallbackPayload || {};
+            return { id: group.id || group.Id, name: group.name || group.Name || fallback.name || '', batchName: group.batchName || group.BatchName || fallback.batchName || '', sequence: group.sequence || group.Sequence || fallback.sequence || '', number: group.number || group.Number || fallback.number || '', version: group.version || group.Version || fallback.version || '', status: group.status || group.Status || fallback.status || '', processStatus: group.processStatus || group.ProcessStatus || fallback.processStatus || '' };
+        }
+
+        function formatProductDisplay(code, name) {
+            var cleanCode = (code || '').toString().trim();
+            var cleanName = (name || '').toString().trim();
+            if (cleanCode && cleanName) return cleanCode + ' ' + cleanName;
+            return cleanCode || cleanName || '';
+        }
+
+        function qaNotify(level, message) {
+            if (window.toastr && typeof window.toastr[level] === 'function') { window.toastr[level](message); }
+            else if (console && typeof console[level] === 'function') { console[level](message); }
+            else { console.log(message); }
+        }
+    </script>
+
+    <!-- editQAChecklistPanel.js — migrated to REST /api/ endpoints -->
+    <script>
+        var qaChecklistQuestions = [];
+        var qaChecklistTemplateList = Array.isArray(window.recordList) ? window.recordList.slice() : [];
+        var currentQaChecklist = null;
+        var qaDefaultSeedInProgress = false;
+        var qaChecklistReadOnly = true;
+        var qaChecklistPermissions = { canSubmit: false, canApprove: false, isQa: false, isQaHead: false };
+        var qaRejectInProgress = false;
+        var qaCurrentOrderId = '';
+        var qaCurrentOrderDetails = null;
+        var qaPackingListEntries = [];
+        var qaFinalProductMeta = null;
+        var qaFinalProductMetaAttempted = false;
+        var QA_BATCH_RELEASE_STATUS = 'Release';
+        var QA_BSR_ORDER_MATERIAL_TYPE = 'In-Warehouse';
+        var QA_BSR_PRODUCT_LOT = 'BSR';
+        var QA_BSR_ISSUED_TO = 'BSR';
+        var qaBsrTransferCompleted = false;
+        var qaBsrTransferInProgress = false;
+        var outputProductDetails = {};
+        var packingListDetails = [];
+
+        window.registerQaChecklistTemplate = function (template) {
+            if (!template || !template.id) return;
+            var exists = qaChecklistTemplateList.some(function(item) { return String(item.id) === String(template.id); });
+            if (!exists) qaChecklistTemplateList.push(template);
+        };
+
+        // ── Expose editor open handler for the list panel ──
+        window.showQAChecklistEditor = function (checklistId, allowFallback, batchNumber, productCode, batchName) {
+            var checklist = null;
+            for (var i = 0; i < qaChecklistTemplateList.length; i++) {
+                if (String(qaChecklistTemplateList[i].id) === String(checklistId)) {
+                    checklist = qaChecklistTemplateList[i];
+                    break;
+                }
+            }
+            if (!checklist && allowFallback) checklist = qaChecklistTemplateList[0] || null;
+            if (!checklist) {
+                qaNotify('warning', 'No QA checklist template is available.');
+                return;
+            }
+
+            currentQaChecklist = checklist;
+            qaChecklistPermissions = getQaChecklistPermissionFlags();
+            var batchValue = batchNumber || checklist.name || '';
+            var batchDisplayName = batchName || checklist.batchName || '';
+            var productValue = productCode || checklist.productCode || checklist.code || '';
+            resetChecklistForm();
+            populateChecklistMeta(checklist);
+            $('#qaChecklistTitle').text(checklist.name || 'QA Checklist');
+            $('#editQAChecklistPanel').show();
+            $('#allQAChecklistPanel').hide();
+            setChecklistReadOnly(true);
+
+            prefillBatchDetails(batchValue, productValue, batchDisplayName);
+            loadChecklistQuestions(checklist.id);
+            fetchChecklistReturnRemarks();
+            loadChecklistRemark();
+            loadChecklistHistory();
+            printReportFun();
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        };
+
+        $(document).ready(function () {
+            qaChecklistPermissions = getQaChecklistPermissionFlags();
+            $('.qa-checklist-back-btn').on('click', function () {
+                $('#editQAChecklistPanel').hide();
+                $('#allQAChecklistPanel').show();
+                setChecklistReadOnly(true);
+                // Reload list table
+                loadQaChecklists(buildQaChecklistTable);
+            });
+
+            $('.qa-checklist-save-btn').on('click', function () { handleChecklistSave(); });
+            $('.qa-checklist-edit-btn').on('click', function () {
+                if (!qaChecklistPermissions.canSubmit && !qaChecklistPermissions.canApprove) {
+                    qaNotify('warning', 'You do not have permission to edit this checklist.');
+                    return;
+                }
+                if (isChecklistLocked()) {
+                    qaNotify('warning', 'This checklist is locked and cannot be edited.');
+                    return;
+                }
+                setChecklistReadOnly(false);
+            });
+            $('.qa-checklist-submit-btn').on('click', function () { handleChecklistSubmit(); });
+            $('.qa-checklist-approve-btn').on('click', function () { handleChecklistApprove(); });
+            $('.qa-checklist-reject-btn').on('click', function () {
+                if (!qaChecklistPermissions.canApprove) {
+                    qaNotify('warning', 'You do not have permission to reject this checklist.');
+                    return;
+                }
+                $('#qaRejectRemark').val('');
+                $('#qaRejectError').hide();
+                var rejectModal = new bootstrap.Modal($('#qaChecklistRejectModal')[0]); rejectModal.show();
+            });
+            $('#qaRejectConfirmBtn').on('click', function () { handleChecklistReject(); });
+            $('#qaRejectModalCloseBtn').on('click', function () {
+                var rejectModal = bootstrap.Modal.getInstance($('#qaChecklistRejectModal')[0]);
+                if (rejectModal) rejectModal.hide();
+            });
+            $('#qaRefreshLabelPreviewBtn').on('click', function () { renderQaLabelPreview(qaPackingListEntries); });
+            setChecklistReadOnly(true);
+
+            $(document).off('click', '#printTransferNoteReportBtn').on('click', '#printTransferNoteReportBtn', function () {
+                handlePrintIssueReport();
+            });
+
+            // Initialize lucide icons
+            if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+        });
+
+        function handlePrintIssueReport() {
+            console.log("Printing report...");
+            openReportInNewTab();
+        }
+
+        function openReportInNewTab() {
+            var htmlContent = buildIssueReportHtml();
+            var reportWindow = window.open('', '_blank');
+            if (!reportWindow || reportWindow.closed || typeof reportWindow.closed === 'undefined') return;
+            reportWindow.document.open();
+            reportWindow.document.write(htmlContent);
+            reportWindow.document.close();
+        }
+
+        function buildIssueReportHtml() {
+            var companyName = 'Ipca Laboratories Limited, Ankleshwar';
+            var reportTitle = 'TRANSFER NOTE PRODUCTION SLIP';
+            var srNo = currentQaChecklist ? (currentQaChecklist.number || '') : '';
+            var date = new Date().toLocaleDateString();
+            // Use actual product name from batch details instead of hardcoded value
+            var product = '';
+            if (qaCurrentOrderDetails) {
+                var prod = qaCurrentOrderDetails.productRecipe?.product || qaCurrentOrderDetails.product || qaFinalProductMeta?.product || {};
+                var prodName = prod.name || prod.Name || '';
+                var prodNumber = prod.number || prod.Number || '';
+                product = prodName ? (prodNumber ? prodNumber + ' - ' + prodName : prodName) : (prodNumber || '');
+            }
+            var batchNo = qaCurrentOrderDetails ? (qaCurrentOrderDetails.number || qaCurrentOrderDetails.name || '') : ($('#qaBatchNumber').val() || '');
+            var mfgDate = outputProductDetails.manufacturingDate || '';
+            var expDate = outputProductDetails.finalExpiryDisplay || '';
+            var formatNo = 'PRD/STP/01-01';
+            var totalGross = 0, totalTare = 0, totalNet = 0;
+
+            // Use only current batch's packing list details
+            var currentPackingList = packingListDetails || [];
+            currentPackingList.forEach(function(row) {
+                totalGross += parseFloat(row.grossWeight) || 0;
+                totalTare += parseFloat(row.tareWeight) || 0;
+                totalNet += parseFloat(row.netWeight) || 0;
+            });
+
+            var rowsHtml = currentPackingList.map(function(row) {
+                return '<tr><td style="text-align:center;">' + (row.containerLabel || '-') + '</td>' +
+                    '<td style="text-align:right;">' + (row.grossWeight || '-') + '</td>' +
+                    '<td style="text-align:right;">' + (row.tareWeight || '-') + '</td>' +
+                    '<td style="text-align:right;">' + (row.netWeight || '-') + '</td>' +
+                    '<td style="text-align:center;">' + (row.sealNumber || '-') + '</td></tr>';
+            }).join('');
+
+            if (!currentPackingList.length) {
+                rowsHtml = '<tr><td colspan="5" style="text-align:center;">No packing list data available for this batch.</td></tr>';
+            }
+
+            return '<!DOCTYPE html><html><head><title>Transfer Note Production Slip</title>' +
+                '<style>body{font-family:Arial,sans-serif;font-size:13px;color:#000}' +
+                '.report-header{text-align:center;font-weight:bold;font-size:16px}' +
+                '.report-title{text-align:center;font-size:15px;font-weight:bold;margin-bottom:8px}' +
+                '.meta-table{width:100%;margin-bottom:8px}.meta-table td{padding:2px 6px}' +
+                '.main-table{width:100%;border-collapse:collapse;margin-bottom:8px}' +
+                '.main-table th,.main-table td{border:1px solid #000;padding:4px 6px;font-size:13px}' +
+                '.main-table th{background:#f0f0f0}' +
+                '.sign-table{width:100%;margin-top:18px;text-align:center}.sign-table td{padding:10px 6px 0 6px;font-size:12px}' +
+                '.remarks{margin-top:10px;font-size:13px}.format-no{text-align:right;font-size:12px;margin-top:10px}</style>' +
+                '</head><body>' +
+                '<div class="report-header">' + companyName + '</div>' +
+                '<div class="report-title">' + reportTitle + '</div>' +
+                '<table class="meta-table"><tr><td><b>Sr. No.:</b> ' + srNo + '</td><td><b>Date:</b> ' + date + '</td><td><b>Mfg. Date:</b> ' + mfgDate + '</td><td><b>Exp. Date / Retest Date:</b> ' + expDate + '</td></tr>' +
+                '<tr><td colspan="2"><b>Product:</b> ' + product + '</td><td colspan="2"><b>Batch No.:</b> ' + batchNo + '</td></tr></table>' +
+                '<table class="main-table"><tr><th>Drum No.</th><th>Gross</th><th>Tare</th><th>Net</th><th>Seal No.</th></tr>' + rowsHtml +
+                '<tr><th>Total</th><th style="text-align:right;">' + totalGross.toFixed(3) + '</th><th style="text-align:right;">' + totalTare.toFixed(3) + '</th><th style="text-align:right;">' + totalNet.toFixed(3) + '</th><th></th></tr></table>' +
+                '<div class="remarks"><b>Remarks:</b></div>' +
+                '<table class="sign-table"><tr><td>Prepared By<br><br>_________________<br>Production Incharge</td><td>Checked By<br><br>_________________<br>Q.A.D.</td><td>Received By<br><br>_________________<br></td></tr></table>' +
+                '<div class="format-no"><b>Format No.:</b> ' + formatNo + '</div></body></html>';
+        }
+
+        function printReportFun() {
+            if (currentQaChecklist && currentQaChecklist.processStatus == "Approved") {
+                $('#printTransferNoteReportBtn').show();
+            } else {
+                $('#printTransferNoteReportBtn').hide();
+            }
+        }
+
+        function populateChecklistMeta(checklist) {
+            $('#qaChecklistName').val(checklist.name || '');
+            $('#qaChecklistVersion').val(checklist.version || '');
+            $('#qaChecklistSequence').val(checklist.sequence || '');
+            $('#qaChecklistStatus').val(checklist.status || '');
+            $('#qaChecklistProcessStatus').val(checklist.processStatus || '');
+        }
+
+        function resetChecklistForm() {
+            $('#qaChecklistQuestionTable input[type="radio"]').prop('checked', false);
+            $('#qaChecklistQuestionTable input[type="text"]').val('');
+            $('#qaBatchApprovalFlag').val('');
+            $('.qa-checklist-meta-input').not('#qaProductCode, #qaBatchNumber').val('');
+            qaCurrentOrderId = '';
+            qaCurrentOrderDetails = null;
+            qaPackingListEntries = [];
+            packingListDetails = [];
+            qaFinalProductMeta = null;
+            qaBsrTransferCompleted = false;
+            qaBsrTransferInProgress = false;
+            outputProductDetails = {};
+            setBatchDetailsMessage('Batch details will load automatically.');
+            setQaPackingListMessage('Packing list will load automatically.');
+            resetQaLabelPreview();
+        }
+
+        // ── REST: GET /api/questions/group/{groupId} ──
+        function loadChecklistQuestions(checklistId) {
+            if (!checklistId) { renderChecklistQuestions([]); return; }
+            JSUTIL.callAJAXGet(
+                JSUTIL.getUrl('/api/questions/group/' + checklistId),
+                function (list) {
+                    var questions = Array.isArray(list) ? list : (Array.isArray(list?.data) ? list.data : []);
+                    if (!questions.length && !qaDefaultSeedInProgress) {
+                        seedDefaultChecklistQuestions(checklistId);
+                        return;
+                    }
+                    var normalized = questions.map(normalizeQuestionRecord);
+                    renderChecklistQuestions(normalized);
+                },
+                function () {
+                    qaNotify('error', 'Unable to load checklist questions from server.');
+                    renderChecklistQuestions([]);
+                }
+            );
+        }
+
+        function renderChecklistQuestions(response) {
+            var allQuestions = Array.isArray(response) ? response.slice() : [];
+            qaChecklistQuestions = allQuestions;
+            var $table = $('#qaChecklistQuestionTable');
+            $table.empty();
+
+            if (!qaChecklistQuestions.length) {
+                $table.append('<tr><td colspan="4" class="text-center text-muted">No questions found for this checklist.</td></tr>');
+                setChecklistReadOnly(true);
+                return;
+            }
+
+            qaChecklistQuestions.sort(function(a, b) { return (a.sequence || 0) - (b.sequence || 0); });
+            var rows = buildGroupedQuestionRows(qaChecklistQuestions);
+            $table.append(rows.join(''));
+            setChecklistReadOnly(qaChecklistReadOnly);
+        }
+
+        function buildQuestionRow(question, index, numbering) {
+            var statusHtml = buildStatusOptions(question, index);
+            var remarkHtml = buildRemarkBlock(question, index);
+            var helpText = question.helpText ? '<div class="text-muted small" style="margin-top:4px;">' + question.helpText + '</div>' : '';
+            var numberCell = numbering && numbering.showGroupNumber
+                ? '<td rowspan="' + (numbering.groupRowspan || 1) + '">' + formatMajorLabel(numbering.groupLabel) + '</td>'
+                : '';
+            return '<tr data-question-id="' + (question.id || '') + '">' +
+                numberCell +
+                '<td><div class="font-bold">' + (question.body || '') + '</div>' + helpText + '</td>' +
+                '<td>' + statusHtml + '</td>' +
+                '<td>' + remarkHtml + '</td>' +
+                '</tr>';
+        }
+
+        function buildStatusOptions(question, index) {
+            var options = [];
+            if (question.options) {
+                var parts = Array.isArray(question.options) ? question.options : String(question.options).split(';');
+                parts.forEach(function(opt) {
+                    var clean = (opt === null || opt === undefined) ? '' : String(opt).trim();
+                    if (clean) options.push(clean);
+                });
+            }
+            var questionType = (question.type || '').toLowerCase();
+            var normalizedBody = (question.body || '').toLowerCase();
+            var isBatchApprovalFlag = normalizedBody === 'batch approval flag';
+            var isDropdown = (questionType === 'dropdown' || questionType === 'select' || questionType === 'picklist') && !isBatchApprovalFlag;
+
+            if (questionType === 'text' || questionType === 'text-only') {
+                var inputId = 'qaStatusText_' + index;
+                var value = escapeAttribute(question.savedStatus || '');
+                var disabledAttr = qaChecklistReadOnly ? 'disabled' : '';
+                return '<input type="text" class="form-control" id="' + inputId + '" value="' + value + '" ' + disabledAttr + '>';
+            }
+            if (isBatchApprovalFlag) {
+                var opts = options.length ? options : ['Approved', 'Unapproved', 'Rejected', 'Hold', 'Under Quarantine', 'Unhold'];
+                var savedValue = (question.savedStatus || '').trim();
+                var selectId = 'qaStatusSelect_' + index;
+                var allowHeadEdit = qaChecklistPermissions.isQaHead && !isChecklistLocked();
+                var disabledAttr2 = allowHeadEdit ? '' : 'disabled';
+                var optionsHtml = opts.map(function(opt) {
+                    var n = (opt === null || opt === undefined) ? '' : String(opt).trim();
+                    if (!n) return '';
+                    return '<option value="' + n + '"' + (savedValue === n ? ' selected' : '') + '>' + n + '</option>';
+                }).join('');
+                return '<select class="form-control qa-batch-approval-select" id="' + selectId + '" ' + disabledAttr2 + '>' + optionsHtml + '</select>';
+            }
+            if (isDropdown) {
+                var selectId2 = 'qaStatusSelect_' + index;
+                var disabledAttr3 = qaChecklistReadOnly ? 'disabled' : '';
+                var opts2 = options.length ? options : ['Approved', 'Unapproved', 'Rejected', 'Hold', 'Under Quarantine', 'Unhold'];
+                var optionsHtml2 = opts2.map(function(opt) {
+                    var n = (opt === null || opt === undefined) ? '' : String(opt).trim();
+                    if (!n) return '';
+                    return '<option value="' + n + '"' + ((question.savedStatus || '') === n ? ' selected' : '') + '>' + n + '</option>';
+                }).join('');
+                return '<select class="form-control" id="' + selectId2 + '" ' + disabledAttr3 + '>' + optionsHtml2 + '</select>';
+            }
+            if (!options.length && questionType === 'yes/no') { options.push('Yes', 'No'); }
+            else if (!options.length) { options.push('OK', 'Not OK', 'NA'); }
+
+            return options.map(function(option) {
+                var n = (option === null || option === undefined) ? '' : String(option).trim();
+                if (!n) return '';
+                var inputName = 'qaStatus_' + index;
+                var inputId3 = inputName + '_' + n.replace(/\s+/g, '').toLowerCase();
+                var isChecked = (question.savedStatus || '') === n;
+                return '<label class="qa-status-option" for="' + inputId3 + '"><input type="radio" id="' + inputId3 + '" name="' + inputName + '" value="' + n + '"' + (isChecked ? ' checked' : '') + '> ' + n + '</label>';
+            }).join('');
+        }
+
+        function buildRemarkBlock(question, index) {
+            var inputId = 'qaRemark_' + index;
+            var isTextType = (question.type || '').toLowerCase() === 'text' || (question.type || '').toLowerCase() === 'text-only';
+            if (isTextType) return '';
+            var remarkValue = escapeAttribute(question.savedRemark || '');
+            return '<input type="text" class="form-control" id="' + inputId + '" placeholder="" value="' + remarkValue + '">';
+        }
+
+        function handleChecklistSave() {
+            if (!qaChecklistPermissions.canSubmit && !qaChecklistPermissions.canApprove) {
+                qaNotify('warning', 'You do not have permission to save this checklist.');
+                return;
+            }
+            if (isChecklistLocked()) {
+                qaNotify('warning', 'This checklist is locked and cannot be edited.');
+                setChecklistReadOnly(true);
+                return;
+            }
+            if (!qaChecklistQuestions.length) {
+                qaNotify('warning', 'No questions to save for this checklist.');
+                return;
+            }
+            var batchNumber = ($('#qaBatchNumber').val() || '').trim();
+            var updates = qaChecklistQuestions.map(function(question, index) {
+                var status = getQuestionAnswer(question, index);
+                var remark = $('#qaRemark_' + index).val() || '';
+                return {
+                    id: question.id,
+                    questionIndex: index,
+                    payload: { status: '', helpText: status, category: batchNumber || question.category || '', name: remark },
+                    localUpdate: { status: status, remark: remark }
+                };
+            }).filter(function(item) { return item.id; });
+
+            if (!updates.length) {
+                qaNotify('warning', 'No valid questions to update.');
+                return;
+            }
+            persistQuestionUpdates(updates, function () { setChecklistReadOnly(true); });
+        }
+
+        function handleChecklistSubmit() {
+            if (!qaChecklistPermissions.canSubmit) { qaNotify('warning', 'You do not have permission to submit.'); return; }
+            if (!currentQaChecklist || !currentQaChecklist.id) { qaNotify('warning', 'Checklist is not loaded.'); return; }
+            if (isChecklistLocked()) { qaNotify('info', 'Checklist is already submitted or approved.'); return; }
+            updateChecklistProcessStatus('In-Review', function () {
+                qaNotify('success', 'Checklist submitted for approval.');
+                setChecklistReadOnly(true);
+            });
+        }
+
+        function handleChecklistApprove() {
+            if (!qaChecklistPermissions.canApprove) { qaNotify('warning', 'You do not have permission to approve.'); return; }
+            if (!currentQaChecklist || !currentQaChecklist.id) { qaNotify('warning', 'Checklist is not loaded.'); return; }
+            var status = getChecklistStatus();
+            if (status === 'approved') { qaNotify('info', 'Checklist is already approved.'); return; }
+            var batchApprovalFlag = getBatchApprovalFlagValue();
+            if (!batchApprovalFlag) { qaNotify('warning', 'Select a batch approval flag before submitting.'); return; }
+            var remark = ($('#qaChecklistRemarks').val() || '').trim();
+            var previousStatus = getChecklistStatus();
+            createChecklistHistoryActivity(remark, batchApprovalFlag, function () {
+                updateChecklistProcessStatus(batchApprovalFlag, function () {
+                    qaNotify('success', 'Checklist status updated to ' + batchApprovalFlag + '.');
+                    setChecklistReadOnly(true);
+                    loadChecklistHistory();
+                    loadChecklistRemark();
+                    triggerQaBsrTransferOnFirstFlag(previousStatus, batchApprovalFlag);
+                    // ── Update Production Order orderStatus to "QA Approved" ──
+                    if (batchApprovalFlag.toLowerCase() === 'approved') {
+                        updateBatchStatusAfterApproval('QA Approved');
+                    }
+                });
+            }, function () { qaNotify('error', 'Unable to record remark history.'); });
+        }
+
+        function handleChecklistReject() {
+            if (qaRejectInProgress) return;
+            if (!qaChecklistPermissions.canApprove) { qaNotify('warning', 'You do not have permission to reject.'); return; }
+            if (!currentQaChecklist || !currentQaChecklist.id) { qaNotify('warning', 'Checklist is not loaded.'); return; }
+            var status = getChecklistStatus();
+            if (status !== 'in-review') { qaNotify('info', 'Checklist must be in review to reject.'); return; }
+            var remark = ($('#qaRejectRemark').val() || '').trim();
+            if (!remark) { $('#qaRejectError').show(); $('#qaRejectRemark').focus(); return; }
+            $('#qaRejectError').hide();
+            qaRejectInProgress = true;
+            createChecklistProcessActivity(remark, function () {
+                updateChecklistProcessStatus('Draft', function () {
+                    qaNotify('success', 'Checklist rejected.');
+                    var rejectModal = bootstrap.Modal.getInstance($('#qaChecklistRejectModal')[0]); if (rejectModal) rejectModal.hide();
+                    setChecklistReadOnly(true);
+                    qaRejectInProgress = false;
+                }, function () { qaRejectInProgress = false; });
+            }, function () { qaRejectInProgress = false; qaNotify('error', 'Unable to record rejection remark.'); });
+        }
+
+        // ── REST: POST /api/production-orders/list ──
+        function prefillBatchDetails(batchNumber, productCode, batchName) {
+            qaCurrentOrderId = '';
+            qaCurrentOrderDetails = null;
+            qaFinalProductMeta = null;
+            qaFinalProductMetaAttempted = false;
+            setBatchDetailsMessage(batchNumber ? 'Loading batch details...' : 'Batch not specified.');
+            setOutputProductMessage('Output product details will load automatically.');
+            setQaPackingListMessage(batchNumber ? 'Loading packing list...' : 'Batch not specified.');
+            $('#qaBatchNumber').val(batchName || batchNumber || '');
+            if (productCode) $('#qaProductCode').val(productCode);
+            if (!batchNumber) return;
+
+            var sanitizedBatchNumber = (batchNumber || '').replace(/'/g, "''");
+            var numericId = Number(sanitizedBatchNumber);
+            var idCondition = Number.isNaN(numericId) ? "Id = '" + sanitizedBatchNumber + "'" : 'Id = ' + numericId;
+            var payload = {
+                fields: 'Id;Number;Name;OrderOwner.Id;ProductRecipe.Id;OrderStatus',
+                conditions: ["Name = '" + sanitizedBatchNumber + "'", "Number = '" + sanitizedBatchNumber + "'", idCondition],
+                logic: '{0} OR {1} OR {2}'
+            };
+
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/production-orders/list'), JSON.stringify(payload), function (res) {
+                var list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+                if (!list.length) {
+                    setBatchDetailsMessage('No batch found for "' + batchNumber + '".');
+                    setQaPackingListMessage('Packing list unavailable for this batch.');
+                    return;
+                }
+                var order = list[0] || {};
+                qaCurrentOrderId = order.id || order.Id || '';
+                qaCurrentOrderDetails = order;
+                var displayBatchName = order.name || order.Name || '';
+                var displayBatchNumber = order.number || order.Number || '';
+                var batchDisplay = displayBatchName || displayBatchNumber || batchName || batchNumber || '';
+                $('#qaBatchNumber').val(batchDisplay);
+                fetchQaFinalProductMeta(qaCurrentOrderId);
+                var product = order.productRecipe?.product || order.ProductRecipe?.Product || order.product || order.Product || order.productRecipe?.productStage?.product || order.ProductRecipe?.ProductStage?.Product || {};
+                var productNumber = product.number || product.Number || product.code || product.Code || '';
+                var productName = product.name || product.Name || '';
+                var productDisplay = formatProductDisplay(productNumber, productName);
+                if (!$('#qaProductCode').val()) $('#qaProductCode').val(productDisplay);
+                if (order.orderOwner?.name || order.OrderOwner?.Name) {
+                    $('#qaPreparedBy').val(order.orderOwner?.name || order.OrderOwner?.Name);
+                }
+                renderBatchDetailsTable(order);
+                renderOutputProductDetails(order);
+                loadQaPackingList(qaCurrentOrderId);
+            }, function () {
+                setBatchDetailsMessage('Unable to fetch batch details.');
+                setOutputProductMessage('Unable to fetch output product details.');
+                setQaPackingListMessage('Unable to fetch packing list.');
+            });
+        }
+
+        function setBatchDetailsMessage(message) {
+            var $body = $('#qaBatchDetailsTableBody');
+            if ($body.length) $body.html('<tr><td colspan="4" class="text-center text-muted">' + escapeHtml(message || '') + '</td></tr>');
+        }
+        function setOutputProductMessage(message) {
+            var $body = $('#qaOutputProductTableBody');
+            if ($body.length) $body.html('<tr><td colspan="4" class="text-center text-muted">' + escapeHtml(message || '') + '</td></tr>');
+        }
+        function setQaPackingListMessage(message) {
+            var $body = $('#qaPackingListTableBody');
+            if ($body.length) $body.html('<tr><td colspan="9" class="text-center text-muted">' + escapeHtml(message || '') + '</td></tr>');
+        }
+        function resetQaLabelPreview() {
+            $('#qaLabelPreviewGrid').empty();
+            setQaLabelPreviewMessage('Label preview will load automatically.');
+        }
+        function setQaLabelPreviewMessage(message, isError) {
+            var $msg = $('#qaLabelPreviewMessage');
+            if (!$msg.length) return;
+            if (!message) { $msg.text('').hide(); return; }
+            $msg.removeClass('text-danger text-success').addClass(isError ? 'text-danger' : 'text-muted').text(message).show();
+        }
+
+        // ── Still /data/OrderMaterial — controller is at /data/OrderMaterial ──
+        function fetchQaFinalProductMeta(orderId, onComplete) {
+            qaFinalProductMetaAttempted = true;
+            var done = function () {
+                if (typeof onComplete === 'function') onComplete();
+                if (qaCurrentOrderDetails) renderOutputProductDetails(qaCurrentOrderDetails);
+            };
+            var remarkKey = '';
+            var candidates = [qaCurrentOrderId, orderId, qaCurrentOrderDetails?.id, qaCurrentOrderDetails?.number, qaCurrentOrderDetails?.name, ($('#qaBatchNumber').val() || '').toString().trim()];
+            for (var i = 0; i < candidates.length; i++) {
+                var val = (candidates[i] === null || candidates[i] === undefined) ? '' : String(candidates[i]).trim();
+                if (val) { remarkKey = val; break; }
+            }
+            if (!remarkKey) { done(); return; }
+            var safeRemark = remarkKey.replace(/'/g, "''");
+            var payload = {
+                fields: "Type;PlannedQuantity;ActualQuantity;QuantityConsumed;NumberOfContainers;Product.Id;Remarks;DocNumber;ManufacturingDate;ExpiryDate;RetestDate;ProductLot;ExpiryType;Grade;Variation",
+                conditions: ["Type = 'Under-Test'", "Remarks = '" + safeRemark + "'"],
+                logic: '{0} AND {1}'
+            };
+            JSUTIL.callAJAXPost('/data/OrderMaterial/list', JSON.stringify(payload), function (res) {
+                var list = [];
+                var c = [res?.data, res, res?.data?.data];
+                for (var i = 0; i < c.length; i++) { if (Array.isArray(c[i]) && c[i].length) { list = c[i]; break; } }
+                var item = list && list[0] ? list[0] : null;
+                if (item) {
+                    qaFinalProductMeta = {
+                        id: item.id || item.Id || '',
+                        docNumber: item.docNumber || item.DocNumber || '',
+                        manufacturingDate: item.manufacturingDate || item.ManufacturingDate || '',
+                        expiryDate: item.expiryDate || item.ExpiryDate || '',
+                        retestDate: item.retestDate || item.RetestDate || '',
+                        expiryType: item.expiryType || item.ExpiryType || '',
+                        quantity: item.plannedQuantity || '',
+                        uom: item.uom || item.Uom || (item.product && (item.product.uom || item.product.Uom)) || '',
+                        numberOfContainers: item.numberOfContainers || item.NumberOfContainers || '',
+                        product: item.product || item.Product || {}
+                    };
+                }
+                done();
+            }, function () { done(); });
+        }
+
+        function ensureQaFinalProductMeta(callback) {
+            if (qaFinalProductMeta) { if (typeof callback === 'function') callback(qaFinalProductMeta); return; }
+            if (!qaCurrentOrderId) { if (typeof callback === 'function') callback(null); return; }
+            fetchQaFinalProductMeta(qaCurrentOrderId, function () { if (typeof callback === 'function') callback(qaFinalProductMeta); });
+        }
+
+        function triggerQaBsrTransferOnFirstFlag(previousStatus, nextStatus) {
+            if (!qaChecklistPermissions.isQaHead) return;
+            if (qaBsrTransferCompleted || qaBsrTransferInProgress) return;
+            var prev = (previousStatus || '').toLowerCase();
+            var next = (nextStatus || '').toLowerCase();
+            if (!next) return;
+            if (prev && prev !== 'draft' && prev !== 'in-review') return;
+            startQaBsrTransfer();
+        }
+
+        function startQaBsrTransfer() {
+            qaBsrTransferInProgress = true;
+            ensureQaFinalProductMeta(function (meta) {
+                var cleanUp = function (success) { qaBsrTransferInProgress = false; if (success) qaBsrTransferCompleted = true; };
+                if (!meta && !qaCurrentOrderDetails) { cleanUp(false); return; }
+                var qty = getQaBsrQuantity(meta, qaCurrentOrderDetails);
+                if (!Number.isFinite(qty) || qty <= 0) { cleanUp(false); return; }
+                var payloadResult = buildQaBsrOrderMaterialPayload(qty);
+                if (!payloadResult.valid) { cleanUp(false); return; }
+                // Still /data/OrderMaterial/create
+                createQaBsrOrderMaterial(payloadResult.payload, function (createdId) {
+                    if (!qaFinalProductMeta) qaFinalProductMeta = {};
+                    qaFinalProductMeta.id = qaFinalProductMeta.id || createdId;
+                    // ── REST: POST /api/order-material-transactions ──
+                    createQaBsrIssueTransaction(qty, createdId, function () {
+                        qaNotify('success', 'Final goods transferred to BSR.');
+                        cleanUp(true);
+                    }, function () { cleanUp(false); });
+                }, function () { cleanUp(false); });
+            });
+        }
+
+        function buildQaBsrOrderMaterialPayload(issueQty) {
+            var qty = Math.abs(Number(issueQty));
+            if (!Number.isFinite(qty) || qty <= 0) return { valid: false };
+            var base = qaFinalProductMeta || {};
+            var productId = base?.product?.id || base?.product?.Id || qaCurrentOrderDetails?.product?.id || qaCurrentOrderDetails?.productRecipe?.product?.id || '';
+            if (!productId) return { valid: false };
+            var docNumber = (base.docNumber || qaCurrentOrderDetails?.number || qaCurrentOrderDetails?.name || $('#qaBatchNumber').val() || '').toString().trim();
+            if (!docNumber) return { valid: false };
+            var payload = {
+                type: QA_BSR_ORDER_MATERIAL_TYPE, plannedQuantity: qty, quantityToWarehouse: qty,
+                materialStatus: 'Actual', remarks: qaCurrentOrderId || '', productLot: QA_BSR_PRODUCT_LOT,
+                product: { id: Number(productId) }, docNumber: docNumber
+            };
+            if (base.manufacturingDate) payload.manufacturingDate = base.manufacturingDate;
+            if (base.expiryDate) payload.expiryDate = base.expiryDate;
+            if (base.retestDate) payload.retestDate = base.retestDate;
+            payload.expiryType = (base.expiryType || '').trim() || 'Expiry';
+            if (Number(base.numberOfContainers) > 0) payload.numberOfContainers = base.numberOfContainers;
+            return { valid: true, payload: payload };
+        }
+
+        // Still /data/OrderMaterial/create (controller is at /data/OrderMaterial)
+        function createQaBsrOrderMaterial(payload, onSuccess, onError) {
+            JSUTIL.callAJAXPost('/data/OrderMaterial/create', JSON.stringify(payload), function (res) {
+                var createdId = res?.id || res?.Id || res?.data?.id || '';
+                if (typeof onSuccess === 'function') onSuccess(createdId, res);
+            }, function (err) { if (typeof onError === 'function') onError(err); });
+        }
+
+        // ── REST: POST /api/order-material-transactions ──
+        function createQaBsrIssueTransaction(issueQty, orderMaterialId, onSuccess, onFailure) {
+            var qty = Math.abs(Number(issueQty));
+            if (!Number.isFinite(qty) || qty <= 0) { if (typeof onFailure === 'function') onFailure(); return; }
+            var batchNumber = qaCurrentOrderDetails?.number || qaCurrentOrderDetails?.name || $('#qaBatchNumber').val() || '';
+            var docCode = (qaFinalProductMeta?.docNumber || qaCurrentOrderDetails?.number || batchNumber || '').toString().trim();
+            var resolvedId = orderMaterialId || qaFinalProductMeta?.id || '';
+            if (!resolvedId) { if (typeof onSuccess === 'function') onSuccess(); return; }
+            var payload = {
+                docNumber: docCode || batchNumber,
+                transactionDate: new Date().toISOString(),
+                batchNumber: batchNumber,
+                quantityChange: -Math.abs(qty),
+                type: 'Issued',
+                issuedToName: QA_BSR_ISSUED_TO
+            };
+            if (resolvedId) payload.orderMaterial = { id: resolvedId };
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/order-material-transactions'), JSON.stringify(payload), function (res) {
+                if (typeof onSuccess === 'function') onSuccess(res);
+            }, function (err) { if (typeof onFailure === 'function') onFailure(err); });
+        }
+
+        function getQaBsrQuantity(meta, orderDetails) {
+            var base = meta || {};
+            var candidates = [base.quantity, base.actualQuantity, base.plannedQuantity, base.quantityToWarehouse, orderDetails?.quantityToWarehouse, orderDetails?.plannedQuantity, orderDetails?.quantity];
+            for (var i = 0; i < candidates.length; i++) {
+                var val = Number(candidates[i]);
+                if (!Number.isNaN(val) && Number.isFinite(val) && val > 0) return val;
+            }
+            return NaN;
+        }
+
+        function renderBatchDetailsTable(order) {
+            var $body = $('#qaBatchDetailsTableBody');
+            if (!$body.length) return;
+            if (!order) { setBatchDetailsMessage('No batch details found.'); return; }
+            var product = order.productRecipe?.product || order.ProductRecipe?.Product || order.product || order.Product || order.productRecipe?.productStage?.product || {};
+            var productCode = product.number || product.Number || product.code || product.Code || '';
+            var productName = product.name || product.Name || '';
+            var productDisplay = formatProductDisplay(productCode, productName);
+            var batchNumber = order.number || order.Number || '';
+            var batchName = order.name || order.Name || '';
+            var productStage = order.productRecipe?.productStage || {};
+            var stageName = productStage.name || productStage.Name || '';
+            var stageCode = productStage.code || productStage.Code || '';
+            var stageDisplay = [stageName, stageCode].filter(Boolean).join(' ');
+            var type = order.productRecipe?.type || '';
+            var owner = order.orderOwner?.name || order.OrderOwner?.Name || '';
+            var status = order.orderStatus || order.OrderStatus || '';
+
+            $body.html(
+                '<tr><th style="width:22%;">Batch Number</th><td style="width:28%;">' + formatDisplayValue(batchNumber || batchName) + '</td><th style="width:22%;">Batch Name</th><td style="width:28%;">' + formatDisplayValue(batchName || batchNumber) + '</td></tr>' +
+                '<tr><th>Product</th><td>' + formatDisplayValue(productDisplay) + '</td><th>Stage</th><td>' + formatDisplayValue(stageDisplay) + '</td></tr>' +
+                '<tr><th>Type</th><td>' + formatDisplayValue(type) + '</td><th>Status</th><td>' + formatDisplayValue(status) + '</td></tr>' +
+                '<tr><th>Owner</th><td>' + formatDisplayValue(owner) + '</td><th>Quantity</th><td>-</td></tr>'
+            );
+        }
+
+        function renderOutputProductDetails(order) {
+            var $body = $('#qaOutputProductTableBody');
+            if (!$body.length || !order) return;
+            var product = order.productRecipe?.product || order.product || qaFinalProductMeta?.product || {};
+            var uom = qaFinalProductMeta?.uom || product.uom || product.Uom || '';
+            var quantity = order.plannedQuantity || qaFinalProductMeta?.quantity || order.productRecipe?.productQuantity || '';
+            var containers = (qaFinalProductMeta && qaFinalProductMeta.numberOfContainers) ? qaFinalProductMeta.numberOfContainers : (Array.isArray(qaPackingListEntries) && qaPackingListEntries.length ? qaPackingListEntries.length : '');
+            var expiryType = qaFinalProductMeta?.expiryType || '';
+            var manufacturingDate = formatDateValue(qaFinalProductMeta?.manufacturingDate || '');
+            var retestDate = formatDateValue(qaFinalProductMeta?.retestDate || '');
+            var expiryDate = formatDateValue(qaFinalProductMeta?.expiryDate || '');
+            var finalExpiryDisplay = (expiryType || '').toLowerCase() === 'retest' ? retestDate : expiryDate || retestDate;
+
+            outputProductDetails = { quantity: formatDisplayValue(quantity), uom: formatDisplayValue(uom), containers: formatDisplayValue(containers), expiryType: formatDisplayValue(expiryType), manufacturingDate: formatDisplayValue(manufacturingDate), finalExpiryDisplay: formatDisplayValue(finalExpiryDisplay) };
+
+            $body.html(
+                '<tr><th style="width:22%;">Quantity Produced</th><td style="width:28%;">' + formatDisplayValue(quantity) + '</td><th style="width:22%;">UOM</th><td style="width:28%;">' + formatDisplayValue(uom) + '</td></tr>' +
+                '<tr><th>Number of Containers / Bags</th><td>' + formatDisplayValue(containers) + '</td><th>Expiry Type</th><td>' + formatDisplayValue(expiryType) + '</td></tr>' +
+                '<tr><th>Manufacturing Date</th><td>' + formatDisplayValue(manufacturingDate) + '</td><th>Retest / Expiry Date</th><td>' + formatDisplayValue(finalExpiryDisplay) + '</td></tr>'
+            );
+        }
+
+        // ── REST: GET /api/product-containers + client-side filter by remarks ──
+        // The ProductContainerController doesn't support filtering by Remarks in /list endpoint,
+        // so we fetch all and filter client-side by remarks === orderId
+        function loadQaPackingList(orderId) {
+            if (!orderId) { setQaPackingListMessage('Packing list unavailable.'); qaPackingListEntries = []; packingListDetails = []; resetQaLabelPreview(); return; }
+            if (!qaFinalProductMeta && !qaFinalProductMetaAttempted) { fetchQaFinalProductMeta(orderId, function () { loadQaPackingList(orderId); }); return; }
+            setQaPackingListMessage('Loading packing list...');
+            var targetId = String(orderId).trim();
+
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-containers'), function (res) {
+                var allContainers = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+                // Filter containers where remarks matches orderId
+                var filtered = allContainers.filter(function(item) {
+                    var remarks = String(item.remarks || item.Remarks || '').trim();
+                    return remarks === targetId;
+                });
+                if (!filtered.length) { setQaPackingListMessage('No packing list found for this batch.'); qaPackingListEntries = []; packingListDetails = []; resetQaLabelPreview(); renderOutputProductDetails(qaCurrentOrderDetails); return; }
+                var normalized = filtered.map(function(item, idx) { return normalizeQaPackingEntry(item, idx, filtered.length); });
+                qaPackingListEntries = normalized;
+                renderQaPackingList(normalized);
+                renderQaLabelPreview(normalized);
+                renderOutputProductDetails(qaCurrentOrderDetails);
+            }, function () { setQaPackingListMessage('Unable to load packing list.'); qaPackingListEntries = []; packingListDetails = []; resetQaLabelPreview(); renderOutputProductDetails(qaCurrentOrderDetails); });
+        }
+
+        function normalizeQaPackingEntry(raw, index, total) {
+            var product = raw.product || raw.Product || {};
+            var productInside = [product.number || product.Number, product.name || product.Name].filter(Boolean).join(' - ') || raw.packDescription || '';
+            var container = raw.number || raw.Number || (index + 1) + ' of ' + total;
+            var formatWeight = function(value) { var num = Number(value); return (value === 0 || value === '0') ? '0' : (Number.isFinite(num) ? String(num) : ''); };
+            var uom = product.uom || product.Uom || raw.uom || '';
+            var expiryFallback = qaFinalProductMeta?.retestDate || qaFinalProductMeta?.expiryDate || '';
+            var manufacturingFallback = qaFinalProductMeta?.manufacturingDate || '';
+            return {
+                container: container || '' + (index + 1),
+                sealNumber: (raw.sealNumber || raw.SealNumber || '').toString(),
+                productInside: productInside,
+                netWeight: formatWeight(raw.netWeight || raw.NetWeight || ''),
+                tareWeight: formatWeight(raw.tareWeight || raw.TareWeight || ''),
+                grossWeight: formatWeight(raw.grossWeight || raw.GrossWeight || ''),
+                uom: uom,
+                manufacturingDate: raw.manufacturingDate || raw.ManufacturingDate || manufacturingFallback,
+                expiryDate: raw.retestDate || raw.RetestDate || raw.expiryDate || raw.ExpiryDate || expiryFallback
+            };
+        }
+
+        function renderQaPackingList(entries) {
+            var $body = $('#qaPackingListTableBody');
+            if (!$body.length || !Array.isArray(entries) || !entries.length) { setQaPackingListMessage('No packing list found.'); return; }
+            packingListDetails = [];
+            var rows = entries.map(function(entry, idx) {
+                var containerLabel = entry.container || (idx + 1) + ' of ' + entries.length;
+                var obj = { containerLabel: formatDisplayValue(containerLabel), sealNumber: formatDisplayValue(entry.sealNumber), productInside: formatDisplayValue(entry.productInside), netWeight: formatDisplayValue(entry.netWeight), tareWeight: formatDisplayValue(entry.tareWeight), grossWeight: formatDisplayValue(entry.grossWeight), uom: formatDisplayValue(entry.uom), manufacturingDate: formatDisplayValue(formatDateValue(entry.manufacturingDate)), expiryDate: formatDisplayValue(formatDateValue(entry.expiryDate)) };
+                packingListDetails.push(obj);
+                return '<tr><td>' + obj.containerLabel + '</td><td>' + obj.sealNumber + '</td><td>' + obj.productInside + '</td><td>' + obj.netWeight + '</td><td>' + obj.tareWeight + '</td><td>' + obj.grossWeight + '</td><td>' + obj.uom + '</td><td>' + obj.manufacturingDate + '</td><td>' + obj.expiryDate + '</td></tr>';
+            }).join('');
+            $body.html(rows);
+        }
+
+        function renderQaLabelPreview(entries) {
+            if (!canShowQaLabels()) { resetQaLabelPreview(); setQaLabelPreviewMessage('Labels will be available after review.', true); return; }
+            var list = Array.isArray(entries) ? entries : qaPackingListEntries;
+            if (!list.length) { resetQaLabelPreview(); setQaLabelPreviewMessage('No packing list rows to preview.', true); return; }
+            setQaLabelPreviewMessage('Label preview available for ' + list.length + ' container(s).');
+        }
+
+        function canShowQaLabels() {
+            var status = getChecklistStatus();
+            return status !== '' && status !== 'draft' && status !== 'in-review';
+        }
+
+        // ── REST: POST /api/questions/upsert_multiple ──
+        function persistQuestionUpdates(updates, onSuccess) {
+            var payload = updates.map(function(item, idx) {
+                var targetIndex = typeof item.questionIndex === 'number' ? item.questionIndex : idx;
+                var question = qaChecklistQuestions[targetIndex] || {};
+                var questionGroupId = question.groupId || question.group?.id || (currentQaChecklist ? currentQaChecklist.id : undefined);
+                return {
+                    id: item.id,
+                    helpText: item.localUpdate.status,
+                    status: '',
+                    category: item.payload.category,
+                    name: item.localUpdate.remark || question.name || question.body || '',
+                    group: questionGroupId ? { id: questionGroupId } : undefined
+                };
+            });
+
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/questions/upsert_multiple'), JSON.stringify(payload), function () {
+                updates.forEach(function(item, idx) {
+                    var targetIndex = typeof item.questionIndex === 'number' ? item.questionIndex : idx;
+                    if (qaChecklistQuestions[targetIndex]) {
+                        qaChecklistQuestions[targetIndex].helpText = item.localUpdate.status;
+                        qaChecklistQuestions[targetIndex].name = item.localUpdate.remark;
+                        qaChecklistQuestions[targetIndex].status = '';
+                        qaChecklistQuestions[targetIndex].savedStatus = item.localUpdate.status;
+                        qaChecklistQuestions[targetIndex].savedRemark = item.localUpdate.remark;
+                    }
+                });
+                qaNotify('success', 'Checklist saved to server.');
+                if (typeof onSuccess === 'function') onSuccess();
+            }, function () { qaNotify('error', 'Could not save checklist responses.'); });
+        }
+
+        // ── REST: PUT /api/question-groups/{id} ──
+        function updateChecklistProcessStatus(nextStatus, onSuccess, onFailure) {
+            if (!currentQaChecklist || !currentQaChecklist.id) { if (typeof onFailure === 'function') onFailure(); return; }
+            var payload = { processStatus: nextStatus };
+            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/question-groups/' + currentQaChecklist.id), JSON.stringify(payload), function (res) {
+                currentQaChecklist.processStatus = nextStatus;
+                applyChecklistActionVisibility();
+                fetchChecklistReturnRemarks();
+                if (typeof onSuccess === 'function') onSuccess(res);
+            }, function (err) { if (typeof onFailure === 'function') onFailure(err); });
+        }
+
+        // ── Update Production Order orderStatus after QA checklist approval ──
+        function updateBatchStatusAfterApproval(nextOrderStatus) {
+            var batchNumber = ($('#qaBatchNumber').val() || '').trim();
+            var targetStatus = (nextOrderStatus || '').trim() || 'QA Approved';
+
+            var applyStatusUpdate = function (orderId) {
+                var payload = { orderStatus: targetStatus };
+                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/production-orders/' + orderId), JSON.stringify(payload), function () {
+                    if (qaCurrentOrderDetails) {
+                        qaCurrentOrderDetails.orderStatus = targetStatus;
+                        qaCurrentOrderDetails.OrderStatus = targetStatus;
+                        renderBatchDetailsTable(qaCurrentOrderDetails);
+                    }
+                    qaNotify('success', 'Batch status updated to ' + targetStatus + '.');
+                }, function (err) {
+                    console.error('Failed to update batch status after QA approval', err);
+                    qaNotify('error', 'Checklist approved but batch status could not be updated to ' + targetStatus + '.');
+                });
+            };
+
+            // If we already have the order ID from prefillBatchDetails, use it directly
+            if (qaCurrentOrderId) {
+                applyStatusUpdate(qaCurrentOrderId);
+                return;
+            }
+
+            // Otherwise look up the batch by number/name
+            if (!batchNumber) {
+                qaNotify('warning', 'Checklist approved but batch details are missing; status not updated.');
+                return;
+            }
+
+            var sanitized = (batchNumber || '').replace(/'/g, "''");
+            var numericId = Number(sanitized);
+            var idCondition = Number.isNaN(numericId) ? "Id = '" + sanitized + "'" : 'Id = ' + numericId;
+            var payload = {
+                fields: 'Id',
+                conditions: ["Number = '" + sanitized + "'", "Name = '" + sanitized + "'", idCondition],
+                logic: '{0} OR {1} OR {2}'
+            };
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/production-orders/list'), JSON.stringify(payload), function (res) {
+                var list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+                var record = list[0] || {};
+                var id = record.id || record.Id || '';
+                if (id) {
+                    qaCurrentOrderId = id;
+                    applyStatusUpdate(id);
+                } else {
+                    qaNotify('warning', 'Checklist approved but batch "' + batchNumber + '" was not found.');
+                }
+            }, function () {
+                qaNotify('error', 'Checklist approved but batch status could not be updated.');
+            });
+        }
+
+        // ── REST: GET /api/process-activities/search?parentRecordId=X ──
+        function fetchChecklistReturnRemarks() {
+            if (!currentQaChecklist || !currentQaChecklist.id) { hideChecklistRemarksPanel(); return; }
+            if (isChecklistLocked()) { hideChecklistRemarksPanel(); return; }
+            JSUTIL.callAJAXGet(
+                JSUTIL.getUrl('/api/process-activities/search?parentRecordId=' + currentQaChecklist.id),
+                function (response) {
+                    var list = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : []);
+                    var remarks = getLatestReturnReason(list);
+                    if (remarks) showChecklistRemarksPanel(remarks);
+                    else hideChecklistRemarksPanel();
+                },
+                function () { hideChecklistRemarksPanel(); }
+            );
+        }
+
+        // ── REST: GET /api/process-activities/search?parentRecordId=X&type=history ──
+        function loadChecklistRemark() {
+            var $remarks = $('#qaChecklistRemarks');
+            if (!currentQaChecklist || !currentQaChecklist.id) { $remarks.val(''); return; }
+            JSUTIL.callAJAXGet(
+                JSUTIL.getUrl('/api/process-activities/search?parentRecordId=' + currentQaChecklist.id + '&type=history'),
+                function (response) {
+                    var list = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : []);
+                    var latest = list[0] || {};
+                    $remarks.val((latest.reason || latest.Reason || '').trim());
+                },
+                function () { $remarks.val(''); }
+            );
+        }
+
+        function loadChecklistHistory() {
+            var $tbody = $('#qaHistoryTableBody');
+            if (!$tbody.length) return;
+            if (!currentQaChecklist || !currentQaChecklist.id) { $tbody.html('<tr><td colspan="3" class="text-center text-muted">No history available.</td></tr>'); return; }
+            JSUTIL.callAJAXGet(
+                JSUTIL.getUrl('/api/process-activities/search?parentRecordId=' + currentQaChecklist.id + '&type=history'),
+                function (response) {
+                    var list = Array.isArray(response) ? response : (Array.isArray(response?.data) ? response.data : []);
+                    if (!list.length) { $tbody.html('<tr><td colspan="3" class="text-center text-muted">No history available.</td></tr>'); return; }
+                    var rows = list.map(function(item) {
+                        var date = formatDateTimeDisplayValue(item.createdDate || item.CreatedDate || '');
+                        var flag = stringifyValue(item.notes || item.Notes || '');
+                        var remark = stringifyValue(item.reason || item.Reason || '');
+                        return '<tr><td>' + escapeHtml(date) + '</td><td>' + escapeHtml(flag) + '</td><td>' + escapeHtml(remark) + '</td></tr>';
+                    }).join('');
+                    $tbody.html(rows);
+                },
+                function () { $tbody.html('<tr><td colspan="3" class="text-center text-muted">Unable to load history.</td></tr>'); }
+            );
+        }
+
+        // ── REST: POST /api/process-activities ──
+        function createChecklistHistoryActivity(remark, flag, onSuccess, onFailure) {
+            if (!currentQaChecklist || !currentQaChecklist.id) { if (typeof onFailure === 'function') onFailure(); return; }
+            var payload = { reason: remark || '', notes: flag || '', type: 'history', parentRecordId: String(currentQaChecklist.id) };
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(payload), function (res) {
+                if (typeof onSuccess === 'function') onSuccess(res);
+            }, function (err) { if (typeof onFailure === 'function') onFailure(err); });
+        }
+
+        function createChecklistProcessActivity(reason, onSuccess, onFailure) {
+            if (!currentQaChecklist || !currentQaChecklist.id) { if (typeof onFailure === 'function') onFailure(); return; }
+            var payload = { reason: reason, parentRecordId: String(currentQaChecklist.id) };
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(payload), function (res) {
+                fetchChecklistReturnRemarks();
+                if (typeof onSuccess === 'function') onSuccess(res);
+            }, function (err) { if (typeof onFailure === 'function') onFailure(err); });
+        }
+
+        // ── REST: POST /api/questions/upsert_multiple (seed defaults) ──
+        function seedDefaultChecklistQuestions(checklistId) {
+            qaDefaultSeedInProgress = true;
+            var defaultQuestionList = typeof window.getDefaultQaChecklistQuestions === 'function' ? window.getDefaultQaChecklistQuestions() : getDefaultQaQuestions();
+            var defaults = defaultQuestionList.map(function(q, index) {
+                return { id: null, body: q.body, options: q.options || '', type: q.type || 'Text', sequence: q.sequence || (index + 1), required: !!q.required, enableComment: q.enableComment !== false, group: { id: checklistId }, helpText: q.helpText || '', status: q.status || '', category: q.category || '', name: '' };
+            });
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/questions/upsert_multiple'), JSON.stringify(defaults), function () {
+                qaDefaultSeedInProgress = false;
+                loadChecklistQuestions(checklistId);
+            }, function () { qaDefaultSeedInProgress = false; qaNotify('error', 'Unable to seed default checklist questions.'); });
+        }
+
+        function getDefaultQaQuestions() {
+            return [
+                { sequence: 1, body: 'QA review status of BPCR.', options: 'OK;Not OK', type: 'Yes/No' },
+                { sequence: 2.1, body: 'Deviation reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 2.2, body: 'If Yes, Deviation No.:', type: 'Text' },
+                { sequence: 2.3, body: 'Final fate of the batch as per deviation:', type: 'Text' },
+                { sequence: 3.1, body: 'TCCP/CCP reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 3.2, body: 'If Yes, TCCP/CCP No.:', type: 'Text' },
+                { sequence: 3.3, body: 'Final fate of the batch as per TCCP/CCP:', type: 'Text' },
+                { sequence: 4.1, body: 'OOS/OOT/Lab incident reported (if any) and closed:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 4.2, body: 'If Yes, OOS/OOT/Lab incident No.:', type: 'Text' },
+                { sequence: 4.3, body: 'Final fate of the batch as per OOS/OOT:', type: 'Text' },
+                { sequence: 5.1, body: 'Batch is Reprocessed/Reworked:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 5.2, body: 'If Yes, Reprocessed/Reworked No.:', type: 'Text' },
+                { sequence: 5.3, body: 'Evaluation of Reprocessed/Reworked:', type: 'Text' },
+                { sequence: 6.1, body: 'Extraneous matter disc filter', options: 'OK;Not OK', type: 'Yes/No' },
+                { sequence: 7.1, body: 'Analytical report along with worksheet and relevant supporting data received from QC and reviewed by QA:', options: 'Yes;No', type: 'Yes/No' },
+                { sequence: 7.2, body: 'A.R. No. of Batch:', type: 'Text' },
+                { sequence: 7.3, body: 'Specification No :', type: 'Text' },
+                { sequence: 8.1, body: 'Certificate of analysis with remark/ Opinion :', type: 'Text' },
+                { sequence: 9.1, body: 'Manufacturing License', options: 'OK;Not OK', type: 'Yes/No' },
+                { sequence: 10.1, body: 'Meeting requirements with respect to technical or Quality Agreement /DMF/CEP', options: 'OK;Not OK;NA', type: 'Yes/No' },
+                { sequence: 11.1, body: 'Stability study sample required*', options: 'Yes;No;NA', type: 'Yes/No' },
+                { sequence: 12.1, body: 'Any Other', type: 'Text' },
+                { sequence: 13.1, body: 'Batch approval flag', options: 'Approved;Unapproved;Rejected;Hold;Under Quarantine;Unhold', type: 'Dropdown' }
+            ];
+        }
+        window.getDefaultQaChecklistQuestions = window.getDefaultQaChecklistQuestions || getDefaultQaQuestions;
+
+        // ── Utility / helper functions ──
+        function escapeAttribute(value) { return stringifyValue(value).replace(/"/g, '&quot;'); }
+        function escapeHtml(value) { return stringifyValue(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+        function stringifyValue(value) { if (value === null || value === undefined) return ''; if (typeof value === 'string') return value; try { return String(value); } catch (e) { return ''; } }
+        function formatDisplayValue(value) { var clean = stringifyValue(value).trim(); return clean ? escapeHtml(clean) : '-'; }
+        function formatDateValue(value) { var text = stringifyValue(value).trim(); if (!text) return ''; return text.length >= 10 ? text.slice(0, 10) : text; }
+        function formatDateTimeDisplayValue(value) {
+            if (!value) return '-';
+            var date = new Date(value);
+            if (Number.isNaN(date.getTime())) return stringifyValue(value);
+            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0') + ' ' + String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
+        }
+        function formatMajorLabel(value) { var num = parseInt(value, 10); return isNaN(num) ? stringifyValue(value) : num; }
+
+        function getQuestionAnswer(question, index) {
+            var questionType = (question.type || '').toLowerCase();
+            var normalizedBody = (question.body || '').toLowerCase();
+            var isBatchApprovalFlag = normalizedBody === 'batch approval flag';
+            var isDropdown = (questionType === 'dropdown' || questionType === 'select' || questionType === 'picklist') && !isBatchApprovalFlag;
+            if (questionType === 'text' || questionType === 'text-only') return $('#qaStatusText_' + index).val() || '';
+            if (isBatchApprovalFlag || isDropdown) return $('#qaStatusSelect_' + index).val() || '';
+            return $('input[name="qaStatus_' + index + '"]:checked').val() || '';
+        }
+
+        function getBatchApprovalFlagValue() {
+            if (!Array.isArray(qaChecklistQuestions) || !qaChecklistQuestions.length) return '';
+            for (var i = 0; i < qaChecklistQuestions.length; i++) {
+                if ((qaChecklistQuestions[i].body || '').toLowerCase() === 'batch approval flag') {
+                    return stringifyValue(getQuestionAnswer(qaChecklistQuestions[i], i) || qaChecklistQuestions[i].savedStatus || currentQaChecklist?.processStatus || '').trim();
+                }
+            }
+            return '';
+        }
+
+        function buildGroupedQuestionRows(questionList) {
+            var groups = [], groupMap = {};
+            questionList.forEach(function(question) {
+                var isBatchApprovalFlag = (question.body || '').toLowerCase() === 'batch approval flag';
+                var seqNum = Number(question.sequence);
+                var major = Number.isFinite(seqNum) ? Math.floor(seqNum) : question.sequence;
+                var majorKey = stringifyValue(major || question.sequence || question.body || groups.length + 1);
+                if (!groupMap[majorKey]) { groupMap[majorKey] = { major: majorKey, items: [] }; groups.push(groupMap[majorKey]); }
+                var qType = (question.type || '').toLowerCase();
+                var statusSource = (qType === 'text' || qType === 'text-only') ? question.helpText : (question.helpText || question.status);
+                question.savedStatus = stringifyValue(statusSource || '');
+                if (isBatchApprovalFlag) {
+                    var groupStatus = stringifyValue(currentQaChecklist?.processStatus || '').trim();
+                    if (groupStatus) question.savedStatus = groupStatus;
+                }
+                var remark = stringifyValue(question.name || '');
+                question.savedRemark = (remark && remark === stringifyValue(question.body || '')) ? '' : remark;
+                groupMap[majorKey].items.push(question);
+            });
+            groups.sort(function(a, b) {
+                var aNum = Number(a.major), bNum = Number(b.major);
+                if (Number.isFinite(aNum) && Number.isFinite(bNum)) return aNum - bNum;
+                return stringifyValue(a.major).localeCompare(stringifyValue(b.major));
+            });
+            var globalIndex = 0, rows = [];
+            groups.forEach(function(group) {
+                group.items.sort(function(a, b) { return (a.sequence || 0) - (b.sequence || 0); });
+                group.items.forEach(function(question, idx) {
+                    var numbering = { showGroupNumber: idx === 0, groupRowspan: group.items.length, groupLabel: group.major, subLabel: formatMajorLabel(group.major) + '.' + (idx + 1) };
+                    rows.push(buildQuestionRow(question, globalIndex, numbering));
+                    globalIndex++;
+                });
+            });
+            return rows;
+        }
+
+        function normalizeQuestionRecord(raw) {
+            var groupId = raw.groupId || raw.GroupId || raw.group?.id || raw.Group?.Id || (raw.group ? raw.group.Id : undefined);
+            return {
+                id: raw.id || raw.Id, body: raw.body || raw.Body || '', options: raw.options || raw.Options || '',
+                type: raw.type || raw.Type || '', sequence: raw.sequence || raw.Sequence || 0,
+                required: raw.required || raw.Required || false,
+                enableComment: raw.enableComment !== undefined ? raw.enableComment : true,
+                status: raw.status || raw.Status || '', helpText: raw.helpText || raw.HelpText || '',
+                category: raw.category || raw.Category || '',
+                name: raw.name || raw.Name || raw.body || raw.Body || '',
+                groupId: groupId, group: groupId ? { id: groupId } : (raw.group || undefined),
+                attachmentRequired: raw.attachmentRequired || false
+            };
+        }
+
+        function hideChecklistRemarksPanel() { $('#qaRejectNoteText').text(''); $('.qa-reject-note-panel').hide(); }
+        function showChecklistRemarksPanel(remarks) {
+            if (remarks && remarks.trim()) { $('#qaRejectNoteText').text(remarks); $('.qa-reject-note-panel').show(); }
+            else hideChecklistRemarksPanel();
+        }
+
+        function getLatestReturnReason(activityList) {
+            if (!Array.isArray(activityList) || !activityList.length) return '';
+            var filtered = activityList.filter(function(item) { return ((item.reason || item.Reason) || '').trim(); });
+            var listToUse = filtered.length ? filtered : activityList;
+            listToUse.sort(function(a, b) { return getActivityTimestamp(b) - getActivityTimestamp(a); });
+            return ((listToUse[0] || {}).reason || (listToUse[0] || {}).Reason || '').trim();
+        }
+
+        function getActivityTimestamp(activity) {
+            var dateValue = (activity && (activity.createdDate || activity.CreatedDate)) || '';
+            var parsed = Date.parse(dateValue);
+            if (!isNaN(parsed)) return parsed;
+            var idValue = Number(activity && (activity.id || activity.Id));
+            return isNaN(idValue) ? 0 : idValue;
+        }
+
+        function getUserGroupNames() {
+            if (window.FOX && Array.isArray(window.FOX.userGroupNames)) return window.FOX.userGroupNames.map(function(name) { return String(name || '').toLowerCase(); });
+            return [];
+        }
+
+        function getQaChecklistPermissionFlags() {
+            var groups = getUserGroupNames();
+            var isQa = groups.indexOf('qa') !== -1;
+            var isQaHead = groups.indexOf('qa_head') !== -1;
+            return { canSubmit: isQa, canApprove: isQaHead, isQa: isQa, isQaHead: isQaHead };
+        }
+
+        function getChecklistStatus() {
+            if (!currentQaChecklist) return '';
+            return ((currentQaChecklist.processStatus || currentQaChecklist.ProcessStatus || '') + '').toLowerCase();
+        }
+
+        function isChecklistLocked() { var status = getChecklistStatus(); return status === 'approved' || status === 'deprecated'; }
+
+        function canEditChecklist() {
+            var status = getChecklistStatus();
+            var isDraft = status === '' || status === 'draft';
+            return isDraft && qaChecklistPermissions.canSubmit && !qaChecklistPermissions.canApprove;
+        }
+
+        function toggleRemarksVisibility() {
+            var isQaOnly = qaChecklistPermissions.canSubmit && !qaChecklistPermissions.canApprove;
+            var $remarks = $('#qaChecklistRemarksGroup');
+            var $remarksInput = $('#qaChecklistRemarks');
+            if ($remarks.length) { $remarks.toggle(!isQaOnly); if ($remarksInput.length) $remarksInput.prop('readonly', !qaChecklistPermissions.canApprove); }
+        }
+
+        function toggleLabelTabVisibility(status) {
+            var normalized = (status || '').toLowerCase();
+            var hideLabels = normalized === '' || normalized === 'draft' || normalized === 'in-review';
+            var $labelsTabNav = $('a[href="#tab-4"]').closest('li');
+            var $labelsTabPane = $('#tab-4');
+            if (!$labelsTabNav.length || !$labelsTabPane.length) return;
+            if (hideLabels) { $labelsTabNav.hide(); if ($labelsTabPane.hasClass('active')) $('a[href="#tab-1"]').tab('show'); $labelsTabPane.removeClass('active in'); }
+            else { $labelsTabNav.show(); }
+        }
+
+        function applyChecklistActionVisibility() {
+            var status = getChecklistStatus();
+            var locked = isChecklistLocked();
+            var isDraft = status === '' || status === 'draft';
+            var showSubmit = qaChecklistPermissions.canSubmit && !qaChecklistPermissions.canApprove && isDraft;
+            var showApprove = qaChecklistPermissions.canApprove && status !== 'approved' && status !== 'deprecated' && !isDraft;
+            var showReject = qaChecklistPermissions.canApprove && status === 'in-review';
+            var allowEdit = canEditChecklist() && !locked;
+            var showEdit = allowEdit && qaChecklistReadOnly;
+            var showSave = allowEdit && !qaChecklistReadOnly;
+            toggleLabelTabVisibility(status);
+            toggleRemarksVisibility();
+            $('.qa-checklist-submit-btn').toggle(showSubmit);
+            $('.qa-checklist-approve-btn').toggle(showApprove);
+            $('.qa-checklist-reject-btn').toggle(showReject);
+            $('.qa-checklist-edit-btn').toggle(showEdit);
+            $('.qa-checklist-save-btn').toggle(showSave);
+        }
+
+        function setChecklistReadOnly(isReadOnly) {
+            var locked = isChecklistLocked();
+            var canEdit = canEditChecklist();
+            qaChecklistReadOnly = locked || !canEdit ? true : !!isReadOnly;
+            var $questionInputs = $('#qaChecklistQuestionTable').find('input[type="radio"], input[type="text"], input[type="file"], input[type="checkbox"], select');
+            var $metaInputs = $('.qa-checklist-meta-input');
+            $questionInputs.prop('disabled', qaChecklistReadOnly);
+            $metaInputs.prop('readonly', qaChecklistReadOnly).prop('disabled', qaChecklistReadOnly);
+            var allowBatchApprovalEdit = qaChecklistPermissions.isQaHead && !locked;
+            $('.qa-batch-approval-select').prop('disabled', !allowBatchApprovalEdit);
+            applyChecklistActionVisibility();
+        }
+    </script>
+</div>

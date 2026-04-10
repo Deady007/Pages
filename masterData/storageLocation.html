@@ -1,0 +1,161 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<!-- storageLocation.html   Start -->
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #storageLocationTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #storageLocationTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    /* Ensure the DataTables search input has a visible border (including top) */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+</style>
+<div class="qa-white-panel">
+
+    <div class="row animated fadeInRight aasaanPanel" id="Locationpage">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Storage Location <small>Master Data</small></h5>
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;">
+                        <button type="button" class="btn btn-sm btn-secondary newWarehouseBtn"><i
+                                data-lucide="plus"></i>
+                            New Warehouse</button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px;">
+                        <i class="ti ti-loader ti-spin fa-2x"></i>
+                        <div style="margin-top: 10px;">Loading locations...</div>
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+                    <div id="debugInfo" style="display: none; padding: 10px; background: #f8f9fa; margin: 10px 0;">
+                        <pre></pre>
+                    </div>
+                    <div class="modal inmodal fade" id="addStorageLocationModal" tabindex="-1" role="dialog"
+                        aria-hidden="true" style="display: none;">
+                        <div class="modal-dialog modal-md">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <div style="width: 100%; text-align: center;">
+                                        <h4 class="modal-title" style="margin: 0;">Add Storage Location</h4>
+                                        <small class="font-bold" style="display: block; margin-top: 4px;">Enter
+                                            warehouse name</small>
+                                    </div>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="storageLocationForm">
+                                        <div class="form-group">
+                                            <label for="warehouseName">Warehouse Name <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" placeholder="Enter warehouse name..."
+                                                name="warehouseName" class="form-control" id="warehouseName" required>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-secondary" id="saveStorageLocation">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="storageLocationTable" class="table  table-bordered table-hover dataTables">
+                            <thead>
+                                <tr>
+                                    <th>Location Name</th>
+
+                                </tr>
+                            </thead>
+                            <tbody id="allStorageTable">
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+<!-- storageLocation.html   End -->
+
+
+
+
+<script>
+    lucide.createIcons();
+    // newStorageLocation.js    Start
+    lucide.createIcons();
+    var storageLocationDt = null;
+
+    function initStorageLocationTable() {
+        if (storageLocationDt) {
+            storageLocationDt.destroy();
+        }
+        storageLocationDt = new DataTable('#storageLocationTable');
+    }
+
+    $(document).ready(function () {
+        var getUrl = JSUTIL.getUrl('/api/storage-locations');
+        JSUTIL.callAJAXGet(getUrl, function (response) {
+            console.log(response)
+            var innerhtml = ''
+            $.each(response, function (i, val) {
+                innerhtml += `<tr><td>${val.name}</td></tr>`
+            })
+            $('#allStorageTable').empty();
+            $('#allStorageTable').append(innerhtml);
+            initStorageLocationTable();
+        });
+    });
+
+    $('.newWarehouseBtn').on('click', function () {
+        var modal = new bootstrap.Modal($('#addStorageLocationModal')[0]);
+        modal.show();
+    });
+    $('#saveStorageLocation').on('click', function () {
+        var warehouseName = $('#warehouseName').val().trim()
+        if (warehouseName != '') {
+            var obj = {
+                name: `${warehouseName}`,
+                type: 'Warehouse',
+
+            }
+            var saveurl = JSUTIL.getUrl('/api/storage-locations')
+            JSUTIL.callAJAXPost(saveurl, JSON.stringify(obj), function (response) {
+                console.log('after creation', response)
+                location.reload();
+            });
+        }
+        else {
+            JSUTIL.buildErrorModal('please enter warehouse name')
+        }
+    })
+    // newStorageLocation.js    End
+</script>

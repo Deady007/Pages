@@ -1,0 +1,822 @@
+<link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css">
+<script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+    #rejectedMaterialsTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+    #rejectedMaterialsTable tbody tr:last-child td {
+        border-bottom: none !important;
+    } 
+</style>
+<!-- materialReleasePanel.html      Start -->
+<div class="qa-white-panel" style="background: #fff; padding: 16px; border-radius: 8px;">
+<div class="row animated fadeInRight aasaanPanel" id="allRecordPanel">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-sm btn-secondary releaseBtn" style="display: none;"><i class="ti ti-send"></i> Release Material</button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="table-responsive">
+                    <table class="table  table-bordered table-hover" id="rejectedMaterialsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 20px;"></th>
+                                <th>GIM Number</th>
+                                <th>Product</th>
+                                <th>Qty Rejected</th>
+                                <th>Qty Released</th>
+                                <th>Inspection Result</th>
+                                <th style="min-width: 150px;">Print Rejected Labels</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allAccountTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="releaseModal" tabindex="-1" role="dialog" aria-labelledby="releaseModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="releaseModalLabel">Product Release Details</h4>
+            </div>
+            <div class="modal-body">
+                <form id="productReleaseForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="trackingNumber">Tracking Number</label>
+                                <input type="text" class="form-control" id="trackingNumber">
+                            </div>
+                            <div class="form-group">
+                                <label for="transportCompany">Transport Company</label>
+                                <input type="text" class="form-control" id="transportCompany">
+                            </div>
+                            <div class="form-group">
+                                <label for="expectedPickupDate">Expected Pickup Date</label>
+                                <input type="date" class="form-control" id="expectedPickupDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="pickupArrangedBy">Pickup Arranged By</label>
+                                <input type="text" class="form-control" id="pickupArrangedBy">
+                            </div>
+                            <div class="form-group">
+                                <label for="freightCharges">Freight Charges</label>
+                                <input type="number" step="0.01" class="form-control" id="freightCharges">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="returnDate">Return Date</label>
+                                <input type="date" class="form-control" id="returnDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="gateEntryNumber">Gate Entry Number</label>
+                                <input type="text" class="form-control" id="gateEntryNumber">
+                            </div>
+                            <div class="form-group">
+                                <label for="gateEntryTime">Gate Entry Time</label>
+                                <input type="datetime-local" id="gateEntryTime" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label for="deliveryVehicle">Delivery Vehicle Number</label>
+                                <input type="text" class="form-control" id="deliveryVehicle">
+                            </div>
+                            <div class="form-group">
+                                <label for="deliveryDriver">Delivery Driver Name</label>
+                                <input type="text" class="form-control" id="deliveryDriver">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="instructions">Instructions</label>
+                                <textarea class="form-control" id="instructions" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <h4>Items to Release</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="itemsToReleaseTable">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>GIM Number</th>
+                                    <th>Batch Number</th>
+                                    <th>Qty Rejected (Remaining)</th>
+                                    <th>Total Containers</th>
+                                    <th>Containers to Release</th>
+                                    <th>Quantity to Release</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" id="saveReleaseDetails">Save & Release</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- materialReleasePanel.html      End -->
+
+
+</div>
+<script>
+    // materialReleasePanel.js      Start
+
+    // A storage for the full record list is assumed
+new DataTable('#rejectedMaterialsTable');
+var innerHtml = '';
+var releaseItemsMap = {}; // Store release items by receipt item ID
+
+// First, fetch all ProductReleaseItems for the current receipt items
+function fetchReleaseItems(recordList, callback) {
+    var receiptItemIds = recordList.map(function(item) { return item.id; });
+    
+    if (receiptItemIds.length === 0) {
+        callback({});
+        return;
+    }
+    
+    // Fetch ProductReleaseItems with their ProductRelease parent data
+    var obj = {
+        fields:"QuantityReleased;QuantityRemaining;Uom;BatchNumber;Remarks;NumberOfContainers;ProductRelease.Id;ProductRelease.Number;ProductRelease.TrackingNumber;ProductRelease.TransportCompany;Product.Id;ProductReceiptItem.Id",
+        conditions:[`ProductReceiptItem.Id IN (${receiptItemIds.map(id => "'" + id + "'").join(',')})`],
+        logic:"{0}"
+    };
+    
+    JSUTIL.callAJAXPost(
+        '/data/ProductReleaseItem/list',
+        JSON.stringify(obj),
+        function(response) {
+            var releaseMap = {};
+            
+            // Group release items by ProductReceiptItem.Id
+            $.each(response.data || response, function(i, releaseItem) {
+                var receiptItemId = releaseItem.productReceiptItem?.id || releaseItem.ProductReceiptItem?.Id;
+                
+                if (!releaseMap[receiptItemId]) {
+                    releaseMap[receiptItemId] = [];
+                }
+                releaseMap[receiptItemId].push(releaseItem);
+            });
+            
+            callback(releaseMap);
+        },
+        function(error) {
+            console.error('Error fetching release items:', error);
+            callback({});
+        }
+    );
+}
+
+// Initialize the table with release data
+fetchReleaseItems(recordList, function(releaseMap) {
+    releaseItemsMap = releaseMap;
+    
+    $.each(recordList, function(i, val){
+        var qtyRejected = val.quantityRejected || val.QuantityRejected || 0;
+        
+        // Calculate total quantity released for this receipt item
+        var totalQtyReleased = 0;
+        var releaseItems = releaseItemsMap[val.id] || [];
+        
+        if (releaseItems.length > 0) {
+            $.each(releaseItems, function(idx, releaseItem) {
+                totalQtyReleased += releaseItem.quantityReleased || releaseItem.QuantityReleased || 0;
+            });
+        }
+        
+        // Determine if checkbox should be visible
+        var showCheckbox = (qtyRejected !== totalQtyReleased);
+        var checkboxHtml = showCheckbox 
+            ? '<input type="checkbox" class="release-checkbox" data-index="' + i + '">'
+            : '<span class="text-muted">-</span>';
+        
+        // Build print labels column
+        var printLabelsHtml = '';
+        
+        // Check if there are any product releases for this item
+        if (releaseItems.length > 0) {
+            $.each(releaseItems, function(idx, releaseItem) {
+                var releaseId = releaseItem.productRelease?.id || releaseItem.ProductRelease?.Id;
+                var releaseNumber = releaseItem.productRelease?.number || releaseItem.ProductRelease?.Number || (idx + 1);
+                
+                printLabelsHtml += '<button class="btn btn-sm btn-default print-label-btn" ' +
+                    'data-receipt-item-id="' + val.id + '" ' +
+                    'data-release-id="' + releaseId + '" ' +
+                    'data-release-item-id="' + releaseItem.id + '" ' +
+                    'style="margin: 2px;" ' +
+                    'title="Release #' + releaseNumber + '">' +
+                    '<i class="ti ti-printer"></i> Label #' + (idx + 1) +
+                    '</button>';
+            });
+        }
+        
+        if (printLabelsHtml === '') {
+            printLabelsHtml = '<span class="text-muted">No labels</span>';
+        }
+        
+        innerHtml += '<tr data-record-index="' + i + '">' +
+            '<td>' + checkboxHtml + '</td>' + 
+            '<td>' + (val.productReceipt?.number || val.ProductReceipt?.Number || '') + '</td>' +
+            '<td>' + (val.product?.name || val.Product?.Name || '') + '</td>' +
+            '<td>' + qtyRejected + '</td>' +
+            '<td>' + totalQtyReleased + '</td>' +
+            '<td>' + (val.inspectionResult || val.InspectionResult || '') + '</td>' +
+            '<td>' + printLabelsHtml + '</td>' +
+        '</tr>';
+    });
+
+    $('#allAccountTable').append(innerHtml);
+    JSUTIL.reinitializeDataTable();
+});
+
+var selectedRecords = [];
+
+$(document).ready(function(){
+    // 1. Handle Checkbox Change
+    $('#allAccountTable').on('change', '.release-checkbox', function() {
+        if ($('.release-checkbox:checked').length > 0) {
+            $('.releaseBtn').show();
+        } else {
+            $('.releaseBtn').hide();
+        }
+    });
+
+    // 1.5 Handle Print Label Button Click
+    $('#allAccountTable').on('click', '.print-label-btn', function() {
+        var receiptItemId = $(this).data('receipt-item-id');
+        var releaseId = $(this).data('release-id');
+        var releaseItemId = $(this).data('release-item-id');
+        
+        // Call your print label function
+        printRejectedLabel(receiptItemId, releaseId, releaseItemId);
+    });
+
+    // 2. Handle Release Button Click (Populate Modal)
+    $('.releaseBtn').on('click', function() {
+        selectedRecords = []; 
+        $('.release-checkbox:checked').each(function() {
+            var index = $(this).data('index');
+            if (recordList[index]) {
+                selectedRecords.push(recordList[index]);
+            }
+        });
+        
+        var itemsTableBody = $('#itemsToReleaseTable tbody');
+        itemsTableBody.empty(); 
+
+        $.each(selectedRecords, function(i, record) {
+            var rejectedQty = record.quantityRejected || record.QuantityRejected || 0;
+            
+            // Calculate remaining quantity to release using fetched data
+            var alreadyReleased = 0;
+            var releaseItems = releaseItemsMap[record.id] || [];
+            
+            if (releaseItems.length > 0) {
+                $.each(releaseItems, function(idx, releaseItem) {
+                    alreadyReleased += releaseItem.quantityReleased || releaseItem.QuantityReleased || 0;
+                });
+            }
+            var remainingQty = rejectedQty - alreadyReleased;
+            
+            // Calculate remaining containers
+            var totalContainers = record.numberOfContainers || record.NumberOfContainers || 0;
+            var containersReleased = 0;
+            
+            if (releaseItems.length > 0) {
+                $.each(releaseItems, function(idx, releaseItem) {
+                    containersReleased += releaseItem.numberOfContainers || releaseItem.NumberOfContainers || 0;
+                });
+            }
+            var remainingContainers = totalContainers - containersReleased;
+            
+            // Get batch number from the record
+            var batchNumber = record.batchNumber || record.BatchNumber || '';
+            
+            var row = '<tr data-item-id="' + record.id + '">' +
+                '<td>' + (record.product?.name || record.Product?.Name || '') + '</td>' +
+                '<td>' + (record.productReceipt?.number || record.ProductReceipt?.Number || '') + '</td>' +
+                
+                // Batch Number Input (editable)
+                '<td><input type="text" class="form-control batch-number-input" value="' + batchNumber + '" placeholder="Enter batch number" required></td>' +
+                
+                '<td>' + rejectedQty + ' (Remaining: ' + remainingQty + ')</td>' +
+                
+                // Reference: Total Containers
+                '<td>' + totalContainers + '</td>' + 
+                
+                // Input: Containers to Release
+                '<td><input type="number" class="form-control containers-to-release" min="1" max="' + remainingContainers + '" value="' + Math.min(1, remainingContainers) + '"></td>' +
+                
+                // Input: Quantity to Release
+                '<td><input type="number" class="form-control quantity-released" min="0" max="' + remainingQty + '" value="' + remainingQty + '" data-record-id="' + record.id + '"></td>' +
+            '</tr>';
+            itemsTableBody.append(row);
+        });
+
+        $('#releaseModal').modal('show');
+    });
+
+    // 3. Handle Save & Release
+    $('#saveReleaseDetails').on('click', function() {
+        var $btn = $(this);
+        
+        // Helper function to convert date to ISO format
+        function formatDateToISO(dateString) {
+            if (!dateString) return null;
+            var date = new Date(dateString);
+            return date.toISOString();
+        }
+        
+        // A. Prepare Parent Object (ProductRelease)
+        var productReleasePayload = {
+            instructions: $('#instructions').val(),
+            trackingNumber: $('#trackingNumber').val(),
+            transportCompany: $('#transportCompany').val(),
+            expectedPickupDate: formatDateToISO($('#expectedPickupDate').val()),
+            pickupArrangedBy: $('#pickupArrangedBy').val(),
+            returnDate: formatDateToISO($('#returnDate').val()),
+            gateEntryNumber: $('#gateEntryNumber').val(),
+            gateEntryTime: formatDateToISO($('#gateEntryTime').val()),
+            deliveryVehicle: $('#deliveryVehicle').val(),
+            deliveryDriver: $('#deliveryDriver').val(),
+            freightCharges: $('#freightCharges').val(),
+        };
+
+        // B. Validate and Prepare Child Objects
+        var tempChildItems = []; 
+        var receiptsToUpdate = [];
+        var isValid = true;
+
+        $('#itemsToReleaseTable tbody tr').each(function() {
+            var $row = $(this);
+            var receiptItemId = $row.data('item-id'); 
+            
+            var containersRelease = parseInt($row.find('.containers-to-release').val(), 10);
+            var qtyReleased = parseInt($row.find('.quantity-released').val(), 10);
+            var batchNumber = $row.find('.batch-number-input').val().trim();
+            
+            var maxQty = parseInt($row.find('.quantity-released').attr('max'), 10);
+            var maxContainers = parseInt($row.find('.containers-to-release').attr('max'), 10);
+
+            // Validation Logic
+            if (!batchNumber) {
+                JSUTIL.buildErrorModal("Batch number is required for " + $row.find('td:first').text());
+                isValid = false;
+                return false;
+            }
+            
+            if (qtyReleased <= 0 || qtyReleased > maxQty || isNaN(qtyReleased)) {
+                JSUTIL.buildErrorModal("Invalid quantity for " + $row.find('td:first').text());
+                isValid = false;
+                return false;
+            }
+            
+            if (containersRelease < 1 || isNaN(containersRelease)) {
+                JSUTIL.buildErrorModal("Containers to release must be at least 1.");
+                isValid = false;
+                return false;
+            }
+            
+            if (maxContainers > 0 && containersRelease > maxContainers) {
+                JSUTIL.buildErrorModal("Cannot release more containers than available (" + maxContainers + ")");
+                isValid = false;
+                return false;
+            }
+
+            // Find the original record to get product info
+            var originalRecord = null;
+            $.each(selectedRecords, function(idx, rec) {
+                if (rec.id === receiptItemId) {
+                    originalRecord = rec;
+                    return false;
+                }
+            });
+
+            if (!originalRecord) {
+                JSUTIL.buildErrorModal("Error: Could not find original record");
+                isValid = false;
+                return false;
+            }
+
+            // 1. Prepare Payload for creating new Release Item
+            tempChildItems.push({
+                productReceiptItem: { id: receiptItemId },
+                product: { id: originalRecord.product?.id || originalRecord.Product?.Id },
+                numberOfContainers: containersRelease,
+                quantityReleased: qtyReleased,
+                uom: originalRecord.uom || originalRecord.Uom || '',
+                batchNumber: batchNumber, // Use the batch number from input
+            });
+
+            // 2. Calculate new cumulative quantityReleased
+            var cumulativeReleased = qtyReleased;
+            var releaseItems = releaseItemsMap[receiptItemId] || [];
+            
+            if (releaseItems.length > 0) {
+                $.each(releaseItems, function(idx, releaseItem) {
+                    cumulativeReleased += releaseItem.quantityReleased || releaseItem.QuantityReleased || 0;
+                });
+            }
+            
+            receiptsToUpdate.push({
+                id: receiptItemId,
+                quantityReleased: cumulativeReleased
+            });
+        });
+
+        if (!isValid) return;
+
+        $btn.prop('disabled', true).text('Processing...');
+
+        // C. API CALL 1: Create Parent (ProductRelease)
+        JSUTIL.callAJAXPost(
+            '/data/ProductRelease/create', 
+            JSON.stringify(productReleasePayload), 
+            function(parentResponse) {
+                
+                var parentId = parentResponse.id || parentResponse.Id;
+
+                if (!parentId) {
+                    JSUTIL.buildErrorModal("Error: Created Release but did not get an ID back.");
+                    $btn.prop('disabled', false).text('Save & Release');
+                    return;
+                }
+
+                // D. Assign Parent ID to Children
+                var finalChildPayload = tempChildItems.map(function(item) {
+                    item.productRelease = { id: parentId };
+                    return item;
+                });
+
+                // E. API CALL 2: Create Children (ProductReleaseItems)
+                JSUTIL.callAJAXPost(
+                    '/data/ProductReleaseItem/create_multiple', 
+                    JSON.stringify(finalChildPayload), 
+                    function(childResponse) {
+
+                        // F. API CALL 3: Update Original ProductReceiptItems
+                        JSUTIL.callAJAXPost(
+                            '/data/ProductReceiptItem/upsert_multiple',
+                            JSON.stringify(receiptsToUpdate),
+                            function(updateResponse) {
+                                $('#releaseModal').modal('hide');
+                                location.reload(); 
+                            },
+                            function(error) {
+                                JSUTIL.buildErrorModal('Error updating receipt items: ' + (error.message || 'Unknown error'));
+                                $btn.prop('disabled', false).text('Save & Release');
+                            }
+                        );
+                    },
+                    function(error) {
+                        JSUTIL.buildErrorModal('Error creating release items: ' + (error.message || 'Unknown error'));
+                        $btn.prop('disabled', false).text('Save & Release');
+                    }
+                );
+            },
+            function(error) {
+                JSUTIL.buildErrorModal('Error creating release: ' + (error.message || 'Unknown error'));
+                $btn.prop('disabled', false).text('Save & Release');
+            }
+        );
+    });
+});
+
+function printRejectedLabel(receiptItemId, releaseId, releaseItemId) {
+    // Fetch the complete ProductReleaseItem with all related data using list API
+    var obj = {
+        fields: "Id;QuantityReleased;NumberOfContainers;BatchNumber;Uom;ProductRelease.Id;ProductRelease.Number;ProductRelease.TrackingNumber;ProductRelease.TransportCompany;Product.Id;Product.Name;Product.Number;ProductReceiptItem.Id;ProductReceiptItem.ProductReceipt.Number;ProductReceiptItem.ManufacturingDate;ProductReceiptItem.ExpiryDate;ProductReceiptItem.ManufacturerName",
+        conditions: [`Id='${releaseItemId}'`],
+        logic: "{0}"
+    };
+    
+    JSUTIL.callAJAXPost(
+        '/data/ProductReleaseItem/list',
+        JSON.stringify(obj),
+        function(response) {
+            var data = response.data || response;
+            
+            if (!data || data.length === 0) {
+                JSUTIL.buildErrorModal('Error: Release item not found');
+                return;
+            }
+            
+            var releaseItem = data[0];
+            
+            var labelData = {
+                quantityReleased: releaseItem.quantityReleased || releaseItem.QuantityReleased || 0,
+                numberOfContainers: releaseItem.numberOfContainers || releaseItem.NumberOfContainers || 0,
+                batchNumber: releaseItem.batchNumber || releaseItem.BatchNumber || '',
+                uom: releaseItem.uom || releaseItem.Uom || '',
+                manufacturingDate: releaseItem.productReceiptItem?.manufacturingDate || 
+                                 releaseItem.ProductReceiptItem?.ManufacturingDate || '',
+                expiryDate: releaseItem.productReceiptItem?.expiryDate || 
+                          releaseItem.ProductReceiptItem?.ExpiryDate || '',
+                manufacturerName: releaseItem.productReceiptItem?.manufacturer.name || 
+                                releaseItem.ProductReceiptItem?.Manufacturer.Name || '',
+                product: {
+                    name: releaseItem.product?.name || releaseItem.Product?.Name || '',
+                    number: releaseItem.product?.number || releaseItem.Product?.Number || ''
+                },
+                productReceipt: {
+                    number: releaseItem.productReceiptItem?.productReceipt?.number || 
+                            releaseItem.ProductReceiptItem?.ProductReceipt?.Number || ''
+                },
+                productRelease: {
+                    id: releaseItem.productRelease?.id || releaseItem.ProductRelease?.Id || '',
+                    number: releaseItem.productRelease?.number || releaseItem.ProductRelease?.Number || '',
+                    trackingNumber: releaseItem.productRelease?.trackingNumber || 
+                                  releaseItem.ProductRelease?.TrackingNumber || '',
+                    transportCompany: releaseItem.productRelease?.transportCompany || 
+                                    releaseItem.ProductRelease?.TransportCompany || ''
+                }
+            };
+            
+            // Generate labels based on number of containers
+            var numberOfContainers = labelData.numberOfContainers || 1;
+            var allLabelsHtml = generateMultipleRejectedLabels(labelData, numberOfContainers);
+            
+            // Use JSUTIL print helper
+            JSUTIL.printRejectedLabels(allLabelsHtml);
+        },
+        function(error) {
+            JSUTIL.buildErrorModal('Error fetching release item details: ' + (error.message || 'Unknown error'));
+        }
+    );
+}
+
+// Function to generate multiple rejected labels HTML (one per container)
+function generateMultipleRejectedLabels(releaseData, numberOfContainers) {
+    var allLabelsHtml = '';
+    var releaseNumber = releaseData.productRelease.number || releaseData.productRelease.id || 'REL';
+    
+    // Format dates
+    var mfgDate = releaseData.manufacturingDate ? 
+        new Date(releaseData.manufacturingDate).toLocaleDateString('en-GB') : 'N/A';
+    var expDate = releaseData.expiryDate ? 
+        new Date(releaseData.expiryDate).toLocaleDateString('en-GB') : 'N/A';
+    
+    // Generate one label for each container
+    for (var i = 1; i <= numberOfContainers; i++) {
+        var containerInfo = `${i} of ${numberOfContainers}`;
+        
+        var labelHtml = `
+            <div class="rejected-label">
+                <div class="rejected-header">
+                    <div class="company-logo">Suleshvari</div>
+                    <div class="rejected-status">REJECTED</div>
+                </div>
+                
+                <div class="product-title">${releaseData.product.name}</div>
+                
+                <table class="info-table">
+                    <tr>
+                        <td class="label-cell">Item Code:</td>
+                        <td class="value-cell">${releaseData.product.number}</td>
+                        <td class="label-cell">Release No:</td>
+                        <td class="value-cell">${releaseNumber}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">GIM No:</td>
+                        <td class="value-cell" colspan="3">${releaseData.productReceipt.number}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Batch No:</td>
+                        <td class="value-cell" colspan="3">${releaseData.batchNumber}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Quantity:</td>
+                        <td class="value-cell" colspan="3">${releaseData.quantityReleased} ${releaseData.uom || 'KGM'}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Mfg. Date:</td>
+                        <td class="value-cell">${mfgDate}</td>
+                        <td class="label-cell">Exp. Date:</td>
+                        <td class="value-cell">${expDate}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Mfg. Name:</td>
+                        <td class="value-cell" colspan="3">${releaseData.manufacturerName}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Tracking No:</td>
+                        <td class="value-cell" colspan="3">${releaseData.productRelease.trackingNumber || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Transport:</td>
+                        <td class="value-cell" colspan="3">${releaseData.productRelease.transportCompany || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">Container No:</td>
+                        <td class="value-cell" colspan="3">${containerInfo}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-cell">User Id:</td>
+                        <td class="value-cell">${employeeId}</td>
+                        <td class="label-cell">User Name:</td>
+                        <td class="value-cell">${employeeName}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="page-break"></div>
+        `;
+        allLabelsHtml += labelHtml;
+    }
+    
+    return allLabelsHtml;
+}
+
+// Print helper function for Rejected Labels
+JSUTIL.printRejectedLabels = function (htmlContent) {
+    if (!htmlContent) {
+        console.error("No content provided to print.");
+        return;
+    }
+
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+
+    doc.write(`
+        <html>
+        <head>
+            <title>Rejected Material Labels Print</title>
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    margin: 0;
+                    padding: 20px;
+                    -webkit-print-color-adjust: exact;
+                    color-adjust: exact;
+                    print-color-adjust: exact;
+                    font-family: Arial, sans-serif;
+                }
+                
+                .rejected-label {
+                    width: 100%;
+                    max-width: 800px;
+                    margin: 0 auto 20px;
+                    border: 3px solid #000;
+                    page-break-inside: avoid;
+                    padding: 10px;
+                }
+                
+                .rejected-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                    padding: 10px;
+                    border-bottom: 2px solid #000;
+                }
+                
+                .company-logo {
+                    font-size: 36px;
+                    font-weight: bold;
+                    letter-spacing: 2px;
+                }
+                
+                .rejected-status {
+                    font-size: 32px;
+                    font-weight: bold;
+                    letter-spacing: 2px;
+                }
+                
+                .product-title {
+                    text-align: center;
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-bottom: 15px;
+                    padding: 10px;
+                }
+                
+                .info-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 0;
+                }
+                
+                .info-table tr {
+                    border: 1px solid #000;
+                }
+                
+                .label-cell {
+                    padding: 8px 10px;
+                    font-weight: bold;
+                    color: #000;
+                    font-size: 14px;
+                    border: 1px solid #000;
+                    width: 25%;
+                }
+                
+                .value-cell {
+                    padding: 8px 10px;
+                    color: #000;
+                    font-size: 14px;
+                    border: 1px solid #000;
+                    width: 25%;
+                }
+                
+                .page-break {
+                    page-break-after: always;
+                }
+                
+                @page {
+                    size: A4;
+                    margin: 15mm;
+                }
+                
+                @media print {
+                    body {
+                        padding: 0;
+                    }
+                    
+                    .rejected-label {
+                        margin: 0 auto;
+                        page-break-inside: avoid;
+                    }
+                    
+                    .page-break:last-child {
+                        display: none;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${htmlContent}
+        </body>
+        </html>
+    `);
+    doc.close();
+
+    var cleanup = function () {
+        try {
+            if (iframe && iframe.parentNode) {
+                document.body.removeChild(iframe);
+            }
+        } catch (e) {
+            console.error('Error removing print iframe:', e);
+        }
+    };
+
+    iframe.onload = function () {
+        try {
+            setTimeout(function () {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+
+                setTimeout(cleanup, 500);
+
+                window.addEventListener('focus', function cleanupOnFocus() {
+                    setTimeout(function () {
+                        cleanup();
+                        window.removeEventListener('focus', cleanupOnFocus);
+                    }, { once: true });
+                }, { once: true });
+
+            }, 100);
+        } catch (e) {
+            console.error('Error during print:', e);
+            cleanup();
+        }
+    };
+
+    setTimeout(cleanup, 5000);
+};
+    // materialReleasePanel.js      End
+</script>

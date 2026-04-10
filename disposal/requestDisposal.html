@@ -1,0 +1,1057 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+    .user-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1060;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.user-search-dropdown .user-search-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+}
+.user-search-dropdown .user-search-item:hover {
+    background: #f0f4ff;
+}
+
+    .selectCompoundBtn {
+        color: #337AB7 !important;
+        text-decoration: none;
+    }
+
+    #allProductRequestPanel .card-header,
+    #requestInventoryPanel .card-header,
+    #editProductRequestPanel .card-header {
+        border-bottom: 1px solid #e7eaec !important;
+    }
+
+    /* ── Vendor-style dropdown ── */
+    .disposal-dropdown-menu {
+        max-height: 300px;
+        overflow-y: auto;
+        position: absolute !important;
+        transform: none !important;
+        will-change: auto;
+        z-index: 1050;
+    }
+
+    .disposal-dropdown {
+        position: relative;
+    }
+
+    .disposal-dropdown-menu.show {
+        display: block;
+        top: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        min-width: 100%;
+        transform: translate3d(0px, 0px, 0px) !important;
+    }
+
+    .disposal-dropdown-menu .form-control {
+        border: 0.5px solid #ddd;
+    }
+
+    .disposal-dropdown-menu .form-control:focus {
+        border-color: #6c757d;
+    }
+
+    .disposal-dropdown-items {
+        border-top: 1px solid #e9ecef;
+    }
+
+    /* Disabled state */
+    .disposal-dropdown-btn:disabled {
+        opacity: 1;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+    }
+
+    .disposal-dropdown-btn:disabled::after {
+        pointer-events: none !important;
+    }
+
+    /* Products Tab Color */
+    .products-tab-link {
+        color: #337AB7 !important;
+    }
+
+    /* ── Form field spacing ── */
+    #requestInventoryPanel .col-sm-6,
+    #requestInventoryPanel .col-sm-12,
+    #editProductRequestPanel .col-sm-6,
+    #editProductRequestPanel .col-sm-12 {
+        margin-bottom: 15px;
+    }
+    #requestInventoryPanel .form-label,
+    #editProductRequestPanel .form-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #888;
+        margin-bottom: 4px;
+        display: block;
+    }
+</style>
+
+<!--allProductRequestPanel.html start-->
+<div class="row aasaanPanel" id="allProductRequestPanel">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header justify-content-between">
+                <h4 class="card-title">Disposal Requests</h4>
+                <button type="button" class="btn btn-sm btn-secondary newProductRequestBtn">
+                    <i data-lucide="plus"></i>New Request
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="disposalRequestListTable" class="table table-hover table-bordered dataTables">
+                        <thead class="thead-sm text-uppercase fs-xxs">
+                            <tr>
+                                <th>Number</th>
+                                <th>Material Type</th>
+                                <th>Outward Type</th>
+                                <th>Request Date</th>
+                                <th>Initiator</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="dataTableRecordList" id="allProductCompoundTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--allProductRequestPanel.html end-->
+
+
+<!--requestInventoryPanel.html start-->
+<div class="row aasaanPanel" id="requestInventoryPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header justify-content-between">
+                <h4 class="card-title"><span id="editRequestInventoryTitle"></span></h4>
+                <div>
+                    <button type="button" class="btn btn-sm btn-default showRequestOnCancel">
+                        <i data-lucide="x"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary labControlBtn" id="saveInventoryBtn">
+                        <i data-lucide="check"></i>Save
+                    </button>
+                    <button type="button" class="btn btn-sm btn-default labControlBtn" id="submitRequestBtn">
+                        <i data-lucide="send"></i>Send To Warehouse
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <label class="form-label">Document Code</label>
+                        <input type="text" class="form-control createStudyRequestInput" name="sopReference" placeholder="Enter Document Code">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Storage Location</label>
+                        <div class="disposal-dropdown">
+                            <button
+                                class="btn btn-default dropdown-toggle w-100 d-flex justify-content-between align-items-center disposal-dropdown-btn"
+                                type="button" id="createStorageLocationBtn" aria-haspopup="true" aria-expanded="false"
+                                style="border:1px solid #ced4da;">
+                                <span>--none--</span>
+                            </button>
+                            <div class="dropdown-menu disposal-dropdown-menu w-100 p-0"
+                                id="createStorageLocationDropdown">
+                                <div class="px-2 py-2">
+                                    <input type="text" class="form-control form-control-sm"
+                                        id="createStorageLocationSearch" placeholder="Search..." autocomplete="off">
+                                </div>
+                                <div class="disposal-dropdown-items" style="max-height:200px; overflow-y:auto;">
+                                    <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="storageLocation.id" id="createStorageLocationId"
+                            class="createStudyRequestNonInput" value="">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Material Type</label>
+                        <input type="text" class="form-control createStudyRequestInput" name="materialType" placeholder="Material Type">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Outward Type</label>
+                        <div class="disposal-dropdown">
+                            <button
+                                class="btn btn-default dropdown-toggle w-100 d-flex justify-content-between align-items-center disposal-dropdown-btn"
+                                type="button" id="createWasteCategoryBtn" aria-haspopup="true" aria-expanded="false"
+                                style="border:1px solid #ced4da;">
+                                <span>--none--</span>
+                            </button>
+                            <div class="dropdown-menu disposal-dropdown-menu w-100" id="createWasteCategoryDropdown">
+                                <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                <a class="dropdown-item" href="#" data-value="Material Sale">Material Sale</a>
+                                <a class="dropdown-item" href="#" data-value="Rejected Return">Rejected Return</a>
+                                <a class="dropdown-item" href="#" data-value="Inter Unit Transfer">Inter Unit
+                                    Transfer</a>
+                                <a class="dropdown-item" href="#" data-value="Returnable">Returnable</a>
+                            </div>
+                        </div>
+                        <input type="hidden" name="wasteCategory" id="createWasteCategory"
+                            class="createStudyRequestInput" value="">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Department</label>
+                        <div class="disposal-dropdown">
+                            <button
+                                class="btn btn-default dropdown-toggle w-100 d-flex justify-content-between align-items-center disposal-dropdown-btn"
+                                type="button" id="createDepartmentBtn" aria-haspopup="true" aria-expanded="false"
+                                style="border:1px solid #ced4da;">
+                                <span>--none--</span>
+                            </button>
+                            <div class="dropdown-menu disposal-dropdown-menu w-100 p-0" id="createDepartmentDropdown">
+                                <div class="px-2 py-2">
+                                    <input type="text" class="form-control form-control-sm" id="createDepartmentSearch"
+                                        placeholder="Search..." autocomplete="off">
+                                </div>
+                                <div class="disposal-dropdown-items" style="max-height:200px; overflow-y:auto;">
+                                    <a class="dropdown-item active" href="#" data-value="">--none--</a>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="department.id" id="createDepartmentId"
+                            class="createStudyRequestNonInput" value="">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Vendor</label>
+                        <div class="position-relative">
+                            <input type="text" placeholder="Search vendor..." class="form-control" id="vendorName"
+                                autocomplete="off">
+                            <div id="vendorDropdown" class="user-search-dropdown" style="display:none;"></div>
+                        </div>
+                        <input type="hidden" name="vendor.id" id="vendorId"
+                            class="selectSearchInputAutoCompleteId createStudyRequestInput" value="">
+                        <input type="hidden" name="vendor.name" id="vendorName_hidden" value="">
+                    </div>
+                    <div class="col-sm-12">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control createStudyRequestInput" name="initiatorNotes" placeholder="Enter Remarks"
+                            rows="4"></textarea>
+                    </div>
+                    <input type="hidden" class="createStudyRequestInput" name="id">
+                    <input type="hidden" class="createStudyRequestInput" name="requestDate">
+                    <input type="hidden" class="createStudyRequestInput" name="initiatorId">
+                    <input type="hidden" class="createStudyRequestInput" name="processStatus">
+                    <input type="hidden" class="createStudyRequestInput" name="number">
+                </div>
+                <hr class="my-3">
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn btn-sm btn-default labControlBtn" id="addRequestInventory">
+                        <i data-lucide="plus"></i></i>Add Item
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0">
+                        <thead class="thead-sm text-uppercase fs-xxs">
+                            <tr>
+                                <th style="width: 50px;"></th>
+                                <th>Product</th>
+                                <th>Stock Type</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allProductRequestTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--requestInventoryPanel.html end-->
+
+
+<!--editProductRequestPanel.html start-->
+<div class="row aasaanPanel" id="editProductRequestPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="card-header justify-content-between">
+                <h4 class="card-title"><span id="editRequestTitle"></span></h4>
+                <button type="button" class="btn btn-sm btn-default showAllCompoundsOnCancel">
+                    <i data-lucide="x"></i>Close
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <label class="form-label">Document Code</label>
+                        <input type="text" class="form-control editStudyRequestInput" name="sopReference" disabled placeholder="Enter Document Code">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Storage Location</label>
+                        <button
+                            class="btn btn-default dropdown-toggle w-100 d-flex justify-content-between align-items-center disposal-dropdown-btn"
+                            type="button" id="editStorageLocationBtn" disabled style="border:1px solid #ced4da;">
+                            <span>--none--</span>
+                        </button>
+                        <input type="hidden" name="storageLocation.id" id="editStorageLocationId"
+                            class="editStudyRequestInput" value="">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Material Type</label>
+                        <input type="text" class="form-control editStudyRequestInput" name="materialType" disabled placeholder="Enter Material Type">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Outward Type</label>
+                        <button
+                            class="btn btn-default dropdown-toggle w-100 d-flex justify-content-between align-items-center disposal-dropdown-btn"
+                            type="button" id="editWasteCategoryBtn" disabled style="border:1px solid #ced4da;">
+                            <span>--none--</span>
+                        </button>
+                        <input type="hidden" name="wasteCategory" id="editWasteCategory" class="editStudyRequestInput"
+                            value="">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Department</label>
+                        <button
+                            class="btn btn-default dropdown-toggle w-100 d-flex justify-content-between align-items-center disposal-dropdown-btn"
+                            type="button" id="editDepartmentBtn" disabled style="border:1px solid #ced4da;">
+                            <span>--none--</span>
+                        </button>
+                        <input type="hidden" name="department.id" id="editDepartmentId" class="editStudyRequestInput"
+                            value="">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Vendor</label>
+                        <input type="text" placeholder="search.."
+                            class="typeahead_3 form-control selectSearchInputAutoComplete" disabled>
+                        <input type="hidden" name="vendor.id"
+                            class="selectSearchInputAutoCompleteId editStudyRequestInput"
+                            aria-description="search/vendor" disabled>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Initiated By</label>
+                        <input type="text" class="form-control editStudyRequestInput" name="initiator.name" disabled>
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Executed By</label>
+                        <input type="text" class="form-control editStudyRequestInput" name="executor.name" disabled>
+                    </div>
+                    <div class="col-sm-12">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control editStudyRequestInput" name="initiatorNotes" rows="4"
+                            disabled></textarea>
+                    </div>
+                </div>
+
+                <!-- Products Tab -->
+                <ul class="nav nav-tabs mb-3 mt-4" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active products-tab-link" data-bs-toggle="tab" href="#tab-1" role="tab"
+                            aria-selected="true">Products</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div id="tab-1" class="tab-pane fade show active" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0">
+                                <thead class="thead-sm text-uppercase fs-xxs" id="allRequestsTableHead"></thead>
+                                <tbody id="allRequestsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--editProductRequestPanel.html end-->
+
+
+<script>
+    // ============================================================
+    // Global state
+    // ============================================================
+    // ADD this line near the other var declarations
+    var disposalTableSelector = '#disposalRequestListTable';
+    var recordList = [];
+    var uomList = [
+        { "name": "kg", "description": "Kilogram" },
+        { "name": "gm", "description": "Gram" },
+        { "name": "lt", "description": "Liter" },
+        { "name": "ml", "description": "Mililiter" }
+    ];
+    var currentProductList = [];
+    var studyRequestUrl = '';
+    var currentRequestId = '';
+    var currentProcessStatus = '';
+
+    // (Choices.js removed — dropdowns now use vendor-style Bootstrap pattern)
+
+    // ============================================================
+    // Vendor-style dropdown helpers & AJAX loaders
+    // ============================================================
+
+    function disposalPopulateDropdown(dropdownId, items, labelKey, valueKey) {
+        var $container = $(dropdownId + ' .disposal-dropdown-items');
+        var html = '<a class="dropdown-item active" href="#" data-value="">--none--</a>';
+        $.each(items, function (i, item) {
+            var val = valueKey ? (item[valueKey] || item.id || '') : item;
+            var label = labelKey ? (item[labelKey] || item.name || '') : item;
+            html += '<a class="dropdown-item" href="#" data-value="' + val + '">' + label + '</a>';
+        });
+        $container.html(html);
+    }
+
+    // Cache lists for name resolution in setDisposalDropdown
+    var _storageLocationList = [];
+    var _departmentList = [];
+
+    // Load Storage Locations
+    JSUTIL.callAJAXGet(
+        JSUTIL.getUrl('/api/storage-locations'),
+        function (objList) {
+            _storageLocationList = objList || [];
+            disposalPopulateDropdown('#createStorageLocationDropdown', _storageLocationList, 'name', 'id');
+        }
+    );
+
+    // Load Departments
+    JSUTIL.callAJAXGet(
+        JSUTIL.getUrl('/api/departments'),
+        function (objList) {
+            _departmentList = objList || [];
+            disposalPopulateDropdown('#createDepartmentDropdown', _departmentList, 'name', 'id');
+        }
+    );
+
+    // Load Products (for item rows)
+    JSUTIL.callAJAXGet(
+        JSUTIL.getUrl('/api/products'),
+        function (objList) {
+            currentProductList = objList;
+            console.info(currentProductList);
+        }
+    );
+
+    // ============================================================
+    // Vendor-style dropdown interaction logic
+    // ============================================================
+
+    // Generic open/close toggle for all disposal dropdowns
+    $(document).on('click', '.disposal-dropdown-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $menu = $(this).next('.disposal-dropdown-menu');
+        $('.disposal-dropdown-menu').not($menu).removeClass('show');
+        $menu.toggleClass('show');
+        var $search = $menu.find('input[type="text"]');
+        if ($search.length) {
+            setTimeout(function () { $search.focus(); }, 0);
+        }
+    });
+
+    // Close all dropdowns when clicking outside
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.disposal-dropdown').length) {
+            $('.disposal-dropdown-menu').removeClass('show');
+        }
+    });
+
+    // Don't close when clicking inside search input
+    $(document).on('click', '.disposal-dropdown-menu input', function (e) {
+        e.stopPropagation();
+    });
+
+    // Outward Type item click
+    $(document).on('click', '#createWasteCategoryDropdown .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#createWasteCategoryBtn span').first().text($(this).text());
+        $('#createWasteCategory').val(value);
+        $(this).addClass('active').siblings().removeClass('active');
+        $(this).closest('.disposal-dropdown-menu').removeClass('show');
+    });
+
+    // Storage Location item click
+    $(document).on('click', '#createStorageLocationDropdown .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#createStorageLocationBtn span').first().text($(this).text());
+        $('#createStorageLocationId').val(value);
+        $(this).addClass('active').siblings().removeClass('active');
+        $(this).closest('.disposal-dropdown-menu').removeClass('show');
+        $('#createStorageLocationSearch').val('');
+    });
+
+    // Department item click
+    $(document).on('click', '#createDepartmentDropdown .dropdown-item', function (e) {
+        e.preventDefault();
+        var value = $(this).data('value');
+        $('#createDepartmentBtn span').first().text($(this).text());
+        $('#createDepartmentId').val(value);
+        $(this).addClass('active').siblings().removeClass('active');
+        $(this).closest('.disposal-dropdown-menu').removeClass('show');
+        $('#createDepartmentSearch').val('');
+    });
+
+    // Storage Location inline search
+    $(document).on('input', '#createStorageLocationSearch', function () {
+        var term = this.value.toLowerCase();
+        $('#createStorageLocationDropdown .disposal-dropdown-items .dropdown-item').each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(term) !== -1);
+        });
+    });
+
+    // Department inline search
+    $(document).on('input', '#createDepartmentSearch', function () {
+        var term = this.value.toLowerCase();
+        $('#createDepartmentDropdown .disposal-dropdown-items .dropdown-item').each(function () {
+            $(this).toggle($(this).text().toLowerCase().indexOf(term) !== -1);
+        });
+    });
+
+    // Helper: set dropdown display + hidden value (replaces setChoicesValue)
+    function setDisposalDropdown(field, value) {
+        if (field === 'wasteCategory') {
+            var text = value || '--none--';
+            $('#createWasteCategoryBtn span').first().text(text);
+            $('#createWasteCategory').val(value || '');
+            $('#editWasteCategoryBtn span').first().text(text);
+            $('#createWasteCategoryDropdown .dropdown-item').each(function () {
+                $(this).toggleClass('active', String($(this).data('value')) === String(value || ''));
+            });
+        } else if (field === 'storageLocation.id') {
+            var sName = '--none--';
+            if (value) {
+                $.each(_storageLocationList, function (i, v) {
+                    if (String(v.id) === String(value)) { sName = v.name; return false; }
+                });
+            }
+            $('#createStorageLocationBtn span').first().text(sName);
+            $('#createStorageLocationId').val(value || '');
+            $('#editStorageLocationBtn span').first().text(sName);
+            $('#createStorageLocationDropdown .dropdown-item').each(function () {
+                $(this).toggleClass('active', String($(this).data('value')) === String(value || ''));
+            });
+        } else if (field === 'department.id') {
+            var dName = '--none--';
+            if (value) {
+                $.each(_departmentList, function (i, v) {
+                    if (String(v.id) === String(value)) { dName = v.name; return false; }
+                });
+            }
+            $('#createDepartmentBtn span').first().text(dName);
+            $('#createDepartmentId').val(value || '');
+            $('#editDepartmentBtn span').first().text(dName);
+            $('#createDepartmentDropdown .dropdown-item').each(function () {
+                $(this).toggleClass('active', String($(this).data('value')) === String(value || ''));
+            });
+        }
+    }
+
+    // ============================================================
+    // Disposal Request Table (DataTable)
+    // ============================================================
+    // function renderDisposalRequestTable() {
+    //     var $table = $('#disposalRequestListTable');
+
+    //     if ($.fn.DataTable && $.fn.DataTable.isDataTable($table)) {
+    //         $table.DataTable().destroy();
+    //     }
+
+    //     var innerHtml = '';
+    //     $.each(recordList, function(i, val) {
+    //         var statusBadge = '';
+    //         if (val.processStatus === 'Issued') {
+    //             statusBadge = '<span class="badge bg-info">' + val.processStatus + '</span>';
+    //         } else if (val.processStatus === 'New') {
+    //             statusBadge = '<span class="badge bg-warning text-dark">' + val.processStatus + '</span>';
+    //         } else {
+    //             statusBadge = '<span class="badge bg-success">' + val.processStatus + '</span>';
+    //         }
+    //         innerHtml += '<tr>' +
+    //             '<td><a href="javascript:void(0);" class="selectCompoundBtn" name="' + val.id + '">' + (val.number || '') + '</a></td>' +
+    //             '<td>' + (val.materialType || '') + '</td>' +
+    //             '<td>' + (val.wasteCategory || '') + '</td>' +
+    //             '<td>' + JSUTIL.getDate(val.requestDate) + '</td>' +
+    //             '<td>' + ((val.initiator && val.initiator.name) || '') + '</td>' +
+    //             '<td>' + statusBadge + '</td>' +
+    //             '</tr>';
+    //     });
+    //     $('#allProductCompoundTable').empty().append(innerHtml);
+
+    //     $table.DataTable({
+    //         order: [],
+    //         pageLength: 25,
+    //         language: {
+    //             paginate: {
+    //                 first: '<i class="ti ti-chevrons-left"></i>',
+    //                 previous: '<i class="ti ti-chevron-left"></i>',
+    //                 next: '<i class="ti ti-chevron-right"></i>',
+    //                 last: '<i class="ti ti-chevrons-right"></i>'
+    //             }
+    //         }
+    //     });
+    // }
+
+    // function loadDisposalRequests(onDone) {
+    //     JSUTIL.callAJAXGet('/api/disposal-requests', function(response) {
+    //         recordList = Array.isArray(response) ? response : [];
+    //         renderDisposalRequestTable();
+    //         if (typeof onDone === 'function') onDone(recordList);
+    //     }, function() {
+    //         recordList = [];
+    //         renderDisposalRequestTable();
+    //         if (typeof onDone === 'function') onDone(recordList);
+    //     });
+    // }
+
+    function initDisposalRequestTable(retryCount) {
+        retryCount = typeof retryCount === 'number' ? retryCount : 0;
+        if (typeof $.fn.DataTable === 'function') {
+            if (!$.fn.DataTable.isDataTable(disposalTableSelector)) {
+                $(disposalTableSelector).DataTable({ order: [], pageLength: 25 });
+            }
+            return;
+        }
+        if (retryCount < 40) {
+            setTimeout(function () { initDisposalRequestTable(retryCount + 1); }, 150);
+        }
+    }
+
+
+    function destroyDisposalRequestTable() {
+        try {
+            if ($.fn.DataTable && $.fn.DataTable.isDataTable(disposalTableSelector)) {
+                $(disposalTableSelector).DataTable().clear().destroy();
+            }
+        } catch (e) {
+            console.warn('DataTable destroy warning:', e);
+        }
+        $('#allProductCompoundTable').empty();
+    }
+
+    function renderDisposalRequestTable() {
+        destroyDisposalRequestTable();
+
+        var innerHtml = '';
+        $.each(recordList, function (i, val) {
+            var statusBadge = '';
+            if (val.processStatus === 'Issued') {
+                statusBadge = '<span style="display: inline-block; padding: 5px 10px; border-radius: 20px; letter-spacing: 0.5px; font-weight: 600; font-size: 10px; text-transform: uppercase; background-color: #20c997; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.15); white-space: nowrap;">' + val.processStatus + '</span>';
+            } else if (val.processStatus === 'New') {
+                statusBadge = '<span style="display: inline-block; padding: 5px 10px; border-radius: 20px; letter-spacing: 0.5px; font-weight: 600; font-size: 10px; text-transform: uppercase; background-color: #6c757d; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.15); white-space: nowrap;">' + val.processStatus + '</span>';
+            } else {
+                statusBadge = '<span style="display: inline-block; padding: 5px 10px; border-radius: 20px; letter-spacing: 0.5px; font-weight: 600; font-size: 10px; text-transform: uppercase; background-color: #337AB7; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.15); white-space: nowrap;">' + val.processStatus + '</span>';
+            }
+            innerHtml += '<tr data-id="' + val.id + '">' +
+                '<td><a href="javascript:void(0);" class="selectCompoundBtn">' + (val.number || '') + '</a></td>' +
+                '<td>' + (val.materialType || '') + '</td>' +
+                '<td>' + (val.wasteCategory || '') + '</td>' +
+                '<td>' + JSUTIL.getDate(val.requestDate) + '</td>' +
+                '<td>' + ((val.initiator && val.initiator.name) || '') + '</td>' +
+                '<td>' + statusBadge + '</td>' +
+                '</tr>';
+        });
+        $('#allProductCompoundTable').html(innerHtml);
+
+        initDisposalRequestTable();
+    }
+
+    function loadDisposalRequests(onDone) {
+        JSUTIL.callAJAXGet('/api/disposal-requests', function (response) {
+            recordList = Array.isArray(response) ? response : [];
+            renderDisposalRequestTable();
+            if (typeof onDone === 'function') onDone(recordList);
+        }, function () {
+            recordList = [];
+            renderDisposalRequestTable();
+            if (typeof onDone === 'function') onDone(recordList);
+        });
+    }
+
+
+    // ============================================================
+    // Request Items - Render callback
+    // ============================================================
+    function callbackAfterGetRequestItems(objList) {
+        console.log(objList);
+        if (currentProcessStatus === 'New') {
+            $('#allProductRequestTable').empty();
+
+            $.each(objList, function (i, val) {
+                var newRow = '<tr class="productRequestItem" name="' + val.id + '">' +
+                    '<td><button class="btn btn-sm btn-soft-danger deleteTrSelect"><i class="ti ti-trash"></i></button></td>' +
+                    '<td><select class="form-control studyRequestItemInput" name="product.id" data-index="' + i + '">' +
+                    '<option value="">--none--</option>';
+                $.each(currentProductList, function (j, product) {
+                    var selected = val.product.id === product.id ? 'selected' : '';
+                    newRow += '<option value="' + product.id + '" ' + selected + '>' + product.name + '</option>';
+                });
+                newRow += '</select></td>' +
+                    '<td><input type="text" class="form-control form-control-sm studyRequestItemInput" name="stockType" placeholder="Enter Stock Type" value="' + (val.stockType || '') + '"></td>' +
+                    '<td><input type="number" class="form-control form-control-sm studyRequestItemInput" name="quantity" placeholder="Enter Quantity" value="' + (val.quantity || '') + '"></td>' +
+                    '<td><select class="form-control studyRequestItemInput" name="uom" data-index="' + i + '">' +
+                    '<option value="">--none--</option>';
+                $.each(uomList, function (j, unit) {
+                    var selected = val.uom === unit.name ? 'selected' : '';
+                    newRow += '<option value="' + unit.name + '" ' + selected + '>' + unit.name + ' (' + unit.description + ')</option>';
+                });
+                newRow += '</select></td></tr>';
+                $('#allProductRequestTable').append(newRow);
+            });
+
+            // Reinitialize input types for newly added rows
+            JSUTIL.reinitializeInputTypes();
+        } else {
+            var innerHtml = '';
+            var headerHtml = '<tr><th>Product</th><th>Stock Type</th><th>Quantity</th></tr>';
+            $('#allRequestsTableHead').empty().append(headerHtml);
+            $('#allRequestsTable').empty();
+            $.each(objList, function (i, val) {
+                innerHtml += '<tr class="productRequestItem" name="' + val.id + '">' +
+                    '<td>' + val.product.number + ' - ' + val.product.name + '</td>' +
+                    '<td>' + val.stockType + '</td>' +
+                    '<td>' + val.quantity + ' ' + val.uom + '</td>' +
+                    '</tr>';
+            });
+            $('#allRequestsTable').append(innerHtml);
+        }
+    }
+
+    // ============================================================
+    // Main ready - allProductRequestPanel
+    // ============================================================
+    $(document).ready(function () {
+        $(window).off('load.disposalDT').on('load.disposalDT', function () {
+            initDisposalRequestTable();
+        });
+        setTimeout(function () {
+            loadDisposalRequests();
+        }, 300);
+
+        $('.newProductRequestBtn').on('click', function () {
+            $('#editRequestInventoryTitle').text('New Request');
+            var todayDate = new Date().toLocaleDateString('en-GB');
+            studyRequestUrl = '/api/disposal-requests';
+            $('.createStudyRequestInput[name="requestDate"]').val(todayDate);
+            $('.createStudyRequestInput[name="initiator.id"]').val(FOX.employeeId);
+            $('.createStudyRequestInput[name="processStatus"]').val('New');
+
+            // Reset dropdowns
+            setDisposalDropdown('wasteCategory', '');
+            setDisposalDropdown('storageLocation.id', '');
+            setDisposalDropdown('department.id', '');
+
+            $('#requestInventoryPanel').show();
+            $('#allProductRequestPanel').hide();
+        });
+
+        $('.showRequestOnCancel').on('click', function () {
+            $('#requestInventoryPanel').hide();
+            $('#allProductRequestPanel').show();
+        });
+
+        $('#allProductCompoundTable').on('click', '.selectCompoundBtn', function () {
+            var currentId = $(this).closest('tr').data('id');
+            currentRequestId = currentId;
+
+            $.each(recordList, function (i, val) {
+                if (Number(currentId) === val.id) {
+                    console.log(val);
+                    currentProcessStatus = val.processStatus;
+
+                    if (val.processStatus === 'New') {
+                        // ---------- Create/Edit panel ----------
+                        $('#editRequestInventoryTitle').text(val.number);
+                        $('.createStudyRequestInput[name="id"]').val(val.id);
+                        $('.createStudyRequestInput[name="initiator.id"]').val(val.initiatorId);
+                        $('.createStudyRequestInput[name="processStatus"]').val(val.processStatus);
+                        $('.createStudyRequestInput[name="initiatorNotes"]').val(val.initiatorNotes);
+                        $('.createStudyRequestInput[name="sopReference"]').val(val.sopReference);
+                        $('.createStudyRequestInput[name="materialType"]').val(val.materialType);
+                        $('.createStudyRequestInput[name="number"]').val(val.number);
+                        $('.createStudyRequestInput[name="requestDate"]').val(JSUTIL.getDate(val.requestDate));
+
+                        // Vendor
+                        if (val.vendor) {
+                            $('#vendorId').val(val.vendorId);
+                            $('#vendorName').val(val.vendor ? val.vendor.name : '');
+                            $('#vendorName_hidden').val(val.vendor ? val.vendor.name : '');
+                        } else {
+                            $('#vendorId').val('');
+                            $('#vendorName').val('');
+                            $('#vendorName_hidden').val('');
+                        }
+
+                        // Outward Type
+                        setDisposalDropdown('wasteCategory', val.wasteCategory || '');
+
+                        // Storage Location
+                        setDisposalDropdown('storageLocation.id', val.storageLocation ? (val.storageLocation.id || '') : '');
+
+                        // Department
+                        setDisposalDropdown('department.id', val.department ? (val.department.id || '') : '');
+
+                        studyRequestUrl = '/api/disposal-requests/upsert';
+                        $('#requestInventoryPanel').show();
+                        $('#allProductRequestPanel').hide();
+
+                    } else {
+                        // ---------- Read-only edit panel ----------
+                        $('#editRequestTitle').text(val.number);
+                        $('.editStudyRequestInput[name="initiatorNotes"]').val(val.initiatorNotes);
+                        $('.editStudyRequestInput[name="sopReference"]').val(val.sopReference);
+                        $('.editStudyRequestInput[name="materialType"]').val(val.materialType);
+                        // $('.editStudyRequestInput[name="initiator.name"]').val(val.initiator.name);
+                        $('.editStudyRequestInput[name="initiator.name"]').val(getEmployeeFullName(val.initiator));
+                        // if(val.executor) {
+                        //     $('.editStudyRequestInput[name="executor.name"]').val(val.executor.name || '');
+                        // }
+                        if (val.executor) {
+                            $('.editStudyRequestInput[name="executor.name"]').val(getEmployeeFullName(val.executor));
+                        }
+
+                        // Vendor
+                        if (val.vendor != '') {
+                            $('.editStudyRequestInput[name="vendor.id"]').val(val.vendor.id);
+                            $('.editStudyRequestInput[name="vendor.id"]').parent().find(".selectSearchInputAutoComplete").val(val.vendor.name);
+                        } else {
+                            $('.editStudyRequestInput[name="vendor.id"]').val('');
+                            $('.editStudyRequestInput[name="vendor.id"]').parent().find(".selectSearchInputAutoComplete").val('');
+                        }
+
+                        // Outward Type (read-only btn)
+                        setDisposalDropdown('wasteCategory', val.wasteCategory || '');
+
+                        // Storage Location (read-only btn)
+                        setDisposalDropdown('storageLocation.id', val.storageLocation ? (val.storageLocation.id || '') : '');
+
+                        // Department (read-only btn)
+                        setDisposalDropdown('department.id', val.department ? (val.department.id || '') : '');
+
+                        $('#editProductRequestPanel').show();
+                        $('#allProductRequestPanel').hide();
+                    }
+
+                    JSUTIL.callAJAXGet('/api/disposal-request-items?requestId=' + currentRequestId, callbackAfterGetRequestItems);
+                }
+            });
+        });
+    });
+
+    // ============================================================
+    // requestInventoryPanel - Add items, Save, Submit
+    // ============================================================
+    $(document).ready(function () {
+        $('.showRequestOnCancel').on('click', function () {
+            $('#requestInventoryPanel').hide();
+            $('#allQualityControlPanel').hide();
+            $('#editQualityControlPanel').show();
+            $('#allProductRequestTable').empty();
+            $('.createStudyRequestInput').val('');
+        });
+
+        $('#addRequestInventory').on('click', function () {
+            var rowCount = $('#allProductRequestTable tr.productRequestItem').length;
+            var newRow = '<tr class="productRequestItem" name="">' +
+                '<td><button class="btn btn-sm btn-soft-danger deleteTrSelect"><i class="ti ti-trash"></i></button></td>' +
+                '<td><select class="form-control studyRequestItemInput" name="product.id" data-index="' + rowCount + '">' +
+                '<option value="">--none--</option>';
+            $.each(currentProductList, function (i, val) {
+                newRow += '<option value="' + val.id + '">' + val.number + ' - ' + val.name + '</option>';
+            });
+            newRow += '</select></td>' +
+                '<td><input type="text" class="form-control form-control-sm studyRequestItemInput" name="stockType" placeholder="Enter Stock Type"></td>' +
+                '<td><input type="number" class="form-control form-control-sm studyRequestItemInput" name="quantity" placeholder="Enter Quantity"></td>' +
+                '<td><select class="form-control studyRequestItemInput" name="uom" data-index="' + rowCount + '">' +
+                '<option value="">--none--</option>';
+            $.each(uomList, function (i, unit) {
+                newRow += '<option value="' + unit.name + '">' + unit.name + ' (' + unit.description + ')</option>';
+            });
+            newRow += '</select></td></tr>';
+            $('#allProductRequestTable').append(newRow);
+            JSUTIL.reinitializeInputTypes();
+        });
+
+        $('#saveInventoryBtn').on('click', function () {
+            updateStudyRequest(false);
+        });
+
+        $('#submitRequestBtn').on('click', function () {
+            updateStudyRequest(true);
+        });
+    });
+
+    function updateStudyRequest(complete) {
+        if (complete) {
+            $('.createStudyRequestInput[name="processStatus"]').val("Submitted");
+        }
+        var requestObj = JSUTIL.buildFormDataJSON('createStudyRequestInput');
+        requestObj['requestDate'] = JSUTIL.toDatabaseDate($('.createStudyRequestInput[name="requestDate"]').val());
+
+        var storageLocationId = $('.createStudyRequestNonInput[name="storageLocation.id"]').val();
+        var departmentId = $('.createStudyRequestNonInput[name="department.id"]').val();
+
+        if (storageLocationId != '') {
+            requestObj['storageLocation'] = { id: storageLocationId };
+        }
+        if (departmentId != '') {
+            requestObj['department'] = { id: departmentId };
+        }
+        if (FOX && FOX.employeeId) {
+            requestObj['initiator'] = { id: FOX.employeeId };
+        }
+        JSUTIL.callAJAXPost(studyRequestUrl, JSON.stringify(requestObj), callbackAfterCreateRequest);
+    }
+
+    function callbackAfterCreateRequest(response) {
+        console.log(response);
+        var items = [];
+        $('#allProductRequestTable tr.productRequestItem').each(function (i) {
+            var item = {
+                id: $(this).attr('name'),
+                product: { 'id': $(this).find('.studyRequestItemInput[name="product.id"][data-index="' + i + '"]').val() },
+                stockType: $(this).find('.studyRequestItemInput[name="stockType"]').val(),
+                quantity: $(this).find('.studyRequestItemInput[name="quantity"]').val(),
+                uom: $(this).find('.studyRequestItemInput[name="uom"][data-index="' + i + '"]').val(),
+                request: { 'id': response.id }
+            };
+            items.push(item);
+        });
+        console.log(items);
+        var postUrl = '/api/disposal-request-items/upsert-multiple';
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(items), callbackAfterCreateRequestItems);
+    }
+
+    function callbackAfterCreateRequestItems(response) {
+        console.log(response);
+        $('#allProductRequestTable').empty();
+        $('.createStudyRequestInput').val('');
+        $('#requestInventoryPanel').hide();
+        $('#allProductRequestPanel').show();
+        loadDisposalRequests();
+    }
+
+    // ============================================================
+    // editProductRequestPanel - Close
+    // ============================================================
+    var uomConversion = {
+        'mg': 0.001,
+        'g': 1,
+        'kg': 1000
+    };
+
+    $(document).ready(function () {
+        $('.showAllCompoundsOnCancel').on('click', function () {
+            $('#editProductRequestPanel').hide();
+            $('#allProductRequestPanel').show();
+        });
+    });
+
+    // ============================================================
+    // Vendor autocomplete search
+    // ============================================================
+    var vendorSearchTimer;
+
+    $('#vendorName').on('input', function () {
+        clearTimeout(vendorSearchTimer);
+        var q = $(this).val();
+        $('#vendorId').val('');
+        $('#vendorName_hidden').val('');
+        if (!q || q.trim().length < 1) {
+            $('#vendorDropdown').hide();
+            return;
+        }
+        vendorSearchTimer = setTimeout(function () {
+            searchVendors(q);
+        }, 300);
+    });
+
+    $('#vendorName').on('blur', function () {
+        setTimeout(function () { $('#vendorDropdown').hide(); }, 150);
+    });
+    // Helper function - add this near the top with other helpers
+    function getEmployeeFullName(emp) {
+        if (!emp) return '';
+        if (emp.name) return emp.name; // fallback if name exists directly
+        var first = emp.firstName || '';
+        var last = emp.lastName || '';
+        return (first + ' ' + last).trim() || ('ID: ' + emp.id);
+    }
+// ============================================================
+// Vendor autocomplete search
+// ============================================================
+var vendorSearchTimer;
+
+function searchVendors(query, $inputEl, $dropdownEl, $hiddenIdEl, $hiddenNameEl) {
+    $dropdownEl.empty();
+    $.get('/api/account/search', { name: query }, function(results) {
+        $dropdownEl.empty();
+        if (!results || results.length === 0) {
+            $dropdownEl.append('<div class="user-search-item" style="color:#888;">No results found</div>');
+        } else {
+            $.each(results, function(i, account) {
+                $('<div class="user-search-item"></div>')
+                    .text(account.name)
+                    .attr('data-id', account.id)
+                    .on('mousedown', function(e) {
+                        e.preventDefault();
+                        $inputEl.val(account.name);
+                        $hiddenIdEl.val(account.id);
+                        if ($hiddenNameEl && $hiddenNameEl.length) {
+                            $hiddenNameEl.val(account.name);
+                        }
+                        $dropdownEl.hide();
+                    })
+                    .appendTo($dropdownEl);
+            });
+        }
+        $dropdownEl.show();
+    }).fail(function() {
+        $dropdownEl.html('<div class="user-search-item" style="color:#888;">Search failed</div>').show();
+    });
+}
+
+$('#vendorName').on('input', function() {
+    clearTimeout(vendorSearchTimer);
+    var q = $(this).val();
+    $('#vendorId').val('');
+    $('#vendorName_hidden').val('');
+    if (!q || q.trim().length < 1) {
+        $('#vendorDropdown').hide();
+        return;
+    }
+    vendorSearchTimer = setTimeout(function() {
+        searchVendors(q, $('#vendorName'), $('#vendorDropdown'), $('#vendorId'), $('#vendorName_hidden'));
+    }, 300);
+});
+
+$('#vendorName').on('blur', function() {
+    setTimeout(function() { $('#vendorDropdown').hide(); }, 150);
+});
+</script>
