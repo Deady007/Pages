@@ -167,21 +167,21 @@
                     <h5>Request Details</h5>
                     <div class="ibox-tools">
                         <button type="button" class="btn btn-default btn-sm back-to-request-list">
-                            <i data-lucide="arrow-left"></i> Back
+                            <i data-lucide="arrow-left"></i>  Back
                         </button>
                         <button type="button" class="btn btn-default btn-sm reject-request-btn" disabled>
-                            <i data-lucide="x"></i> Reject
+                            <i data-lucide="x"></i>  Reject
                         </button>
                         <button type="button" class="btn btn-secondary btn-sm issue-request-btn" disabled>
-                            <i data-lucide="check"></i> Issue
+                            <i data-lucide="check"></i>  Issue
                         </button>
                         <button type="button" class="btn btn-default btn-sm" id="printProductIssueLabelBtn"
                             style="display:none;">
-                            <i data-lucide="tag"></i> Print Label
+                            <i data-lucide="tag"></i>  Print Label
                         </button>
                         <button type="button" class="btn btn-secondary btn-sm" id="printProductIssueReportBtn"
                             style="display:none;">
-                            <i data-lucide="printer"></i> Print Report
+                            <i data-lucide="printer"></i>  Print Report
                         </button>
                     </div>
                 </div>
@@ -1076,7 +1076,9 @@
                     }
                     const plannedQty = Number(row?.plannedQuantity ?? row?.PlannedQuantity ?? 0);
                     const actualQty = Number(row?.actualQuantity ?? row?.ActualQuantity ?? 0);
-                    map[String(productId)] = { planned: plannedQty, actual: actualQty };
+                    const omName = row?.product?.name || row?.product?.Name || '';
+                    const omUom = row?.product?.uom || row?.product?.Uom || '';
+                    map[String(productId)] = { planned: plannedQty, actual: actualQty, name: omName, uom: omUom };
                 });
                 state.orderMaterialPlanMap = map;
                 if (typeof callback === 'function') {
@@ -1283,10 +1285,9 @@
                 const remainingQty = Number(item?.quantityRemaining ?? item?.QuantityRemaining ?? Math.max(requestedQty - issuedQty, 0));
                 const productInfo = item?.product || item?.Product || {};
                 const productId = productInfo?.id || productInfo?.Id || item?.productId || item?.ProductId || '';
-                const productName = productInfo?.name || productInfo?.Name || '';
-                
+                const productName = productInfo?.name || productInfo?.Name || planEntry?.name || '';
                 const productNumber = productInfo?.number || productInfo?.Number || '';
-                const productUom = productInfo?.uom || productInfo?.Uom || '';
+                const productUom = productInfo?.uom || productInfo?.Uom || planEntry?.uom || '';
                 const planEntry = state.orderMaterialPlanMap[String(productId)] || {};
                 const plannedQty = planEntry && Number.isFinite(Number(planEntry.planned))
                     ? Number(planEntry.planned)

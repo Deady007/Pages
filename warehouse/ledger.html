@@ -19,8 +19,16 @@
                         <div class="col-sm-4">
                             <div class="form-group">
                                 <label><strong>Product</strong></label>
-                                <input type="text" placeholder="search.." class="form-control ledger-product-search" />
+                                <div class="input-group">
+                                    <input type="text" placeholder="search and add products.." class="form-control ledger-product-search" />
+                                    <span class="input-group-btn">
+                                        <button type="button" id="addProductBtn" class="btn btn-default" title="Add product to selection">
+                                            <i data-lucide="plus"></i> Add
+                                        </button>
+                                    </span>
+                                </div>
                                 <input type="hidden" name="Product.Id" class="ledger-product-id" />
+                                <div id="selectedProductsContainer" style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;"></div>
                             </div>
                         </div>
                         <div class="col-sm-2">
@@ -80,8 +88,8 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        
                                         <th>Date</th>
+                                        <th>Product</th>
                                         <th>Transaction Type</th>
                                         <th>Doc Code</th>
                                         <th>Batch No</th>
@@ -90,14 +98,16 @@
                                         <th>Quantity Issue</th>
                                         <th>Closing Balance</th>
                                         <th>Transaction Amount</th>
+                                        <th>Batch Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="transactionTableBody">
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="7" class="text-right"><strong>Total:</strong></td>
+                                        <td colspan="9" class="text-right"><strong>Total:</strong></td>
                                         <td class="text-right" id="totalAmount"><strong>0</strong></td>
+                                        <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -121,10 +131,11 @@ $(document).ready(function () {
     initProductSearch($productSearchInput, $productIdInput);
 
     var currentBatches = [];
+    var selectedProducts = []; // [{id, text}]
 
     var currentFilters = {
-        productId: null,
-        productName: '',
+        productIds: [],
+        productNames: [],
         fromDate: '',
         toDate: '',
         batchId: null,
@@ -141,6 +152,54 @@ $(document).ready(function () {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     $('#fromDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
 
+    // Add product to selection list
+    $('#addProductBtn').on('click', function () {
+        var id = $productIdInput.val();
+        var text = ($productSearchInput.val() || '').trim();
+        if (!id || !text) {
+            JSUTIL.buildErrorModal('Please select a product from the suggestions first');
+            return;
+        }
+        addSelectedProduct(id, text);
+        $productSearchInput.val('');
+        $productIdInput.val('');
+    });
+
+    function addSelectedProduct(id, text) {
+        if (selectedProducts.find(function (p) { return String(p.id) === String(id); })) return;
+        selectedProducts.push({ id: id, text: text });
+        renderSelectedProducts();
+        if ($('#filterTypeDropdown').val() === 'batch') {
+            loadBatchesForSelectedProducts();
+        }
+    }
+
+    function removeSelectedProduct(id) {
+        selectedProducts = selectedProducts.filter(function (p) { return String(p.id) !== String(id); });
+        renderSelectedProducts();
+        if ($('#filterTypeDropdown').val() === 'batch') {
+            loadBatchesForSelectedProducts();
+        }
+    }
+
+    function renderSelectedProducts() {
+        var container = $('#selectedProductsContainer');
+        container.empty();
+        selectedProducts.forEach(function (p) {
+            var safeText = $('<div>').text(p.text).html();
+            container.append(
+                '<span style="display:inline-flex;align-items:center;background:#e8f0fe;border:1px solid #4285f4;border-radius:20px;padding:2px 10px;margin:2px 0;font-size:13px;">' +
+                safeText +
+                '<span class="remove-product-tag" data-id="' + p.id + '" style="margin-left:6px;cursor:pointer;font-weight:bold;color:#4285f4;line-height:1;">&times;</span>' +
+                '</span>'
+            );
+        });
+        container.find('.remove-product-tag').on('click', function () {
+            removeSelectedProduct($(this).data('id'));
+        });
+        lucide.createIcons();
+    }
+
     // Handle filter type dropdown toggle
     $('#filterTypeDropdown').on('change', function () {
         var filterType = $(this).val();
@@ -152,33 +211,44 @@ $(document).ready(function () {
         } else {
             $('#dateFilterSection').hide();
             $('#batchFilterSection').show();
-            var productId = $productIdInput.val();
-            if (productId) {
-                loadBatchesForProduct(productId);
+            if (selectedProducts.length) {
+                loadBatchesForSelectedProducts();
             }
         }
     });
 
-    // When product changes, reload batches if batch filter is active
-    $productIdInput.on('change', function () {
-        var productId = $(this).val();
-        if ($('#filterTypeDropdown').val() === 'batch' && productId) {
-            loadBatchesForProduct(productId);
+    function loadBatchesForSelectedProducts() {
+        if (!selectedProducts.length) {
+            currentBatches = [];
+            initBatchSearch([], $batchSearchInput, $batchIdInput);
+            return;
         }
-        $batchSearchInput.val('');
-        $batchIdInput.val('');
-    });
-
-    $productSearchInput.on('blur', function () {
-        setTimeout(function () {
-            var productId = $productIdInput.val();
-            if ($('#filterTypeDropdown').val() === 'batch' && productId) {
-                loadBatchesForProduct(productId);
-            }
-            $batchSearchInput.val('');
-            $batchIdInput.val('');
-        }, 300);
-    });
+        var allBatches = [];
+        var pending = selectedProducts.length;
+        selectedProducts.forEach(function (p) {
+            var apiUrl = JSUTIL.getUrl('/api/product-lots/search?productId=' + encodeURIComponent(p.id));
+            JSUTIL.callAJAXGet(apiUrl, function (res) {
+                var filtered = Array.isArray(res) ? res.filter(function (b) {
+                    var bProductId =
+                        (b.product && (b.product.Id || b.product.id)) ||
+                        (b.Product && (b.Product.Id || b.Product.id));
+                    return String(bProductId) === String(p.id);
+                }) : [];
+                allBatches = allBatches.concat(filtered);
+                pending--;
+                if (pending <= 0) {
+                    currentBatches = allBatches;
+                    initBatchSearch(currentBatches, $batchSearchInput, $batchIdInput);
+                }
+            }, function () {
+                pending--;
+                if (pending <= 0) {
+                    currentBatches = allBatches;
+                    initBatchSearch(currentBatches, $batchSearchInput, $batchIdInput);
+                }
+            });
+        });
+    }
 
     $('#fetchTransactionsBtn').on('click', function () {
         fetchTransactions();
@@ -188,31 +258,13 @@ $(document).ready(function () {
         printLedgerReport();
     });
 
-    function loadBatchesForProduct(productId) {
-        var apiUrl = JSUTIL.getUrl('/api/product-lots/search?productId=' + encodeURIComponent(productId));
-        JSUTIL.callAJAXGet(apiUrl, function (res) {
-            currentBatches = Array.isArray(res) ? res.filter(function (b) {
-                var bProductId =
-                    (b.product && (b.product.Id || b.product.id)) ||
-                    (b.Product && (b.Product.Id || b.Product.id));
-                return String(bProductId) === String(productId);
-            }) : [];
-            initBatchSearch(currentBatches, $batchSearchInput, $batchIdInput);
-        }, function () {
-            currentBatches = [];
-            initBatchSearch([], $batchSearchInput, $batchIdInput);
-        });
-    }
-
     function fetchTransactions() {
-        var productId = $productIdInput.val();
-        var productName = $productSearchInput.val();
-        var filterType = $('#filterTypeDropdown').val();
-
-        if (!productId) {
-            JSUTIL.buildErrorModal('Please select a product');
+        if (!selectedProducts.length) {
+            JSUTIL.buildErrorModal('Please add at least one product');
             return;
         }
+
+        var filterType = $('#filterTypeDropdown').val();
 
         if (filterType === 'date') {
             var fromDate = $('#fromDate').val();
@@ -229,17 +281,17 @@ $(document).ready(function () {
             }
 
             currentFilters = {
-                productId: productId,
-                productName: productName,
+                productIds: selectedProducts.map(function (p) { return p.id; }),
+                productNames: selectedProducts.map(function (p) { return p.text; }),
                 fromDate: fromDate,
                 toDate: toDate,
                 batchId: null,
                 batchName: ''
             };
 
-            fetchProductTransactions(productId, function (records) {
-                var filteredTransactions = filterTransactionsByDate(records, productId, fromDate, toDate);
-                console.log('transactions',filteredTransactions)
+            fetchAllProductTransactions(selectedProducts, function (records) {
+                var filteredTransactions = filterTransactionsByDate(records, currentFilters.productIds, fromDate, toDate);
+                console.log('transactions', filteredTransactions);
                 currentTransactions = filteredTransactions;
                 displayTransactions(filteredTransactions);
                 $('#printLedgerBtn').show();
@@ -255,17 +307,17 @@ $(document).ready(function () {
             }
 
             currentFilters = {
-                productId: productId,
-                productName: productName,
+                productIds: selectedProducts.map(function (p) { return p.id; }),
+                productNames: selectedProducts.map(function (p) { return p.text; }),
                 fromDate: '',
                 toDate: '',
                 batchId: batchId,
                 batchName: batchName
             };
 
-            fetchProductTransactions(productId, function (records) {
-                var filteredTransactions = filterTransactionsByBatch(records, productId, batchId, batchName);
-                console.log('transactions',filteredTransactions)  
+            fetchAllProductTransactions(selectedProducts, function (records) {
+                var filteredTransactions = filterTransactionsByBatch(records, currentFilters.productIds, batchId, batchName);
+                console.log('transactions', filteredTransactions);
                 currentTransactions = filteredTransactions;
                 displayTransactions(filteredTransactions);
                 $('#printLedgerBtn').show();
@@ -273,28 +325,36 @@ $(document).ready(function () {
         }
     }
 
-    function fetchProductTransactions(productId, callback) {
-        if (!productId) {
+    function fetchAllProductTransactions(products, callback) {
+        if (!products || !products.length) {
             callback([]);
             return;
         }
-        var apiUrl = JSUTIL.getUrl(
-            '/api/product-transactions/search?productId=' + encodeURIComponent(productId) +
-            '&type=&changeReason='
-        );
-        JSUTIL.callAJAXGet(apiUrl, function (res) {
-            callback(Array.isArray(res) ? res : []);
-        }, function () {
-            callback([]);
+        var allRecords = [];
+        var pending = products.length;
+        products.forEach(function (p) {
+            var apiUrl = JSUTIL.getUrl(
+                '/api/product-transactions/search?productId=' + encodeURIComponent(p.id) +
+                '&type=&changeReason='
+            );
+            JSUTIL.callAJAXGet(apiUrl, function (res) {
+                allRecords = allRecords.concat(Array.isArray(res) ? res : []);
+                pending--;
+                if (pending <= 0) callback(allRecords);
+            }, function () {
+                pending--;
+                if (pending <= 0) callback(allRecords);
+            });
         });
     }
 
-    function filterTransactionsByDate(records, productId, fromDate, toDate) {
+    function filterTransactionsByDate(records, productIds, fromDate, toDate) {
         if (!records || records.length === 0) return [];
-        records = records.filter(v=> v.processStatus == 'QA Approved' || v.type!='Stock Adjustment')
+        records = records.filter(function (v) {
+            return v.processStatus == 'QA Approved' || v.type != 'Stock Adjustment';
+        });
         var fromDateTime = new Date(fromDate);
         fromDateTime.setHours(0, 0, 0, 0);
-
         var toDateTime = new Date(toDate);
         toDateTime.setHours(23, 59, 59, 999);
 
@@ -304,7 +364,7 @@ $(document).ready(function () {
                 record.Product?.id ||
                 record.product?.Id ||
                 record.product?.id;
-            if (recordProductId != productId) return false;
+            if (!productIds.some(function (id) { return String(id) === String(recordProductId); })) return false;
 
             var transactionDate = record.TransactionDate || record.transactionDate;
             if (!transactionDate) return true;
@@ -314,7 +374,7 @@ $(document).ready(function () {
         });
     }
 
-    function filterTransactionsByBatch(records, productId, batchId, batchName) {
+    function filterTransactionsByBatch(records, productIds, batchId, batchName) {
         if (!records || records.length === 0) return [];
 
         var selectedBatch = currentBatches.find(function (b) {
@@ -331,72 +391,73 @@ $(document).ready(function () {
                 record.Product?.id ||
                 record.product?.Id ||
                 record.product?.id;
-            if (recordProductId != productId) return false;
+            if (!productIds.some(function (id) { return String(id) === String(recordProductId); })) return false;
 
             var recordBatch = record.BatchNumber || record.batchNumber || record.LotNumber || record.lotNumber || '';
             return String(recordBatch).toLowerCase() === String(batchNumber).toLowerCase();
         });
     }
 
-    // Sort by ARN first, then by date within each ARN
-   function sortTransactions(list) {
-    return list.slice().sort(function (a, b) {
-        var dateA = new Date(a.TransactionDate || a.transactionDate);
-        var dateB = new Date(b.TransactionDate || b.transactionDate);
-        return dateA - dateB;
-    });
-}
+    function sortTransactions(list) {
+        return list.slice().sort(function (a, b) {
+            var dateA = new Date(a.TransactionDate || a.transactionDate);
+            var dateB = new Date(b.TransactionDate || b.transactionDate);
+            return dateA - dateB;
+        });
+    }
+
+    function getProductName(transaction) {
+        return transaction.product?.name || transaction.product?.Name ||
+               transaction.Product?.name || transaction.Product?.Name || '';
+    }
 
     function displayTransactions(transactions) {
         var tableBody = $('#transactionTableBody');
         tableBody.empty();
 
         if (transactions.length === 0) {
-            tableBody.append('<tr><td colspan="8" class="text-center">No transactions found for the selected criteria</td></tr>');
+            tableBody.append('<tr><td colspan="11" class="text-center">No transactions found for the selected criteria</td></tr>');
             $('#transactionResultsSection').show();
             $('#totalAmount').html('<strong>0</strong>');
             return;
         }
 
         var totalAmount = 0;
-
-        // Sort by ARN first, then by date within each ARN
         var sorted = sortTransactions(transactions);
-
-        // Each ARN tracks its own independent balance
-        var arnBalances = {};
+        // Balance tracked per product+ARN to avoid cross-product contamination
+        var balanceMap = {};
 
         sorted.forEach(function (transaction) {
             var date = formatDate(transaction.TransactionDate || transaction.transactionDate);
+            var productName = getProductName(transaction);
+            var type = transaction.type || 'GIM';
             var docCode = transaction.DocNumber || transaction.docNumber || transaction.name || '';
-            var batchNo = transaction.BatchNumber || transaction.batchNumber || transaction?.productLot.batchNumber || '';
-            var arn = (transaction.Arn || transaction.arn || transaction?.productLot.arn || '').toString();
+            var batchNo = transaction.BatchNumber || transaction.batchNumber || transaction?.productLot?.batchNumber || '';
+            var arn = (transaction.Arn || transaction.arn || transaction?.productLot?.arn || '').toString();
             var qtyReceipt = parseFloat(transaction.QuantityReceipt || transaction.quantityReceipt || 0);
             var qtyIssue = parseFloat(transaction.QuantityIssued || transaction.quantityIssued || 0);
             var transactionAmount = parseFloat(transaction.TransactionAmount || transaction.transactionAmount || 0);
-            var type 
-            if(transaction.type){
-                type =transaction.type
-            }
-            else{
-                type = 'GIM'
-            }
-            // Independent balance per ARN
-            if (!arnBalances[arn]) arnBalances[arn] = 0;
-            arnBalances[arn] += qtyReceipt - qtyIssue;
+            var batchStatus = transaction?.productLot?.processStatus || transaction?.ProductLot?.processStatus || transaction?.ProductLot?.ProcessStatus || '';
+
+            var productId = transaction.Product?.Id || transaction.Product?.id || transaction.product?.Id || transaction.product?.id || '';
+            var balanceKey = String(productId) + '_' + arn;
+            if (!balanceMap[balanceKey]) balanceMap[balanceKey] = 0;
+            balanceMap[balanceKey] += qtyReceipt - qtyIssue;
 
             totalAmount += transactionAmount;
 
             var row = '<tr>' +
                 '<td>' + date + '</td>' +
-                `<td>${type}</td>`+
+                '<td>' + productName + '</td>' +
+                '<td>' + type + '</td>' +
                 '<td>' + docCode + '</td>' +
                 '<td>' + batchNo + '</td>' +
                 '<td>' + arn + '</td>' +
                 '<td class="text-right">' + (qtyReceipt ? qtyReceipt.toFixed(2) : '') + '</td>' +
                 '<td class="text-right">' + (qtyIssue ? qtyIssue.toFixed(2) : '') + '</td>' +
-                '<td class="text-right"><strong>' + arnBalances[arn].toFixed(2) + '</strong></td>' +
+                '<td class="text-right"><strong>' + balanceMap[balanceKey].toFixed(2) + '</strong></td>' +
                 '<td class="text-right">' + transactionAmount.toFixed(2) + '</td>' +
+                '<td>' + batchStatus + '</td>' +
                 '</tr>';
 
             tableBody.append(row);
@@ -412,10 +473,8 @@ $(document).ready(function () {
             return;
         }
 
-        // Sort by ARN first, then by date within each ARN
         var sortedTransactions = sortTransactions(currentTransactions);
 
-        // Calculate totals
         var totalReceipt = 0;
         var totalIssue = 0;
         var totalStockValue = 0;
@@ -434,6 +493,8 @@ $(document).ready(function () {
         } else {
             filterLabel = 'FROM ' + formatDateForReport(currentFilters.fromDate) + ' TO ' + formatDateForReport(currentFilters.toDate);
         }
+
+        var productLabel = (currentFilters.productNames || []).join(', ');
 
         var printContent = '<!DOCTYPE html><html><head><title>Stock Ledger Report</title>';
         printContent += '<style>';
@@ -465,6 +526,7 @@ $(document).ready(function () {
 
         printContent += '<table><thead><tr>';
         printContent += '<th rowspan="2">Tran<br>Date</th>';
+        printContent += '<th rowspan="2">Product</th>';
         printContent += '<th rowspan="2">Doc Code</th>';
         printContent += '<th rowspan="2">Batch<br>No</th>';
         printContent += '<th rowspan="2">AR No</th>';
@@ -476,50 +538,51 @@ $(document).ready(function () {
         printContent += '<th class="text-right">Issue</th>';
         printContent += '</tr></thead><tbody>';
 
-        printContent += '<tr><td colspan="8" style="text-align:center"><strong>' + currentFilters.productName + '</strong></td></tr>';
+        printContent += '<tr><td colspan="9" style="text-align:center"><strong>' + productLabel + '</strong></td></tr>';
 
-        // Each ARN tracks its own independent balance for print
-        var arnBalances = {};
+        var balanceMap = {};
 
         sortedTransactions.forEach(function (transaction) {
             var date = formatDateShort(transaction.TransactionDate || transaction.transactionDate);
+            var productName = getProductName(transaction);
             var docCode = transaction.DocNumber || transaction.docNumber || transaction?.name || '';
-            var batchNo = transaction.BatchNumber || transaction.batchNumber || transaction?.productLot.batchNumber|| '';
+            var batchNo = transaction.BatchNumber || transaction.batchNumber || transaction?.productLot?.batchNumber || '';
             var arn = (transaction.Arn || transaction.arn || transaction?.productLot?.arn || '').toString();
             var qtyReceipt = parseFloat(transaction.QuantityReceipt || transaction.quantityReceipt || 0);
             var qtyIssue = parseFloat(transaction.QuantityIssued || transaction.quantityIssued || 0);
             var transactionAmount = parseFloat(transaction.TransactionAmount || transaction.transactionAmount || 0);
 
-            // Independent balance per ARN
-            if (!arnBalances[arn]) arnBalances[arn] = 0;
-            arnBalances[arn] += qtyReceipt - qtyIssue;
+            var productId = transaction.Product?.Id || transaction.Product?.id || transaction.product?.Id || transaction.product?.id || '';
+            var balanceKey = String(productId) + '_' + arn;
+            if (!balanceMap[balanceKey]) balanceMap[balanceKey] = 0;
+            balanceMap[balanceKey] += qtyReceipt - qtyIssue;
 
             printContent += '<tr>';
             printContent += '<td>' + date + '</td>';
+            printContent += '<td>' + productName + '</td>';
             printContent += '<td>' + docCode + '</td>';
             printContent += '<td>' + batchNo + '</td>';
             printContent += '<td>' + arn + '</td>';
             printContent += '<td class="text-right">' + (qtyReceipt > 0 ? qtyReceipt.toFixed(3) : '') + '</td>';
             printContent += '<td class="text-right">' + (qtyIssue > 0 ? qtyIssue.toFixed(3) : '') + '</td>';
-            printContent += '<td class="text-right">' + arnBalances[arn].toFixed(3) + '</td>';
+            printContent += '<td class="text-right">' + balanceMap[balanceKey].toFixed(3) + '</td>';
             printContent += '<td class="text-right">' + transactionAmount.toFixed(2) + '</td>';
             printContent += '</tr>';
         });
 
-        // Overall totals row
         printContent += '<tr class="total-row">';
-        printContent += '<td colspan="4" class="text-right"><strong>Total :</strong></td>';
+        printContent += '<td colspan="5" class="text-right"><strong>Total :</strong></td>';
         printContent += '<td class="text-right"><strong>' + totalReceipt.toFixed(3) + '</strong></td>';
         printContent += '<td class="text-right"><strong>' + totalIssue.toFixed(3) + '</strong></td>';
         printContent += '<td colspan="2"></td>';
         printContent += '</tr>';
 
-        // Closing balance per ARN summary rows
-        Object.keys(arnBalances).forEach(function (arn) {
+        Object.keys(balanceMap).forEach(function (key) {
+            var arn = key.split('_').slice(1).join('_');
             printContent += '<tr class="total-row">';
-            printContent += '<td colspan="3" class="text-right"><strong>Closing Balance (' + arn + '):</strong></td>';
+            printContent += '<td colspan="4" class="text-right"><strong>Closing Balance (' + arn + '):</strong></td>';
             printContent += '<td></td>';
-            printContent += '<td colspan="2" class="text-right"><strong>' + arnBalances[arn].toFixed(3) + '</strong></td>';
+            printContent += '<td colspan="2" class="text-right"><strong>' + balanceMap[key].toFixed(3) + '</strong></td>';
             printContent += '<td colspan="2" class="text-right"><strong>' + totalStockValue.toFixed(2) + '</strong></td>';
             printContent += '</tr>';
         });
@@ -565,49 +628,49 @@ $(document).ready(function () {
     }
 
     function loadProductsByName(searchParam, callback) {
-    var trimmedSearch = (searchParam || '').trim();
-    if (!trimmedSearch || trimmedSearch.length <= 2) {
-        callback([]);
-        return;
-    }
+        var trimmedSearch = (searchParam || '').trim();
+        if (!trimmedSearch || trimmedSearch.length <= 2) {
+            callback([]);
+            return;
+        }
 
-    var nameUrl = JSUTIL.getUrl('/api/products?type=&name=' + encodeURIComponent(trimmedSearch));
-    var numberUrl = JSUTIL.getUrl('/api/products?type=&number=' + encodeURIComponent(trimmedSearch));
+        var nameUrl = JSUTIL.getUrl('/api/products?type=&name=' + encodeURIComponent(trimmedSearch));
+        var numberUrl = JSUTIL.getUrl('/api/products?type=&number=' + encodeURIComponent(trimmedSearch));
 
-    var nameResults = null;
-    var numberResults = null;
+        var nameResults = null;
+        var numberResults = null;
 
-    function mergeAndReturn() {
-        if (nameResults === null || numberResults === null) return;
+        function mergeAndReturn() {
+            if (nameResults === null || numberResults === null) return;
 
-        var combined = (nameResults || []).concat(numberResults || []);
-        var seen = {};
-        var deduped = combined.filter(function (p) {
-            var id = p.Id || p.id;
-            if (seen[id]) return false;
-            seen[id] = true;
-            return true;
+            var combined = (nameResults || []).concat(numberResults || []);
+            var seen = {};
+            var deduped = combined.filter(function (p) {
+                var id = p.Id || p.id;
+                if (seen[id]) return false;
+                seen[id] = true;
+                return true;
+            });
+
+            callback(deduped);
+        }
+
+        JSUTIL.callAJAXGet(nameUrl, function (res) {
+            nameResults = Array.isArray(res) ? res : [];
+            mergeAndReturn();
+        }, function () {
+            nameResults = [];
+            mergeAndReturn();
         });
 
-        callback(deduped);
+        JSUTIL.callAJAXGet(numberUrl, function (res) {
+            numberResults = Array.isArray(res) ? res : [];
+            mergeAndReturn();
+        }, function () {
+            numberResults = [];
+            mergeAndReturn();
+        });
     }
-
-    JSUTIL.callAJAXGet(nameUrl, function (res) {
-        nameResults = Array.isArray(res) ? res : [];
-        mergeAndReturn();
-    }, function () {
-        nameResults = [];
-        mergeAndReturn();
-    });
-
-    JSUTIL.callAJAXGet(numberUrl, function (res) {
-        numberResults = Array.isArray(res) ? res : [];
-        mergeAndReturn();
-    }, function () {
-        numberResults = [];
-        mergeAndReturn();
-    });
-}
 
     function initProductSearch($searchInput, $hiddenInput) {
         $searchInput = $searchInput || $('.ledger-product-search');
@@ -641,14 +704,7 @@ $(document).ready(function () {
             afterSelect: function (selectedText) {
                 var mappedProducts = this.$element.data('mappedList') || [];
                 var chosen = mappedProducts.find(function (item) { return item.text === selectedText; });
-                var $targetHidden = $hiddenInput.length ? $hiddenInput : this.$element.closest('.form-group').find('.ledger-product-id');
-                $targetHidden.val(chosen && chosen.id ? chosen.id : '');
-
-                if ($('#filterTypeDropdown').val() === 'batch' && chosen && chosen.id) {
-                    loadBatchesForProduct(chosen.id);
-                    $batchSearchInput.val('');
-                    $batchIdInput.val('');
-                }
+                $hiddenInput.val(chosen && chosen.id ? chosen.id : '');
             }
         });
 
@@ -656,8 +712,7 @@ $(document).ready(function () {
             var currentText = ($(this).val() || '').trim();
             var mappedProducts = $searchInput.data('mappedList') || [];
             var match = mappedProducts.find(function (item) { return item.text === currentText; });
-            var $targetHidden = $hiddenInput.length ? $hiddenInput : $(this).closest('.form-group').find('.ledger-product-id');
-            $targetHidden.val(match && match.id ? match.id : '');
+            $hiddenInput.val(match && match.id ? match.id : '');
         });
     }
 
@@ -685,12 +740,6 @@ $(document).ready(function () {
                     var $targetHidden = $hiddenInput.length ? $hiddenInput : $input.closest('.form-group').find('.ledger-product-id');
                     $input.val(text);
                     $targetHidden.val(id);
-
-                    if ($('#filterTypeDropdown').val() === 'batch' && id) {
-                        loadBatchesForProduct(id);
-                        $batchSearchInput.val('');
-                        $batchIdInput.val('');
-                    }
                 });
             });
         });
