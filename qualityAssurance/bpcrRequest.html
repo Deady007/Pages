@@ -105,15 +105,11 @@
                     <input type="hidden" id="assignBOMId">
                     <div class="text-muted small" id="assignBOMHint" style="display:none;"></div>
                 </div> -->
-                    <div class="form-group">
-                        <label>Verification Password</label>
-                        <input type="password" class="form-control" id="assignBOMPassword"
-                            placeholder="Enter your password to proceed">
-                    </div>
                     <div class="alert alert-danger" id="assignBOMError" style="display:none;"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger btn-sm" id="rejectBatchBtn">Reject</button>
                     <button type="button" class="btn btn-secondary btn-sm" id="confirmAssignBOMBtn">Approve</button>
                 </div>
             </div>
@@ -170,6 +166,10 @@ var selectedAssignOrderKeys = [];
             $('#confirmAssignBOMBtn').on('click', function () {
                 console.log("Clicked");
                 verifyAndAssignBOM();
+            });
+
+            $('#rejectBatchBtn').on('click', function () {
+                rejectBatch();
             });
 
             $(document).on('change', 'input[name="assignBatchSelect"]', function () {
@@ -425,7 +425,6 @@ function loadBOMOptions() {
         function openAssignBOMModal(record) {
             currentAssignGroup = record || null;
             selectedAssignOrderKeys = [];
-            $('#assignBOMPassword').val('');
             $('#assignBOMError').hide().text('');
             $('#assignBOMId').val('');
             $('#assignBOMDisplay').text('-');
@@ -946,39 +945,46 @@ function loadBOMOptions() {
                 showAssignError('No BOM id found for ' + getOrderLabel(missingBomOrder) + '.');
                 return;
             }
-            // if (typeof employeeUsername === 'undefined' || !employeeUsername) {
-            //     showAssignError('Cannot verify user: username not available.');
-            //     return;
-            // }
+            JSUTIL.buildAuthenticationModal(function () {
+                setAssignLoading(true);
+                attachBOMToBatchGroup(selectedOrders);
+            });
+        }
 
-            var password = ($('#assignBOMPassword').val() || '').trim();
-            if (!password) {
-                showAssignError('Enter your password to continue.');
+        function rejectBatch() {
+            if (!currentAssignGroup || !Array.isArray(currentAssignGroup.orders) || !currentAssignGroup.orders.length) {
+                showAssignError('Select a batch first.');
                 return;
             }
-            if (!FOX.employeeUsername) {
-                showAssignError('Cannot verify user: username not available.');
+            var selectedOrders = getSelectedAssignOrders();
+            if (!selectedOrders.length) {
+                showAssignError('Select at least one batch to reject.');
                 return;
             }
-            setAssignLoading(true);
-            var verifyPayload = {
-                username: FOX.employeeUsername,
-                password: password
-            };
-            JSUTIL.callAJAXPost('/api/auth/login',
-                JSON.stringify(verifyPayload),
-                function (response) {
-                    if (!response) {
-                        showAssignError('Invalid password, please try again.');
-                        setAssignLoading(false);
+            JSUTIL.buildAuthenticationModal(function () {
+                setAssignLoading(true);
+                var ordersQueue = selectedOrders.slice();
+                function rejectNext() {
+                    if (!ordersQueue.length) {
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('assignBOMModal'));
+                        if (modal) modal.hide();
+                        location.reload();
                         return;
                     }
-                    attachBOMToBatchGroup(selectedOrders);
-                },
-                function () {
-                    showAssignError('Invalid password, please try again.');
-                    setAssignLoading(false);
-                });
+                    var order = ordersQueue.shift();
+                    var payload = { orderStatus: 'New' };
+                    JSUTIL.callAJAXPut('/api/production-orders/' + order.id,
+                        JSON.stringify(payload),
+                        function () { rejectNext(); },
+                        function (err) {
+                            console.error('Failed to reject batch', order.id, err);
+                            showAssignError('Failed to reject batch ' + getOrderLabel(order) + '.');
+                            setAssignLoading(false);
+                        }
+                    );
+                }
+                rejectNext();
+            });
         }
 
         // sentToQAPanel.js end

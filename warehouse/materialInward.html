@@ -3040,7 +3040,7 @@
                     <input type="text" class="form-control batchNumberInput" value="${item.batchNumber || ''}" required/>
                 </td>
                 <td style="position: relative;">
-                    <input type="text" class="form-control manufacturerSearchInput" placeholder="Search..." value="${manufacturerName}" required/>
+                    <input type="text" class="form-control manufacturerSearchInput" placeholder="Search..." value="${manufacturerName}" required disabled/>
                     <input type="hidden" class="manufacturerId" value="${manufacturerId}"/>
                 </td>
                <td>
@@ -5168,7 +5168,10 @@
 
     // Render receipt items into the table, using PO price map when available
     function renderReceiptItems(response, poPriceMap) {
+    console.log("abcd",response);
         var innerHtml = '';
+        var entryType = (currentReceiptData && currentReceiptData.gateEntry && currentReceiptData.gateEntry.entryType) || '';
+        var isLocalMaterialEntry = entryType === 'localMaterial';
 
         // Build simplified header
         var headerHtml = '<tr>';
@@ -5253,6 +5256,16 @@
 
             // Tax section
             var taxHtml = '';
+            var taxableValueHtml = isLocalMaterialEntry ? '' : `
+                            <div class="col-md-2">
+                                <label class="detail-label">Taxable Value</label>
+                                <input type="number" class="form-control form-control-sm" value="${val.taxableValue ?? ''}" readonly>
+                            </div>`;
+            var approxWeightHtml = isLocalMaterialEntry ? '' : `
+                            <div class="col-md-2">
+                                <label class="detail-label">Approx Weight</label>
+                                <input type="number" class="form-control form-control-sm" value="${val.weightVerification ?? ''}" readonly>
+                            </div>`;
             if ((val.taxAmount2 === 0 || val.taxPercent2 === 0) && (val.taxAmount1 > 0 || val.taxPercent1 > 0)) {
                 // IGST only
                 taxHtml = `
@@ -5342,15 +5355,9 @@
                                 <label class="detail-label">Material Value</label>
                                 <input type="number" class="form-control form-control-sm" value="${val.materialValue ?? ''}" readonly>
                             </div>
-                            <div class="col-md-2">
-                                <label class="detail-label">Taxable Value</label>
-                                <input type="number" class="form-control form-control-sm" value="${val.taxableValue ?? ''}" readonly>
-                            </div>
+                            ${taxableValueHtml}
                             ${taxHtml}
-                            <div class="col-md-2">
-                                <label class="detail-label">Approx Weight</label>
-                                <input type="number" class="form-control form-control-sm" value="${val.weightVerification ?? ''}" readonly>
-                            </div>
+                            ${approxWeightHtml}
                             
                         </div>
 
