@@ -167,21 +167,21 @@
                     <h5>Request Details</h5>
                     <div class="ibox-tools">
                         <button type="button" class="btn btn-default btn-sm back-to-request-list">
-                            <i data-lucide="arrow-left"></i> Back
+                            <i data-lucide="arrow-left"></i>  Back
                         </button>
                         <button type="button" class="btn btn-default btn-sm reject-request-btn" disabled>
-                            <i data-lucide="x"></i> Reject
+                            <i data-lucide="x"></i>  Reject
                         </button>
                         <button type="button" class="btn btn-secondary btn-sm issue-request-btn" disabled>
-                            <i data-lucide="check"></i> Issue
+                            <i data-lucide="check"></i>  Issue
                         </button>
                         <button type="button" class="btn btn-default btn-sm" id="printProductIssueLabelBtn"
                             style="display:none;">
-                            <i data-lucide="tag"></i> Print Label
+                            <i data-lucide="tag"></i>  Print Label
                         </button>
                         <button type="button" class="btn btn-secondary btn-sm" id="printProductIssueReportBtn"
                             style="display:none;">
-                            <i data-lucide="printer"></i> Print Report
+                            <i data-lucide="printer"></i>  Print Report
                         </button>
                     </div>
                 </div>
@@ -1029,89 +1029,22 @@
                 return;
             }
             JSUTIL.callAJAXGet('/api/product-request-items?productRequestId=' + encodeURIComponent(requestId), function (res) {
-                console.log('Fetched request items', res);
                 const data = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
                 state.currentItems = data;
                 fetchPlannedQuantitiesForCurrentBpcr(function () {
                     fetchProductLotsForItems(data, function (lotMap) {
                         fetchContainersForLots(lotMap, function () {
-                            fetchProductMetaForItems(data, function () {
-                                fetchIssuedContainersForRequest(requestId, function (fromIssued) {
-                                    renderRequestItems(data);
-                                    if (!fromIssued) {
-                                        restoreAllocationFromCache(requestId);
-                                    }
-                                    if (typeof callback === 'function') {
-                                        callback();
-                                    }
-                                });
+                            fetchIssuedContainersForRequest(requestId, function (fromIssued) {
+                                renderRequestItems(data);
+                                if (!fromIssued) {
+                                    restoreAllocationFromCache(requestId);
+                                }
+                                if (typeof callback === 'function') {
+                                    callback();
+                                }
                             });
                         });
                     });
-                });
-            });
-        }
-
-        function fetchProductMetaForItems(items, callback) {
-            const list = Array.isArray(items) ? items : [];
-            state.productMetaById = state.productMetaById || {};
-            const productIds = [];
-
-            list.forEach(function (item) {
-                const pid = item?.product?.id || item?.product?.Id || item?.productId || item?.ProductId || '';
-                const key = pid ? String(pid) : '';
-                if (!key) {
-                    return;
-                }
-
-                const inlineProduct = item?.product || item?.Product || {};
-                const inlineMeta = {
-                    id: key,
-                    name: inlineProduct?.name || inlineProduct?.Name || '',
-                    number: inlineProduct?.number || inlineProduct?.Number || '',
-                    uom: inlineProduct?.uom || inlineProduct?.Uom || item?.quantityRemainingUom || item?.QuantityRemainingUom || ''
-                };
-
-                const existing = state.productMetaById[key] || {};
-                state.productMetaById[key] = {
-                    id: key,
-                    name: existing.name || inlineMeta.name || '',
-                    number: existing.number || inlineMeta.number || '',
-                    uom: existing.uom || inlineMeta.uom || ''
-                };
-
-                if (!state.productMetaById[key].name || !state.productMetaById[key].uom) {
-                    if (productIds.indexOf(key) === -1) {
-                        productIds.push(key);
-                    }
-                }
-            });
-
-            if (!productIds.length) {
-                if (typeof callback === 'function') callback();
-                return;
-            }
-
-            let pending = productIds.length;
-            function doneOne() {
-                pending -= 1;
-                if (pending <= 0 && typeof callback === 'function') {
-                    callback();
-                }
-            }
-
-            productIds.forEach(function (pid) {
-                JSUTIL.callAJAXGet('/api/products/' + encodeURIComponent(pid), function (product) {
-                    const p = product || {};
-                    state.productMetaById[String(pid)] = {
-                        id: p?.id || p?.Id || pid,
-                        name: p?.name || p?.Name || state.productMetaById[String(pid)]?.name || '',
-                        number: p?.number || p?.Number || state.productMetaById[String(pid)]?.number || '',
-                        uom: p?.uom || p?.Uom || state.productMetaById[String(pid)]?.uom || ''
-                    };
-                    doneOne();
-                }, function () {
-                    doneOne();
                 });
             });
         }
@@ -1143,7 +1076,9 @@
                     }
                     const plannedQty = Number(row?.plannedQuantity ?? row?.PlannedQuantity ?? 0);
                     const actualQty = Number(row?.actualQuantity ?? row?.ActualQuantity ?? 0);
-                    map[String(productId)] = { planned: plannedQty, actual: actualQty };
+                    const omName = row?.product?.name || row?.product?.Name || '';
+                    const omUom = row?.product?.uom || row?.product?.Uom || '';
+                    map[String(productId)] = { planned: plannedQty, actual: actualQty, name: omName, uom: omUom };
                 });
                 state.orderMaterialPlanMap = map;
                 if (typeof callback === 'function') {
@@ -1348,12 +1283,11 @@
                 const requestedQty = Number(item?.quantityRequested ?? item?.QuantityRequested ?? 0);
                 const issuedQty = Number(item?.quantityIssued ?? item?.QuantityIssued ?? 0);
                 const remainingQty = Number(item?.quantityRemaining ?? item?.QuantityRemaining ?? Math.max(requestedQty - issuedQty, 0));
-                const productId = item?.product?.id || item?.product?.Id || item?.productId || item?.ProductId || '';
-                const productMeta = state.productMetaById[String(productId)] || {};
-                const fallbackProduct = item?.product || item?.Product || {};
-                const productName = productMeta?.name || fallbackProduct?.name || fallbackProduct?.Name || '';
-                const productNumber = productMeta?.number || fallbackProduct?.number || fallbackProduct?.Number || '';
-                const productUom = productMeta?.uom || fallbackProduct?.uom || fallbackProduct?.Uom || item?.quantityRemainingUom || item?.QuantityRemainingUom || '';
+                const productInfo = item?.product || item?.Product || {};
+                const productId = productInfo?.id || productInfo?.Id || item?.productId || item?.ProductId || '';
+                const productName = productInfo?.name || productInfo?.Name || planEntry?.name || '';
+                const productNumber = productInfo?.number || productInfo?.Number || '';
+                const productUom = productInfo?.uom || productInfo?.Uom || planEntry?.uom || '';
                 const planEntry = state.orderMaterialPlanMap[String(productId)] || {};
                 const plannedQty = planEntry && Number.isFinite(Number(planEntry.planned))
                     ? Number(planEntry.planned)

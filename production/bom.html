@@ -1294,8 +1294,8 @@ html[data-bs-theme="dark"] .btn-warning:focus,
                 <td><a href="javascript:void(0);" class="selectBOMRecord" data-id="${val.id || val.Id || ''}">${displayName}</a></td>
                 <td>${bpcrNumber}</td>
                 <td>${val.type || val.Type || ''}</td>
-                <td>${productCode} | ${productName}</td>
-                <td>${stageCode} | ${stageName}</td>
+                <td>${[productCode, productName].filter(Boolean).join(' | ') || ''}</td>
+                <td>${[stageCode, stageName].filter(Boolean).join(' | ') || ''}</td>
                 <td>${val.processStatus || val.ProcessStatus || ''}</td>
             </tr>
         `;
@@ -2189,34 +2189,22 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       return Promise.resolve();
     }
     var originalId = currentBOMRecordId;
-    // Full GET then PUT so no fields are wiped by a partial payload
+    var token  = $("meta[name='_csrf']").attr("content");
+    var header = $("meta[name='_csrf_header']").attr("content");
+    var headers = { 'Content-Type': 'application/json' };
+    if (token && header) { headers[header] = token; }
     return fetch('/api/product-recipes/' + originalId, { method: 'GET' })
       .then(function (res) { return res.json(); })
-      .then(function (r) {
-        var deprecatedPayload = {
-          id:                r.id,
-          name:              r.name              || '',
-          masterBatchRecord: r.masterBatchRecord || '',
-          type:              r.type              || '',
-          productQuantity:   r.productQuantity   || 0,
-          quantityVariation: r.quantityVariation || 0,
-          version:           r.version           || 1,
-          plants:            r.plants            || '',
-          processStatus:     'Deprecated',
-          createdDate:       r.createdDate       || r.CreatedDate  || null,
-          approvedDate:      r.approvedDate      || r.ApprovedDate || null
-        };
-        if (r.productStage && r.productStage.id) {
-          deprecatedPayload.productStage = { id: r.productStage.id };
+      .then(function (existing) {
+        var payload = Object.assign({}, existing);
+        payload.processStatus = 'Deprecated';
+        if (existing.productStage && existing.productStage.id) {
+          payload.productStage = { id: existing.productStage.id };
         }
-        var token  = $("meta[name='_csrf']").attr("content");
-        var header = $("meta[name='_csrf_header']").attr("content");
-        var headers = { 'Content-Type': 'application/json' };
-        if (token && header) { headers[header] = token; }
         return fetch('/api/product-recipes/' + originalId, {
           method:  'PUT',
           headers: headers,
-          body:    JSON.stringify(deprecatedPayload)
+          body:    JSON.stringify(payload)
         });
       })
       .then(function () {
@@ -2259,35 +2247,21 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     if (!currentBOMRecordId) {
       return;
     }
-    // Problem: sending only { processStatus } in PUT wipes all other fields (backend does full replacement).
-    // Fix: GET the full record first, then PUT back all fields with only processStatus changed.
-    // GET response shape (from API): { id, name, type, productQuantity, quantityVariation,
-    //   masterBatchRecord, version, processStatus, plants, productStage: { id, ... } }
+    var token  = $("meta[name='_csrf']").attr("content");
+    var header = $("meta[name='_csrf_header']").attr("content");
+    var headers = { 'Content-Type': 'application/json' };
+    if (token && header) { headers[header] = token; }
     fetch('/api/product-recipes/' + currentBOMRecordId, { method: 'GET' })
       .then(function (res) { return res.json(); })
-      .then(function (r) {
-        var postData = {
-          id:                r.id,
-          name:              r.name              || '',
-          type:              r.type              || '',
-          productQuantity:   r.productQuantity   || 0,
-          quantityVariation: r.quantityVariation || 0,
-          masterBatchRecord: r.masterBatchRecord || '',
-          version:           r.version           || 1,
-          plants:            r.plants            || '',
-          processStatus:     nextStatus         
-        };
-        // Preserve the productStage relation using just its id (avoid sending the full nested object)
-        if (r.productStage && r.productStage.id) {
-          postData.productStage = { id: r.productStage.id };
+      .then(function (existing) {
+        var postData = Object.assign({}, existing);
+        postData.processStatus = nextStatus;
+        if (existing.productStage && existing.productStage.id) {
+          postData.productStage = { id: existing.productStage.id };
         }
         if (String(nextStatus || '').toLowerCase() === 'approved') {
           postData.approvedDate = new Date().toISOString();
         }
-        var token  = $("meta[name='_csrf']").attr("content");
-        var header = $("meta[name='_csrf_header']").attr("content");
-        var headers = { 'Content-Type': 'application/json' };
-        if (token && header) { headers[header] = token; }
         return fetch('/api/product-recipes/' + currentBOMRecordId, {
           method:  'PUT',
           headers: headers,
@@ -2591,21 +2565,6 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     }
 
     var $form = $('#editBOMForm');
-    var payload = {
-      id: Number($('#editBOMId').val()) || currentBOMRecordId,
-      masterBatchRecord: toUpperSafe($form.find('[name="masterBatchRecord"]').val()),
-      version: Number($form.find('[name="version"]').val()) || 0,
-      type: $form.find('[name="type"]').val(),
-      productQuantity: Number($form.find('[name="productQuantity"]').val()) || 0,
-      quantityVariation: Number($form.find('[name="quantityVariation"]').val()) || 0,
-      productStage: {
-        id: Number($('#editStageId').val())
-      }
-    };
-
-    var selectedPlantIds = normalizePlantIdArray($('#editBOMPlantSelect').val());
-    payload.plants = selectedPlantIds.join(';');
-
     var token = $("meta[name='_csrf']").attr("content");
     var header = $("meta[name='_csrf_header']").attr("content");
     var headers = {
@@ -2615,11 +2574,28 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       headers[header] = token;
     }
 
-    fetch('/api/product-recipes/' + currentBOMRecordId, {
-      method: 'PUT',
-      headers: headers,
-      body: JSON.stringify(payload)
-    }).then(async function (response) {
+    // GET existing record first, then merge edits to avoid wiping fields
+    fetch('/api/product-recipes/' + currentBOMRecordId, { method: 'GET' })
+      .then(function (res) { return res.json(); })
+      .then(function (existing) {
+        var payload = Object.assign({}, existing);
+        payload.id = Number($('#editBOMId').val()) || currentBOMRecordId;
+        payload.masterBatchRecord = toUpperSafe($form.find('[name="masterBatchRecord"]').val());
+        payload.version = Number($form.find('[name="version"]').val()) || 0;
+        payload.type = $form.find('[name="type"]').val();
+        payload.productQuantity = Number($form.find('[name="productQuantity"]').val()) || 0;
+        payload.quantityVariation = Number($form.find('[name="quantityVariation"]').val()) || 0;
+        payload.productStage = { id: Number($('#editStageId').val()) };
+
+        var selectedPlantIds = normalizePlantIdArray($('#editBOMPlantSelect').val());
+        payload.plants = selectedPlantIds.join(';');
+
+        return fetch('/api/product-recipes/' + currentBOMRecordId, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(payload)
+        });
+      }).then(async function (response) {
       if (!response.ok) {
         var text = await response.text();
         throw new Error(text || ('HTTP ' + response.status));
@@ -2953,15 +2929,11 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       var qty = $row.find('.material-qty-input').val();
       var qtyValue = Number(qty);
       if (!productId) {
-        JSUTIL.buildErrorModal('Please select a product for this step.');
-        isValid = false;
-        return false;
+        return true; // skip empty rows
       }
 
       if (!qty || isNaN(qtyValue) || qtyValue <= 0) {
-        JSUTIL.buildErrorModal('Please enter a valid quantity for this step.');
-        isValid = false;
-        return false;
+        return true; // skip rows without valid quantity
       }
 
       var recordId = $row.find('.material-item-id').val();
@@ -3001,7 +2973,11 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     return payload;
   }
 
+  var _isSavingMaterial = false;
   function handleMaterialSave(stepKey) {
+    if (_isSavingMaterial) {
+      return;
+    }
     if (!currentBOMRecordId) {
       JSUTIL.buildErrorModal('Select a BOM record first.');
       return;
@@ -3013,6 +2989,8 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       JSUTIL.buildErrorModal('Select a step before saving materials.');
       return;
     }
+    _isSavingMaterial = true;
+    $('.material-save-btn').prop('disabled', true);
 
     ensureStepMaterialStore(stepKey);
 
@@ -3025,9 +3003,20 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     var newRecords      = payload.filter(function (r) { return !r.id; });
     var existingRecords = payload.filter(function (r) { return !!r.id; });
 
+    // Deduplicate new records by productId + stepId to prevent duplicate entries
+    var seen = {};
+    newRecords = newRecords.filter(function (r) {
+      var key = String(r.product && r.product.id) + '_' + String(r.step && r.step.id);
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+
     var processDeletesAndRefresh = function () {
       processMaterialDeletes(stepKey, function () {
         fetchRecipeItems(currentBOMRecordId);
+        _isSavingMaterial = false;
+        $('.material-save-btn').prop('disabled', false);
       });
     };
 
@@ -3068,13 +3057,22 @@ html[data-bs-theme="dark"] .btn-warning:focus,
         processDeletesAndRefresh();
         return;
       }
-      // POST only genuinely new rows (no id)
-      JSUTIL.callAJAXPost('/api/product-recipe-byproducts/create_multiple', JSON.stringify(newRecords), function () {
-        processDeletesAndRefresh();
-      }, function () {
-        JSUTIL.buildErrorModal('Failed to save new materials. Please try again.');
-        processDeletesAndRefresh();
-      });
+      // POST one record at a time via create_multiple (array of 1) to avoid duplicate creation
+      var queue = newRecords.slice();
+      function createNext() {
+        if (!queue.length) {
+          processDeletesAndRefresh();
+          return;
+        }
+        var rec = queue.shift();
+        JSUTIL.callAJAXPost('/api/product-recipe-byproducts/create_multiple', JSON.stringify([rec]), function () {
+          createNext();
+        }, function (err) {
+          console.error('Failed to create material:', err);
+          createNext();
+        });
+      }
+      createNext();
     }
 
     updateExistingThenCreate();

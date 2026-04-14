@@ -1523,6 +1523,7 @@
         var CURRENT_YEAR_YY = new Date().getFullYear().toString().slice(-2);
         var BATCH_SEQUENCE_PREFIX = 'BR-' + CURRENT_YEAR_YY + '-';
         var BATCH_SEQUENCE_PAD_LENGTH = 4;
+        var variationData = []
 
         if (JSUTIL && typeof JSUTIL.callAJAXDelete !== 'function') {
             JSUTIL.callAJAXDelete = function (callUrl, data, onSuccessCallback, onFailureCallback) {
@@ -1592,6 +1593,12 @@
         $(document).ready(function () {
             $(document).on('input change', '#finalProductQty, #finalProductNumberOfContainers', function () {
                 autoCalcNetQtyPerContainer();
+            });
+            $(document).on('input change', '#finalProductQty', function () {
+                validateFinalProductQtyInput(false);
+            });
+            $(document).on('blur', '#finalProductQty', function () {
+                validateFinalProductQtyInput(true);
             });
             JSUTIL.callAJAXGet("/api/production-orders/search?type=" + "Batch", function (response) {
                 if (response && Array.isArray(response)) {
@@ -3768,6 +3775,10 @@
             }
             if (!Number.isFinite(qty) || qty <= 0) {
                 return { valid: false, message: 'Enter produced quantity for the final product.' };
+            }
+            const qtyRangeValidation = validateFinalProductQtyAgainstBatchRange(qty);
+            if (!qtyRangeValidation.valid) {
+                return qtyRangeValidation;
             }
             if (isFinalStage && (!Number.isFinite(numberOfContainers) || numberOfContainers <= 0)) {
                 return { valid: false, message: 'Enter the number of containers/bags for the final product.' };
@@ -6796,6 +6807,7 @@
                 }
                 grouped[key].push(item);
             });
+            console.log('Grouped issue requests:', grouped);
             const tables = Object.keys(grouped).sort().map(function (reqKey) {
                 const firstItem = grouped[reqKey][0] || {};
                 const reqStatus = firstItem?.status || '';
@@ -6982,6 +6994,12 @@
             var expiryTypeOptionsHtml = ['Expiry', 'Retest'].map(function (type) {
                 return '<option value="' + type + '"' + (type === expiryType ? ' selected' : '') + '>' + type + '</option>';
             }).join('');
+            var qtyRange = getFinalProductQtyRange();
+            var qtyMinAttr = qtyRange ? qtyRange.min : 0;
+            var qtyMaxAttr = qtyRange ? qtyRange.max : '';
+            var qtyRangeHint = qtyRange
+                ? '<small class="text-muted">Allowed range: ' + formatBatchMetaValue(qtyRange.min) + ' to ' + formatBatchMetaValue(qtyRange.max) + '.</small>'
+                : '';
 
             // ── Button bar ── Edit and Save have a gap between them ──────
             var buttonBar = '<div class="clearfix" style="margin-bottom:10px;">'
@@ -7019,7 +7037,8 @@
                 + '<div class="form-group col-sm-3">'
                 + '<label>Quantity Produced <span class="text-danger">*</span></label>'
                 + '<input type="number" class="form-control" id="finalProductQty"'
-                + ' value="' + quantity + '" min="0" step="any" ' + readOnlyAttr + ' /></div>'
+                + ' value="' + quantity + '" min="' + qtyMinAttr + '" ' + (qtyMaxAttr !== '' ? ('max="' + qtyMaxAttr + '" ') : '') + 'step="any" ' + readOnlyAttr + ' />'
+                + qtyRangeHint + '</div>'
                 + '<div class="form-group col-sm-3"><label>UOM</label>'
                 + '<div class="bpcr-meta-value">' + (uom || '-') + '</div></div>'
                 + containerCountField
@@ -7056,6 +7075,7 @@
             updateFinalProductButtons(isLocked, !!productId);
             toggleFinalProductInputs(finalProductEditEnabled);
             updateFinalProductDateLabel();
+            applyFinalProductQtyRangeAttributes();
             renderPackingListSection();
 
             if (typeof lucide !== 'undefined') {
@@ -9418,7 +9438,10 @@
                 ...safeMeta,
                 uom: safeMeta.uom || getBPCRBatchUom(currentBPCRRecord)
             };
+            console.log('Setting BOM meta display', { meta: mergedMeta });
+            variationData = mergedMeta;
             $('#bpcrBatchSizeDisplay').text(formatBatchSizeDisplay(mergedMeta));
+            applyFinalProductQtyRangeAttributes();
         }
 
         function getBOMProductUom(item) {
@@ -9533,6 +9556,98 @@
                 return '-';
             }
             return value;
+        }
+
+        function getFinalProductQtyRange() {
+            const batchSize = getNullableNumber(
+                variationData?.batchSize,
+                currentBOMMeta?.batchSize,
+                currentBPCRRecord?.quantity,
+                currentBPCRRecord?.Quantity
+            );
+            const variation = getNullableNumber(
+                variationData?.variation,
+                currentBOMMeta?.variation,
+                currentBPCRRecord?.quantityVariation,
+                currentBPCRRecord?.QuantityVariation
+            );
+
+            if (!Number.isFinite(batchSize) || !Number.isFinite(variation)) {
+                return null;
+            }
+
+            const safeVariation = Math.abs(Number(variation));
+            return {
+                min: Number(batchSize) - safeVariation,
+                max: Number(batchSize) + safeVariation,
+                batchSize: Number(batchSize),
+                variation: safeVariation
+            };
+        }
+
+        function getFinalProductQtyRangeErrorMessage(range) {
+            const formattedBatch = formatBatchMetaValue(range.batchSize);
+            const formattedVariation = formatBatchMetaValue(range.variation);
+            const formattedMin = formatBatchMetaValue(range.min);
+            const formattedMax = formatBatchMetaValue(range.max);
+            return `Quantity Produced must be between ${formattedMin} and ${formattedMax} (Batch Size ${formattedBatch} +/- ${formattedVariation}).`;
+        }
+
+        function validateFinalProductQtyAgainstBatchRange(qty) {
+            const range = getFinalProductQtyRange();
+            if (!range || !Number.isFinite(qty)) {
+                return { valid: true };
+            }
+            if (qty < range.min || qty > range.max) {
+                return { valid: false, message: getFinalProductQtyRangeErrorMessage(range) };
+            }
+            return { valid: true };
+        }
+
+        function applyFinalProductQtyRangeAttributes() {
+            const $qtyInput = $('#finalProductQty');
+            if (!$qtyInput.length) {
+                return;
+            }
+
+            const range = getFinalProductQtyRange();
+            if (range) {
+                $qtyInput.attr('min', range.min);
+                $qtyInput.attr('max', range.max);
+                $qtyInput.attr('title', getFinalProductQtyRangeErrorMessage(range));
+            } else {
+                $qtyInput.attr('min', 0);
+                $qtyInput.removeAttr('max');
+                $qtyInput.removeAttr('title');
+            }
+            validateFinalProductQtyInput(false);
+        }
+
+        function validateFinalProductQtyInput(showModal) {
+            const $qtyInput = $('#finalProductQty');
+            if (!$qtyInput.length || !$qtyInput[0]) {
+                return true;
+            }
+
+            const rawValue = ($qtyInput.val() || '').toString().trim();
+            const inputEl = $qtyInput[0];
+            if (!rawValue) {
+                inputEl.setCustomValidity('');
+                return true;
+            }
+
+            const qty = Number(rawValue);
+            const validation = validateFinalProductQtyAgainstBatchRange(qty);
+            if (!validation.valid) {
+                inputEl.setCustomValidity(validation.message || 'Invalid quantity produced value.');
+                if (showModal) {
+                    showFinalProductError(validation.message || 'Invalid quantity produced value.');
+                }
+                return false;
+            }
+
+            inputEl.setCustomValidity('');
+            return true;
         }
         function formatDateDDMMYYYY(isoString) {
             const date = new Date(isoString);

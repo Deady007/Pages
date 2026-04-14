@@ -2869,6 +2869,7 @@
             var ps = updated.processStatus;
 
             if (ps === 'New' || ps === 'GIM Rejected') {
+                
                 $('.headReprintComments').hide();
                 if (rs === 'Quarantine Label' || rs === 'Quarantine Label Rejected') {
                     $('#printQuarantineBtn').hide();
@@ -4449,7 +4450,7 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            $('#printReportBtn').hide();
+            $('#printReportBtn').show();
         } else if (currentReceipt.processStatus.includes('Inspection Complete')) {
             $('#submitReceiptToQcBtn').hide();
             $('#editBtn').hide();
@@ -4464,7 +4465,7 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            $('#printReportBtn').hide();
+            $('#printReportBtn').show();
             loadStagingLocations();
         } else if (currentReceipt.processStatus == 'Closed' || currentReceipt.processStatus == 'GIM Review') {
             $('#submitReceiptToQcBtn').hide();
@@ -4480,7 +4481,7 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            $('#printReportBtn').hide();
+            $('#printReportBtn').show();
             // Load staging locations for these statuses
             loadStagingLocations();
         } else if (currentReceipt.processStatus == 'GIM Approved') {
@@ -4497,13 +4498,14 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').show();
             $('#closeBtn').hide();
-            $('#printReportBtn').hide();
+            $('#printReportBtn').show();
             // Load staging locations for these statuses
             loadStagingLocations();
         } else if (currentReceipt.processStatus == 'New' || currentReceipt.processStatus == 'GIM Rejected') {
             $('#submitReceiptToQcBtn').hide();
             $('#editBtn').show();
             $('#deleteProductBtn').show();
+            $("#printReportBtn").hide()
             $('#saveBtn').hide();
             $('#addProductSection').hide();
             $('.headReprintComments').hide();
@@ -4537,16 +4539,20 @@
                 $('#labelRejectBtn').hide();
                 $('#sendToGrnBtn').show();
             }
-            $('#printReportBtn').show();
+            // $('#printReportBtn').show();
             $('#uploadFileBtn').show();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
             // ADD THIS LINE to load staging locations for New status
             loadStagingLocations();
         }
+        else if(currentReceipt.processStatus == 'Cancelled')
+        {
+            $("#printReportBtn").hide()
+        }
 
         // Ensure print report is available for all statuses
-        $('#printReportBtn').show();
+        // 
 
         currentReceiptData = currentReceipt;
         console.log('current receipt data', currentReceiptData);
@@ -8289,7 +8295,7 @@
             '<td><input type="text" class="form-control batchNumberInput" required/></td>' +
             '<td style="position: relative;">' +
             '<input type="text" class="form-control manufacturerSearchInput" placeholder="Search..."' +
-            ' value="' + ((selectedPoManufacturer && (selectedPoManufacturer.name || selectedPoManufacturer.Name)) || productData.manufacturerName || '') + '" required/>' +
+            ' value="' + ((selectedPoManufacturer && (selectedPoManufacturer.name || selectedPoManufacturer.Name)) || productData.manufacturerName || '') + '" required disabled/>' +
             '<input type="hidden" class="manufacturerId" value="' + ((selectedPoManufacturer && (selectedPoManufacturer.id || selectedPoManufacturer.Id)) || productData.manufacturerId || '') + '" />' +
             '</td>' +
             '<td><input type="text" placeholder="dd/mm/yyyy" class="form-control mfgDateInput" required/></td>' +
