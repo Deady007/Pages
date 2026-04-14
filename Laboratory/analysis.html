@@ -808,6 +808,11 @@
                                         </div>
                                         <input type="hidden" id="selectTestInput" value="">
                                     </div>
+                                    <div class="col-sm-6" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+                                        <button type="button" class="btn btn-secondary btn-sm" id="printCalculationSheetBtn" style="display:none;">
+                                            <i data-lucide="printer"></i> Print Calculation Sheet
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -842,6 +847,7 @@ var currentSampleRequest = {};
 var currentRequestLineItems = [];
 var btnClicked = '';
 var currentParameterItemList = [];
+var testResult2 = '';
 
 // ── State ──
 var recordList = [];
@@ -984,7 +990,7 @@ $(document).ready(function(){
                 if (objList.sampleUnit) {
                     $.each(uomList, function(i, val){
                         if (val.name === objList.sampleUnit){
-                            unitLabel = val.name + ' (' + val.description + ')';
+                            unitLabel = val.name;
                             return false;
                         }
                     });
@@ -1049,6 +1055,7 @@ function callbackAfterGetRequestItems(ObjList1){
     $('#selectTestMenu').html(testMenuHtml);
     $('#selectTestBtn').text('-- None --');
     $('#selectTestInput').val('');
+    $('#printCalculationSheetBtn').hide();
     // Result Recording panel
     $('#selectTestResultMenu').html(testMenuHtml);
     $('#selectTestResultBtn').text('-- None --');
@@ -1153,16 +1160,22 @@ function attachResultParameterAutoSave() {
 }
 function collectResultParameterValues() {
     var obj = {};
+    testResult2 = '';
     $('#resultParameterContainer .result-param-input').each(function () {
         var paramId = $(this).attr('aria-parameter-id').toString();
         var reading = parseInt($(this).attr('aria-description'));
         var val = $(this).val();
         if (reading > 0) {
-            // Multiple readings: join with semicolons
             if (!obj[paramId]) obj[paramId] = val;
             else obj[paramId] += ';' + val;
         } else {
             obj[paramId] = val;
+        }
+        var meta = currentParameterItemList.find(function(p) {
+            return String(p.id) === String(paramId);
+        });
+        if (meta && meta.type === 'on') {
+            testResult2 = obj[paramId];
         }
     });
     return obj;
@@ -1176,6 +1189,7 @@ function saveTestResults(completeRecording) {
         });
         if (visibleItem && $('#resultParameterContainer').length) {
             visibleItem._testResultObj = collectResultParameterValues();
+            visibleItem._testResult2   = testResult2;
         }
     }
 
@@ -1194,9 +1208,10 @@ function saveTestResults(completeRecording) {
         }
         var val = items[idx++];
         var testResultStr = val._testResultObj ? JSON.stringify(val._testResultObj) : null;
+        var testResult2Str = val._testResult2 || null;
         console.info('Saving testResult for item', val.id, ':', testResultStr ? testResultStr.length + ' chars' : 'null');
         JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-request-items/' + val.id),
-            JSON.stringify({'testResult': testResultStr}), saveNextItem);
+            JSON.stringify({'testResult': testResultStr, 'testResult2': testResult2Str}), saveNextItem);
     }
     saveNextItem();
 }
@@ -1327,6 +1342,150 @@ $(document).ready(function(){
     $('#complWorksheetBtn').on('click', function() {
         btnClicked = "complWorksheetBtn";
         saveWorksheetResults(true);
+    });
+    $('#printCalculationSheetBtn').on('click', function() {
+        var selectedTestId = $('#selectTestInput').val();
+        if (!selectedTestId) return;
+
+        var selectedItem = currentRequestLineItems.find(function(i) {
+            return i.service.id.toString() === selectedTestId.toString();
+        });
+        var worksheetHtml = '';
+        if ($('#worksheetPreviewContent').length && $('#worksheetPreviewContainer').is(':visible')) {
+            worksheetHtml = getWorksheetHtmlWithValues();
+        } else if (selectedItem && selectedItem.worksheet) {
+            worksheetHtml = selectedItem.worksheet;
+        }
+        worksheetHtml = (worksheetHtml || '').replace(/<script[\s\S]*?<\/script>/gi, '');
+
+        function safe(v) {
+            if (v === null || v === undefined || v === '') return '-';
+            return String(v)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        var nowText = moment().format('M/D/YY, h:mm A');
+        var productName = safe(currentSampleRequest.sampleCondition);
+        var productCode = safe(currentSampleRequest.productCode || currentSampleRequest.sampleId);
+        var testName = safe(selectedItem && selectedItem.service ? selectedItem.service.name : '');
+        var testCode = safe(selectedItem && selectedItem.service ? (selectedItem.service.code || selectedItem.service.number || selectedItem.service.id) : '');
+        var limsArNo = safe(currentSampleRequest.referenceNumber);
+        var limsSpecId = safe(currentSampleRequest.limsSpecificationId || (currentSampleRequest.testProcedure ? currentSampleRequest.testProcedure.id : ''));
+        var specNo = safe(selectedItem ? (selectedItem.specificationNo || selectedItem.specificationNumber) : '');
+        var arNo = safe(currentSampleRequest.arNo || currentSampleRequest.id);
+        var printedBy = safe(currentSampleRequest.updatedBy || currentSampleRequest.createdBy || 'System');
+
+        var continuationSheetHtml = '' +
+            '<table class="sheet-table">' +
+            '<tr>' +
+            '<td class="logo-cell"></td>' +
+            '<td class="title-cell" colspan="3">Continuation Sheet</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="label-cell">Product Name:-</td>' +
+            '<td class="value-cell">' + productName + '</td>' +
+            '<td class="label-cell">Product Code:-</td>' +
+            '<td class="value-cell">' + productCode + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="label-cell">Test Name / Test Code:-</td>' +
+            '<td class="value-cell">' + testName + (testCode !== '-' ? ' / ' + testCode : '') + '</td>' +
+            '<td class="label-cell">Batch No.:-</td>' +
+            '<td class="value-cell">' + safe(currentSampleRequest.batchNumber) + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="label-cell">LIMS AR No.:-</td>' +
+            '<td class="value-cell">' + limsArNo + '</td>' +
+            '<td class="label-cell">LIMS Specification Id:-</td>' +
+            '<td class="value-cell">' + limsSpecId + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="label-cell">Specification No:-</td>' +
+            '<td class="value-cell">' + specNo + '</td>' +
+            '<td class="label-cell">AR No.:-</td>' +
+            '<td class="value-cell">' + arNo + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="body-cell" colspan="4">' +
+            (worksheetHtml ? ('<div class="worksheet-inner">' + worksheetHtml + '</div>') : '<div class="worksheet-inner"></div>') +
+            '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="label-cell">Printed By:-</td>' +
+            '<td class="value-cell">' + printedBy + '</td>' +
+            '<td class="label-cell">Page No:-</td>' +
+            '<td class="value-cell">1/1</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="label-cell">Printed On:-</td>' +
+            '<td class="value-cell" colspan="3">' + safe(nowText) + '</td>' +
+            '</tr>' +
+            '<tr>' +
+            '<td class="note-cell" colspan="4"><strong>Note:</strong> This document has been generated electronically and is valid without signature.</td>' +
+            '</tr>' +
+            '</table>';
+
+        var printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Popup blocked. Please allow popups for this site to print the calculation sheet.');
+            return;
+        }
+        var printDoc = '' +
+            '<!doctype html>' +
+            '<html>' +
+            '<head>' +
+            '<meta charset="utf-8">' +
+            '<title>Calculation Sheet</title>' +
+            '<style>' +
+            '@page { size: A4 portrait; margin: 8mm; }' +
+            'html, body { margin: 0; padding: 0; background: #fff; color: #111; font-family: "Times New Roman", serif; font-size: 11pt; }' +
+            '.print-sheet { width: 100%; margin: 0 auto; }' +
+            '.sheet-table { width: 100%; border-collapse: collapse; table-layout: fixed; }' +
+            '.sheet-table td { border: 1px solid #222; padding: 5px 8px; vertical-align: middle; word-wrap: break-word; }' +
+            '.logo-cell { width: 17%; height: 46px; }' +
+            '.title-cell { text-align: center; font-size: 22px; font-weight: 700; letter-spacing: 0.2px; }' +
+            '.label-cell { width: 23%; font-weight: 600; }' +
+            '.value-cell { width: 27%; }' +
+            '.body-cell { height: 520px; vertical-align: top !important; padding: 0 !important; }' +
+            '.worksheet-inner { min-height: 500px; padding: 6px; }' +
+            '.note-cell { font-size: 10.5pt; }' +
+            '.worksheet-inner table { width: 100%; border-collapse: collapse; table-layout: fixed; }' +
+            '.worksheet-inner th, .worksheet-inner td { border: 1px solid #222; padding: 4px 6px; vertical-align: top; }' +
+            'img { max-width: 100%; height: auto; }' +
+            'input, textarea, select { border: none !important; outline: none !important; box-shadow: none !important; background: transparent !important; width: 100%; font: inherit; color: inherit; }' +
+            '.btn, button, .dropdown, .dropdown-menu, .remove-input, .no-print { display: none !important; }' +
+            '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+            '</style>' +
+            '</head>' +
+            '<body>' +
+            '<div class="print-sheet">' + continuationSheetHtml + '</div>' +
+            '</body>' +
+            '</html>';
+
+        printWindow.document.open();
+        printWindow.document.write(printDoc);
+        printWindow.document.close();
+
+        // Use both delayed print and onload as a fallback for browser differences.
+        setTimeout(function() {
+            try {
+                printWindow.focus();
+                printWindow.print();
+            } catch (e) {
+                console.error('Print failed:', e);
+            }
+        }, 300);
+
+        printWindow.onload = function() {
+            try {
+                printWindow.focus();
+                printWindow.print();
+            } catch (e) {
+                console.error('Print onload failed:', e);
+            }
+        };
     });
 });
 function attachWorksheetAutoSave() {
@@ -1507,6 +1666,11 @@ $(document).ready(function() {
         var label = $(this).text().trim();
         $('#selectTestBtn').text(label);
         $('#selectTestInput').val(val);
+        if (val) {
+            $('#printCalculationSheetBtn').show();
+        } else {
+            $('#printCalculationSheetBtn').hide();
+        }
         $(this).siblings().removeClass('active'); $(this).addClass('active');
         // ── Flush the currently-visible worksheet before switching ──
         // Capture final state of the old test's form before lastSelectedTestId changes.

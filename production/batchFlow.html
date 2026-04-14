@@ -1,0 +1,590 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<style>
+    .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
+
+    /* ── Flow Layout ───────────────────────────────────────── */
+    .flow-container {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        min-height: 400px;
+        position: relative;
+    }
+
+    .flow-column {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .flow-left { flex: 5; }
+    .flow-right { flex: 3; display: flex; align-items: center; justify-content: center; }
+
+    /* ── Material Group ────────────────────────────────────── */
+    .material-group {
+        background: #ffffff;
+        border: 1px solid #e5e6e7;
+        border-radius: 10px;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .material-group-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 13px;
+        color: #2f4050;
+        border-bottom: 1px solid #e5e6e7;
+    }
+
+    .material-group-header .group-icon {
+        width: 32px; height: 32px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .material-group-header .group-icon i { width: 18px; height: 18px; }
+    .group-icon-raw { background: #dbeafe; color: #1e40af; }
+    .group-icon-packing { background: #fef3c7; color: #92400e; }
+    .group-icon-general { background: #e0e7ff; color: #4338ca; }
+
+    .material-group-body { padding: 8px 12px; }
+
+    .material-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 6px;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 12px;
+    }
+    .material-row:last-child { border-bottom: none; }
+
+    .material-name { flex: 1; color: #374151; font-weight: 500; }
+    .material-qty {
+        background: #f0f4ff; color: #1e40af; font-weight: 700; font-size: 11px;
+        padding: 3px 10px; border-radius: 12px; white-space: nowrap;
+    }
+    .material-empty { text-align: center; color: #9ca3af; font-size: 12px; padding: 16px 0; }
+
+    /* ── Process Node (Center) ─────────────────────────────── */
+    .flow-center {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .process-node {
+        text-align: center;
+        z-index: 2;
+    }
+    .process-node-circle {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: #ffffff;
+        border: 2px solid #3b82f6;
+        color: #3b82f6;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 8px;
+    }
+    .process-node-circle i { width: 24px; height: 24px; }
+    .process-node-batch { font-size: 12px; font-weight: 600; color: #374151; }
+    .process-node-status { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+    /* ── Arrows (anchored to circle center) ────────────────── */
+    .flow-arrow-left, .flow-arrow-right {
+        position: absolute;
+        height: 2px;
+        background: #cbd5e1;
+        top: calc(50% - 14px);
+        z-index: 1;
+    }
+    .flow-arrow-left { left: 0; width: calc(50% - 40px); }
+    .flow-arrow-right { right: 0; width: calc(50% - 40px); }
+
+    .flow-arrow-left::after, .flow-arrow-right::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 0; height: 0;
+        border-style: solid;
+    }
+    .flow-arrow-left::after {
+        right: -1px; transform: translateY(-50%);
+        border-width: 5px 0 5px 8px;
+        border-color: transparent transparent transparent #94a3b8;
+    }
+    .flow-arrow-right::after {
+        right: -1px; transform: translateY(-50%);
+        border-width: 5px 0 5px 8px;
+        border-color: transparent transparent transparent #94a3b8;
+    }
+
+    /* ── Output Card ───────────────────────────────────────── */
+    .output-card {
+        background: #ffffff;
+        border: 2px solid #10b981;
+        border-radius: 12px;
+        padding: 24px 20px;
+        text-align: center;
+        width: 100%;
+        max-width: 280px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+    }
+    .output-card-icon {
+        width: 52px; height: 52px; border-radius: 50%;
+        background: #d1fae5; color: #065f46;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 12px;
+    }
+    .output-card-icon i { width: 26px; height: 26px; }
+    .output-card-title { font-size: 13px; font-weight: 600; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .output-card-product { font-size: 14px; font-weight: 700; color: #2f4050; margin-bottom: 4px; }
+    .output-card-qty {
+        font-size: 26px; font-weight: 800; color: #059669; margin: 8px 0;
+    }
+    .output-card-uom { font-size: 12px; color: #6b7280; }
+    .output-card-meta { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+    .output-card-empty { color: #9ca3af; font-size: 13px; }
+
+    /* ── Batch Header Card ─────────────────────────────────── */
+    .batch-header-card {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        padding: 14px 18px;
+        background: #f8fbff;
+        border: 1px solid #1c84c6;
+        border-radius: 6px;
+    }
+    .batch-header-item { font-size: 13px; color: #374151; }
+    .batch-header-item strong { color: #2f4050; }
+
+    .batch-status-badge {
+        display: inline-block; padding: 3px 12px; border-radius: 4px;
+        font-size: 11px; font-weight: 600;
+        background: #dbeafe; color: #1e40af;
+    }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 768px) {
+        .flow-container { flex-direction: column; }
+        .flow-center { min-height: 80px; }
+        .flow-arrow-left, .flow-arrow-right { display: none; }
+    }
+
+    /* ── Dark Mode ─────────────────────────────────────────── */
+    body.skin-dark .material-group, body.dark-mode .material-group, [data-bs-theme="dark"] .material-group {
+        background: #1e293b; border-color: #334155;
+    }
+    body.skin-dark .material-group-header, body.dark-mode .material-group-header, [data-bs-theme="dark"] .material-group-header {
+        color: #e2e8f0; border-bottom-color: #334155;
+    }
+    body.skin-dark .material-name, body.dark-mode .material-name, [data-bs-theme="dark"] .material-name { color: #cbd5e1; }
+    body.skin-dark .material-row, body.dark-mode .material-row, [data-bs-theme="dark"] .material-row { border-bottom-color: #334155; }
+    body.skin-dark .material-qty, body.dark-mode .material-qty, [data-bs-theme="dark"] .material-qty { background: #1e3a5f; color: #93c5fd; }
+    body.skin-dark .output-card, body.dark-mode .output-card, [data-bs-theme="dark"] .output-card { background: #1e293b; border-color: #10b981; }
+    body.skin-dark .output-card-product, body.dark-mode .output-card-product, [data-bs-theme="dark"] .output-card-product { color: #e2e8f0; }
+    body.skin-dark .process-node-circle, body.dark-mode .process-node-circle, [data-bs-theme="dark"] .process-node-circle {
+        background: #1e293b; border-color: #60a5fa; color: #60a5fa;
+    }
+    body.skin-dark .process-node-batch, body.dark-mode .process-node-batch, [data-bs-theme="dark"] .process-node-batch { color: #e2e8f0; }
+    body.skin-dark .process-node-status, body.dark-mode .process-node-status, [data-bs-theme="dark"] .process-node-status { color: #94a3b8; }
+    body.skin-dark .batch-header-card, body.dark-mode .batch-header-card, [data-bs-theme="dark"] .batch-header-card {
+        background: #1e293b; border-color: #1c84c6;
+    }
+    body.skin-dark .batch-header-item, body.dark-mode .batch-header-item, [data-bs-theme="dark"] .batch-header-item { color: #cbd5e1; }
+    body.skin-dark .batch-header-item strong, body.dark-mode .batch-header-item strong, [data-bs-theme="dark"] .batch-header-item strong { color: #e2e8f0; }
+    body.skin-dark .flow-arrow-left, body.skin-dark .flow-arrow-right,
+    body.dark-mode .flow-arrow-left, body.dark-mode .flow-arrow-right,
+    [data-bs-theme="dark"] .flow-arrow-left, [data-bs-theme="dark"] .flow-arrow-right { background: #475569; }
+</style>
+
+<div class="qa-white-panel">
+
+    <!-- Search Panel -->
+    <div class="row animated fadeInRight aasaanPanel" id="batchFlowFilterPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Batch Material Flow <small>Visualization</small></h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="row g-3">
+                        <div class="col-sm-5">
+                            <div class="form-group mb-3">
+                                <label>Batch Number</label>
+                                <input type="text" class="form-control" id="batchFlowInput" placeholder="Enter batch number or doc code">
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="form-group mb-3">
+                                <label>&nbsp;</label>
+                                <div>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="generateFlowBtn">
+                                        <i data-lucide="workflow"></i>Generate
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flow Diagram Panel -->
+    <div class="qa-white-panel" id="batchFlowResultWrap" style="display:none; margin-top: 16px;">
+        <div class="row animated fadeInRight">
+            <div class="col-lg-12">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5><span id="flowTitle">Batch Flow</span></h5>
+                        <div class="ibox-tools">
+                            <button type="button" class="btn btn-default btn-sm" id="flowPrintBtn"><i data-lucide="printer"></i>Print</button>
+                            <button type="button" class="btn btn-default btn-sm" id="flowCloseBtn"><i data-lucide="x"></i>Close</button>
+                        </div>
+                    </div>
+                    <div class="ibox-content" id="flowContent">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    if (window.lucide) lucide.createIcons();
+
+    function _esc(v) { if (v == null) return ''; return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    var _currentOrder = null;
+    var _currentMaterials = [];
+    function _showErr(m) { if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') JSUTIL.buildErrorModal(m); else alert(m); }
+    function _fmtNum(n) { if (n == null || isNaN(n)) return '0'; return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+
+    function getMaterialType(item) {
+        var t = (item.type || item.Type || '').toString().toLowerCase().replace(/[\s_-]+/g, '');
+        if (t.indexOf('raw') !== -1) return 'raw';
+        if (t.indexOf('packing') !== -1 || t.indexOf('packaging') !== -1) return 'packing';
+        if (t.indexOf('finished') !== -1 || t.indexOf('final') !== -1 || t.indexOf('output') !== -1) return 'finished';
+        if (t.indexOf('general') !== -1 || t.indexOf('misc') !== -1) return 'general';
+        if (t === '' && item.materialStatus === 'Actual') return 'finished';
+        return 'general';
+    }
+
+    function isFinalProduct(item) {
+        var t = getMaterialType(item);
+        return t === 'finished';
+    }
+
+    function getProductDisplay(item) {
+        var p = item.product || {};
+        var code = p.number || p.Number || p.code || p.Code || '';
+        var name = p.name || p.Name || '';
+        if (code && name) return code + ' - ' + name;
+        return code || name || '-';
+    }
+
+    function getProductUom(item) {
+        var p = item.product || {};
+        return p.uom || p.Uom || '';
+    }
+
+    function getVendorName(item) {
+        var p = item.product || {};
+        var v = p.vendor || p.Vendor || item.vendor || item.Vendor || {};
+        if (typeof v === 'string') return v;
+        return v.name || v.Name || v.companyName || v.CompanyName || '';
+    }
+
+    function renderMaterialGroup(title, iconClass, iconName, items, showExtras) {
+        var bodyHtml = '';
+        if (!items.length) {
+            bodyHtml = '<div class="material-empty">No materials</div>';
+        } else {
+            items.forEach(function(m) {
+                var planned = Number(m.plannedQuantity || 0);
+                var actual = Number(m.actualQuantity || 0);
+                var uom = getProductUom(m);
+                var qtyLabel = actual > 0 ? _fmtNum(actual) : _fmtNum(planned);
+                if (uom) qtyLabel += ' ' + _esc(uom);
+                var label = actual > 0 ? 'Actual' : 'Planned';
+                bodyHtml += '<div class="material-row">' +
+                    '<span class="material-name">' + _esc(getProductDisplay(m));
+                if (showExtras) {
+                    var arn = m.docNumber || m.DocNumber || '';
+                    var vendorName = getVendorName(m);
+                    var batchNo = m.productLot || m.ProductLot || '';
+                    var extras = [arn ? 'ARN: ' + arn : '', vendorName ? 'Vendor: ' + vendorName : '', batchNo ? 'Batch: ' + batchNo : ''].filter(Boolean).join(' · ');
+                    if (extras) bodyHtml += '<br><span style="font-size:10px;color:#6b7280;font-weight:400;">' + _esc(extras) + '</span>';
+                }
+                bodyHtml += '</span>' +
+                    '<span class="material-qty">' + qtyLabel + ' <small style="opacity:0.7;">(' + label + ')</small></span>' +
+                    '</div>';
+            });
+        }
+
+        return '<div class="material-group">' +
+            '<div class="material-group-header">' +
+            '<span class="group-icon ' + iconClass + '"><i data-lucide="' + iconName + '"></i></span>' +
+            title + ' <small style="color:#9ca3af;font-weight:400;">(' + items.length + ')</small>' +
+            '</div>' +
+            '<div class="material-group-body">' + bodyHtml + '</div>' +
+            '</div>';
+    }
+
+    function renderOutputCard(finishedItems, order) {
+        if (!finishedItems.length) {
+            return '<div class="output-card">' +
+                '<div class="output-card-icon"><i data-lucide="package-check"></i></div>' +
+                '<div class="output-card-title">Finished Product</div>' +
+                '<div class="output-card-empty">No output recorded yet</div>' +
+                '</div>';
+        }
+
+        var best = finishedItems[0];
+        var qty = Number(best.actualQuantity || best.plannedQuantity || 0);
+        var uom = getProductUom(best);
+        var productName = getProductDisplay(best);
+        var mfgDate = best.manufacturingDate || '';
+        var expDate = best.expiryDate || '';
+
+        return '<div class="output-card">' +
+            '<div class="output-card-icon"><i data-lucide="package-check"></i></div>' +
+            '<div class="output-card-title">Finished Product</div>' +
+            '<div class="output-card-product">' + _esc(productName) + '</div>' +
+            '<div class="output-card-qty">' + _fmtNum(qty) + '</div>' +
+            (uom ? '<div class="output-card-uom">' + _esc(uom) + '</div>' : '') +
+            (mfgDate || expDate ? '<div class="output-card-meta">' +
+                (mfgDate ? 'Mfg: ' + _esc(mfgDate) : '') +
+                (mfgDate && expDate ? ' | ' : '') +
+                (expDate ? 'Exp: ' + _esc(expDate) : '') +
+                '</div>' : '') +
+            '</div>';
+    }
+
+    function renderBatchHeader(order) {
+        var productName = '';
+        var r = order.productRecipe || {};
+        var ps = r.productStage || order.productStage || {};
+        var p = ps.product || r.product || order.product || {};
+        productName = [p.number || p.Number || '', p.name || p.Name || ''].filter(Boolean).join(' - ');
+
+        var plantName = (order.plant && order.plant.name) || (r.plant && r.plant.name) || '-';
+        var stageName = ps.number || ps.name || '-';
+        var bomName = r.masterBatchRecord || r.name || '-';
+        var owner = order.orderOwner ? ((order.orderOwner.firstName || '') + ' ' + (order.orderOwner.lastName || '')).trim() : '-';
+
+        return '<div class="batch-header-card">' +
+            '<span class="batch-header-item"><strong>Product:</strong> ' + _esc(productName || '-') + '</span>' +
+            '<span class="batch-header-item"><strong>Stage:</strong> ' + _esc(stageName) + '</span>' +
+            '<span class="batch-header-item"><strong>BOM:</strong> ' + _esc(bomName) + '</span>' +
+            '<span class="batch-header-item"><strong>Plant:</strong> ' + _esc(plantName) + '</span>' +
+            '<span class="batch-header-item"><strong>Owner:</strong> ' + _esc(owner) + '</span>' +
+            '<span class="batch-header-item"><span class="batch-status-badge">' + _esc(order.orderStatus || '-') + '</span></span>' +
+            '</div>';
+    }
+
+    function renderFlowDiagram(order, materials) {
+        _currentOrder = order;
+        _currentMaterials = materials;
+        var raw = [], packing = [], general = [], finished = [];
+
+        materials.forEach(function(m) {
+            var type = getMaterialType(m);
+            if (type === 'raw') raw.push(m);
+            else if (type === 'packing') packing.push(m);
+            else if (type === 'finished') finished.push(m);
+            else general.push(m);
+        });
+
+        var batchNumber = order.number || order.name || '-';
+        var batchStatus = order.orderStatus || '';
+
+        var html = renderBatchHeader(order);
+
+        html += '<div class="flow-container">';
+
+        // Left: Materials
+        html += '<div class="flow-column flow-left">';
+        html += renderMaterialGroup('Raw Materials', 'group-icon-raw', 'flask-conical', raw, true);
+        html += renderMaterialGroup('Packing Materials', 'group-icon-packing', 'package', packing, false);
+        html += renderMaterialGroup('General Materials', 'group-icon-general', 'boxes', general, false);
+        html += '</div>';
+
+        // Center: Process node with arrows
+        html += '<div class="flow-column flow-center">';
+        html += '<div class="flow-arrow-left"></div>';
+        html += '<div class="process-node">';
+        html += '<div class="process-node-circle"><i data-lucide="workflow"></i></div>';
+        html += '<div class="process-node-batch">' + _esc(batchNumber) + '</div>';
+        html += '<div class="process-node-status">' + _esc(batchStatus) + '</div>';
+        html += '</div>';
+        html += '<div class="flow-arrow-right"></div>';
+        html += '</div>';
+
+        // Right: Output
+        html += '<div class="flow-column flow-right">';
+        html += renderOutputCard(finished, order);
+        html += '</div>';
+
+        html += '</div>';
+
+        $('#flowContent').html(html);
+        $('#flowTitle').text('Batch Flow — ' + batchNumber);
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function generateFlow() {
+        var query = ($('#batchFlowInput').val() || '').trim();
+        if (!query) { _showErr('Please enter a batch number.'); return; }
+
+        $('#batchFlowResultWrap').show();
+        $('#flowContent').html('<div class="text-center text-muted" style="padding:40px;">Loading...</div>');
+
+        // Search for the order
+        JSUTIL.callAJAXGet('/api/production-orders/search?type=Batch', function(orders) {
+            var list = Array.isArray(orders) ? orders : [];
+            var q = query.toLowerCase();
+            var match = list.find(function(o) {
+                return (o.number || '').toLowerCase() === q ||
+                    (o.name || '').toLowerCase() === q ||
+                    String(o.id) === query;
+            });
+
+            if (!match) {
+                // Try partial match
+                match = list.find(function(o) {
+                    return (o.number || '').toLowerCase().indexOf(q) !== -1 ||
+                        (o.name || '').toLowerCase().indexOf(q) !== -1;
+                });
+            }
+
+            if (!match) {
+                $('#flowContent').html('<div class="text-center text-muted" style="padding:40px;">No batch found matching "' + _esc(query) + '".</div>');
+                return;
+            }
+
+            // Load materials for this order
+            JSUTIL.callAJAXGet('/api/order-materials?orderId=' + match.id, function(matRes) {
+                var materials = Array.isArray(matRes) ? matRes : (matRes && Array.isArray(matRes.data) ? matRes.data : []);
+                renderFlowDiagram(match, materials);
+            }, function() {
+                renderFlowDiagram(match, []);
+            });
+
+        }, function() {
+            _showErr('Unable to load production orders.');
+            $('#flowContent').html('<div class="text-center text-muted" style="padding:40px;">Failed to load data.</div>');
+        });
+    }
+
+    function printFlow() {
+        if (!_currentOrder) { _showErr('No batch loaded.'); return; }
+        var order = _currentOrder;
+        var materials = _currentMaterials || [];
+
+        var raw = [], packing = [], general = [], finished = [];
+        materials.forEach(function(m) {
+            var t = getMaterialType(m);
+            if (t === 'raw') raw.push(m);
+            else if (t === 'packing') packing.push(m);
+            else if (t === 'finished') finished.push(m);
+            else general.push(m);
+        });
+
+        var batchNumber = order.number || order.name || '-';
+        var r = order.productRecipe || {};
+        var ps = r.productStage || order.productStage || {};
+        var p = ps.product || r.product || order.product || {};
+        var productName = [p.number || '', p.name || ''].filter(Boolean).join(' - ') || '-';
+        var plantName = (order.plant && order.plant.name) || (r.plant && r.plant.name) || '-';
+        var bomName = r.masterBatchRecord || r.name || '-';
+        var owner = order.orderOwner ? ((order.orderOwner.firstName || '') + ' ' + (order.orderOwner.lastName || '')).trim() : '-';
+
+        var s = '<style>' +
+            'body{font-family:Arial,sans-serif;font-size:11px;margin:16px;color:#333;}' +
+            'h2{font-size:14px;margin:0 0 10px;}' +
+            'table{width:100%;border-collapse:collapse;margin-bottom:14px;}' +
+            'th,td{border:1px solid #aaa;padding:4px 7px;text-align:left;}' +
+            'th{background:#f0f0f0;font-weight:bold;font-size:10px;text-transform:uppercase;}' +
+            '.info-table td{border:none;padding:2px 10px 2px 0;font-size:11px;}' +
+            '.info-table{margin-bottom:12px;}' +
+            '.section{font-size:12px;font-weight:bold;margin:10px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;}' +
+            '.right-col{float:right;width:38%;}' +
+            '.left-col{float:left;width:60%;}' +
+            '.clearfix::after{content:"";display:table;clear:both;}' +
+            '@page{size:A4 landscape;margin:12mm;}' +
+            '</style>';
+
+        function matTable(title, items, showExtras) {
+            if (!items.length) return '<div class="section">' + title + '</div><p style="color:#999;font-size:10px;">None</p>';
+            var extraHeaders = showExtras ? '<th>ARN</th><th>Vendor</th><th>Batch No</th>' : '';
+            var colCount = showExtras ? 8 : 5;
+            var h = '<div class="section">' + title + ' (' + items.length + ')</div><table><tr><th>#</th><th>Material</th>' + extraHeaders + '<th>Planned Qty</th><th>Actual Qty</th><th>UOM</th></tr>';
+            items.forEach(function(m, i) {
+                var extraCells = '';
+                if (showExtras) {
+                    extraCells = '<td>' + _esc(m.docNumber || m.DocNumber || '-') + '</td>' +
+                        '<td>' + _esc(getVendorName(m) || '-') + '</td>' +
+                        '<td>' + _esc(m.productLot || m.ProductLot || '-') + '</td>';
+                }
+                h += '<tr><td>' + (i+1) + '</td><td>' + _esc(getProductDisplay(m)) + '</td>' + extraCells + '<td style="text-align:right;">' + _fmtNum(m.plannedQuantity) + '</td><td style="text-align:right;">' + _fmtNum(m.actualQuantity) + '</td><td>' + _esc(getProductUom(m)) + '</td></tr>';
+            });
+            return h + '</table>';
+        }
+
+        var finishedHtml = '';
+        if (finished.length) {
+            finishedHtml = '<div class="section">Finished Product Output</div><table><tr><th>Product</th><th>Quantity</th><th>UOM</th></tr>';
+            finished.forEach(function(m) {
+                var qty = Number(m.actualQuantity || m.plannedQuantity || 0);
+                finishedHtml += '<tr><td>' + _esc(getProductDisplay(m)) + '</td><td style="text-align:right;font-weight:bold;font-size:13px;">' + _fmtNum(qty) + '</td><td>' + _esc(getProductUom(m)) + '</td></tr>';
+            });
+            finishedHtml += '</table>';
+        } else {
+            finishedHtml = '<div class="section">Finished Product Output</div><p style="color:#999;font-size:10px;">No output recorded</p>';
+        }
+
+        var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Batch Flow — ' + _esc(batchNumber) + '</title>' + s + '</head><body>' +
+            '<h2>Batch Material Flow — ' + _esc(batchNumber) + '</h2>' +
+            '<table class="info-table"><tr>' +
+            '<td><strong>Product:</strong> ' + _esc(productName) + '</td>' +
+            '<td><strong>BOM:</strong> ' + _esc(bomName) + '</td>' +
+            '<td><strong>Plant:</strong> ' + _esc(plantName) + '</td>' +
+            '<td><strong>Owner:</strong> ' + _esc(owner) + '</td>' +
+            '<td><strong>Status:</strong> ' + _esc(order.orderStatus || '-') + '</td>' +
+            '</tr></table>' +
+            '<div class="clearfix">' +
+            '<div class="left-col">' +
+            matTable('Raw Materials', raw, true) +
+            matTable('Packing Materials', packing, false) +
+            matTable('General Materials', general, false) +
+            '</div>' +
+            '<div class="right-col">' + finishedHtml + '</div>' +
+            '</div>' +
+            '</body></html>';
+
+        var w = window.open('', '_blank', 'width=1000,height=700');
+        if (!w) { _showErr('Pop-up blocked.'); return; }
+        w.document.open(); w.document.write(html); w.document.close();
+        w.onload = function() { w.focus(); w.print(); w.close(); };
+    }
+
+    $(document).ready(function() {
+        $('#generateFlowBtn').on('click', generateFlow);
+        $('#batchFlowInput').on('keypress', function(e) { if (e.which === 13) generateFlow(); });
+        $('#flowCloseBtn').on('click', function() { $('#batchFlowResultWrap').hide(); $('#flowContent').empty(); });
+        $('#flowPrintBtn').on('click', printFlow);
+    });
+</script>

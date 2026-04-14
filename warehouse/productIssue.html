@@ -315,14 +315,15 @@
         </div>
     </div>
 
-    <div class="modal fade" id="allocationOverviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal inmodal fade" id="allocationOverviewModal" tabindex="-1" role="dialog"
+        aria-hidden="true" style="display: none;">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title">Auto Allocation</h4>
+                    <div style="width: 100%; text-align: center;">
+                        <h4 class="modal-title" style="margin: 0;">Auto Allocation</h4>
+                        <small class="font-bold" style="display: block; margin-top: 4px;">Review allocated batches and container quantities for this request</small>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <div id="allocationOverviewSections" style="max-height:420px; overflow-y:auto;">
@@ -2235,6 +2236,58 @@ rows.push(`
             renderAllocationOverviewTable(state.allocationResults?.products || []);
         }
 
+        // Rebuild state.allocationResults from live DOM so user-edited qty inputs are used at issue time
+        function syncAllocationFromInputs() {
+            const allocationProducts = [];
+            $('#productIssueMaterialTable tr.request-item-row').each(function () {
+                const $row = $(this);
+                const productId = String($row.data('product-id') || '');
+                const requestItemId = String($row.data('id') || '');
+                if (!productId) return;
+
+                const productMeta = state.productMetaById[productId] || {};
+                const remaining = Number($row.data('remaining')) || 0;
+                const lotAllocations = [];
+
+                $row.find('.lot-qty-input').each(function () {
+                    const $input = $(this);
+                    const lotId = String($input.data('lot-id') || '');
+                    const val = Number($input.val()) || 0;
+                    if (!lotId || val <= 0) return;
+                    const lotInfo = findLotDetails(productId, lotId) || {};
+                    const containerSel = state.selectedContainersByLot && state.selectedContainersByLot[lotId];
+                    lotAllocations.push({
+                        lotId: lotId,
+                        batchNumber: lotInfo.batchNumber || '',
+                        expiryDate: lotInfo.expiryDate || '',
+                        uom: lotInfo.uom || '',
+                        arn: lotInfo.arn || '',
+                        allocatedWeight: val,
+                        containers: Array.isArray(containerSel) ? containerSel : []
+                    });
+                });
+
+                if (!lotAllocations.length) return;
+
+                const totalAllocated = lotAllocations.reduce(function (s, e) { return s + e.allocatedWeight; }, 0);
+                allocationProducts.push({
+                    productId: productId,
+                    requestItemId: requestItemId,
+                    productName: productMeta.name || $row.find('.product-name').text() || 'Product',
+                    productNumber: productMeta.number || $row.data('product-number') || '',
+                    uom: productMeta.uom || $row.data('uom') || '',
+                    requested: remaining,
+                    allocated: totalAllocated,
+                    lots: lotAllocations
+                });
+            });
+
+            state.allocationResults = { products: allocationProducts };
+            if (state.currentRequestId) {
+                state.allocationCache[state.currentRequestId] = state.allocationResults;
+            }
+        }
+
         function issueCurrentRequest() {
             if (!state.currentRequestId) {
                 JSUTIL.buildErrorModal('Select a request before issuing.');
@@ -2245,6 +2298,9 @@ rows.push(`
                 JSUTIL.buildErrorModal('This request is already processed.');
                 return;
             }
+
+            // Sync allocation from live DOM inputs so manual edits override auto-allocation
+            syncAllocationFromInputs();
 
             const itemsPayload = [];
             const productUsageMap = {};
@@ -2486,7 +2542,8 @@ rows.push(`
                         return;
                     }
                     const u = updates[pIdx];
-                    JSUTIL.callAJAXPut('/api/products/' + u.id, JSON.stringify({ quantity: u.quantity }), function () {
+                    console.log('abcd',u)
+                    JSUTIL.callAJAXPut('/api/products/' + u.id, JSON.stringify({ quantity: u.quantity,quantityOnHand:u.quantityOnHand }), function () {
                         pIdx++; saveNextProduct();
                     }, function (err) {
                         console.error('Failed to update product on hand', err);
@@ -2500,8 +2557,13 @@ rows.push(`
                 JSUTIL.callAJAXGet('/api/products/' + encodeURIComponent(pid), function (prod) {
                     const reduceBy = Number(usageMap[String(pid)] || 0);
                     if (reduceBy > 0 && prod) {
-                        const current = Number(prod.quantity ?? prod.quantityOnHand ?? 0);
-                        updates.push({ id: pid, quantity: Math.max(current - reduceBy, 0) });
+                        const currentOnHand = Number(prod.quantityOnHand ?? prod.QuantityOnHand ?? prod.quantity ?? prod.Quantity ?? 0);
+                        const updatedOnHand = currentOnHand - reduceBy;
+                        updates.push({
+                            id: pid,
+                            quantity: updatedOnHand,
+                            quantityOnHand: updatedOnHand
+                        });
                     }
                     tryFinish();
                 }, function (err) {

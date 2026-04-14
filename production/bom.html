@@ -12,6 +12,32 @@
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js"></script> -->
 <style>
+  .status-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .status-new {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+  .status-submitted {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  .status-completed {
+    background: #dff0d8;
+    color: #3c763d;
+    border: 1px solid #d6e9c6;
+  }
+  .status-rejected {
+    background: #fecaca;
+    color: #991b1b;
+  }
+
   .typeahead.dropdown-menu {
     z-index: 1060 !important;
     background: #fff;
@@ -48,369 +74,365 @@
   }
 </style>
 <style>
-/* ═══════════════════════════════════════════════════════════════════
-   BOM DARK MODE — reference: departments.html
-   Activate by adding class="dark-mode" to <body> or any ancestor.
-═══════════════════════════════════════════════════════════════════ */
-.dark-mode {
-  --bom-bg:           #1a1d23;
-  --bom-bg-secondary: #22262f;
-  --bom-bg-card:      #2a2f3b;
-  --bom-bg-input:     #1e2230;
-  --bom-bg-input-ro:  #181c27;
-  --bom-bg-thead:     #252a36;
-  --bom-border:       #3a4055;
-  --bom-border-light: #2e3347;
-  --bom-text:         #e2e8f0;
-  --bom-text-muted:   #8892a4;
-  --bom-text-label:   #a0aec0;
-  --bom-accent:       #4f8ef7;
-  --bom-accent-green: #34d399;
-  --bom-shadow:       0 2px 8px rgba(0,0,0,0.4);
-}
+  /* ═══════════════════════════════════════════════════════════════════
+     BOM DARK MODE — reference: departments.html
+     Activate by adding class="dark-mode" to <body> or any ancestor.
+  ═══════════════════════════════════════════════════════════════════ */
+  .dark-mode {
+    --bom-bg:           #1a1d23;
+    --bom-bg-secondary: #22262f;
+    --bom-bg-card:      #2a2f3b;
+    --bom-bg-input:     #1e2230;
+    --bom-bg-input-ro:  #181c27;
+    --bom-bg-thead:     #252a36;
+    --bom-border:       #3a4055;
+    --bom-border-light: #2e3347;
+    --bom-text:         #e2e8f0;
+    --bom-text-muted:   #8892a4;
+    --bom-text-label:   #a0aec0;
+    --bom-accent:       #4f8ef7;
+    --bom-accent-green: #34d399;
+    --bom-shadow:       0 2px 8px rgba(0,0,0,0.4);
+  }
 
-/* ── Base panel ── */
-.dark-mode .qa-white-panel,
-.dark-mode #allBOMPanel,
-.dark-mode #editBOMPanel,
-.dark-mode #newBOMPanel {
-  background: var(--bom-bg) !important;
-  color: var(--bom-text) !important;
-}
+  /* ── Base panel ── */
+  .dark-mode .qa-white-panel,
+  .dark-mode #allBOMPanel,
+  .dark-mode #editBOMPanel,
+  .dark-mode #newBOMPanel {
+    background: var(--bom-bg) !important;
+    color: var(--bom-text) !important;
+  }
 
-/* ── ibox ── */
-.dark-mode .ibox,
-.dark-mode .ibox.float-e-margins {
-  background: var(--bom-bg-secondary) !important;
-  border-color: var(--bom-border) !important;
-  box-shadow: var(--bom-shadow) !important;
-}
-.dark-mode .ibox-title {
-  background: var(--bom-bg-secondary) !important;
-  border-bottom-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
-.dark-mode .ibox-content {
-  background: var(--bom-bg-secondary) !important;
-  border-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
+  /* ── ibox ── */
+  .dark-mode .ibox,
+  .dark-mode .ibox.float-e-margins {
+    background: var(--bom-bg-secondary) !important;
+    border-color: var(--bom-border) !important;
+    box-shadow: var(--bom-shadow) !important;
+  }
+  .dark-mode .ibox-title {
+    background: var(--bom-bg-secondary) !important;
+    border-bottom-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
+  .dark-mode .ibox-content {
+    background: var(--bom-bg-secondary) !important;
+    border-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
 
-/* ── Cards ── */
-.dark-mode .bom-lot-card,
-.dark-mode .bom-history-card {
-  background: var(--bom-bg-card) !important;
-  border-color: var(--bom-border) !important;
-  box-shadow: var(--bom-shadow) !important;
-}
+  /* ── Cards ── */
+  .dark-mode .bom-lot-card,
+  .dark-mode .bom-history-card {
+    background: var(--bom-bg-card) !important;
+    border-color: var(--bom-border) !important;
+    box-shadow: var(--bom-shadow) !important;
+  }
 
-/* ── Titles ── */
-.dark-mode .details-subtitle {
-  color: var(--bom-accent) !important;
-  border-left-color: var(--bom-accent) !important;
-}
+  /* ── Titles ── */
+  .dark-mode .details-subtitle {
+    color: var(--bom-accent) !important;
+    border-left-color: var(--bom-accent) !important;
+  }
 
-/* ── Labels ── */
-.dark-mode label,
-.dark-mode .form-group label {
-  color: var(--bom-text-label) !important;
-}
+  /* ── Labels ── */
+  .dark-mode label,
+  .dark-mode .form-group label {
+    color: var(--bom-text-label) !important;
+  }
 
-/* ── Inputs ── */
-.dark-mode .form-control,
-.dark-mode input.form-control,
-.dark-mode select.form-control,
-.dark-mode textarea.form-control {
-  background-color: var(--bom-bg-input) !important;
-  border-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
-.dark-mode .form-control:focus {
-  background-color: var(--bom-bg-input) !important;
-  border-color: var(--bom-accent) !important;
-  color: var(--bom-text) !important;
-  box-shadow: 0 0 0 2px rgba(79,142,247,0.25) !important;
-}
-.dark-mode .form-control[readonly],
-.dark-mode .form-control:disabled,
-.dark-mode input[readonly],
-.dark-mode select:disabled {
-  background-color: var(--bom-bg-input-ro) !important;
-  color: var(--bom-text-muted) !important;
-  border-color: var(--bom-border-light) !important;
-  opacity: 1 !important;
-}
+  /* ── Inputs ── */
+  .dark-mode .form-control,
+  .dark-mode input.form-control,
+  .dark-mode select.form-control,
+  .dark-mode textarea.form-control {
+    background-color: var(--bom-bg-input) !important;
+    border-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
+  .dark-mode .form-control:focus {
+    background-color: var(--bom-bg-input) !important;
+    border-color: var(--bom-accent) !important;
+    color: var(--bom-text) !important;
+    box-shadow: 0 0 0 2px rgba(79,142,247,0.25) !important;
+  }
+  .dark-mode .form-control[readonly],
+  .dark-mode .form-control:disabled,
+  .dark-mode input[readonly],
+  .dark-mode select:disabled {
+    background-color: var(--bom-bg-input-ro) !important;
+    color: var(--bom-text-muted) !important;
+    border-color: var(--bom-border-light) !important;
+    opacity: 1 !important;
+  }
 
-/* ── Material row inputs ── */
-.dark-mode .material-product-code,
-.dark-mode .material-product-search,
-.dark-mode .material-uom,
-.dark-mode .material-type-display,
-.dark-mode .material-qty-input {
-  background-color: var(--bom-bg-input) !important;
-  border-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
+  /* ── Material row inputs ── */
+  .dark-mode .material-product-code,
+  .dark-mode .material-product-search,
+  .dark-mode .material-uom,
+  .dark-mode .material-type-display,
+  .dark-mode .material-qty-input {
+    background-color: var(--bom-bg-input) !important;
+    border-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
 
-/* ── Tables ── */
-.dark-mode .table {
-  color: var(--bom-text) !important;
-  border-color: var(--bom-border) !important;
-}
-.dark-mode .table thead th {
-  background: var(--bom-bg-thead) !important;
-  color: var(--bom-text-muted) !important;
-  border-color: var(--bom-border) !important;
-}
-.dark-mode .table tbody td,
-.dark-mode .table tbody th {
-  border-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
-.dark-mode .table-bordered,
-.dark-mode .table-bordered td,
-.dark-mode .table-bordered th { border-color: var(--bom-border) !important; }
-.dark-mode .table tbody tr.info,
-.dark-mode .table tbody tr.info td {
-  background: rgba(79,142,247,0.12) !important;
-  color: var(--bom-text) !important;
-}
-.dark-mode .table-responsive { border-color: var(--bom-border) !important; }
+  /* ── Tables ── */
+  .dark-mode .table {
+    color: var(--bom-text) !important;
+    border-color: var(--bom-border) !important;
+  }
+  .dark-mode .table thead th {
+    background: var(--bom-bg-thead) !important;
+    color: var(--bom-text-muted) !important;
+    border-color: var(--bom-border) !important;
+  }
+  .dark-mode .table tbody td,
+  .dark-mode .table tbody th {
+    border-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
+  .dark-mode .table-bordered,
+  .dark-mode .table-bordered td,
+  .dark-mode .table-bordered th { border-color: var(--bom-border) !important; }
+  .dark-mode .table tbody tr.info,
+  .dark-mode .table tbody tr.info td {
+    background: rgba(79,142,247,0.12) !important;
+    color: var(--bom-text) !important;
+  }
+  .dark-mode .table-responsive { border-color: var(--bom-border) !important; }
 
-/* ── DataTables — matches departments.html dark style ── */
-.dark-mode .dataTables_wrapper { color: var(--bom-text) !important; }
+  /* ── DataTables — matches departments.html dark style ── */
+  .dark-mode .dataTables_wrapper { color: var(--bom-text) !important; }
 
-.dark-mode .dataTables_wrapper .dataTables_length,
-.dark-mode .dataTables_wrapper .dataTables_filter {
-  color: var(--bom-text-muted) !important;
-  padding: 8px 4px;
-}
-.dark-mode .dataTables_wrapper .dataTables_length label,
-.dark-mode .dataTables_wrapper .dataTables_filter label {
-  color: var(--bom-text-muted) !important;
-  font-size: 13px;
-}
-.dark-mode .dataTables_wrapper .dataTables_length select {
-  background: var(--bom-bg-input) !important;
-  border: 1px solid var(--bom-border) !important;
-  color: var(--bom-text) !important;
-  border-radius: 4px;
-  padding: 2px 6px;
-}
-.dark-mode .dataTables_wrapper .dataTables_filter input {
-  background: var(--bom-bg-input) !important;
-  border: 1px solid var(--bom-border) !important;
-  color: var(--bom-text) !important;
-  border-radius: 4px;
-  padding: 4px 8px;
-  outline: none;
-}
-.dark-mode .dataTables_wrapper .dataTables_filter input:focus {
-  border-color: var(--bom-accent) !important;
-  box-shadow: 0 0 0 2px rgba(79,142,247,0.2) !important;
-}
-.dark-mode .dataTables_wrapper .dataTables_info {
-  color: var(--bom-text-muted) !important;
-  font-size: 13px;
-  padding-top: 10px;
-}
-.dark-mode .dataTables_wrapper .dataTables_paginate { padding-top: 8px; }
-.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  color: var(--bom-text-muted) !important;
-  border-radius: 4px;
-  padding: 4px 10px !important;
-  margin: 0 1px;
-  font-size: 13px;
-}
-.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-  background: var(--bom-bg-card) !important;
-  border-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
-.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-  background: var(--bom-accent) !important;
-  border-color: var(--bom-accent) !important;
-  color: #fff !important;
-  font-weight: 600;
-}
-.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
-.dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
-  background: transparent !important;
-  border-color: transparent !important;
-  color: #444c60 !important;
-  cursor: default;
-}
-.dark-mode table.dataTable thead .sorting:after,
-.dark-mode table.dataTable thead .sorting_asc:after,
-.dark-mode table.dataTable thead .sorting_desc:after,
-.dark-mode table.dataTable thead .sorting:before,
-.dark-mode table.dataTable thead .sorting_asc:before,
-.dark-mode table.dataTable thead .sorting_desc:before {
-  color: var(--bom-text-muted) !important;
-  opacity: 0.6;
-}
-/* odd/even stripe removed — matches departments.html (no row background, transparent) */
-.dark-mode table.dataTable tbody tr.odd,
-.dark-mode table.dataTable tbody tr.even { background: transparent !important; }
-.dark-mode table.dataTable tbody tr:hover,
-.dark-mode table.dataTable tbody tr.odd:hover,
-.dark-mode table.dataTable tbody tr.even:hover { background: rgba(79,142,247,0.07) !important; }
+  .dark-mode .dataTables_wrapper .dataTables_length,
+  .dark-mode .dataTables_wrapper .dataTables_filter {
+    color: var(--bom-text-muted) !important;
+    padding: 8px 4px;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_length label,
+  .dark-mode .dataTables_wrapper .dataTables_filter label {
+    color: var(--bom-text-muted) !important;
+    font-size: 13px;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_length select {
+    background: var(--bom-bg-input) !important;
+    border: 1px solid var(--bom-border) !important;
+    color: var(--bom-text) !important;
+    border-radius: 4px;
+    padding: 2px 6px;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_filter input {
+    background: var(--bom-bg-input) !important;
+    border: 1px solid var(--bom-border) !important;
+    color: var(--bom-text) !important;
+    border-radius: 4px;
+    padding: 4px 8px;
+    outline: none;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--bom-accent) !important;
+    box-shadow: 0 0 0 2px rgba(79,142,247,0.2) !important;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_info {
+    color: var(--bom-text-muted) !important;
+    font-size: 13px;
+    padding-top: 10px;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_paginate { padding-top: 8px; }
+  .dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    color: var(--bom-text-muted) !important;
+    border-radius: 4px;
+    padding: 4px 10px !important;
+    margin: 0 1px;
+    font-size: 13px;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--bom-bg-card) !important;
+    border-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+  .dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: var(--bom-accent) !important;
+    border-color: var(--bom-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+  .dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+  .dark-mode .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: #444c60 !important;
+    cursor: default;
+  }
+  .dark-mode table.dataTable thead .sorting:after,
+  .dark-mode table.dataTable thead .sorting_asc:after,
+  .dark-mode table.dataTable thead .sorting_desc:after,
+  .dark-mode table.dataTable thead .sorting:before,
+  .dark-mode table.dataTable thead .sorting_asc:before,
+  .dark-mode table.dataTable thead .sorting_desc:before {
+    color: var(--bom-text-muted) !important;
+    opacity: 0.6;
+  }
+  /* odd/even stripe removed — matches departments.html (no row background, transparent) */
+  .dark-mode table.dataTable tbody tr.odd,
+  .dark-mode table.dataTable tbody tr.even { background: transparent !important; }
+  .dark-mode table.dataTable tbody tr:hover,
+  .dark-mode table.dataTable tbody tr.odd:hover,
+  .dark-mode table.dataTable tbody tr.even:hover { background: rgba(79,142,247,0.07) !important; }
 
-/* ── BOM list link ── */
-.dark-mode #allBOMDataTable .selectBOMRecord { color: var(--bom-accent) !important; }
+  /* ── BOM list link ── */
+  .dark-mode #allBOMDataTable .selectBOMRecord { color: var(--bom-accent) !important; }
 
-/* ── Buttons ── */
-.dark-mode .btn-default,
-.dark-mode .btn-white {
-  background: var(--bom-bg-card) !important;
-  border-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
-.dark-mode .btn-default:hover,
-.dark-mode .btn-white:hover {
-  background: #343a4a !important;
-  border-color: var(--bom-accent) !important;
-}
-.dark-mode .btn-secondary {
-  background: var(--bom-accent) !important;
-  border-color: var(--bom-accent) !important;
-  color: #fff !important;
-}
-.dark-mode .btn-primary  { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
-.dark-mode .btn-warning  { background: #d97706 !important; border-color: #d97706 !important; color: #fff !important; }
-/* ── Lot collapse panels ── */
-.dark-mode .panel-default { background: var(--bom-bg-card) !important; border-color: var(--bom-border) !important; }
-.dark-mode .panel-default > .panel-heading {
-  background: var(--bom-bg-card) !important;
-  border-bottom-color: var(--bom-border) !important;
-  color: var(--bom-text) !important;
-}
-.dark-mode .panel-default > .panel-heading a { color: var(--bom-text) !important; }
-.dark-mode .panel-body { background: var(--bom-bg-card) !important; color: var(--bom-text) !important; }
+  /* ── Buttons ── */
+  .dark-mode .btn-default,
+  .dark-mode .btn-white {
+    background: var(--bom-bg-card) !important;
+    border-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
+  .dark-mode .btn-default:hover,
+  .dark-mode .btn-white:hover {
+    background: #343a4a !important;
+    border-color: var(--bom-accent) !important;
+  }
+  .dark-mode .btn-secondary {
+    background: var(--bom-accent) !important;
+    border-color: var(--bom-accent) !important;
+    color: #fff !important;
+  }
+  .dark-mode .btn-primary  { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
+  .dark-mode .btn-warning  { background: #d97706 !important; border-color: #d97706 !important; color: #fff !important; }
+  /* ── Lot collapse panels ── */
+  .dark-mode .panel-default { background: var(--bom-bg-card) !important; border-color: var(--bom-border) !important; }
+  .dark-mode .panel-default > .panel-heading {
+    background: var(--bom-bg-card) !important;
+    border-bottom-color: var(--bom-border) !important;
+    color: var(--bom-text) !important;
+  }
+  .dark-mode .panel-default > .panel-heading a { color: var(--bom-text) !important; }
+  .dark-mode .panel-body { background: var(--bom-bg-card) !important; color: var(--bom-text) !important; }
 
-/* ── Step type badges ── */
-.dark-mode .label-success { background: #065f46 !important; color: #a7f3d0 !important; }
-.dark-mode .label-primary { background: #1e3a8a !important; color: #bfdbfe !important; }
-.dark-mode .label-info    { background: #164e63 !important; color: #a5f3fc !important; }
+  /* ── Step type badges ── */
+  .dark-mode .label-success { background: #065f46 !important; color: #a7f3d0 !important; }
+  .dark-mode .label-primary { background: #1e3a8a !important; color: #bfdbfe !important; }
+  .dark-mode .label-info    { background: #164e63 !important; color: #a5f3fc !important; }
 
-/* ── Misc ── */
-.dark-mode .text-muted { color: var(--bom-text-muted) !important; }
-.dark-mode .border-bottom { border-bottom-color: var(--bom-border) !important; }
-.dark-mode .material-empty-row td {
-  color: var(--bom-text-muted) !important;
-  background: var(--bom-bg-card) !important;
-}
-.dark-mode .delete-material-row {
-  background: transparent !important;
-  border-color: var(--bom-border) !important;
-  color: #f87171 !important;
-}
-.dark-mode .delete-material-row:hover {
-  background: rgba(248,113,113,0.15) !important;
-  border-color: #f87171 !important;
-}
-.approvalRemarksPanel {
-    border: 2px solid #dc3545 !important;
+  /* ── Misc ── */
+  .dark-mode .text-muted { color: var(--bom-text-muted) !important; }
+  .dark-mode .border-bottom { border-bottom-color: var(--bom-border) !important; }
+  .dark-mode .material-empty-row td {
+    color: var(--bom-text-muted) !important;
+    background: var(--bom-bg-card) !important;
+  }
+  .dark-mode .delete-material-row {
+    background: transparent !important;
+    border-color: var(--bom-border) !important;
+    color: #f87171 !important;
+  }
+  .dark-mode .delete-material-row:hover {
+    background: rgba(248,113,113,0.15) !important;
+    border-color: #f87171 !important;
+  }
+  .approvalRemarksPanel {
+    border: 2px solid #f59e0b !important;
     border-radius: 10px !important;
-    background: #fff5f5 !important;
-    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15), 0 4px 12px rgba(220, 53, 69, 0.1) !important;
+    background: #fffbeb !important;
+    box-shadow: none !important;
     margin-bottom: 20px;
-    animation: remarksAttention 0.6s ease-in-out;
-}
-@keyframes remarksAttention {
-    0%   { transform: scale(1); }
-    30%  { transform: scale(1.01); }
-    100% { transform: scale(1); }
-}
-.approvalRemarksPanel .panel-heading {
-    background: #dc3545 !important;
-    border-bottom: none !important;
+  }
+  .approvalRemarksPanel .panel-heading {
+    background: #fef3c7 !important;
+    border-bottom: 1px solid #fde68a !important;
     border-radius: 8px 8px 0 0 !important;
     padding: 12px 16px !important;
-}
-.approvalRemarksPanel .panel-heading a,
-.approvalRemarksPanel .panel-heading .panel-title a {
-    color: #fff !important;
+  }
+  .approvalRemarksPanel .panel-heading a,
+  .approvalRemarksPanel .panel-heading .panel-title a {
+    color: #92400e !important;
     font-weight: 600 !important;
     font-size: 15px !important;
     text-decoration: none !important;
-}
-.approvalRemarksPanel .panel-heading .fa-exclamation-triangle {
-    color: #fff !important;
+  }
+  .approvalRemarksPanel .panel-heading .remarks-icon {
+    color: #d97706 !important;
+    width: 18px;
+    height: 18px;
+    vertical-align: text-bottom;
     margin-right: 6px;
-}
-.approvalRemarksPanel .panel-body {
-    background: #fff5f5 !important;
-    color: #991b1b !important;
+  }
+  .approvalRemarksPanel .panel-body {
+    background: #fffbeb !important;
+    color: #92400e !important;
     font-size: 14px !important;
     font-weight: 500 !important;
     padding: 14px 18px !important;
     border-radius: 0 0 8px 8px !important;
     line-height: 1.6;
     white-space: pre-wrap;
-}
-.dark-mode .approvalRemarksPanel,
-html[data-bs-theme="dark"] .approvalRemarksPanel {
-    background: #2d1215 !important;
-    border-color: #f87171 !important;
-    box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2), 0 4px 12px rgba(248, 113, 113, 0.1) !important;
-}
+  }
+  .dark-mode .approvalRemarksPanel,
+  html[data-bs-theme="dark"] .approvalRemarksPanel {
+    background: #2d2010 !important;
+    border-color: #d97706 !important;
+    box-shadow: none !important;
+  }
 
-.dark-mode .approvalRemarksPanel .panel-heading,
-html[data-bs-theme="dark"] .approvalRemarksPanel .panel-heading {
-    background: #991b1b !important;
-}
+  .dark-mode .approvalRemarksPanel .panel-heading,
+  html[data-bs-theme="dark"] .approvalRemarksPanel .panel-heading {
+    background: #3b2a10 !important;
+    border-bottom-color: #7c4a00 !important;
+  }
 
-.dark-mode .approvalRemarksPanel .panel-body,
-html[data-bs-theme="dark"] .approvalRemarksPanel .panel-body {
-    background: #2d1215 !important;
-    color: #fca5a5 !important;
-}
-/* ── Approval remarks ── */
-.dark-mode .approvalRemarksPanel { background: #2d2010 !important; border-color: #7c4a00 !important; }
-.dark-mode .approvalRemarksPanel .panel-heading { background: #3b2a10 !important; border-color: #7c4a00 !important; }
+  .dark-mode .approvalRemarksPanel .panel-body,
+  html[data-bs-theme="dark"] .approvalRemarksPanel .panel-body {
+    background: #2d2010 !important;
+    color: #fcd34d !important;
+  }
+  /* ── Approval remarks ── */
 
-/* ── Typeahead dropdown ── */
-.dark-mode .typeahead.dropdown-menu {
-  background: var(--bom-bg-card) !important;
-  border-color: var(--bom-border) !important;
-}
-.dark-mode .typeahead.dropdown-menu li > a { color: var(--bom-text) !important; }
-.dark-mode .typeahead.dropdown-menu li > a:hover { background: var(--bom-bg-input) !important; }
-.dark-mode .typeahead.dropdown-menu .active > a { background: var(--bom-accent) !important; color: #fff !important; }
+  /* ── Typeahead dropdown ── */
+  .dark-mode .typeahead.dropdown-menu {
+    background: var(--bom-bg-card) !important;
+    border-color: var(--bom-border) !important;
+  }
+  .dark-mode .typeahead.dropdown-menu li > a { color: var(--bom-text) !important; }
+  .dark-mode .typeahead.dropdown-menu li > a:hover { background: var(--bom-bg-input) !important; }
+  .dark-mode .typeahead.dropdown-menu .active > a { background: var(--bom-accent) !important; color: #fff !important; }
 
-/* ── Choices.js ── */
-.dark-mode .choices__inner { background: var(--bom-bg-input) !important; border-color: var(--bom-border) !important; color: var(--bom-text) !important; }
-.dark-mode .choices__list--dropdown,
-.dark-mode .choices__list[aria-expanded] { background: var(--bom-bg-card) !important; border-color: var(--bom-border) !important; }
-.dark-mode .choices__list--dropdown .choices__item { background: var(--bom-bg-card) !important; color: var(--bom-text) !important; }
-.dark-mode .choices__list--dropdown .choices__item--selectable.is-highlighted { background: var(--bom-accent) !important; color: #fff !important; }
-.dark-mode .choices__item.choices__item--selectable { background: #3b4160 !important; color: var(--bom-text) !important; }
-.dark-mode .choices__input { background: transparent !important; color: var(--bom-text) !important; }
-.dark-mode .choices__button { border-left-color: rgba(255,255,255,0.2) !important; filter: invert(1); }
+  /* ── Choices.js ── */
+  .dark-mode .choices__inner { background: var(--bom-bg-input) !important; border-color: var(--bom-border) !important; color: var(--bom-text) !important; }
+  .dark-mode .choices__list--dropdown,
+  .dark-mode .choices__list[aria-expanded] { background: var(--bom-bg-card) !important; border-color: var(--bom-border) !important; }
+  .dark-mode .choices__list--dropdown .choices__item { background: var(--bom-bg-card) !important; color: var(--bom-text) !important; }
+  .dark-mode .choices__list--dropdown .choices__item--selectable.is-highlighted { background: var(--bom-accent) !important; color: #fff !important; }
+  .dark-mode .choices__item.choices__item--selectable { background: #3b4160 !important; color: var(--bom-text) !important; }
+  .dark-mode .choices__input { background: transparent !important; color: var(--bom-text) !important; }
+  .dark-mode .choices__button { border-left-color: rgba(255,255,255,0.2) !important; filter: invert(1); }
 
-/* ── Modals ── */
-.dark-mode .modal-content { background: var(--bom-bg-secondary) !important; border-color: var(--bom-border) !important; color: var(--bom-text) !important; }
-.dark-mode .modal-header,
-.dark-mode .modal-header-simple { background: var(--bom-bg-card) !important; border-bottom-color: var(--bom-border) !important; }
-.dark-mode .modal-header .modal-title,
-.dark-mode .modal-header-simple .modal-title { color: var(--bom-text) !important; }
-.dark-mode .modal-footer { background: var(--bom-bg-card) !important; border-top-color: var(--bom-border) !important; }
+  /* ── Modals ── */
+  .dark-mode .modal-content { background: var(--bom-bg-secondary) !important; border-color: var(--bom-border) !important; color: var(--bom-text) !important; }
+  .dark-mode .modal-header,
+  .dark-mode .modal-header-simple { background: var(--bom-bg-card) !important; border-bottom-color: var(--bom-border) !important; }
+  .dark-mode .modal-header .modal-title,
+  .dark-mode .modal-header-simple .modal-title { color: var(--bom-text) !important; }
+  .dark-mode .modal-footer { background: var(--bom-bg-card) !important; border-top-color: var(--bom-border) !important; }
 
-/* ── Scrollbars ── */
-.dark-mode ::-webkit-scrollbar { width: 6px; height: 6px; }
-.dark-mode ::-webkit-scrollbar-track { background: var(--bom-bg); }
-.dark-mode ::-webkit-scrollbar-thumb { background: var(--bom-border); border-radius: 3px; }
-.dark-mode ::-webkit-scrollbar-thumb:hover { background: #5a6280; }
+  /* ── Scrollbars ── */
+  .dark-mode ::-webkit-scrollbar { width: 6px; height: 6px; }
+  .dark-mode ::-webkit-scrollbar-track { background: var(--bom-bg); }
+  .dark-mode ::-webkit-scrollbar-thumb { background: var(--bom-border); border-radius: 3px; }
+  .dark-mode ::-webkit-scrollbar-thumb:hover { background: #5a6280; }
 
-/* .dark-mode .btn-secondary {
-    background: var(--bom-accent) !important;
-    border-color: var(--bom-accent) !important;
-    color: #fff !important;
-} */
+  /* .dark-mode .btn-secondary {
+      background: var(--bom-accent) !important;
+      border-color: var(--bom-accent) !important;
+      color: #fff !important;
+  } */
 </style>
 <!-- allBOMPanel.html start -->
 <div class="qa-white-panel">
@@ -487,9 +509,9 @@ html[data-bs-theme="dark"] .approvalRemarksPanel .panel-body {
       border-radius: 8px;
       box-shadow: var(--ins-box-shadow-sm);
       margin-bottom: 0;
-  }
+    }
 
-  #allBOMPanel .ibox-title {
+    #allBOMPanel .ibox-title {
       background-color: var(--ins-secondary-bg);
       border-bottom: var(--ins-border-width, 1px) solid var(--ins-border-color);
       border-radius: 8px 8px 0 0;
@@ -497,270 +519,270 @@ html[data-bs-theme="dark"] .approvalRemarksPanel .panel-body {
       display: flex;
       align-items: center;
       justify-content: space-between;
-  }
+    }
 
-  #allBOMPanel .ibox-content {
+    #allBOMPanel .ibox-content {
       background-color: var(--ins-secondary-bg);
       border-radius: 0 0 8px 8px;
       padding: 16px;
-  }
+    }
 
-  #allBOMPanel .ibox-title h5 {
+    #allBOMPanel .ibox-title h5 {
       margin: 0;
-  }
+    }
 
-  #allBOMDataTable thead th {
+    #allBOMDataTable thead th {
       border-bottom: 1px solid #eee !important;
-  }
+    }
 
-  #allBOMDataTable tbody tr:last-child td {
+    #allBOMDataTable tbody tr:last-child td {
       border-bottom: none !important;
-  }
+    }
 
-  #allBOMDataTable .selectBOMRecord {
+    #allBOMDataTable .selectBOMRecord {
       color: #337ab7;
       text-decoration: none;
-  }
+    }
 
-  #allBOMDataTable .selectBOMRecord:hover,
-  #allBOMDataTable .selectBOMRecord:focus {
+    #allBOMDataTable .selectBOMRecord:hover,
+    #allBOMDataTable .selectBOMRecord:focus {
       color: #286090;
-  }
-  html[data-bs-theme="dark"] body,
-html[data-bs-theme="dark"] .qa-white-panel,
-html[data-bs-theme="dark"] .ibox,
-html[data-bs-theme="dark"] .ibox-content,
-html[data-bs-theme="dark"] .ibox-title {
-    background: #181a20 !important;
-    color: #eee !important;
-    border-color: #444 !important;
-}
+    }
+    html[data-bs-theme="dark"] body,
+    html[data-bs-theme="dark"] .qa-white-panel,
+    html[data-bs-theme="dark"] .ibox,
+    html[data-bs-theme="dark"] .ibox-content,
+    html[data-bs-theme="dark"] .ibox-title {
+      background: #181a20 !important;
+      color: #eee !important;
+      border-color: #444 !important;
+    }
 
-html[data-bs-theme="dark"] .form-control,
-html[data-bs-theme="dark"] input,
-html[data-bs-theme="dark"] select,
-html[data-bs-theme="dark"] textarea {
-    background: #23272f !important;
-    color: #eee !important;
-    border: 1px solid #444 !important;
-}
+    html[data-bs-theme="dark"] .form-control,
+    html[data-bs-theme="dark"] input,
+    html[data-bs-theme="dark"] select,
+    html[data-bs-theme="dark"] textarea {
+      background: #23272f !important;
+      color: #eee !important;
+      border: 1px solid #444 !important;
+    }
 
-html[data-bs-theme="dark"] .form-control:focus,
-html[data-bs-theme="dark"] input:focus,
-html[data-bs-theme="dark"] select:focus,
-html[data-bs-theme="dark"] textarea:focus {
-    background: #23272f !important;
-    color: #fff !important;
-    border-color: #2196f3 !important;
-}
+    html[data-bs-theme="dark"] .form-control:focus,
+    html[data-bs-theme="dark"] input:focus,
+    html[data-bs-theme="dark"] select:focus,
+    html[data-bs-theme="dark"] textarea:focus {
+      background: #23272f !important;
+      color: #fff !important;
+      border-color: #2196f3 !important;
+    }
 
-html[data-bs-theme="dark"] .dropdown-menu {
-    background: #23272f !important;
-    color: #eee !important;
-    border: 1px solid #444 !important;
-}
+    html[data-bs-theme="dark"] .dropdown-menu {
+      background: #23272f !important;
+      color: #eee !important;
+      border: 1px solid #444 !important;
+    }
 
-html[data-bs-theme="dark"] .dropdown-item {
-    color: #bfc9da !important;
-}
+    html[data-bs-theme="dark"] .dropdown-item {
+      color: #bfc9da !important;
+    }
 
-html[data-bs-theme="dark"] .dropdown-item:hover,
-html[data-bs-theme="dark"] .dropdown-item.active {
-    background: #2d3139 !important;
-    color: #fff !important;
-}
+    html[data-bs-theme="dark"] .dropdown-item:hover,
+    html[data-bs-theme="dark"] .dropdown-item.active {
+      background: #2d3139 !important;
+      color: #fff !important;
+    }
 
-html[data-bs-theme="dark"] table,
-html[data-bs-theme="dark"] th,
-html[data-bs-theme="dark"] td {
-    /* background: #23272f !important; */
-    color: #eee !important;
-    /* border-color: #444 !important; */
-}
+    html[data-bs-theme="dark"] table,
+    html[data-bs-theme="dark"] th,
+    html[data-bs-theme="dark"] td {
+      /* background: #23272f !important; */
+      color: #eee !important;
+      /* border-color: #444 !important; */
+    }
 
-html[data-bs-theme="dark"] .table thead th {
-    color: #8b95a5 !important;
-    /* background: #23272f !important; */
-}
+    html[data-bs-theme="dark"] .table thead th {
+      color: #8b95a5 !important;
+      /* background: #23272f !important; */
+    }
 
-html[data-bs-theme="dark"] .btn {
-    background: #23272f !important;
-    color: #bfc9da !important;
-    border: 1px solid #444 !important;
-}
+    html[data-bs-theme="dark"] .btn {
+      background: #23272f !important;
+      color: #bfc9da !important;
+      border: 1px solid #444 !important;
+    }
 
-html[data-bs-theme="dark"] .btn-primary,
-html[data-bs-theme="dark"] .btn-primary:focus {
-    background: #2196f3 !important;
-    color: #fff !important;
-    border: none !important;
-}
+    html[data-bs-theme="dark"] .btn-primary,
+    html[data-bs-theme="dark"] .btn-primary:focus {
+      background: #2196f3 !important;
+      color: #fff !important;
+      border: none !important;
+    }
 
-html[data-bs-theme="dark"] .btn-primary:hover {
-    background: #1769aa !important;
-    color: #fff !important;
-}
+    html[data-bs-theme="dark"] .btn-primary:hover {
+      background: #1769aa !important;
+      color: #fff !important;
+    }
 
-html[data-bs-theme="dark"] .modal-content {
-    background: #23272f !important;
-    color: #eee !important;
-    border-color: #444 !important;
-}
+    html[data-bs-theme="dark"] .modal-content {
+      background: #23272f !important;
+      color: #eee !important;
+      border-color: #444 !important;
+    }
 
-html[data-bs-theme="dark"] .section-header2,
-html[data-bs-theme="dark"] .details-subtitle {
-    color: #bfc9da !important;
-}
+    html[data-bs-theme="dark"] .section-header2,
+    html[data-bs-theme="dark"] .details-subtitle {
+      color: #bfc9da !important;
+    }
 
-html[data-bs-theme="dark"] .typeahead.dropdown-menu {
-    background: #23272f !important;
-    color: #eee !important;
-    border: 1px solid #444 !important;
-}
+    html[data-bs-theme="dark"] .typeahead.dropdown-menu {
+      background: #23272f !important;
+      color: #eee !important;
+      border: 1px solid #444 !important;
+    }
 
-html[data-bs-theme="dark"] .typeahead.dropdown-menu li>a {
-    color: #bfc9da !important;
-}
+    html[data-bs-theme="dark"] .typeahead.dropdown-menu li>a {
+      color: #bfc9da !important;
+    }
 
-html[data-bs-theme="dark"] .typeahead.dropdown-menu li>a:hover,
-html[data-bs-theme="dark"] .typeahead.dropdown-menu .active>a {
-    background-color: #2196f3 !important;
-    color: #fff !important;
-}
-html[data-bs-theme="dark"] .bom-lot-card , html[data-bs-theme="dark"] .bom-history-card {
-    background: #23272f !important;
-    color: #bfc9da !important;
-    border: 1px solid #444 !important;
-}
-/* 1. Modal Dialogs (Bootstrap/Custom) */
-.dark-mode .modal-content,
-html[data-bs-theme="dark"] .modal-content {
-    background: #23272f !important;
-    color: #e2e8f0 !important;
-    border: 1px solid #3a4055 !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
-}
-.dark-mode .modal-header,
-html[data-bs-theme="dark"] .modal-header {
-    background: #2a2f3b !important;
-    border-bottom: 1px solid #3a4055 !important;
-    color: #e2e8f0 !important;
-}
-.dark-mode .modal-title,
-html[data-bs-theme="dark"] .modal-title {
-    color: #e2e8f0 !important;
-}
-.dark-mode .modal-footer,
-html[data-bs-theme="dark"] .modal-footer {
-    background: #2a2f3b !important;
-    border-top: 1px solid #3a4055 !important;
-}
-.dark-mode .modal-content input,
-.dark-mode .modal-content select,
-.dark-mode .modal-content textarea,
-html[data-bs-theme="dark"] .modal-content input,
-html[data-bs-theme="dark"] .modal-content select,
-html[data-bs-theme="dark"] .modal-content textarea {
-    background: #181c27 !important;
-    color: #e2e8f0 !important;
-    border: 1px solid #3a4055 !important;
-}
-.dark-mode .modal-content input:focus,
-.dark-mode .modal-content select:focus,
-.dark-mode .modal-content textarea:focus,
-html[data-bs-theme="dark"] .modal-content input:focus,
-html[data-bs-theme="dark"] .modal-content select:focus,
-html[data-bs-theme="dark"] .modal-content textarea:focus {
-    border-color: #4f8ef7 !important;
-    color: #fff !important;
-}
+    html[data-bs-theme="dark"] .typeahead.dropdown-menu li>a:hover,
+    html[data-bs-theme="dark"] .typeahead.dropdown-menu .active>a {
+      background-color: #2196f3 !important;
+      color: #fff !important;
+    }
+    html[data-bs-theme="dark"] .bom-lot-card , html[data-bs-theme="dark"] .bom-history-card {
+      background: #23272f !important;
+      color: #bfc9da !important;
+      border: 1px solid #444 !important;
+    }
+    /* 1. Modal Dialogs (Bootstrap/Custom) */
+    .dark-mode .modal-content,
+    html[data-bs-theme="dark"] .modal-content {
+      background: #23272f !important;
+      color: #e2e8f0 !important;
+      border: 1px solid #3a4055 !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+    }
+    .dark-mode .modal-header,
+    html[data-bs-theme="dark"] .modal-header {
+      background: #2a2f3b !important;
+      border-bottom: 1px solid #3a4055 !important;
+      color: #e2e8f0 !important;
+    }
+    .dark-mode .modal-title,
+    html[data-bs-theme="dark"] .modal-title {
+      color: #e2e8f0 !important;
+    }
+    .dark-mode .modal-footer,
+    html[data-bs-theme="dark"] .modal-footer {
+      background: #2a2f3b !important;
+      border-top: 1px solid #3a4055 !important;
+    }
+    .dark-mode .modal-content input,
+    .dark-mode .modal-content select,
+    .dark-mode .modal-content textarea,
+    html[data-bs-theme="dark"] .modal-content input,
+    html[data-bs-theme="dark"] .modal-content select,
+    html[data-bs-theme="dark"] .modal-content textarea {
+      background: #181c27 !important;
+      color: #e2e8f0 !important;
+      border: 1px solid #3a4055 !important;
+    }
+    .dark-mode .modal-content input:focus,
+    .dark-mode .modal-content select:focus,
+    .dark-mode .modal-content textarea:focus,
+    html[data-bs-theme="dark"] .modal-content input:focus,
+    html[data-bs-theme="dark"] .modal-content select:focus,
+    html[data-bs-theme="dark"] .modal-content textarea:focus {
+      border-color: #4f8ef7 !important;
+      color: #fff !important;
+    }
 
-/* 2. Choices.js Multi-Select Dropdown */
-.dark-mode .choices__inner,
-html[data-bs-theme="dark"] .choices__inner {
-    background: #181c27 !important;
-    color: #e2e8f0 !important;
-    border: 1px solid #3a4055 !important;
-}
-.dark-mode .choices__list--dropdown,
-.dark-mode .choices__list[aria-expanded],
-html[data-bs-theme="dark"] .choices__list--dropdown,
-html[data-bs-theme="dark"] .choices__list[aria-expanded] {
-    background: #23272f !important;
-    color: #e2e8f0 !important;
-    border: 1px solid #3a4055 !important;
-}
-.dark-mode .choices__item.choices__item--selectable,
-html[data-bs-theme="dark"] .choices__item.choices__item--selectable {
-    background: #2a2f3b !important;
-    color: #e2e8f0 !important;
-}
-.dark-mode .choices__item.choices__item--selectable.is-highlighted,
-html[data-bs-theme="dark"] .choices__item.choices__item--selectable.is-highlighted {
-    background: #4f8ef7 !important;
-    color: #fff !important;
-}
-.dark-mode .choices__input,
-html[data-bs-theme="dark"] .choices__input {
-    background: transparent !important;
-    color: #e2e8f0 !important;
-}
-.dark-mode .choices__button,
-html[data-bs-theme="dark"] .choices__button {
-    border-left: 1px solid #3a4055 !important;
-    filter: invert(1);
-}
-.dark-mode .choices__list--multiple .choices__item,
-html[data-bs-theme="dark"] .choices__list--multiple .choices__item {
-    background: #0e7490 !important;
-    color: #fff !important;
-    border: none !important;
-}
-.btn-secondary,
-html[data-bs-theme="dark"] .btn-secondary,
-.dark-mode .btn-secondary {
-    background: #2196f3 !important;   /* or your preferred blue */
-    border-color: #2196f3 !important;
-    color: #fff !important;
-    box-shadow: none !important;
-}
+    /* 2. Choices.js Multi-Select Dropdown */
+    .dark-mode .choices__inner,
+    html[data-bs-theme="dark"] .choices__inner {
+      background: #181c27 !important;
+      color: #e2e8f0 !important;
+      border: 1px solid #3a4055 !important;
+    }
+    .dark-mode .choices__list--dropdown,
+    .dark-mode .choices__list[aria-expanded],
+    html[data-bs-theme="dark"] .choices__list--dropdown,
+    html[data-bs-theme="dark"] .choices__list[aria-expanded] {
+      background: #23272f !important;
+      color: #e2e8f0 !important;
+      border: 1px solid #3a4055 !important;
+    }
+    .dark-mode .choices__item.choices__item--selectable,
+    html[data-bs-theme="dark"] .choices__item.choices__item--selectable {
+      background: #2a2f3b !important;
+      color: #e2e8f0 !important;
+    }
+    .dark-mode .choices__item.choices__item--selectable.is-highlighted,
+    html[data-bs-theme="dark"] .choices__item.choices__item--selectable.is-highlighted {
+      background: #4f8ef7 !important;
+      color: #fff !important;
+    }
+    .dark-mode .choices__input,
+    html[data-bs-theme="dark"] .choices__input {
+      background: transparent !important;
+      color: #e2e8f0 !important;
+    }
+    .dark-mode .choices__button,
+    html[data-bs-theme="dark"] .choices__button {
+      border-left: 1px solid #3a4055 !important;
+      filter: invert(1);
+    }
+    .dark-mode .choices__list--multiple .choices__item,
+    html[data-bs-theme="dark"] .choices__list--multiple .choices__item {
+      background: #0e7490 !important;
+      color: #fff !important;
+      border: none !important;
+    }
+    .btn-secondary,
+    html[data-bs-theme="dark"] .btn-secondary,
+    .dark-mode .btn-secondary {
+      background: #2196f3 !important;   /* or your preferred blue */
+      border-color: #2196f3 !important;
+      color: #fff !important;
+      box-shadow: none !important;
+    }
 
-.btn-secondary:hover,
-html[data-bs-theme="dark"] .btn-secondary:hover,
-.dark-mode .btn-secondary:hover,
-.btn-secondary:focus,
-html[data-bs-theme="dark"] .btn-secondary:focus,
-.dark-mode .btn-secondary:focus {
-    background: #1769aa !important;   /* a slightly darker blue for hover/focus */
-    border-color: #1769aa !important;
-    color: #fff !important;
-}
-/* .btn-warning,
-html[data-bs-theme="dark"] .btn-warning,
-.dark-mode .btn-warning {
-    background: #f4c542 !important;   
-    border-color: #f4c542 !important;
-    color: #fff !important;
-    box-shadow: none !important;
-}
+    .btn-secondary:hover,
+    html[data-bs-theme="dark"] .btn-secondary:hover,
+    .dark-mode .btn-secondary:hover,
+    .btn-secondary:focus,
+    html[data-bs-theme="dark"] .btn-secondary:focus,
+    .dark-mode .btn-secondary:focus {
+      background: #1769aa !important;   /* a slightly darker blue for hover/focus */
+      border-color: #1769aa !important;
+      color: #fff !important;
+    }
+    /* .btn-warning,
+    html[data-bs-theme="dark"] .btn-warning,
+    .dark-mode .btn-warning {
+        background: #f4c542 !important;
+        border-color: #f4c542 !important;
+        color: #fff !important;
+        box-shadow: none !important;
+    }
 
-.btn-warning:hover,
-html[data-bs-theme="dark"] .btn-warning:hover,
-.dark-mode .btn-warning:hover,
-.btn-warning:focus,
-html[data-bs-theme="dark"] .btn-warning:focus,
-.dark-mode .btn-warning:focus {
-    background: #d9a900 !important;   
-    border-color: #d9a900 !important;
-    color: #fff !important;
-} */
+    .btn-warning:hover,
+    html[data-bs-theme="dark"] .btn-warning:hover,
+    .dark-mode .btn-warning:hover,
+    .btn-warning:focus,
+    html[data-bs-theme="dark"] .btn-warning:focus,
+    .dark-mode .btn-warning:focus {
+        background: #d9a900 !important;
+        border-color: #d9a900 !important;
+        color: #fff !important;
+    } */
   </style>
   <div class="row animated fadeInRight aasaanPanel" id="allBOMPanel">
     <div class="col-lg-12">
       <div class="ibox float-e-margins">
         <div class="ibox-title">
           <!-- <h5 class="details-subtitle">BOM <small>Management</small></h5> -->
-           <h5>BOM <small>Management</small></h5>
+          <h5>BOM <small>Management</small></h5>
           <div class="ibox-tools">
             <button type="button" class="btn btn-sm btn-secondary newRecipesButton"><i data-lucide="plus"></i>New
               BOM</button>
@@ -770,17 +792,17 @@ html[data-bs-theme="dark"] .btn-warning:focus,
           <div class="table-responsive">
             <table class="table table-hover table-bordered" id="allBOMDataTable">
               <thead>
-                <tr>
-                  <th>BOM ID</th>
-                  <th>BPCR</th>
-                  <th>Type</th>
-                  <th>Product</th>
-                  <th>Stage</th>
-                  <!-- <th>Quantity</th> -->
-                  <!-- <th>Material & Equipment Cost</th> -->
-                  <!-- <th>Is Active</th> -->
-                  <th>Status</th>
-                </tr>
+              <tr>
+                <th>BOM ID</th>
+                <th>BPCR</th>
+                <th>Type</th>
+                <th>Product</th>
+                <th>Stage</th>
+                <!-- <th>Quantity</th> -->
+                <!-- <th>Material & Equipment Cost</th> -->
+                <!-- <th>Is Active</th> -->
+                <th>Status</th>
+              </tr>
               </thead>
               <tbody id="allBOMTable"></tbody>
             </table>
@@ -819,10 +841,10 @@ html[data-bs-theme="dark"] .btn-warning:focus,
             <button type="button" class="btn btn-secondary btn-sm submitBOMReview"><i data-lucide="check"></i>
               Submit for Review </button>
             <button type="button" class="btn btn-warning btn-sm rejectBOMBtn" style="display: none;"><i
-                data-lucide="undo-2"></i>
+                    data-lucide="undo-2"></i>
               Return </button>
             <button type="button" class="btn btn-secondary btn-sm approveBOMBtn" style="display: none;"><i
-                data-lucide="check"></i>
+                    data-lucide="check"></i>
               Approve </button>
           </div>
         </div>
@@ -831,8 +853,8 @@ html[data-bs-theme="dark"] .btn-warning:focus,
             <div class="panel-heading">
               <h5 class="panel-title">
                 <a data-toggle="collapse" data-bs-toggle="collapse" data-target="#approvalRemarksCollapse"
-                  data-bs-target="#approvalRemarksCollapse" aria-expanded="true" class="" style="color: #676a6c;">
-                  <i class="fa fa-exclamation-triangle" style="color: #676a6c;"></i> Remarks
+                   data-bs-target="#approvalRemarksCollapse" aria-expanded="true" class="">
+                  <i data-lucide="triangle-alert" class="remarks-icon"></i> Remarks
                 </a>
               </h5>
             </div>
@@ -888,7 +910,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
                 <div class="form-group">
                   <label>Plants</label>
                   <select class="form-control editBOMInput" id="editBOMPlantSelect" name="plantId" multiple data-choices
-                    data-choices-removeItem disabled>
+                          data-choices-removeItem disabled>
                     <!-- <option value="">--none--</option> -->
                   </select>
                 </div>
@@ -899,14 +921,14 @@ html[data-bs-theme="dark"] .btn-warning:focus,
                 <div class="form-group">
                   <label>Batch Size</label>
                   <input type="number" class="form-control editBOMInput" name="productQuantity" min="0" step="any"
-                    readonly>
+                         readonly>
                 </div>
               </div>
               <div class="col-sm-4">
                 <div class="form-group">
                   <label>Batch Variation</label>
                   <input type="number" class="form-control editBOMInput" name="quantityVariation" min="0" step="any"
-                    value="0" readonly>
+                         value="0" readonly>
                 </div>
               </div>
               <div class="col-sm-4">
@@ -1002,9 +1024,9 @@ html[data-bs-theme="dark"] .btn-warning:focus,
               padding: 24px 32px 20px 32px;
               background-color: #f8f9fa;
               position: relative;
-          }
+            }
 
-          .modal-header-simple .modal-title {
+            .modal-header-simple .modal-title {
               margin: 0 0 8px 0;
               font-size: 24px;
               font-weight: 600;
@@ -1012,7 +1034,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
               display: block;
               width: 100%;
               line-height: 1.2;
-          }
+            }
           </style>
           <div class="bom-history-card">
             <div class="section-header2">
@@ -1021,18 +1043,18 @@ html[data-bs-theme="dark"] .btn-warning:focus,
             <div class="table-responsive" style="margin-bottom: 0;">
               <table class="table table-bordered " style="margin-bottom: 0;">
                 <thead>
-                  <tr>
-                    <th style="width: 100px;">Version</th>
-                    <th style="width: 150px;">Status</th>
-                    <th>Name</th>
-                    <th style="width: 200px;">Created Date</th>
-                    <th style="width: 200px;">Approved Date</th>
-                  </tr>
+                <tr>
+                  <th style="width: 100px;">Version</th>
+                  <th style="width: 150px;">Status</th>
+                  <th>Name</th>
+                  <th style="width: 200px;">Created Date</th>
+                  <th style="width: 200px;">Approved Date</th>
+                </tr>
                 </thead>
                 <tbody id="bomVersionHistoryBody">
-                  <tr class="text-muted">
-                    <td colspan="5">No versions found.</td>
-                  </tr>
+                <tr class="text-muted">
+                  <td colspan="5">No versions found.</td>
+                </tr>
                 </tbody>
               </table>
             </div>
@@ -1088,7 +1110,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
           <div class="form-group mb-3">
             <label for="returnCommentInput">Comment</label>
             <textarea class="form-control" id="returnCommentInput" rows="4"
-              placeholder="Enter return comments"></textarea>
+                      placeholder="Enter return comments"></textarea>
             <div class="text-danger small m-t-xs" id="returnCommentError" style="display:none;">Please enter a
               comment before returning.</div>
           </div>
@@ -1168,7 +1190,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
                 <div class="form-group">
                   <label>Plants</label>
                   <select class="form-control newBOMInput" id="newBOMPlantSelect" name="plantId" multiple data-choices
-                    data-choices-removeItem required>
+                          data-choices-removeItem required>
                     <option value="">--none--</option>
                   </select>
                 </div>
@@ -1179,7 +1201,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
                 <div class="form-group">
                   <label>Batch Size</label>
                   <input type="number" class="form-control newBOMInput" name="productQuantity" min="0" step="any"
-                    required>
+                         required>
                 </div>
               </div>
               <div class="col-sm-4">
@@ -1289,6 +1311,14 @@ html[data-bs-theme="dark"] .btn-warning:focus,
         var stageCode = stage.number || stage.Number || '';
         var stageName = stage.name || stage.Name || '';
 
+        var statusRaw = val.processStatus || val.ProcessStatus || '';
+        var statusClass = 'status-new';
+        var statusLower = statusRaw.toLowerCase();
+        if (statusLower === 'approved') statusClass = 'status-completed';
+        else if (statusLower === 'in-review' || statusLower === 'in review' || statusLower === 'submitted') statusClass = 'status-submitted';
+        else if (statusLower === 'returned' || statusLower === 'rejected') statusClass = 'status-rejected';
+        else if (statusLower === 'new' || statusLower === 'deprecated' || statusLower === 'draft') statusClass = 'status-new';
+
         innerHtml += `
             <tr data-id="${val.id || val.Id || ''}" class="bom-record-row">
                 <td><a href="javascript:void(0);" class="selectBOMRecord" data-id="${val.id || val.Id || ''}">${displayName}</a></td>
@@ -1296,7 +1326,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
                 <td>${val.type || val.Type || ''}</td>
                 <td>${[productCode, productName].filter(Boolean).join(' | ') || ''}</td>
                 <td>${[stageCode, stageName].filter(Boolean).join(' | ') || ''}</td>
-                <td>${val.processStatus || val.ProcessStatus || ''}</td>
+                <td><span class="status-badge ${statusClass}">${statusRaw}</span></td>
             </tr>
         `;
       });
@@ -1319,26 +1349,26 @@ html[data-bs-theme="dark"] .btn-warning:focus,
 
   function fetchBOMList(onDone) {
     fetch('/api/product-recipes', { method: 'GET' })
-      .then(async function (response) {
-        if (!response.ok) {
-          var text = await response.text();
-          throw new Error(text || ('HTTP ' + response.status));
-        }
-        return response.json();
-      })
-      .then(function (recipes) {
-        window.recordList = Array.isArray(recipes) ? recipes : [];
-        renderBOMTable(window.recordList);
-        if (typeof onDone === 'function') {
-          onDone(window.recordList);
-        }
-      })
-      .catch(function (error) {
-        console.error('BOM list load failed:', error);
-        if (typeof onDone === 'function') {
-          onDone([]);
-        }
-      });
+            .then(async function (response) {
+              if (!response.ok) {
+                var text = await response.text();
+                throw new Error(text || ('HTTP ' + response.status));
+              }
+              return response.json();
+            })
+            .then(function (recipes) {
+              window.recordList = Array.isArray(recipes) ? recipes : [];
+              renderBOMTable(window.recordList);
+              if (typeof onDone === 'function') {
+                onDone(window.recordList);
+              }
+            })
+            .catch(function (error) {
+              console.error('BOM list load failed:', error);
+              if (typeof onDone === 'function') {
+                onDone([]);
+              }
+            });
   }
 
   $(document).ready(function () {
@@ -1346,7 +1376,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       $('.select2').select2();
     }
     fetchBOMList(function () {
-      syncViewWithHash();
+      syncViewOnLoad();
     });
 
     $('#allBOMTable').on('click', '.selectBOMRecord', function (event) {
@@ -1354,29 +1384,20 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       openBOMEditor($(this).data('id'));
       $('.newRecipesButton').hide();
     });
-
-    $('#allBOMTable').on('click', '.bom-record-row', function (event) {
-      if ($(event.target).closest('.selectBOMRecord').length) {
-        return;
-      }
-      openBOMEditor($(this).data('id'));
-    });
   });
 
   function openBOMEditor(recordId) {
     if (!recordId) return;
-    window.location.hash = 'edit/' + recordId;
+    showEditPanel(recordId);
   }
 
-  function syncViewWithHash() {
-    var hash = window.location.hash.substring(1); // remove #
-    if (!hash || hash === 'list') {
+  function syncViewOnLoad() {
+    var pendingEditId = sessionStorage.getItem('_bomPendingEditId');
+    if (pendingEditId) {
+      sessionStorage.removeItem('_bomPendingEditId');
+      showEditPanel(pendingEditId);
+    } else {
       showListPanel();
-    } else if (hash === 'new') {
-      showNewPanel();
-    } else if (hash.indexOf('edit/') === 0) {
-      var recordId = hash.split('/')[1];
-      showEditPanel(recordId);
     }
   }
 
@@ -1421,10 +1442,6 @@ html[data-bs-theme="dark"] .btn-warning:focus,
   }
 
   // Handle back/forward navigation
-  $(window).on('hashchange', function () {
-    syncViewWithHash();
-  });
-
   // allBOMPanel.js end
 
 
@@ -1437,6 +1454,8 @@ html[data-bs-theme="dark"] .btn-warning:focus,
   var editPlantOptionsCache = null;
   var isRevisingBOM = false;
   var productSearchCacheByType = {};
+  var _productsLoading = false;
+  var _productsLoadingCallbacks = [];
   var recipeStepList = [];
   var stepMaterialsMap = {};
   var stepMaterialDeleteQueue = {};
@@ -1548,8 +1567,8 @@ html[data-bs-theme="dark"] .btn-warning:focus,
   function showApprovalRemarksPanel(remarks) {
     if (remarks && remarks.trim() !== '') {
       $('#approvalRemarksText').html(
-        '<strong style="display:block; margin-bottom:6px; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; color:#dc3545;">Rejection Reason:</strong>' +
-        '<span>' + $('<span>').text(remarks).html() + '</span>'
+              '<strong style="display:block; margin-bottom:6px; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; color:#d97706;">Rejection Reason:</strong>' +
+              '<span>' + $('<span>').text(remarks).html() + '</span>'
       );
       $('.approvalRemarksPanel').show();
 
@@ -1755,7 +1774,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     });
 
     $('.editBOMCancelBtn').on('click', function () {
-      window.location.hash = 'list';
+      showListPanel();
     });
 
     loadPlantList();
@@ -1947,22 +1966,22 @@ html[data-bs-theme="dark"] .btn-warning:focus,
 
   function fetchRevisionSteps(bomId, callback, onError) {
     fetch('/api/product-recipe-steps/product-recipe/' + Number(bomId))
-      .then(function (res) { return res.json(); })
-      .then(function (res) {
-        var sorted = (res || []).sort(function (a, b) {
-          var seqA = Number(a.sequence || a.Sequence || 0);
-          var seqB = Number(b.sequence || b.Sequence || 0);
-          return seqA - seqB;
-        });
-        if (typeof callback === 'function') {
-          callback(sorted);
-        }
-      })
-      .catch(function () {
-        if (typeof onError === 'function') {
-          onError('Unable to fetch steps for revision.');
-        }
-      });
+            .then(function (res) { return res.json(); })
+            .then(function (res) {
+              var sorted = (res || []).sort(function (a, b) {
+                var seqA = Number(a.sequence || a.Sequence || 0);
+                var seqB = Number(b.sequence || b.Sequence || 0);
+                return seqA - seqB;
+              });
+              if (typeof callback === 'function') {
+                callback(sorted);
+              }
+            })
+            .catch(function () {
+              if (typeof onError === 'function') {
+                onError('Unable to fetch steps for revision.');
+              }
+            });
   }
 
   function fetchRevisionMaterials(bomId, callback, onError) {
@@ -2112,33 +2131,33 @@ html[data-bs-theme="dark"] .btn-warning:focus,
 
     function resolveStepIdMap() {
       fetch('/api/product-recipe-steps/product-recipe/' + Number(newRecipeId))
-        .then(function (r) { return r.json(); })
-        .then(function (newSteps) {
-          var stepIdMap = {};
-          oldStepMeta.forEach(function (meta) {
-            // Match by name + sequence against the newly created steps
-            var match = (newSteps || []).find(function (ns) {
-              return String(ns.name || ns.Name || '').trim() === meta.name &&
-                     Number(ns.sequence || ns.Sequence || 0) === meta.seq;
-            });
-            if (match && (match.id || match.Id)) {
-              stepIdMap[meta.oldKey] = match.id || match.Id;
-              console.log('stepIdMap:', meta.oldKey, '→', stepIdMap[meta.oldKey], '(', meta.name, ')');
-            } else {
-              console.warn('No match for step:', meta.name, 'seq:', meta.seq);
-            }
-          });
-          if (typeof callback === 'function') {
-            callback(stepIdMap);
-          }
-        })
-        .catch(function (err) {
-          console.error('resolveStepIdMap GET failed:', err);
-          // Return empty map so materials still get created (just without step assignment)
-          if (typeof callback === 'function') {
-            callback({});
-          }
-        });
+              .then(function (r) { return r.json(); })
+              .then(function (newSteps) {
+                var stepIdMap = {};
+                oldStepMeta.forEach(function (meta) {
+                  // Match by name + sequence against the newly created steps
+                  var match = (newSteps || []).find(function (ns) {
+                    return String(ns.name || ns.Name || '').trim() === meta.name &&
+                            Number(ns.sequence || ns.Sequence || 0) === meta.seq;
+                  });
+                  if (match && (match.id || match.Id)) {
+                    stepIdMap[meta.oldKey] = match.id || match.Id;
+                    console.log('stepIdMap:', meta.oldKey, '→', stepIdMap[meta.oldKey], '(', meta.name, ')');
+                  } else {
+                    console.warn('No match for step:', meta.name, 'seq:', meta.seq);
+                  }
+                });
+                if (typeof callback === 'function') {
+                  callback(stepIdMap);
+                }
+              })
+              .catch(function (err) {
+                console.error('resolveStepIdMap GET failed:', err);
+                // Return empty map so materials still get created (just without step assignment)
+                if (typeof callback === 'function') {
+                  callback({});
+                }
+              });
     }
 
     postNextStep();
@@ -2194,32 +2213,32 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     var headers = { 'Content-Type': 'application/json' };
     if (token && header) { headers[header] = token; }
     return fetch('/api/product-recipes/' + originalId, { method: 'GET' })
-      .then(function (res) { return res.json(); })
-      .then(function (existing) {
-        var payload = Object.assign({}, existing);
-        payload.processStatus = 'Deprecated';
-        if (existing.productStage && existing.productStage.id) {
-          payload.productStage = { id: existing.productStage.id };
-        }
-        return fetch('/api/product-recipes/' + originalId, {
-          method:  'PUT',
-          headers: headers,
-          body:    JSON.stringify(payload)
-        });
-      })
-      .then(function () {
-        // Update local cache
-        if (Array.isArray(window.recordList)) {
-          var existing = window.recordList.find(function (item) {
-            return String(item.id || item.Id) === String(originalId);
-          });
-          if (existing) { existing.processStatus = 'Deprecated'; }
-        }
-        console.log('Original BOM marked Deprecated:', originalId);
-      })
-      .catch(function (err) {
-        console.warn('Failed to deprecate original BOM:', err);
-      });
+            .then(function (res) { return res.json(); })
+            .then(function (existing) {
+              var payload = Object.assign({}, existing);
+              payload.processStatus = 'Deprecated';
+              if (existing.productStage && existing.productStage.id) {
+                payload.productStage = { id: existing.productStage.id };
+              }
+              return fetch('/api/product-recipes/' + originalId, {
+                method:  'PUT',
+                headers: headers,
+                body:    JSON.stringify(payload)
+              });
+            })
+            .then(function () {
+              // Update local cache
+              if (Array.isArray(window.recordList)) {
+                var existing = window.recordList.find(function (item) {
+                  return String(item.id || item.Id) === String(originalId);
+                });
+                if (existing) { existing.processStatus = 'Deprecated'; }
+              }
+              console.log('Original BOM marked Deprecated:', originalId);
+            })
+            .catch(function (err) {
+              console.warn('Failed to deprecate original BOM:', err);
+            });
   }
 
   function openRevisedBOM(newId, newVersion, createResponse) {
@@ -2229,9 +2248,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     //  1. The BOM list is re-fetched fresh from the server (old record shows as Deprecated)
     //  2. The new revised record is opened directly from server data
     var newHash = 'edit/' + newId;
-    if (window.location.hash.replace('#', '') !== newHash) {
-      window.location.hash = newHash;
-    }
+    sessionStorage.setItem('_bomPendingEditId', newId);
     location.reload();
   }
 
@@ -2252,37 +2269,37 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     var headers = { 'Content-Type': 'application/json' };
     if (token && header) { headers[header] = token; }
     fetch('/api/product-recipes/' + currentBOMRecordId, { method: 'GET' })
-      .then(function (res) { return res.json(); })
-      .then(function (existing) {
-        var postData = Object.assign({}, existing);
-        postData.processStatus = nextStatus;
-        if (existing.productStage && existing.productStage.id) {
-          postData.productStage = { id: existing.productStage.id };
-        }
-        if (String(nextStatus || '').toLowerCase() === 'approved') {
-          postData.approvedDate = new Date().toISOString();
-        }
-        return fetch('/api/product-recipes/' + currentBOMRecordId, {
-          method:  'PUT',
-          headers: headers,
-          body:    JSON.stringify(postData)
-        });
-      })
-      .then(function (res) { return res.json(); })
-      .then(function (res) {
-        console.log('Status updated:', res);
-        if (currentBOMRecord) {
-          currentBOMRecord.processStatus = nextStatus;
-          if (String(nextStatus || '').toLowerCase() === 'approved') {
-            currentBOMRecord.approvedDate = new Date().toISOString();
-          }
-        }
-        location.reload();
-      })
-      .catch(function (err) {
-        console.error('Failed to update process status:', err);
-        JSUTIL.buildErrorModal('Failed to update status: ' + (err.message || err));
-      });
+            .then(function (res) { return res.json(); })
+            .then(function (existing) {
+              var postData = Object.assign({}, existing);
+              postData.processStatus = nextStatus;
+              if (existing.productStage && existing.productStage.id) {
+                postData.productStage = { id: existing.productStage.id };
+              }
+              if (String(nextStatus || '').toLowerCase() === 'approved') {
+                postData.approvedDate = new Date().toISOString();
+              }
+              return fetch('/api/product-recipes/' + currentBOMRecordId, {
+                method:  'PUT',
+                headers: headers,
+                body:    JSON.stringify(postData)
+              });
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (res) {
+              console.log('Status updated:', res);
+              if (currentBOMRecord) {
+                currentBOMRecord.processStatus = nextStatus;
+                if (String(nextStatus || '').toLowerCase() === 'approved') {
+                  currentBOMRecord.approvedDate = new Date().toISOString();
+                }
+              }
+              location.reload();
+            })
+            .catch(function (err) {
+              console.error('Failed to update process status:', err);
+              JSUTIL.buildErrorModal('Failed to update status: ' + (err.message || err));
+            });
   }
 
   function fetchBOMVersionHistory(record) {
@@ -2341,13 +2358,13 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       var approvedDisplay = approvedDate ? formatDisplayDate(approvedDate) : '';
       var createdDisplay = createdDate ? formatDisplayDate(createdDate) : '';
       var rowHtml = '' +
-        '<tr class="' + (isCurrent ? 'info' : '') + '">' +
-        '<td>' + sanitizeInputValue(version) + (isCurrent ? ' (current)' : '') + '</td>' +
-        '<td>' + sanitizeInputValue(status) + '</td>' +
-        '<td>' + sanitizeInputValue(name) + '</td>' +
-        '<td>' + sanitizeInputValue(createdDisplay) + '</td>' +
-        '<td>' + sanitizeInputValue(approvedDisplay) + '</td>' +
-        '</tr>';
+              '<tr class="' + (isCurrent ? 'info' : '') + '">' +
+              '<td>' + sanitizeInputValue(version) + (isCurrent ? ' (current)' : '') + '</td>' +
+              '<td>' + sanitizeInputValue(status) + '</td>' +
+              '<td>' + sanitizeInputValue(name) + '</td>' +
+              '<td>' + sanitizeInputValue(createdDisplay) + '</td>' +
+              '<td>' + sanitizeInputValue(approvedDisplay) + '</td>' +
+              '</tr>';
       $body.append(rowHtml);
     });
     if (typeof lucide !== 'undefined') {
@@ -2396,33 +2413,33 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       var stepTypeBadge = stepTypeLabel ? ('<span class="label ' + badgeClass + ' step-type-badge pull-right">' + sanitizeInputValue(stepTypeLabel) + '</span>') : '';
       var isOpen = normalizedActive ? normalizedActive === stepKey : idx === 0;
       var panelHtml = '' +
-        '<div class="panel panel-default step-panel">' +
-        '<div class="panel-heading">' +
-        '<h5 class="panel-title clearfix">' +
-        '<a data-toggle="collapse" data-bs-toggle="collapse" data-parent="#editStepListContainer" data-bs-parent="#editStepListContainer" href="#' + collapseId + '" data-target="#' + collapseId + '" data-bs-target="#' + collapseId + '" aria-expanded="' + (isOpen ? 'true' : 'false') + '">' +
-        '<i class="fa ' + (isOpen ? 'fa-caret-down' : 'fa-caret-right') + ' step-toggle-icon" style="margin-right:6px; pointer-events: none;"></i>' +
-        'Lot - ' + safeName +
-        '</a>  ' + stepTypeBadge +
-        '</h5>' +
-        '</div>' +
-        '<div id="' + collapseId + '" class="panel-collapse collapse ' + (isOpen ? 'in show' : '') + '">' +
-        '<div class="panel-body">' +
-        '<div class="row" style="padding-bottom:10px;">' +
-        '<div class="col-sm-6 text-muted">Add materials to this step.</div>' +
-        '<div class="col-sm-6" align="right">' +
-        '<button type="button" class="btn btn-default btn-sm material-add-btn" data-step-id="' + stepKey + '"><i data-lucide="plus"></i> Add Material</button> ' +
-        '<button type="button" class="btn btn-sm btn-secondary material-save-btn" data-step-id="' + stepKey + '"><i data-lucide="check"></i> Save</button>' +
-        '</div>' +
-        '</div>' +
-        '<div class="table-responsive">' +
-        '<table class="table table-bordered table-hover">' +
-        '<thead><tr><th style="width:50px;"></th><th>Product Code</th><th>Product Name</th><th>Product UOM</th><th>Type</th><th>Standard Qty</th></tr></thead>' +
-        '<tbody id="' + getMaterialTableBodyId(stepKey) + '" data-step-key="' + stepKey + '"></tbody>' +
-        '</table>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
+              '<div class="panel panel-default step-panel">' +
+              '<div class="panel-heading">' +
+              '<h5 class="panel-title clearfix">' +
+              '<a data-toggle="collapse" data-bs-toggle="collapse" data-parent="#editStepListContainer" data-bs-parent="#editStepListContainer" href="#' + collapseId + '" data-target="#' + collapseId + '" data-bs-target="#' + collapseId + '" aria-expanded="' + (isOpen ? 'true' : 'false') + '">' +
+              '<i class="fa ' + (isOpen ? 'fa-caret-down' : 'fa-caret-right') + ' step-toggle-icon" style="margin-right:6px; pointer-events: none;"></i>' +
+              'Lot - ' + safeName +
+              '</a>  ' + stepTypeBadge +
+              '</h5>' +
+              '</div>' +
+              '<div id="' + collapseId + '" class="panel-collapse collapse ' + (isOpen ? 'in show' : '') + '">' +
+              '<div class="panel-body">' +
+              '<div class="row" style="padding-bottom:10px;">' +
+              '<div class="col-sm-6 text-muted">Add materials to this step.</div>' +
+              '<div class="col-sm-6" align="right">' +
+              '<button type="button" class="btn btn-default btn-sm material-add-btn" data-step-id="' + stepKey + '"><i data-lucide="plus"></i> Add Material</button> ' +
+              '<button type="button" class="btn btn-sm btn-secondary material-save-btn" data-step-id="' + stepKey + '"><i data-lucide="check"></i> Save</button>' +
+              '</div>' +
+              '</div>' +
+              '<div class="table-responsive">' +
+              '<table class="table table-bordered table-hover">' +
+              '<thead><tr><th style="width:50px;"></th><th>Product Code</th><th>Product Name</th><th>Product UOM</th><th>Type</th><th>Standard Qty</th></tr></thead>' +
+              '<tbody id="' + getMaterialTableBodyId(stepKey) + '" data-step-key="' + stepKey + '"></tbody>' +
+              '</table>' +
+              '</div>' +
+              '</div>' +
+              '</div>' +
+              '</div>';
       $container.append(panelHtml);
     });
     (recipeStepList || []).forEach(function (step) {
@@ -2545,18 +2562,18 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       return;
     }
     fetch('/api/product-recipe-steps/product-recipe/' + Number(recipeId))
-      .then(function (res) { return res.json(); })
-      .then(function (res) {
-        recipeStepList = (res || []).sort(function (a, b) {
-          var seqA = Number(a.sequence || a.Sequence || 0);
-          var seqB = Number(b.sequence || b.Sequence || 0);
-          return seqA - seqB;
-        });
-        renderStepList();
-        if (typeof callback === 'function') {
-          callback(recipeStepList);
-        }
-      });
+            .then(function (res) { return res.json(); })
+            .then(function (res) {
+              recipeStepList = (res || []).sort(function (a, b) {
+                var seqA = Number(a.sequence || a.Sequence || 0);
+                var seqB = Number(b.sequence || b.Sequence || 0);
+                return seqA - seqB;
+              });
+              renderStepList();
+              if (typeof callback === 'function') {
+                callback(recipeStepList);
+              }
+            });
   }
 
   function saveBOMRecord() {
@@ -2576,26 +2593,26 @@ html[data-bs-theme="dark"] .btn-warning:focus,
 
     // GET existing record first, then merge edits to avoid wiping fields
     fetch('/api/product-recipes/' + currentBOMRecordId, { method: 'GET' })
-      .then(function (res) { return res.json(); })
-      .then(function (existing) {
-        var payload = Object.assign({}, existing);
-        payload.id = Number($('#editBOMId').val()) || currentBOMRecordId;
-        payload.masterBatchRecord = toUpperSafe($form.find('[name="masterBatchRecord"]').val());
-        payload.version = Number($form.find('[name="version"]').val()) || 0;
-        payload.type = $form.find('[name="type"]').val();
-        payload.productQuantity = Number($form.find('[name="productQuantity"]').val()) || 0;
-        payload.quantityVariation = Number($form.find('[name="quantityVariation"]').val()) || 0;
-        payload.productStage = { id: Number($('#editStageId').val()) };
+            .then(function (res) { return res.json(); })
+            .then(function (existing) {
+              var payload = Object.assign({}, existing);
+              payload.id = Number($('#editBOMId').val()) || currentBOMRecordId;
+              payload.masterBatchRecord = toUpperSafe($form.find('[name="masterBatchRecord"]').val());
+              payload.version = Number($form.find('[name="version"]').val()) || 0;
+              payload.type = $form.find('[name="type"]').val();
+              payload.productQuantity = Number($form.find('[name="productQuantity"]').val()) || 0;
+              payload.quantityVariation = Number($form.find('[name="quantityVariation"]').val()) || 0;
+              payload.productStage = { id: Number($('#editStageId').val()) };
 
-        var selectedPlantIds = normalizePlantIdArray($('#editBOMPlantSelect').val());
-        payload.plants = selectedPlantIds.join(';');
+              var selectedPlantIds = normalizePlantIdArray($('#editBOMPlantSelect').val());
+              payload.plants = selectedPlantIds.join(';');
 
-        return fetch('/api/product-recipes/' + currentBOMRecordId, {
-          method: 'PUT',
-          headers: headers,
-          body: JSON.stringify(payload)
-        });
-      }).then(async function (response) {
+              return fetch('/api/product-recipes/' + currentBOMRecordId, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(payload)
+              });
+            }).then(async function (response) {
       if (!response.ok) {
         var text = await response.text();
         throw new Error(text || ('HTTP ' + response.status));
@@ -2604,7 +2621,6 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     }).then(function (responseText) {
       setBOMEditState(false);
       console.log('Update Success:', responseText);
-      window.location.hash = 'list';
       location.reload();
     }).catch(function (error) {
       console.error('Update Failed:', error);
@@ -2723,36 +2739,36 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     var safeProductCode = sanitizeInputValue(productCode);
 
     return '' +
-      '<tr class="material-data-row" data-material-type="single">' +
-      '<td>' +
-      '<button type="button" class="btn btn-xs btn-default delete-material-row" title="Delete">' +
-      '<i data-lucide="trash"></i>' +
-      '</button>' +
-      '</td>' +
-      '<td>' +
-      '<div class="typeahead-container" style="position: relative;">' +
-      '<input type="text" class="form-control material-product-code" placeholder="Search code" autocomplete="off" value="' + safeProductCode + '">' +
-      '</div>' +
-      '</td>' +
-      '<td>' +
-      '<div class="typeahead-container" style="position: relative;">' +
-      '<input type="text" class="form-control material-product-search ' + MATERIAL_DEFAULT_META.typeaheadClass + '" placeholder="Search product" autocomplete="off" value="' + safeProductName + '">' +
-      '</div>' +
-      '<input type="hidden" class="material-product-id" value="' + safeProductId + '">' +
-      '<input type="hidden" class="material-item-id" value="' + safeRowId + '">' +
-      '<input type="hidden" class="material-step-id" value="' + safeStepId + '">' +
-      '</td>' +
-      '<td>' +
-      '<input type="text" class="form-control material-uom" readonly value="' + safeUomValue + '">' +
-      '</td>' +
-      '<td>' +
-      '<input type="text" class="form-control material-type-display" readonly value="' + typeLabel + '">' +
-      '<input type="hidden" class="material-type" value="' + sanitizeInputValue(itemType) + '">' +
-      '</td>' +
-      '<td>' +
-      '<input type="number" class="form-control material-qty-input" min="0" placeholder="Standard quantity" value="' + safeQty + '">' +
-      '</td>' +
-      '</tr>';
+            '<tr class="material-data-row" data-material-type="single">' +
+            '<td>' +
+            '<button type="button" class="btn btn-xs btn-default delete-material-row" title="Delete">' +
+            '<i data-lucide="trash"></i>' +
+            '</button>' +
+            '</td>' +
+            '<td>' +
+            '<div class="typeahead-container" style="position: relative;">' +
+            '<input type="text" class="form-control material-product-code" placeholder="Search code" autocomplete="off" value="' + safeProductCode + '">' +
+            '</div>' +
+            '</td>' +
+            '<td>' +
+            '<div class="typeahead-container" style="position: relative;">' +
+            '<input type="text" class="form-control material-product-search ' + MATERIAL_DEFAULT_META.typeaheadClass + '" placeholder="Search product" autocomplete="off" value="' + safeProductName + '">' +
+            '</div>' +
+            '<input type="hidden" class="material-product-id" value="' + safeProductId + '">' +
+            '<input type="hidden" class="material-item-id" value="' + safeRowId + '">' +
+            '<input type="hidden" class="material-step-id" value="' + safeStepId + '">' +
+            '</td>' +
+            '<td>' +
+            '<input type="text" class="form-control material-uom" readonly value="' + safeUomValue + '">' +
+            '</td>' +
+            '<td>' +
+            '<input type="text" class="form-control material-type-display" readonly value="' + typeLabel + '">' +
+            '<input type="hidden" class="material-type" value="' + sanitizeInputValue(itemType) + '">' +
+            '</td>' +
+            '<td>' +
+            '<input type="number" class="form-control material-qty-input" min="0" placeholder="Standard quantity" value="' + safeQty + '">' +
+            '</td>' +
+            '</tr>';
   }
 
   function buildMaterialTypeOptions(selectedValue) {
@@ -2870,6 +2886,13 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       return;
     }
 
+    // Queue callback — will be resolved when the single API call completes
+    _productsLoadingCallbacks.push({ type: normalizedType, cacheKey: cacheKey, callback: callback });
+
+    // If a request is already in-flight, just queue — don't fire another
+    if (_productsLoading) return;
+    _productsLoading = true;
+
     JSUTIL.callAJAXGet('/api/products', function (res) {
       var mapped = (res || []).map(function (item) {
         var id = item.Id || item.id;
@@ -2907,10 +2930,19 @@ html[data-bs-theme="dark"] .btn-warning:focus,
         };
       });
       productSearchCacheByType['all'] = mapped;
-      productSearchCacheByType[cacheKey] = filterProductsByType(mapped, normalizedType);
-      if (typeof callback === 'function') {
-        callback(productSearchCacheByType[cacheKey]);
-      }
+      _productsLoading = false;
+
+      // Resolve all queued callbacks
+      var pending = _productsLoadingCallbacks.slice();
+      _productsLoadingCallbacks = [];
+      pending.forEach(function (entry) {
+        if (!productSearchCacheByType[entry.cacheKey]) {
+          productSearchCacheByType[entry.cacheKey] = filterProductsByType(mapped, entry.type);
+        }
+        if (typeof entry.callback === 'function') {
+          entry.callback(productSearchCacheByType[entry.cacheKey]);
+        }
+      });
     });
   }
 
@@ -3108,14 +3140,14 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       fetch('/api/product-recipe-byproducts/' + currentId, {
         method: 'DELETE'
       })
-        .then(function (response) {
-          if (!response.ok) console.warn('Delete failed for byproduct ' + currentId);
-          processNext();
-        })
-        .catch(function (error) {
-          console.warn('Delete error for byproduct ' + currentId, error);
-          processNext();
-        });
+              .then(function (response) {
+                if (!response.ok) console.warn('Delete failed for byproduct ' + currentId);
+                processNext();
+              })
+              .catch(function (error) {
+                console.warn('Delete error for byproduct ' + currentId, error);
+                processNext();
+              });
     };
 
     processNext();
@@ -3313,16 +3345,16 @@ html[data-bs-theme="dark"] .btn-warning:focus,
       method:  'DELETE',
       headers: headers
     })
-    .then(function (response) {
-      if (!response.ok) {
-        console.warn('DELETE failed for byproduct id=' + recordId + ', status=' + response.status);
-      } else {
-        console.log('Deleted byproduct id=' + recordId);
-      }
-    })
-    .catch(function (err) {
-      console.warn('DELETE error for byproduct id=' + recordId, err);
-    });
+            .then(function (response) {
+              if (!response.ok) {
+                console.warn('DELETE failed for byproduct id=' + recordId + ', status=' + response.status);
+              } else {
+                console.log('Deleted byproduct id=' + recordId);
+              }
+            })
+            .catch(function (err) {
+              console.warn('DELETE error for byproduct id=' + recordId, err);
+            });
   });
 
   $(document).on('input', '.material-product-search', function () {
@@ -3610,7 +3642,7 @@ html[data-bs-theme="dark"] .btn-warning:focus,
 
 
 
-  // newBOMPanel.js start 
+  // newBOMPanel.js start
   var stageOptionsCache = [];
   var plantOptionsCache = [];
 
@@ -3619,10 +3651,10 @@ html[data-bs-theme="dark"] .btn-warning:focus,
     bindUppercaseInput('.newBOMInput[name="masterBatchRecord"]');
 
     $('.newRecipesButton').on("click", function () {
-      window.location.hash = 'new';
+      showNewPanel();
     });
     $('.newBOMCancelBtn').on("click", function () {
-      window.location.hash = 'list';
+      showListPanel();
     });
     $('#stageId').on('change', function () {
       updateNewBOMProductDetails($(this).val());
@@ -3799,7 +3831,6 @@ html[data-bs-theme="dark"] .btn-warning:focus,
         parsed = responseText ? JSON.parse(responseText) : {};
       } catch (e) { }
       console.log('BOM created:', parsed);
-      window.location.hash = 'list';
       location.reload();
     }).catch(function (error) {
       console.error('Error creating BOM:', error);

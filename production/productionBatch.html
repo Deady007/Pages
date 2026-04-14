@@ -1172,7 +1172,8 @@
                                                 <i data-lucide="flag"></i> Finish
                                             </button>
                                             <button type="button"
-                                                class="btn btn-secondary btn-sm final-product-edit-btn">
+                                                class="btn btn-secondary btn-sm final-product-edit-btn"
+                                                style="display:none;">
                                                 <i data-lucide="pencil"></i> Edit
                                             </button>
                                             <button type="button"
@@ -3757,8 +3758,9 @@
 
         function buildFinalProductPayload() {
             const qty = Number($('#finalProductQty').val());
-            const isFinalStage = isFinalStageForCurrentBatch();
-            const numberOfContainers = isFinalStage ? Number($('#finalProductNumberOfContainers').val()) : null;
+            // const isFinalStage = isFinalStageForCurrentBatch();
+            const isFinalStage = true; // Always treat as final stage so container fields are saved
+            const numberOfContainers = Number($('#finalProductNumberOfContainers').val());
             const productId = $('#finalProductProductId').val();
             const existingId = $('#finalProductId').val();
             const manufacturingDate = $('#finalProductManufacturingDate').val();
@@ -4453,6 +4455,18 @@
             toggleActualTimeEditControls(currentStatusValue);
         }
 
+        // Force visibility with !important to override any CSS rule. Operates on every matching node.
+        function setFinalProductBtnVisible(selector, visible) {
+            document.querySelectorAll(selector).forEach(function (el) {
+                if (visible) {
+                    el.style.setProperty('display', 'inline-flex', 'important');
+                    el.removeAttribute('hidden');
+                } else {
+                    el.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
+
         function setFinalProductEditMode(enable) {
             var normalized = (currentStatusValue || '').toLowerCase();
             var locked = isFinalProductLockedStatus(currentStatusValue)
@@ -4461,13 +4475,12 @@
 
             finalProductEditEnabled = !!enable && !locked;
 
-            // Toggle Edit ↔ Save immediately
             if (locked) {
-                $('.final-product-edit-btn').hide();
-                $('.final-product-save-btn').hide();
+                setFinalProductBtnVisible('.final-product-edit-btn', false);
+                setFinalProductBtnVisible('.final-product-save-btn', false);
             } else {
-                $('.final-product-edit-btn').toggle(!finalProductEditEnabled);
-                $('.final-product-save-btn').toggle(finalProductEditEnabled);
+                setFinalProductBtnVisible('.final-product-edit-btn', !finalProductEditEnabled);
+                setFinalProductBtnVisible('.final-product-save-btn', finalProductEditEnabled);
             }
 
             toggleFinalProductInputs(finalProductEditEnabled);
@@ -4486,14 +4499,12 @@
 
             if (hideEditSave) {
                 finalProductEditEnabled = false;
-                $('.final-product-edit-btn').hide();
-                $('.final-product-save-btn').hide();
+                setFinalProductBtnVisible('.final-product-edit-btn', false);
+                setFinalProductBtnVisible('.final-product-save-btn', false);
             } else {
-                // Show Edit only when there's a product and we're not in edit mode
-                // Show Save only when in edit mode
                 var canShowEdit = !!hasProduct;
-                $('.final-product-edit-btn').toggle(canShowEdit && !finalProductEditEnabled);
-                $('.final-product-save-btn').toggle(canShowEdit && !!finalProductEditEnabled);
+                setFinalProductBtnVisible('.final-product-edit-btn', canShowEdit && !finalProductEditEnabled);
+                setFinalProductBtnVisible('.final-product-save-btn', canShowEdit && !!finalProductEditEnabled);
             }
 
             // Finish button is fully independent
@@ -7001,22 +7012,23 @@
                 ? '<small class="text-muted">Allowed range: ' + formatBatchMetaValue(qtyRange.min) + ' to ' + formatBatchMetaValue(qtyRange.max) + '.</small>'
                 : '';
 
-            // ── Button bar ── Edit and Save have a gap between them ──────
-            var buttonBar = '<div class="clearfix" style="margin-bottom:10px;">'
-                + '<div class="pull-right final-product-actions" style="display:flex;align-items:center;gap:6px;">'
+            // ── Button bar ── Aligned right, in its own full-width row above the form fields
+            var buttonBar = '<div class="row" style="margin:0 0 12px 0;">'
+                + '<div class="col-sm-12" style="padding:0;">'
+                + '<div class="final-product-actions" style="display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap;">'
                 + finishButtonHtml
-                + '<button type="button" class="btn btn-secondary btn-sm final-product-edit-btn">'
+                + '<button type="button" class="btn btn-secondary btn-sm final-product-edit-btn" style="display:none;">'
                 + '<i data-lucide="pencil"></i> Edit</button>'
                 + '<button type="button" class="btn btn-secondary btn-sm final-product-save-btn" style="display:none;">'
                 + '<i data-lucide="check"></i> Save</button>'
-                + '</div></div>';
+                + '</div></div></div>';
 
             var emptyText = (!productId)
                 ? '<div class="text-muted final-product-empty-text">Start production to record the final product output.</div>'
                 : '';
 
             var containerCountField = '';
-            if (isFinalStage) {
+            // if (isFinalStage) {
                 var numericContainerCount = Number(item && item.numberOfContainers);
                 var containerCountValue = Number.isFinite(numericContainerCount) && numericContainerCount > 0
                     ? numericContainerCount : '';
@@ -7024,7 +7036,7 @@
                     + '<label>Number of Containers / Bags <span class="text-danger">*</span></label>'
                     + '<input type="number" class="form-control" id="finalProductNumberOfContainers"'
                     + ' value="' + containerCountValue + '" min="1" step="1" ' + readOnlyAttr + ' /></div>';
-            }
+            // }
 
             var gradeOptions = ['', 'IP', 'USP'].map(function (opt) {
                 return '<option value="' + opt + '"' + (opt === gradeValue ? ' selected' : '') + '>'

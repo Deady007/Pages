@@ -964,6 +964,7 @@
             box-shadow: none;
             padding: 0;
         }
+
         .coa-section {
             page-break-inside: avoid;
         }
@@ -975,17 +976,18 @@
             <div class="ibox-title">
                 <h5> Generate <small> COA </small></h5>
                 <div class="ibox-tools">
-                    <button type="button" class="btn btn-default btn-sm close-box showCoaTemplateCancel"><i class="fa fa-times"></i> Close</button>
-                    <button type="button" class="btn btn-default btn-sm printCoaBtn"> Print </button>
-                    <button type="button" class="btn btn-default btn-sm exportPdfCoaBtn"> Export PDF</button>
+                    <button type="button" class="btn btn-default btn-sm close-box showCoaTemplateCancel"><i
+                            data-lucide="x"></i> Close</button>
+                    <button type="button" class="btn btn-secondary btn-sm printCoaBtn"> Print </button>
+                    <button type="button" class="btn btn-secondary btn-sm exportPdfCoaBtn"> Export PDF</button>
                 </div>
             </div>
             <div class="ibox-content">
-                
+
             </div>
         </div>
     </div>
-</div>  
+</div>
 <!-- generateCoaPanel2.html End -->
 
 
@@ -1120,7 +1122,7 @@ $(document).ready(function(){
                 if (objList.sampleUnit) {
                     $.each(uomList, function(i, val) {
                         if (val.name === objList.sampleUnit) {
-                            unitLabel = val.name + ' (' + val.description + ')';
+                            unitLabel = val.name;
                             return false;
                         }
                     });
@@ -1739,32 +1741,32 @@ function formatProductDisplay(code, name) {
 
 
 // generateCoaPanel2.js Start
-$(document).ready(function(){
-    
-    // Generate COA Button Handler
-    $('.generateCoaBtn').on('click', function(){
-        if (!currentRequestId || !window.currentCoaTemplate) {
-            toastr.warning('Please select a COA template first');
-            return;
-        }
-        generateCoaPreview(window.currentCoaTemplate);
-        $('#generateCoaPanel2').show();
-        $('#editCoaTemplatePanel').hide();
-    });
-    
-    // Close Generate COA Panel
-    $('.showCoaTemplateCancel').on('click', function(){
-        $('#generateCoaPanel2').hide();
-        $('#editReviewPanel2').show();
-        $('#editCoaTemplatePanel').show();
-        $('#editRequestPanel').show();
-    });
-    
+        $(document).ready(function(){
+
+        // Generate COA Button Handler
+            $('.generateCoaBtn').on('click', function(){
+                if (!currentRequestId || !window.currentCoaTemplate) {
+                    alert('Please select a COA template first');
+                    return;
+                }
+                generateCoaPreview(window.currentCoaTemplate);
+                $('#generateCoaPanel2').show();
+                $('#editCoaTemplatePanel').hide();
+            });
+
+        // Close Generate COA Panel
+        $('.showCoaTemplateCancel').on('click', function(){
+            $('#generateCoaPanel2').hide();
+            $('#editReviewPanel2').show();
+            $('#editCoaTemplatePanel').show();
+            $('#editRequestPanel').show();
+        });
+
     // Print COA
     $('.printCoaBtn').on('click', function(){
         printCoa();
     });
-    
+
     // Export PDF COA
     $('.exportPdfCoaBtn').on('click', function(){
         exportCoaToPdf();
@@ -1774,13 +1776,13 @@ $(document).ready(function(){
 function generateCoaPreview(template) {
     var today = new Date();
     var formatDate = function(d) { return d.toISOString().slice(0, 10); };
-    
+
     var sampleId = currentSampleRequest.sampleId;
     var batchNo = currentSampleRequest.batchNumber;
     var productName = currentSampleRequest.sampleCondition;
     var mfgDate = new Date(currentSampleRequest.manufacturingDate);
     var expDate = new Date(currentSampleRequest.expiryDate);
-    
+
     var fieldsData = [];
     if (template.fields) {
         try {
@@ -1789,7 +1791,7 @@ function generateCoaPreview(template) {
             console.error('Error parsing fields:', e);
         }
     }
-    
+
     var sectionMap = {};
     $.each(fieldsData, function(idx, field) {
         if (!sectionMap[field.section]) {
@@ -1801,7 +1803,7 @@ function generateCoaPreview(template) {
             unit: field.unit
         });
     });
-    
+
     var coaHtml = `
         <div id="coaPreview" class="coa-preview">
             <div class="coa-header">
@@ -1810,7 +1812,7 @@ function generateCoaPreview(template) {
                 <div class="subtitle">${escapeHtml(template.name || 'COA Template')}</div>
                 <div class="regulatory-tags">Regulatory: ${escapeHtml(template.tags || 'GMP')}</div>
             </div>
-            
+
             <div class="coa-meta-grid">
                 <div class="coa-meta-item">
                     <span class="label">Sample ID:</span><span>${sampleId}</span>
@@ -1832,12 +1834,12 @@ function generateCoaPreview(template) {
                 </div>
             </div>
     `;
-    
+
     $.each(sectionMap, function(sectionName, fields) {
         var isResultSection = /result/i.test(sectionName) || /test/i.test(sectionName);
-        
+
         coaHtml += '<div class="coa-section"><h4>' + escapeHtml(sectionName) + '</h4>';
-        
+
         if (isResultSection) {
             coaHtml += '<table class="coa-table"><thead><tr>' +
                 '<th style="width:30%;">Parameter</th>' +
@@ -1845,7 +1847,7 @@ function generateCoaPreview(template) {
                 '<th style="width:20%;">Result</th>' +
                 '<th style="width:20%;">Remark</th>' +
                 '</tr></thead><tbody>';
-            
+
             $.each(currentRequestLineItems, function(idx, field) {
                 coaHtml += '<tr>' +
                     '<td>' + escapeHtml(field.service.name || '') + '</td>' +
@@ -1854,7 +1856,7 @@ function generateCoaPreview(template) {
                     '<td>' + escapeHtml(field.remarks) + '</td>' +
                     '</tr>';
             });
-            
+
             coaHtml += '</tbody></table>';
         } else {
             coaHtml += '<table class="coa-table">';
@@ -1867,14 +1869,14 @@ function generateCoaPreview(template) {
             });
             coaHtml += '</table>';
         }
-        
+
         coaHtml += '</div>';
     });
-    
+
     coaHtml += '<div class="coa-footer">' +
         (template.footer || 'This is a system-generated COA with dummy data for template validation purposes only.').replace(/\n/g, '<br>') +
         '</div></div>';
-    
+
     console.log(coaHtml);
     $('#generateCoaPanel2 .ibox-content').html(coaHtml);
 }
@@ -1883,7 +1885,7 @@ function generateDummyValue(field) {
     var type = field.type || 'text';
     var label = (field.label || '').toLowerCase();
     var unit = field.unit || '';
-    
+
     switch (type) {
         case 'text':
             if (/batch/.test(label)) return 'BATCH-' + Math.floor(Math.random() * 900000 + 100000);
@@ -1930,9 +1932,9 @@ function printCoa() {
         toastr.warning('No COA to print');
         return;
     }
-    
+
     var printWindow = window.open('', '', 'height=800,width=800');
-    
+
     printWindow.document.write('<html><head><title>Certificate of Analysis</title>');
     printWindow.document.write('<style>');
     printWindow.document.write(
@@ -1955,10 +1957,10 @@ function printCoa() {
     printWindow.document.write('</style></head><body>');
     printWindow.document.write(printContent.outerHTML);
     printWindow.document.write('</body></html>');
-    
+
     printWindow.document.close();
     printWindow.focus();
-    
+
     setTimeout(function() {
         printWindow.print();
         printWindow.close();
@@ -1971,15 +1973,15 @@ function exportCoaToPdf() {
         toastr.warning('No COA to export');
         return;
     }
-    
+
     if (typeof html2pdf === 'undefined') {
         toastr.error('PDF library not loaded. Please include html2pdf.js');
         return;
     }
-    
+
     var template = window.currentCoaTemplate;
     var filename = 'COA-' + (template?.name || 'template') + '-' + new Date().getTime() + '.pdf';
-    
+
     var opt = {
         margin: 10,
         filename: filename,
@@ -1987,7 +1989,7 @@ function exportCoaToPdf() {
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    
+
     html2pdf().set(opt).from(element).save();
 }
 

@@ -476,7 +476,7 @@
         var isActive = $('#isActive').is(':checked');
 
         if (groupName === '' || uniqueName === '') {
-            alert('Please enter group name and unique name');
+            JSUTIL.buildErrorModal('Please enter group name and unique name');
             return;
         }
 
@@ -506,16 +506,16 @@
                 // Save members if there are selected users
                 if (selectedUsers.length > 0) {
                     saveGroupMembers(groupId, function() {
-                        $('#addUserGroupModal').modal('hide');
+                        bootstrap.Modal.getInstance(document.getElementById('addUserGroupModal'))?.hide();
                         loadUserGroups();
                     });
                 } else {
-                    $('#addUserGroupModal').modal('hide');
+                    bootstrap.Modal.getInstance(document.getElementById('addUserGroupModal'))?.hide();
                     loadUserGroups();
                 }
             },
             error: function(xhr, status, error) {
-                alert('Error saving user group: ' + error);
+                console.error('Error saving user group:', error);
             }
         });
     }
@@ -538,7 +538,7 @@
                     createGroupMembers(groupId, callback);
                 }).fail(function(error) {
                     console.error('Error deleting existing members:', error);
-                    alert('Error saving user group members');
+                    createGroupMembers(groupId, callback);
                 });
             } else {
                 createGroupMembers(groupId, callback);
@@ -565,11 +565,8 @@
             }));
         });
         
-        $.when.apply($, createPromises).then(function() {
+        $.when.apply($, createPromises).always(function() {
             callback();
-        }).fail(function(error) {
-            console.error('Error creating members:', error);
-            alert('Error saving user group members');
         });
     }
 

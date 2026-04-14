@@ -1,300 +1,490 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
 <style>
-.tabs {
-  display: flex;
-  gap: 10px;
-}
-.tab-btn {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: #f9f9f9;
-  cursor: pointer;
-  border-radius: 6px;
-}
-.tab-content {
-  display: none !important;
-}
+  .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
 
-.tab-content.active {
-  display: block !important;
-}
+  #reportResultTable thead th { border-bottom: 1px solid #eee !important; }
+  #reportResultTable tbody tr:last-child td { border-bottom: none !important; }
+  #reportResultTable th, #reportResultTable td { vertical-align: middle; }
 
-.report-output.hidden {
-  display: none;
-}
+  .report-summary-card {
+    background: #f8fbff;
+    border: 1px solid #e5e6e7;
+    border-left: 4px solid #1c84c6;
+    border-radius: 4px;
+    padding: 14px 18px;
+    text-align: center;
+  }
+  .report-summary-card .summary-label {
+    font-size: 12px; color: #6b7280; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .report-summary-card .summary-value {
+    font-size: 22px; font-weight: 700; color: #2f4050; margin-top: 4px;
+  }
 
-.tab-btn.active {
-  background: #2563eb;
-  color: #fff;
-}
+  .status-badge { display: inline-block; padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .status-inside { background: #dbeafe; color: #1e40af; }
+  .status-entry-approved { background: #d1fae5; color: #065f46; }
+  .status-exit-requested { background: #fef3c7; color: #92400e; }
+  .status-exit-approved { background: #e0e7ff; color: #3730a3; }
+  .status-exited { background: #f3f4f6; color: #6b7280; }
+  .status-rejected { background: #fecaca; color: #991b1b; }
+  .status-default { background: #f3f4f6; color: #6b7280; }
 
-.report-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
+  .utilization-bar { display: inline-block; height: 8px; border-radius: 4px; background: #e5e7eb; min-width: 80px; position: relative; vertical-align: middle; }
+  .utilization-bar-fill { height: 100%; border-radius: 4px; background: #10b981; }
+  .utilization-bar-fill.over { background: #ef4444; }
 
-.report-toolbar .search-container {
-  flex: 1;
-  max-width: 360px;
-}
+  #reportType optgroup { font-weight: 600; color: #2f4050; }
 
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 10px;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.pagination .page-btn {
-  padding: 6px 10px;
-  border: 1px solid #ddd;
-  background: #fff;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.pagination .page-btn.active {
-  background: #2563eb;
-  color: #fff;
-  border-color: #2563eb;
-}
+  /* Dark mode */
+  body.skin-dark .report-summary-card, body.dark-mode .report-summary-card, [data-bs-theme="dark"] .report-summary-card {
+    background: #1e293b; border-color: #334155; border-left-color: #3b82f6;
+  }
+  body.skin-dark .report-summary-card .summary-value, body.dark-mode .report-summary-card .summary-value, [data-bs-theme="dark"] .report-summary-card .summary-value { color: #e2e8f0; }
+  body.skin-dark .report-summary-card .summary-label, body.dark-mode .report-summary-card .summary-label, [data-bs-theme="dark"] .report-summary-card .summary-label { color: #94a3b8; }
+  body.skin-dark .utilization-bar, body.dark-mode .utilization-bar, [data-bs-theme="dark"] .utilization-bar { background: #334155; }
 </style>
-<!-- Reports Page -->
-<div class="page-content" id="reports-page">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon blue">
-              <i class="ri-bar-chart-fill"></i>
-            </div>
-            <div class="stat-title">Revenue</div>
-          </div>
-          <div class="stat-value">
-            <span id="revenueReportValue"></span>
-            <span class="stat-unit">Monthly</span>
-          </div>
+
+<div class="qa-white-panel">
+
+  <!-- Filter Panel -->
+  <div class="row animated fadeInRight aasaanPanel" id="reportFilterPanel">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5>Reports <small>Analytics</small></h5>
         </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon green">
-              <i class="ri-line-chart-line"></i>
+        <div class="ibox-content">
+          <div class="row g-3">
+            <div class="col-sm-4">
+              <div class="form-group mb-3">
+                <label>Report</label>
+                <select class="form-control" id="reportType">
+                  <option value="">-- Select Report --</option>
+                  <optgroup label="Visitor Management">
+                    <option value="visitor-log">Visitor Log</option>
+                    <option value="visitor-by-contact">Visitors by Contact Person</option>
+                    <option value="visitor-by-company">Visitors by Company</option>
+                    <option value="visitor-by-status">Visitors by Status</option>
+                    <option value="visitor-by-type">Visitors by Type</option>
+                  </optgroup>
+                  <optgroup label="Production">
+                    <option value="material-utilization">Material Utilization</option>
+                  </optgroup>
+                </select>
+              </div>
             </div>
-            <div class="stat-title">Consultations</div>
-          </div>
-          <div class="stat-value">
-            <span id="consultationsReportValue"></span>
-            <span class="stat-unit">Consultations in total</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon yellow">
-              <i class="ri-star-smile-fill"></i>
+            <div class="col-sm-3">
+              <div class="form-group mb-3">
+                <label>From Date</label>
+                <input type="date" class="form-control" id="reportFromDate">
+              </div>
             </div>
-            <div class="stat-title">Reviews</div>
-          </div>
-          <div class="stat-value">
-            <span id="patientReviewValue"></span>
-            <span class="stat-unit">Stars out of 5</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon red">
-              <i class="ri-pie-chart-2-line"></i>
+            <div class="col-sm-3">
+              <div class="form-group mb-3">
+                <label>To Date</label>
+                <input type="date" class="form-control" id="reportToDate">
+              </div>
             </div>
-            <div class="stat-title">Occupancy</div>
-          </div>
-          <div class="stat-value">
-            <span id="occupancyReportValue">0%</span>
-            <span class="stat-unit">Occupied</span>
+            <div class="col-sm-2">
+              <div class="form-group mb-3">
+                <label>&nbsp;</label>
+                <div>
+                  <button type="button" class="btn btn-secondary btn-sm" id="generateReportBtn">
+                    <i data-lucide="file-bar-chart"></i>Generate
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- <div class="page-form">
-        <h3 class="card-title">Generate Reports</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Report Type</label>
-            <select id="reportType">
-               <option>Patient Report</option>
-              <option>Profit Report</option>
-              <option>Invoice Report</option>
-            </select>
+  <!-- Result Panel -->
+  <div class="qa-white-panel" id="reportResultWrap" style="display:none; margin-top: 16px;">
+    <div class="row animated fadeInRight">
+      <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+          <div class="ibox-title">
+            <h5><span id="reportResultTitle">Report</span> <small id="reportResultSubtitle"></small></h5>
+            <div class="ibox-tools">
+              <button type="button" class="btn btn-default btn-sm" id="reportPrintBtn"><i data-lucide="printer"></i>Print</button>
+              <button type="button" class="btn btn-default btn-sm" id="reportDownloadBtn"><i data-lucide="download"></i>Download CSV</button>
+              <button type="button" class="btn btn-default btn-sm" id="reportCloseBtn"><i data-lucide="x"></i>Close</button>
+            </div>
           </div>
-
-          <div class="form-group">
-            <label>Duration</label>
-            <select id="reportDuration" onchange="updateDateInputs()"> 
-              <option value=" ">None</option>
-              <option value="month">Month</option>
-               <option value="custom">Custom Range</option>
-               <option value="date">Date</option>
-            </select>
+          <div class="ibox-content">
+            <div class="row g-3 mb-3" id="reportSummaryRow" style="display:none;"></div>
+            <div class="table-responsive">
+              <table id="reportResultTable" class="table table-hover table-bordered dataTables">
+                <thead id="reportResultHead"></thead>
+                <tbody id="reportResultBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <div id="date" class="form-group" style="width: 200px;">
-          <label>Select Date/Month</label>
-          <input type="date" id="reportDate">
-        </div>
-        <div class="form-group" id="fromDateGroup" style="display: none;">
-            <label>From Date</label>
-            <input type="date" id="reportFromDate">
-          </div>
-          <div class="form-group" id="toDateGroup" style="display: none;">
-            <label>To Date</label>
-            <input type="date" id="reportToDate">
-          </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-          <button class="btn btn-outline" onclick="exportReport()">Export PDF</button>
-        </div>
-        <div id="generatedReport" class="report-output hidden"></div>
-      </div>   -->
-<!-- Tabs Navigation -->
-<div class="report-tabs">
-  <button class="tab-btn active" data-report-tab="patient" onclick="showReportTab('patient')">Patient Report</button>
-  <button class="tab-btn" data-report-tab="profit" onclick="showReportTab('profit')">Profit Report</button>
-  <button class="tab-btn" data-report-tab="invoice" onclick="showReportTab('invoice')">Invoice Report</button>
-  <button class="tab-btn" data-report-tab="allPatients" onclick="showReportTab('allPatients')">All Patients</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- Patient Report Tab Content -->
-<div id="patientReportTab" class="tab-content active">
-  <div class="form-row">
-    <div class="form-group">
-      <label>Search Patient</label>
-      <input 
-        type="text" 
-        id="patientSearchInputPatient" 
-        placeholder="Search by name or mobile number..." 
-        oninput="searchPatientForReport('patient')"
-      />
-      <div id="patientSearchResultsPatient" class="search-results" style="display:none;"></div>
-    </div>
-    <div class="form-group">
-      <label>Duration</label>
-      <select id="reportDurationPatient" onchange="updateDateInputs('patient')">
-        <option value=" ">None</option>
-        <option value="month">Month</option>
-        <option value="custom">Custom Range</option>
-        <option value="date">Date</option>
-      </select>
-    </div>
-    <div class="form-group" id="datePatient" style="display:none;">
-      <label>Select Date/Month</label>
-      <input type="date" id="reportDatePatient">
-    </div>
-    <div class="form-group" id="fromDateGroupPatient" style="display:none;">
-      <label>From Date</label>
-      <input type="date" id="reportFromDatePatient">
-    </div>
-    <div class="form-group" id="toDateGroupPatient" style="display:none;">
-      <label>To Date</label>
-      <input type="date" id="reportToDatePatient">
-    </div>
-  </div>
-  <div class="form-actions">
-    <button class="btn btn-primary" onclick="generateReport('patient')">Generate Report</button>
-  </div>
-  <div id="generatedPatientReport" class="report-output hidden"></div>
-</div>
+<script>
+  if (window.lucide) lucide.createIcons();
 
-<!-- Profit Report Tab Content -->
-<div id="profitReportTab" class="tab-content" style="display:none;">
-  <div class="form-row">
-    <!-- <div class="form-group">
-      <label>Search Patient</label>
-      <input 
-        type="text" 
-        id="patientSearchInputProfit" 
-        placeholder="Search by name or mobile number..." 
-        oninput="searchPatientForReport('profit')"
-      />
-      <div id="patientSearchResultsProfit" class="search-results" style="display:none;"></div>
-    </div> -->
-    <div class="form-group">
-      <label>Duration</label>
-      <select id="reportDurationProfit" onchange="updateDateInputs('profit')">
-        <option value=" ">None</option>
-        <option value="month">Month</option>
-        <option value="custom">Custom Range</option>
-        <option value="date">Date</option>
-      </select>
-    </div>
-    <div class="form-group" id="dateProfit" style="display:none;">
-      <label>Select Date/Month</label>
-      <input type="date" id="reportDateProfit">
-    </div>
-    <div class="form-group" id="fromDateGroupProfit" style="display:none;">
-      <label>From Date</label>
-      <input type="date" id="reportFromDateProfit">
-    </div>
-    <div class="form-group" id="toDateGroupProfit" style="display:none;">
-      <label>To Date</label>
-      <input type="date" id="reportToDateProfit">
-    </div>
-  </div>
-  <div class="form-actions">
-    <button class="btn btn-primary" onclick="generateReport('profit')">Generate Report</button>
-  </div>
-  <div id="generatedProfitReport" class="report-output hidden"></div>
-</div>
+  // ════════════════════════════════════════════════════════════════════
+  // Utilities
+  // ════════════════════════════════════════════════════════════════════
+  function _esc(val) { if (val == null) return ''; return String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function _showErr(msg) { if (window.JSUTIL && typeof JSUTIL.buildErrorModal === 'function') JSUTIL.buildErrorModal(msg); else alert(msg); }
 
-<!-- Invoice Report Tab Content -->
-<div id="invoiceReportTab" class="tab-content" style="display:none;">
-  <div class="form-row">
-    <div class="form-group">
-      <label>Search Patient</label>
-      <input 
-        type="text" 
-        id="patientSearchInputInvoice" 
-        placeholder="Search by name or mobile number..." 
-        oninput="searchPatientForReport('invoice')"
-      />
-      <div id="patientSearchResultsInvoice" class="search-results" style="display:none;"></div>
-    </div>
-    <div class="form-group">
-      <label>Duration</label>
-      <select id="reportDurationInvoice" onchange="updateDateInputs('invoice')">
-        <option value=" ">None</option>
-        <option value="month">Month</option>
-        <option value="custom">Custom Range</option>
-        <option value="date">Date</option>
-      </select>
-    </div>
-    <div class="form-group" id="dateInvoice" style="display:none;">
-      <label>Select Date/Month</label>
-      <input type="date" id="reportDateInvoice">
-    </div>
-    <div class="form-group" id="fromDateGroupInvoice" style="display:none;">
-      <label>From Date</label>
-      <input type="date" id="reportFromDateInvoice">
-    </div>
-    <div class="form-group" id="toDateGroupInvoice" style="display:none;">
-      <label>To Date</label>
-      <input type="date" id="reportToDateInvoice">
-    </div>
-  </div>
-  <div class="form-actions">
-    <button class="btn btn-primary" onclick="generateReport('invoice')">Generate Report</button>
-  </div>
-  <div id="generatedInvoiceReport" class="report-output hidden"></div>
-</div>
+  function _fmtDate(val) {
+    if (!val) return '-';
+    var d = new Date(val); if (isNaN(d.getTime())) return '-';
+    return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
 
-<!-- All Patients Report Tab Content -->
-<div id="allPatientsReportTab" class="tab-content" style="display:none;">
-  <div id="allPatientsReportContainer" class="report-output"></div>
-</div>
-</div>
+  function _fmtNum(n) { if (n == null || isNaN(n)) return '-'; return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
+
+  function _destroyDT() { if ($.fn.DataTable && $.fn.DataTable.isDataTable('#reportResultTable')) $('#reportResultTable').DataTable().clear().destroy(); }
+  function _initDT() { if ($.fn.DataTable && !$.fn.DataTable.isDataTable('#reportResultTable')) $('#reportResultTable').DataTable({ order: [], pageLength: 25, autoWidth: false }); if (window.lucide) lucide.createIcons(); }
+
+  function _dateFilter(list, dateField) {
+    var from = $('#reportFromDate').val(), to = $('#reportToDate').val();
+    if (!from && !to) return list;
+    return list.filter(function(r) {
+      var d = r[dateField] ? new Date(r[dateField]) : null;
+      if (!d || isNaN(d.getTime())) return false;
+      if (from && d < new Date(from + 'T00:00:00')) return false;
+      if (to && d > new Date(to + 'T23:59:59')) return false;
+      return true;
+    });
+  }
+
+  function _setSubtitle() {
+    var f = $('#reportFromDate').val(), t = $('#reportToDate').val(), p = [];
+    if (f) p.push('From: ' + f); if (t) p.push('To: ' + t);
+    $('#reportResultSubtitle').text(p.length ? p.join(' | ') : 'All Records');
+  }
+
+  function _emptyRow(cols, msg) { return '<tr><td colspan="' + cols + '" class="text-center text-muted">' + (msg || 'No records found.') + '</td></tr>'; }
+
+  function _statusBadge(s) {
+    var cls = 'status-default';
+    if (s === 'Inside') cls = 'status-inside';
+    else if (s === 'Entry Approved') cls = 'status-entry-approved';
+    else if (s === 'Exit Requested') cls = 'status-exit-requested';
+    else if (s === 'Exit Approved') cls = 'status-exit-approved';
+    else if (s === 'Exited') cls = 'status-exited';
+    else if (s === 'Rejected') cls = 'status-rejected';
+    return '<span class="status-badge ' + cls + '">' + _esc(s || '-') + '</span>';
+  }
+
+  function _utilizationBar(pct) {
+    var p = Math.min(pct, 100);
+    var overCls = pct > 100 ? ' over' : '';
+    return '<span class="utilization-bar"><span class="utilization-bar-fill' + overCls + '" style="width:' + p + '%;"></span></span> ' + pct.toFixed(1) + '%';
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // Summary Cards
+  // ════════════════════════════════════════════════════════════════════
+  function _renderSummary(cards) {
+    var colSize = Math.max(2, Math.floor(12 / cards.length));
+    var html = '';
+    cards.forEach(function(c) {
+      html += '<div class="col-sm-' + colSize + '"><div class="report-summary-card"><div class="summary-label">' + _esc(c.label) + '</div><div class="summary-value">' + _esc(c.value) + '</div></div></div>';
+    });
+    $('#reportSummaryRow').html(html).show();
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // Visitor helpers
+  // ════════════════════════════════════════════════════════════════════
+  function _vName(v) { return ((v.firstName || '') + ' ' + (v.lastName || '')).trim() || '-'; }
+  function _vHost(v) { if (!v.host) return '-'; return v.host.name || ((v.host.firstName || '') + ' ' + (v.host.lastName || '')).trim() || '-'; }
+
+  function _visitorStatusSummary(list) {
+    return [
+      { label: 'Total', value: list.length },
+      { label: 'Inside', value: list.filter(function(v) { return v.processStatus === 'Inside'; }).length },
+      { label: 'Approved', value: list.filter(function(v) { return v.processStatus === 'Entry Approved'; }).length },
+      { label: 'Exited', value: list.filter(function(v) { return v.processStatus === 'Exited'; }).length },
+      { label: 'Rejected', value: list.filter(function(v) { return v.processStatus === 'Rejected'; }).length }
+    ];
+  }
+
+  function _groupAndCount(list, keyFn) {
+    var g = {};
+    list.forEach(function(v) { var k = keyFn(v); if (!g[k]) g[k] = []; g[k].push(v); });
+    return g;
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // REPORT: Visitor Log
+  // ════════════════════════════════════════════════════════════════════
+  function reportVisitorLog(list) {
+    $('#reportResultTitle').text('Visitor Log');
+    _renderSummary(_visitorStatusSummary(list));
+    $('#reportResultHead').html('<tr><th>#</th><th>Number</th><th>Name</th><th>Company</th><th>Phone</th><th>Contact Person</th><th>Purpose</th><th>Entry Time</th><th>Exit Time</th><th>Status</th></tr>');
+    var html = '';
+    list.forEach(function(v, i) {
+      html += '<tr><td>' + (i+1) + '</td><td>' + _esc(v.number||'-') + '</td><td>' + _esc(_vName(v)) + '</td><td>' + _esc(v.company||'-') + '</td><td>' + _esc(v.phone||'-') + '</td><td>' + _esc(_vHost(v)) + '</td><td>' + _esc(v.purpose||'-') + '</td><td>' + _fmtDate(v.entryTime) + '</td><td>' + _fmtDate(v.exitTime) + '</td><td>' + _statusBadge(v.processStatus) + '</td></tr>';
+    });
+    $('#reportResultBody').html(html || _emptyRow(10));
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // REPORT: Visitors by Contact Person
+  // ════════════════════════════════════════════════════════════════════
+  function reportVisitorByContact(list) {
+    $('#reportResultTitle').text('Visitors by Contact Person');
+    _renderSummary(_visitorStatusSummary(list));
+    $('#reportResultHead').html('<tr><th>Contact Person</th><th>Total</th><th>Inside</th><th>Approved</th><th>Exited</th><th>Rejected</th></tr>');
+    var g = _groupAndCount(list, _vHost);
+    var html = '';
+    Object.keys(g).sort().forEach(function(k) {
+      var l = g[k];
+      html += '<tr><td>' + _esc(k) + '</td><td><strong>' + l.length + '</strong></td><td>' + l.filter(function(v){return v.processStatus==='Inside';}).length + '</td><td>' + l.filter(function(v){return v.processStatus==='Entry Approved';}).length + '</td><td>' + l.filter(function(v){return v.processStatus==='Exited';}).length + '</td><td>' + l.filter(function(v){return v.processStatus==='Rejected';}).length + '</td></tr>';
+    });
+    $('#reportResultBody').html(html || _emptyRow(6));
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // REPORT: Visitors by Company
+  // ════════════════════════════════════════════════════════════════════
+  function reportVisitorByCompany(list) {
+    $('#reportResultTitle').text('Visitors by Company');
+    _renderSummary(_visitorStatusSummary(list));
+    $('#reportResultHead').html('<tr><th>Company</th><th>Total</th><th>Inside</th><th>Approved</th><th>Exited</th><th>Rejected</th></tr>');
+    var g = _groupAndCount(list, function(v) { return v.company || 'N/A'; });
+    var html = '';
+    Object.keys(g).sort().forEach(function(k) {
+      var l = g[k];
+      html += '<tr><td>' + _esc(k) + '</td><td><strong>' + l.length + '</strong></td><td>' + l.filter(function(v){return v.processStatus==='Inside';}).length + '</td><td>' + l.filter(function(v){return v.processStatus==='Entry Approved';}).length + '</td><td>' + l.filter(function(v){return v.processStatus==='Exited';}).length + '</td><td>' + l.filter(function(v){return v.processStatus==='Rejected';}).length + '</td></tr>';
+    });
+    $('#reportResultBody').html(html || _emptyRow(6));
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // REPORT: Visitors by Status
+  // ════════════════════════════════════════════════════════════════════
+  function reportVisitorByStatus(list) {
+    $('#reportResultTitle').text('Visitors by Status');
+    $('#reportSummaryRow').hide();
+    $('#reportResultHead').html('<tr><th>Status</th><th>Count</th><th>Percentage</th></tr>');
+    var g = _groupAndCount(list, function(v) { return v.processStatus || 'Inside'; });
+    var total = list.length; var html = '';
+    Object.keys(g).forEach(function(k) { var c = g[k].length; html += '<tr><td>' + _statusBadge(k) + '</td><td><strong>' + c + '</strong></td><td>' + (total > 0 ? (c/total*100).toFixed(1) : '0.0') + '%</td></tr>'; });
+    $('#reportResultBody').html(html || _emptyRow(3));
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // REPORT: Visitors by Type
+  // ════════════════════════════════════════════════════════════════════
+  function reportVisitorByType(list) {
+    $('#reportResultTitle').text('Visitors by Type');
+    $('#reportSummaryRow').hide();
+    $('#reportResultHead').html('<tr><th>Type</th><th>Count</th><th>Percentage</th></tr>');
+    var g = _groupAndCount(list, function(v) { return v.type || 'N/A'; });
+    var total = list.length; var html = '';
+    Object.keys(g).sort().forEach(function(k) { var c = g[k].length; html += '<tr><td>' + _esc(k) + '</td><td><strong>' + c + '</strong></td><td>' + (total > 0 ? (c/total*100).toFixed(1) : '0.0') + '%</td></tr>'; });
+    $('#reportResultBody').html(html || _emptyRow(3));
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // REPORT: Material Utilization
+  // ════════════════════════════════════════════════════════════════════
+  function reportMaterialUtilization(orders, materials) {
+    $('#reportResultTitle').text('Material Utilization');
+
+    // Build order lookup
+    var orderMap = {};
+    (orders || []).forEach(function(o) { orderMap[String(o.id)] = o; });
+
+    // Enrich materials with order info
+    var enriched = (materials || []).map(function(m) {
+      var orderId = m.remarks || (m.productionOrder && m.productionOrder.id) || '';
+      var order = orderMap[String(orderId)] || {};
+      return {
+        batchNumber: order.number || order.name || orderId || '-',
+        batchStatus: order.orderStatus || '-',
+        materialName: (m.product && (m.product.name || m.product.Name)) || '-',
+        materialCode: (m.product && (m.product.number || m.product.Number || m.product.code || m.product.Code)) || '',
+        step: m.productLot || m.ProductLot || '-',
+        type: m.type || '-',
+        status: m.materialStatus || m.MaterialStatus || '-',
+        planned: Number(m.plannedQuantity || 0),
+        actual: Number(m.actualQuantity || 0),
+        consumed: Number(m.quantityConsumed || 0),
+        discarded: Number(m.quantityDiscarded || 0),
+        toWarehouse: Number(m.quantityToWarehouse || 0),
+        uom: (m.product && (m.product.uom || m.product.Uom)) || '',
+        createdDate: m.createdDate || m.CreatedDate || order.createdDate || ''
+      };
+    });
+
+    // Filter by date
+    var from = $('#reportFromDate').val(), to = $('#reportToDate').val();
+    if (from || to) {
+      enriched = enriched.filter(function(m) {
+        if (!m.createdDate) return false;
+        var d = new Date(m.createdDate); if (isNaN(d.getTime())) return false;
+        if (from && d < new Date(from + 'T00:00:00')) return false;
+        if (to && d > new Date(to + 'T23:59:59')) return false;
+        return true;
+      });
+    }
+
+    // Summary
+    var totalPlanned = 0, totalActual = 0, totalDiscarded = 0;
+    enriched.forEach(function(m) { totalPlanned += m.planned; totalActual += m.actual; totalDiscarded += m.discarded; });
+    var overallUtil = totalPlanned > 0 ? (totalActual / totalPlanned * 100) : 0;
+
+    _renderSummary([
+      { label: 'Materials', value: enriched.length },
+      { label: 'Total Planned', value: _fmtNum(totalPlanned) },
+      { label: 'Total Actual', value: _fmtNum(totalActual) },
+      { label: 'Total Discarded', value: _fmtNum(totalDiscarded) },
+      { label: 'Utilization', value: overallUtil.toFixed(1) + '%' }
+    ]);
+
+    $('#reportResultHead').html('<tr><th>#</th><th>Batch</th><th>Material</th><th>Step</th><th>Type</th><th>Planned</th><th>Actual</th><th>Consumed</th><th>Discarded</th><th>Utilization</th><th>Status</th></tr>');
+
+    var html = '';
+    enriched.forEach(function(m, i) {
+      var matDisplay = m.materialCode ? m.materialCode + ' - ' + m.materialName : m.materialName;
+      var utilPct = m.planned > 0 ? (m.actual / m.planned * 100) : 0;
+      html += '<tr>' +
+              '<td>' + (i+1) + '</td>' +
+              '<td>' + _esc(m.batchNumber) + '</td>' +
+              '<td>' + _esc(matDisplay) + '</td>' +
+              '<td>' + _esc(m.step) + '</td>' +
+              '<td>' + _esc(m.type) + '</td>' +
+              '<td>' + _fmtNum(m.planned) + (m.uom ? ' ' + _esc(m.uom) : '') + '</td>' +
+              '<td>' + _fmtNum(m.actual) + '</td>' +
+              '<td>' + _fmtNum(m.consumed) + '</td>' +
+              '<td>' + _fmtNum(m.discarded) + '</td>' +
+              '<td>' + _utilizationBar(utilPct) + '</td>' +
+              '<td><span class="status-badge status-default">' + _esc(m.status) + '</span></td>' +
+              '</tr>';
+    });
+    $('#reportResultBody').html(html || _emptyRow(11));
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // Generate
+  // ════════════════════════════════════════════════════════════════════
+  function generateReport() {
+    var type = $('#reportType').val();
+    if (!type) { _showErr('Please select a report.'); return; }
+
+    _destroyDT();
+    $('#reportResultHead, #reportResultBody').empty();
+    $('#reportSummaryRow').empty().hide();
+    $('#reportResultWrap').show();
+    $('#reportResultBody').html('<tr><td class="text-center text-muted">Loading...</td></tr>');
+    _setSubtitle();
+
+    // Visitor reports
+    if (type.indexOf('visitor-') === 0) {
+      JSUTIL.callAJAXGet('/api/visitor', function(res) {
+        var list = _dateFilter(Array.isArray(res) ? res : [], 'entryTime');
+        _destroyDT();
+        if (type === 'visitor-log') reportVisitorLog(list);
+        else if (type === 'visitor-by-contact') reportVisitorByContact(list);
+        else if (type === 'visitor-by-company') reportVisitorByCompany(list);
+        else if (type === 'visitor-by-status') reportVisitorByStatus(list);
+        else if (type === 'visitor-by-type') reportVisitorByType(list);
+        _initDT();
+      }, function() { _showErr('Unable to load visitor data.'); });
+      return;
+    }
+
+    // Material Utilization
+    if (type === 'material-utilization') {
+      var ordersLoaded = null, materialsLoaded = null;
+      function tryRender() {
+        if (ordersLoaded === null || materialsLoaded === null) return;
+        _destroyDT();
+        reportMaterialUtilization(ordersLoaded, materialsLoaded);
+        _initDT();
+      }
+      JSUTIL.callAJAXGet('/api/production-orders', function(res) {
+        ordersLoaded = Array.isArray(res) ? res : [];
+        tryRender();
+      }, function() { ordersLoaded = []; tryRender(); });
+
+      JSUTIL.callAJAXGet('/api/order-materials', function(res) {
+        materialsLoaded = Array.isArray(res) ? res : [];
+        tryRender();
+      }, function() { materialsLoaded = []; tryRender(); });
+      return;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // Print
+  // ════════════════════════════════════════════════════════════════════
+  function printReport() {
+    var title = $('#reportResultTitle').text();
+    var subtitle = $('#reportResultSubtitle').text();
+    var $table = $('#reportResultTable').clone();
+    $table.find('.dataTables_empty').parent().remove();
+    var tableHtml = $table[0].outerHTML;
+
+    var printHtml = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + _esc(title) + '</title>' +
+            '<style>body{font-family:Arial,sans-serif;font-size:12px;margin:20px;}h2{margin-bottom:4px;font-size:15px;}.subtitle{color:#666;font-size:12px;margin-bottom:12px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #999;padding:5px 8px;text-align:left;}th{background:#f0f0f0;font-weight:bold;}tr:nth-child(even){background:#f8f8f8;}.status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;}.utilization-bar{display:inline-block;height:6px;border-radius:3px;background:#e5e7eb;min-width:60px;}.utilization-bar-fill{height:100%;border-radius:3px;background:#10b981;}</style></head><body>' +
+            '<h2>' + _esc(title) + '</h2><div class="subtitle">' + _esc(subtitle) + '</div>' + tableHtml + '</body></html>';
+
+    var w = window.open('', '_blank', 'width=1000,height=600');
+    if (!w) { _showErr('Pop-up blocked.'); return; }
+    w.document.open(); w.document.write(printHtml); w.document.close();
+    w.onload = function() { w.focus(); w.print(); w.close(); };
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // Download CSV
+  // ════════════════════════════════════════════════════════════════════
+  function downloadCSV() {
+    var headers = [];
+    $('#reportResultTable thead th').each(function() { headers.push($(this).text()); });
+    var rows = [];
+    var dt = $.fn.DataTable.isDataTable('#reportResultTable') ? $('#reportResultTable').DataTable() : null;
+    var $rows = dt ? $(dt.rows({ page: 'all' }).nodes()) : $('#reportResultTable tbody tr');
+    $rows.each(function() { var r = []; $(this).find('td').each(function() { r.push($(this).text().trim()); }); if (r.length) rows.push(r); });
+
+    var lines = [];
+    lines.push(headers.map(function(h) { return '"' + h.replace(/"/g,'""') + '"'; }).join(','));
+    rows.forEach(function(r) { lines.push(r.map(function(c) { return '"' + c.replace(/"/g,'""') + '"'; }).join(',')); });
+
+    var blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    link.setAttribute('href', URL.createObjectURL(blob));
+    link.setAttribute('download', ($('#reportResultTitle').text() || 'report').replace(/\s+/g, '_') + '.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // Events
+  // ════════════════════════════════════════════════════════════════════
+  $(document).ready(function() {
+    var today = new Date();
+    var thirtyAgo = new Date(today.getTime() - 30 * 86400000);
+    $('#reportToDate').val(today.toISOString().split('T')[0]);
+    $('#reportFromDate').val(thirtyAgo.toISOString().split('T')[0]);
+
+    $('#generateReportBtn').on('click', generateReport);
+    $('#reportCloseBtn').on('click', function() { _destroyDT(); $('#reportResultWrap').hide(); $('#reportResultHead, #reportResultBody, #reportSummaryRow').empty(); });
+    $('#reportPrintBtn').on('click', printReport);
+    $('#reportDownloadBtn').on('click', downloadCSV);
+  });
+</script>

@@ -216,6 +216,7 @@
                     <div class="ibox-tools">
                         <button type="button" class="btn btn-default btn-sm close-box showAllTestAndParametersOnCancel"><i data-lucide="x"></i>Close</button>
                         <button type="button" class="btn btn-default btn-sm" id="deleteTestBtn"><i data-lucide="trash"></i>Delete</button>
+                        <button type="button" class="btn btn-default btn-sm" id="addTestWorksheetBtn"><i data-lucide="plus"></i>Add Worksheet</button>
                         <button type="button" class="btn btn-secondary btn-sm testEditBtn"><i data-lucide="pencil"></i>Edit</button>
                         <button type="button" class="btn btn-secondary btn-sm" id="editTestSaveBtn"><i data-lucide="check"></i>Save</button>
                         <button type="button" class="btn btn-default btn-sm" id="testCloneBtn"><i data-lucide="copy"></i>Clone</button>
@@ -591,6 +592,788 @@
     </div>
     <!--editTestParameterPanel.html end-->
 
+    <!--worksheetRichTextPanel.html start-->
+    <style>
+        /* ── Worksheet Rich-Text Panel ──────────────────────────────────────
+           Inherits the STP page's ibox/inspinia theme.
+           No standalone-app colours, fonts, or shadows.
+        ── */
+
+        /* Reset box-model inside panel only */
+        #richTextPanel *,
+        #richTextPanel *::before,
+        #richTextPanel *::after {
+            box-sizing: border-box;
+        }
+
+        /* ── Toolbar ── */
+        #richTextPanel .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #e7eaec;
+        }
+
+        #richTextPanel .toolbar-group {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+            padding-right: 8px;
+            margin-right: 4px;
+            border-right: 1px solid #e2e5e8;
+        }
+
+        #richTextPanel .toolbar-group:last-child {
+            border-right: none;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        #richTextPanel .toolbar-select {
+            height: 30px;
+            padding: 0 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 3px;
+            background: #fff;
+            color: #555;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        #richTextPanel .toolbar-select:focus {
+            outline: none;
+            border-color: #1c84c6;
+        }
+
+        #richTextPanel .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #555;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+
+        #richTextPanel .toolbar-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke-width: 2;
+            pointer-events: none;
+        }
+
+        #richTextPanel .toolbar-btn:hover {
+            background: #eef2f7;
+            border-color: #d1d5db;
+            color: #333;
+        }
+
+        #richTextPanel .toolbar-btn.active {
+            background: #1c84c6;
+            border-color: #1c84c6;
+            color: #fff;
+        }
+
+        /* ── Color pickers ── */
+        #richTextPanel .color-picker-wrapper {
+            position: relative;
+            width: 30px;
+            height: 30px;
+        }
+
+        #richTextPanel .color-picker {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        #richTextPanel .color-picker-display {
+            width: 100%;
+            height: 100%;
+            border-radius: 3px;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        #richTextPanel .color-swatch {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+        }
+
+        /* ── Editor content area ── */
+        #richTextPanel .editor-container {
+            border: 1px solid #e7eaec;
+            border-radius: 8px;
+            box-shadow: none;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        #richTextPanel .editor-content {
+            min-height: 280px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 14px 16px;
+            outline: none;
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #333;
+            background: #fff;
+            border: 0;
+            border-top: 1px solid #e7eaec;
+        }
+
+        #richTextPanel .editor-content:focus {
+            border-color: #1c84c6;
+            box-shadow: inset 0 0 0 1px rgba(28, 132, 198, 0.15);
+        }
+
+        #richTextPanel .editor-content:empty::before {
+            content: 'Enter worksheet content here...';
+            color: #aaa;
+            pointer-events: none;
+        }
+
+        /* Scrollbar */
+        #richTextPanel .editor-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #richTextPanel .editor-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #richTextPanel .editor-content::-webkit-scrollbar-thumb {
+            background: #c8ced3;
+            border-radius: 3px;
+        }
+
+        #richTextPanel .editor-content::-webkit-scrollbar-thumb:hover {
+            background: #adb5bd;
+        }
+
+        /* Typography inside editor */
+        #richTextPanel .editor-content h1,
+        #richTextPanel .preview-content h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 12px 0 6px;
+            color: #23527c;
+        }
+
+        #richTextPanel .editor-content h2,
+        #richTextPanel .preview-content h2 {
+            font-size: 17px;
+            font-weight: 600;
+            margin: 10px 0 5px;
+            color: #23527c;
+        }
+
+        #richTextPanel .editor-content h3,
+        #richTextPanel .preview-content h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 8px 0 4px;
+            color: #23527c;
+        }
+
+        #richTextPanel .editor-content p,
+        #richTextPanel .preview-content p {
+            margin: 0 0 8px;
+        }
+
+        #richTextPanel .editor-content ul,
+        #richTextPanel .editor-content ol,
+        #richTextPanel .preview-content ul,
+        #richTextPanel .preview-content ol {
+            padding-left: 22px;
+            margin: 0 0 8px;
+        }
+
+        #richTextPanel .editor-content li,
+        #richTextPanel .preview-content li {
+            margin-bottom: 3px;
+        }
+
+        #richTextPanel .editor-content a,
+        #richTextPanel .preview-content a {
+            color: #1c84c6;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* Link hover tooltip */
+        #rte-link-tooltip {
+            position: fixed;
+            z-index: 9999;
+            background: #1e293b;
+            color: #fff;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            max-width: 320px;
+            pointer-events: auto;
+            white-space: nowrap;
+        }
+        #rte-link-tooltip .rte-link-url {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            opacity: 0.85;
+            font-size: 11px;
+        }
+        #rte-link-tooltip .rte-link-open {
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        #rte-link-tooltip .rte-link-open:hover { background: #2563eb; }
+
+        #richTextPanel .editor-content blockquote,
+        #richTextPanel .preview-content blockquote {
+            margin: 8px 0;
+            padding: 8px 14px;
+            border-left: 3px solid #1c84c6;
+            background: #f0f7fc;
+            color: #555;
+            font-style: italic;
+        }
+
+        #richTextPanel .editor-content pre,
+        #richTextPanel .preview-content pre {
+            background: #f8f8f8;
+            border: 1px solid #e7eaec;
+            border-radius: 3px;
+            padding: 10px 14px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        #richTextPanel .editor-content hr,
+        #richTextPanel .preview-content hr {
+            border: none;
+            border-top: 1px solid #e7eaec;
+            margin: 12px 0;
+        }
+
+        /* ── Stats bar ── */
+        #richTextPanel .stats-bar {
+            display: flex;
+            gap: 20px;
+            padding: 6px 16px;
+            font-size: 12px;
+            color: #888;
+            background: #fafafa;
+            border: 0;
+            border-top: none;
+            border-top: 1px solid #e7eaec;
+        }
+
+        #richTextPanel .stat-item {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        #richTextPanel .stat-value {
+            font-weight: 600;
+            color: #555;
+        }
+
+        /* ── Live Preview card ── */
+        #richTextPanel .preview-content {
+            font-family: inherit;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #333;
+            min-height: 60px;
+        }
+
+        #richTextPanel .preview-content:empty::before {
+            content: 'Preview will appear here...';
+            color: #aaa;
+        }
+
+        /* ── Input fields inside editor ── */
+        #richTextPanel .editor-input-field {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px dashed #1c84c6;
+            border-radius: 3px;
+            padding: 2px 6px;
+            background: #f0f7fc;
+            margin: 0 2px;
+            vertical-align: middle;
+        }
+
+        #richTextPanel .editor-input-field input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 13px;
+            color: #333;
+            min-width: 60px;
+            max-width: 200px;
+        }
+
+        #richTextPanel .editor-input-field .input-label {
+            font-size: 11px;
+            color: #888;
+            white-space: nowrap;
+        }
+
+        #richTextPanel .editor-input-field .remove-input {
+            cursor: pointer;
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0 2px;
+        }
+
+        #richTextPanel .editor-input-field .remove-input:hover {
+            color: #e74c3c;
+        }
+
+        /* preview: hide remove button */
+        #richTextPanel .preview-content .editor-input-field .remove-input {
+            display: none;
+        }
+
+        /* ── Hint text inside editor card ── */
+        #richTextPanel .worksheet-hint {
+            margin: 0 0 12px;
+            font-size: 13px;
+            color: #676a6c;
+        }
+
+        #richTextPanel .editor-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        #richTextPanel .worksheet-preview-card {
+            margin-top: 14px;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .rte-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+        }
+        .rte-modal-backdrop.open {
+            display: flex;
+        }
+        .rte-modal-box {
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            min-width: 340px;
+            max-width: 480px;
+            width: 100%;
+            padding: 0;
+            animation: rteModalIn 0.15s ease;
+        }
+        @keyframes rteModalIn {
+            from { opacity:0; transform: translateY(-16px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+        .rte-modal-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .rte-modal-body {
+            padding: 16px 20px;
+        }
+        .rte-modal-body .form-group { margin-bottom: 12px; }
+        .rte-modal-body .form-group:last-child { margin-bottom: 0; }
+        .rte-modal-body label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 4px; }
+        .rte-modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+    </style>
+
+
+    <div class="row animated fadeInRight aasaanPanel" id="richTextPanel" style="display: none;">
+
+        <!-- ── Card 1 : Editor ── -->
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Worksheet</h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box richTextOnCancel"><i
+                                class="ti ti-x"></i> Close </button>
+                        <button type="button" class="btn btn-default btn-sm" id="richTextSaveBtn"><i
+                                class="ti ti-check "></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <p class="worksheet-hint">Please paste your worksheet here. Review the rendered worksheet before
+                        finalizing.</p>
+                    <!-- Editor Container -->
+                    <div class="editor-container">
+                        <!-- Toolbar -->
+                        <div class="toolbar" role="toolbar" aria-label="Formatting options">
+                            <!-- Text Style -->
+                            <div class="toolbar-group">
+                                <select class="toolbar-select" id="formatBlock" title="Text style">
+                                    <option value="p">Paragraph</option>
+                                    <option value="h1">Heading 1</option>
+                                    <option value="h2">Heading 2</option>
+                                    <option value="h3">Heading 3</option>
+                                    <option value="blockquote">Quote</option>
+                                    <option value="pre">Code Block</option>
+                                </select>
+                                <select class="toolbar-select" id="fontName" title="Font family">
+                                    <option value="IBM Plex Sans">IBM Plex Sans</option>
+                                    <option value="Fraunces">Fraunces</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Helvetica">Helvetica</option>
+                                    <option value="JetBrains Mono">JetBrains Mono</option>
+                                </select>
+                                <select class="toolbar-select" id="fontSize" title="Font size">
+                                    <option value="1">Small</option>
+                                    <option value="3" selected>Normal</option>
+                                    <option value="5">Large</option>
+                                    <option value="7">Extra Large</option>
+                                </select>
+                            </div>
+
+                            <!-- Basic Formatting -->
+                            <div class="toolbar-group">
+                                <button class="toolbar-btn" data-command="bold" title="Bold (Ctrl+B)" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+                                        <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="italic" title="Italic (Ctrl+I)" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="19" y1="4" x2="10" y2="4" />
+                                        <line x1="14" y1="20" x2="5" y2="20" />
+                                        <line x1="15" y1="4" x2="9" y2="20" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="underline" title="Underline (Ctrl+U)" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3" />
+                                        <line x1="4" y1="21" x2="20" y2="21" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="strikeThrough" title="Strikethrough" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="4" y1="12" x2="20" y2="12" />
+                                        <path d="M17.5 7.5c-1.5-2-4-2.5-6.5-2.5-3 0-5.5 1-5.5 4 0 1.5.5 2.5 2 3" />
+                                        <path d="M8.5 16.5c1 1.5 3 2.5 5.5 2.5 3.5 0 5.5-2 5.5-4.5 0-1-.5-2-1.5-2.5" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Colors -->
+                            <div class="toolbar-group">
+                                <div class="color-picker-wrapper" title="Text color">
+                                    <input type="color" class="color-picker" id="textColor" value="#0a0a0a" onmousedown="event.preventDefault()">
+                                    <div class="color-picker-display">
+                                        <div class="color-swatch" id="textColorSwatch" style="background: #0a0a0a;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="color-picker-wrapper" title="Highlight color">
+                                    <input type="color" class="color-picker" id="bgColor" value="#fef3c7" onmousedown="event.preventDefault()">
+                                    <div class="color-picker-display">
+                                        <div class="color-swatch" id="bgColorSwatch" style="background: #fef3c7;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lists & Alignment -->
+                            <div class="toolbar-group">
+                                <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet list" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="9" y1="6" x2="20" y2="6" />
+                                        <line x1="9" y1="12" x2="20" y2="12" />
+                                        <line x1="9" y1="18" x2="20" y2="18" />
+                                        <circle cx="4" cy="6" r="1.5" fill="currentColor" />
+                                        <circle cx="4" cy="12" r="1.5" fill="currentColor" />
+                                        <circle cx="4" cy="18" r="1.5" fill="currentColor" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="insertOrderedList" title="Numbered list" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="10" y1="6" x2="21" y2="6" />
+                                        <line x1="10" y1="12" x2="21" y2="12" />
+                                        <line x1="10" y1="18" x2="21" y2="18" /><text x="4" y="7" font-size="6"
+                                                                                      fill="currentColor" font-family="sans-serif">1</text><text x="4" y="13"
+                                                                                                                                                 font-size="6" fill="currentColor" font-family="sans-serif">2</text><text
+                                            x="4" y="19" font-size="6" fill="currentColor"
+                                            font-family="sans-serif">3</text>
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="justifyLeft" title="Align left" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="3" y1="6" x2="21" y2="6" />
+                                        <line x1="3" y1="12" x2="15" y2="12" />
+                                        <line x1="3" y1="18" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="justifyCenter" title="Align center" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="3" y1="6" x2="21" y2="6" />
+                                        <line x1="6" y1="12" x2="18" y2="12" />
+                                        <line x1="4" y1="18" x2="20" y2="18" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="justifyRight" title="Align right" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="3" y1="6" x2="21" y2="6" />
+                                        <line x1="9" y1="12" x2="21" y2="12" />
+                                        <line x1="6" y1="18" x2="21" y2="18" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Insert Elements -->
+                            <div class="toolbar-group">
+                                <button class="toolbar-btn" id="insertLinkBtn" title="Insert link" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" id="insertImageBtn" title="Insert image URL" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21 15 16 10 5 21" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" id="insertInputBtn" title="Insert input field" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <rect x="3" y="6" width="18" height="12" rx="2" />
+                                        <line x1="7" y1="12" x2="17" y2="12" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="insertHorizontalRule"
+                                        title="Insert horizontal line" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <line x1="3" y1="12" x2="21" y2="12" stroke-width="2" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Undo/Redo -->
+                            <div class="toolbar-group">
+                                <button class="toolbar-btn" data-command="undo" title="Undo (Ctrl+Z)" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <polyline points="1 4 1 10 7 10" />
+                                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="redo" title="Redo (Ctrl+Y)" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <polyline points="23 4 23 10 17 10" />
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                    </svg>
+                                </button>
+                                <button class="toolbar-btn" data-command="removeFormat" title="Clear formatting" onmousedown="event.preventDefault()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor">
+                                        <path d="M4 7V4h16v3" />
+                                        <path d="M9 20h6" />
+                                        <path d="M12 4v16" />
+                                        <line x1="3" y1="3" x2="21" y2="21" stroke-width="2" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Editor Content -->
+                        <div class="editor-content" id="editor" contenteditable="true" spellcheck="true" role="textbox"
+                             aria-multiline="true" aria-label="Rich text editor"></div>
+
+                        <!-- Stats Bar -->
+                        <div class="stats-bar">
+                            <div class="stat-item">
+                                <span>Words:</span>
+                                <span class="stat-value" id="wordCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Characters:</span>
+                                <span class="stat-value" id="charCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Paragraphs:</span>
+                                <span class="stat-value" id="paraCount">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Reading time:</span>
+                                <span class="stat-value" id="readTime">0 min</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ── Card 2 : Live Preview ── -->
+                    <div class="col-lg-12 worksheet-preview-card">
+                        <div class="ibox float-e-margins">
+                            <div class="ibox-title">
+                                <h5>Live Preview</h5>
+                            </div>
+                            <div class="ibox-content">
+                                <div class="preview-content" id="preview"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /.ibox-content -->
+            </div><!-- /.ibox -->
+        </div><!-- /.col-lg-12 -->
+
+
+    </div><!-- /#richTextPanel -->
+    <!-- Insert Link Modal -->
+    <!-- Insert Link Modal -->
+    <div class="rte-modal-backdrop" id="linkModal">
+        <div class="rte-modal-box" role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+            <div class="rte-modal-header" id="linkModalTitle">Insert Link</div>
+            <div class="rte-modal-body">
+                <div class="form-group">
+                    <label for="linkText">Link Text</label>
+                    <input type="text" class="form-control" id="linkText" placeholder="Display text">
+                </div>
+                <div class="form-group">
+                    <label for="linkUrl">URL</label>
+                    <input type="url" class="form-control" id="linkUrl" placeholder="https://example.com">
+                </div>
+            </div>
+            <div class="rte-modal-footer">
+                <button class="btn btn-default btn-sm" id="cancelLinkBtn">Cancel</button>
+                <button class="btn btn-secondary btn-sm" id="confirmLinkBtn">Insert Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insert Image Modal -->
+    <div class="rte-modal-backdrop" id="imageModal">
+        <div class="rte-modal-box" role="dialog" aria-modal="true" aria-labelledby="imageModalTitle">
+            <div class="rte-modal-header" id="imageModalTitle">Insert Image</div>
+            <div class="rte-modal-body">
+                <div class="form-group">
+                    <label for="imageUrl">Image URL</label>
+                    <input type="url" class="form-control" id="imageUrl" placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="form-group">
+                    <label for="imageAlt">Alt Text</label>
+                    <input type="text" class="form-control" id="imageAlt" placeholder="Image description">
+                </div>
+            </div>
+            <div class="rte-modal-footer">
+                <button class="btn btn-default btn-sm" id="cancelImageBtn">Cancel</button>
+                <button class="btn btn-secondary btn-sm" id="confirmImageBtn">Insert Image</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insert Input Field Modal -->
+    <div class="rte-modal-backdrop" id="inputModal">
+        <div class="rte-modal-box" role="dialog" aria-modal="true" aria-labelledby="inputModalTitle">
+            <div class="rte-modal-header" id="inputModalTitle">Insert Input Field</div>
+            <div class="rte-modal-body">
+                <div class="form-group">
+                    <label for="inputLabel">Field Label</label>
+                    <input type="text" class="form-control" id="inputLabel" placeholder="e.g., Name, Email, Date">
+                </div>
+                <div class="form-group">
+                    <label for="inputType">Field Type</label>
+                    <select class="form-control" id="inputType">
+                        <option value="text">Text</option>
+                        <option value="email">Email</option>
+                        <option value="number">Number</option>
+                        <option value="date">Date</option>
+                        <option value="tel">Phone</option>
+                        <option value="url">URL</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="inputPlaceholder">Placeholder</label>
+                    <input type="text" class="form-control" id="inputPlaceholder" placeholder="Hint text for the field">
+                </div>
+            </div>
+            <div class="rte-modal-footer">
+                <button class="btn btn-default btn-sm" id="cancelInputBtn">Cancel</button>
+                <button class="btn btn-secondary btn-sm" id="confirmInputBtn">Insert Field</button>
+            </div>
+        </div>
+    </div>
+    <!--worksheetRichTextPanel.html end-->
+
 
 </div>
 
@@ -705,7 +1488,9 @@
             id: record.id || record.Id,
             name: record.name || record.Name || '',
             description: record.description || record.Description || '',
-            numberOfReadings: record.numberOfReadings || record.NumberOfReadings || ''
+            numberOfReadings: record.numberOfReadings || record.NumberOfReadings || '',
+            instruction: record.instruction || record.Instruction || '',
+            number: record.number || record.Number || ''
         };
     }
 
@@ -769,7 +1554,7 @@
         var innerHtml = '';
         $.each(recordList, function (i, val) {
             innerHtml += '<tr>' +
-                '<td class="itemNum"><a href="javascript:void(0);" class="selectTestBtn" data-id="' + val.id + '">' + val.name + '</a></td>' +
+                '<td class="itemNum"><a href="javascript:void(0);" class="selectTestBtn" data-id="' + val.id + '">' + val.number + ' - ' +val.name + '</a></td>' +
                 '<td>' + (val.description || '') + '</td>' +
                 '</tr>';
         });
@@ -845,8 +1630,16 @@
         }
 
         try {
-            await requestJson('/api/lab-services', 'POST', payload);
-        } catch (apiErr) {
+            await requestJson('/api/lab-services/next-number', 'GET');
+            try {
+                await requestJson('/api/lab-services', 'POST', payload);
+            } catch (apiErr) {
+                console.error(apiErr);
+                showError('Unable to create test.');
+                return;
+            }
+        }
+        catch {
             console.error(apiErr);
             showError('Unable to create test.');
             return;
@@ -1021,6 +1814,7 @@
     // ================================================================
     // Document ready: bind all event handlers
     // ================================================================
+    var currentRecord = {};
     $(document).ready(function () {
         // $(".select2").select2();
         console.log('Document ready - tests');
@@ -1053,6 +1847,7 @@
             if (!match) return;
 
             currentTestId = id;
+            currentRecord = match;
             $('#editTestTitle').text(match.name);
             $('.editTestInput[name="name"]').val(match.name);
             $('.editTestInput[name="description"]').val(match.description);
@@ -1428,4 +2223,929 @@
             modal.show();
         });
     }
+
+    var panelOpen = '';
+    var worksheetOpen = false; // true while richTextPanel is visible; blocks async callbacks from wiping unsaved panel state
+    $(document).ready(function () {
+        $('.richTextOnCancel').on('click', function () {
+            $('#richTextPanel').hide();
+            $('#editTestPanel').show();
+            worksheetOpen = false;
+        });
+        $(document).on('click', '#addTestWorksheetBtn', function (e) {
+            e.preventDefault();
+            $('#newTestPanel').hide();
+            $('#editTestPanel').hide();
+            $('#richTextPanel').show();
+            worksheetOpen = true;
+            if (!window.editorInstance) {
+                window.editorInstance = new RichTextEditor();
+            }
+            try {
+                const instruction = currentRecord.instruction;
+                if (instruction) {
+                    window.editorInstance.setContent(instruction);
+                } else {
+                    window.editorInstance.clearContent();
+                }
+
+            } catch (err) {
+                console.error(err);
+                window.editorInstance.clearContent();
+            }
+        });
+    });
+
+    function callbackAfterTestCreateAndUpdate(response) {
+        location.reload();
+    }
+
+    class RichTextEditor {
+        constructor() {
+            this.$editor = $('#editor');
+            this.$preview = $('#preview');
+            this.savedSelection = null;
+
+            this.init();
+        }
+
+        init() {
+            this.bindToolbarButtons();
+            this.bindToolbarSelects();
+            this.bindColorPickers();
+            this.bindModals();
+            this.bindEditorEvents();
+            this.bindExportButtons();
+            this.updatePreview();
+        }
+
+        // Save the current selection/cursor position
+        saveSelection() {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                this.savedSelection = selection.getRangeAt(0).cloneRange();
+            }
+        }
+
+        // Restore the saved selection
+        restoreSelection() {
+            if (this.savedSelection) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(this.savedSelection);
+            }
+        }
+
+        // Check if the current selection has a given inline style applied
+        isStyleActive(styleProp, styleValue) {
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return false;
+            const range = sel.getRangeAt(0);
+            // For collapsed cursor — check the node at cursor
+            if (range.collapsed) {
+                let node = range.startContainer;
+                if (node.nodeType === 3) node = node.parentElement;
+                const cs = window.getComputedStyle(node);
+                if (styleProp === 'fontWeight') return parseInt(cs.fontWeight) >= 600;
+                if (styleProp === 'fontStyle') return cs.fontStyle === styleValue;
+                if (styleProp === 'textDecoration') return cs.textDecorationLine.includes(styleValue);
+                return false;
+            }
+            // For a real selection — check ALL text nodes inside it
+            const fragment = range.cloneContents();
+            const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT);
+            let node = walker.nextNode();
+            if (!node) return false;
+            // ALL nodes must have the style for it to be considered "active"
+            while (node) {
+                // Find the actual element in the live DOM matching this text
+                const liveNodes = this.$editor[0].querySelectorAll('*');
+                let found = false;
+                for (const el of liveNodes) {
+                    if (el.textContent.includes(node.textContent.trim()) && node.textContent.trim()) {
+                        const cs = window.getComputedStyle(el);
+                        let active = false;
+                        if (styleProp === 'fontWeight') active = parseInt(cs.fontWeight) >= 600;
+                        if (styleProp === 'fontStyle') active = cs.fontStyle === styleValue;
+                        if (styleProp === 'textDecoration') active = cs.textDecorationLine.includes(styleValue);
+                        if (!active) return false;
+                        found = true;
+                        break;
+                    }
+                }
+                node = walker.nextNode();
+            }
+            return true;
+        }
+
+        // Apply/remove inline style on selected text by wrapping in a span
+        applyInlineStyle(styleProp, onValue, offValue) {
+            this.$editor.focus();
+            this.restoreSelection();
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return false;
+            const isActive = this.isStyleActive(styleProp, onValue);
+            // Use execCommand-based approach but normalize afterward
+            if (styleProp === 'fontWeight') {
+                document.execCommand('bold', false, null);
+                // Normalize: replace any <b> or <strong> tags with font-weight span
+                this.normalizeBoldTags();
+            } else if (styleProp === 'fontStyle') {
+                document.execCommand('italic', false, null);
+                this.normalizeItalicTags();
+            } else if (styleProp === 'textDecoration' && onValue === 'underline') {
+                document.execCommand('underline', false, null);
+                this.normalizeUnderlineTags();
+            } else if (styleProp === 'textDecoration' && onValue === 'line-through') {
+                document.execCommand('strikeThrough', false, null);
+                this.normalizeStrikeTags();
+            }
+            this.saveSelection();
+            this.updatePreview();
+            this.updateStats();
+            this.updateToolbarState();
+            return isActive; // return wasActive
+        }
+
+        // Normalize <b>/<strong> → <span style="font-weight:700">
+        normalizeBoldTags() {
+            const editor = this.$editor[0];
+            editor.querySelectorAll('b, strong').forEach(el => {
+                const span = document.createElement('span');
+                span.style.fontWeight = '700';
+                while (el.firstChild) span.appendChild(el.firstChild);
+                el.parentNode.replaceChild(span, el);
+            });
+        }
+
+        // Normalize <i>/<em> → <span style="font-style:italic">
+        normalizeItalicTags() {
+            const editor = this.$editor[0];
+            editor.querySelectorAll('i, em').forEach(el => {
+                const span = document.createElement('span');
+                span.style.fontStyle = 'italic';
+                while (el.firstChild) span.appendChild(el.firstChild);
+                el.parentNode.replaceChild(span, el);
+            });
+        }
+
+        // Normalize <u> → <span style="text-decoration:underline">
+        normalizeUnderlineTags() {
+            const editor = this.$editor[0];
+            editor.querySelectorAll('u').forEach(el => {
+                const span = document.createElement('span');
+                span.style.textDecoration = 'underline';
+                while (el.firstChild) span.appendChild(el.firstChild);
+                el.parentNode.replaceChild(span, el);
+            });
+        }
+
+        // Normalize <strike>/<s> → <span style="text-decoration:line-through">
+        normalizeStrikeTags() {
+            const editor = this.$editor[0];
+            editor.querySelectorAll('strike, s').forEach(el => {
+                const span = document.createElement('span');
+                span.style.textDecoration = 'line-through';
+                while (el.firstChild) span.appendChild(el.firstChild);
+                el.parentNode.replaceChild(span, el);
+            });
+        }
+
+        applyTextColor(color) {
+            this.$editor.focus();
+            this.restoreSelection();
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            const range = sel.getRangeAt(0);
+            if (!this.$editor[0].contains(range.commonAncestorContainer) || range.collapsed) return;
+
+            const extracted = range.extractContents();
+            const span = document.createElement('span');
+            span.style.color = color;
+            span.appendChild(extracted);
+            range.insertNode(span);
+
+            const newRange = document.createRange();
+            newRange.selectNodeContents(span);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            this.savedSelection = newRange.cloneRange();
+            this.updatePreview();
+            this.updateStats();
+            this.updateToolbarState();
+        }
+
+        // Execute document command
+        execCommand(command, value = null) {
+            this.$editor.focus();
+            this.restoreSelection();
+            // Query state AFTER focus+selection are restored — this is the reliable moment
+            const wasActive = document.queryCommandState(command);
+            document.execCommand(command, false, value);
+            this.saveSelection();
+            this.updatePreview();
+            this.updateStats();
+            this.updateToolbarState();
+            return wasActive; // return pre-execution state to caller
+        }
+
+        // Bind toolbar buttons
+        bindToolbarButtons() {
+            const self = this;
+            // Note: mousedown preventDefault is handled inline on each button (onmousedown="event.preventDefault()")
+            // to reliably prevent editor focus loss before the jQuery event system fires.
+            $('.toolbar-btn[data-command]').on('click', function (e) {
+                e.preventDefault();
+                const command = $(this).data('command');
+
+                // For formatting commands, use inline style approach for consistency
+                if (command === 'bold') {
+                    const wasActive = self.applyInlineStyle('fontWeight', '700', 'normal');
+                    $('[data-command="bold"]').toggleClass('active', !wasActive);
+                } else if (command === 'italic') {
+                    const wasActive = self.applyInlineStyle('fontStyle', 'italic', 'normal');
+                    $('[data-command="italic"]').toggleClass('active', !wasActive);
+                } else if (command === 'underline') {
+                    const wasActive = self.applyInlineStyle('textDecoration', 'underline', 'none');
+                    $('[data-command="underline"]').toggleClass('active', !wasActive);
+                } else if (command === 'strikeThrough') {
+                    const wasActive = self.applyInlineStyle('textDecoration', 'line-through', 'none');
+                    $('[data-command="strikeThrough"]').toggleClass('active', !wasActive);
+                } else {
+                    self.execCommand(command);
+                }
+            });
+        }
+
+        // Bind select dropdowns
+        bindToolbarSelects() {
+            const self = this;
+
+            // Format block (headings, paragraphs, etc.)
+            $('#formatBlock').on('change', function () {
+                self.execCommand('formatBlock', $(this).val());
+            });
+
+            // Font family
+            $('#fontName').on('change', function () {
+                self.execCommand('fontName', $(this).val());
+            });
+
+            // Font size
+            $('#fontSize').on('change', function () {
+                self.execCommand('fontSize', $(this).val());
+            });
+        }
+
+        // Bind color pickers
+        bindColorPickers() {
+            const self = this;
+
+            // Text color
+            $('#textColor').on('input', function () {
+                const color = $(this).val();
+                $('#textColorSwatch').css('background', color);
+                self.$editor.focus();
+                self.restoreSelection();
+                document.execCommand('foreColor', false, color);
+                self.saveSelection();
+                self.updatePreview();
+            });
+            $('#textColor').on('change', function () {
+                const color = $(this).val();
+                $('#textColorSwatch').css('background', color);
+                self.$editor.focus();
+                self.restoreSelection();
+                document.execCommand('foreColor', false, color);
+                self.saveSelection();
+                self.updatePreview();
+            });
+
+            // Highlight color
+            $('#bgColor').on('input', function () {
+                const color = $(this).val();
+                $('#bgColorSwatch').css('background', color);
+                self.$editor.focus();
+                self.restoreSelection();
+                document.execCommand('hiliteColor', false, color);
+                self.saveSelection();
+                self.updatePreview();
+            });
+            $('#bgColor').on('change', function () {
+                const color = $(this).val();
+                $('#bgColorSwatch').css('background', color);
+                self.$editor.focus();
+                self.restoreSelection();
+                document.execCommand('hiliteColor', false, color);
+                self.saveSelection();
+                self.updatePreview();
+            });
+        }
+
+        // Bind modal triggers and actions
+        bindModals() {
+            const self = this;
+
+            function openModal(id) {
+                $('#' + id).addClass('open');
+            }
+            function closeModal(id, cb) {
+                $('#' + id).removeClass('open');
+                if (cb) cb();
+            }
+            // Close on backdrop click
+            $(document).on('click', '.rte-modal-backdrop', function (e) {
+                if (e.target === this) closeModal(this.id);
+            });
+            // Close on Escape
+            $(document).on('keydown', function (e) {
+                if (e.key === 'Escape') $('.rte-modal-backdrop.open').each(function () {
+                    closeModal(this.id);
+                });
+            });
+
+            // ── Link Modal ──
+            $('#insertLinkBtn').on('click', function (e) {
+                e.preventDefault();
+                self.saveSelection();
+                const sel = window.getSelection();
+                $('#linkText').val(sel ? sel.toString() : '');
+                $('#linkUrl').val('');
+                openModal('linkModal');
+                setTimeout(() => $('#linkUrl').focus(), 50);
+            });
+
+            $('#cancelLinkBtn').on('click', function () { closeModal('linkModal'); });
+
+            $('#confirmLinkBtn').on('click', function (e) {
+                e.preventDefault();
+                const text = $('#linkText').val().trim();
+                const url  = $('#linkUrl').val().trim();
+                if (!url) return;
+                closeModal('linkModal', function () {
+                    self.$editor[0].focus();
+                    self.restoreSelection();
+                    document.execCommand('insertHTML', false,
+                        `<a href="${url}" target="_blank">${text || url}</a>`);
+                    self.updatePreview();
+                    self.showToast('Link inserted successfully');
+                });
+            });
+
+            // ── Image Modal ──
+            $('#insertImageBtn').on('click', function (e) {
+                e.preventDefault();
+                self.saveSelection();
+                $('#imageUrl').val('');
+                $('#imageAlt').val('');
+                openModal('imageModal');
+                setTimeout(() => $('#imageUrl').focus(), 50);
+            });
+
+            $('#cancelImageBtn').on('click', function () { closeModal('imageModal'); });
+
+            $('#confirmImageBtn').on('click', function (e) {
+                e.preventDefault();
+                const url = $('#imageUrl').val().trim();
+                const alt = $('#imageAlt').val().trim();
+                if (!url) return;
+                closeModal('imageModal', function () {
+                    self.$editor[0].focus();
+                    self.restoreSelection();
+                    const imgHtml = `<img src="${url}" alt="${alt}" style="max-width:100%;height:auto;border-radius:8px;margin:1rem 0;">`;
+                    document.execCommand('insertHTML', false, imgHtml);
+                    self.updatePreview();
+                    self.showToast('Image inserted successfully');
+                });
+            });
+
+            // ── Input Field Modal ──
+            $('#insertInputBtn').on('click', function (e) {
+                e.preventDefault();
+                self.saveSelection();
+                $('#inputLabel').val('');
+                $('#inputPlaceholder').val('');
+                openModal('inputModal');
+                setTimeout(() => $('#inputLabel').focus(), 50);
+            });
+
+            $('#cancelInputBtn').on('click', function () { closeModal('inputModal'); });
+
+            $('#confirmInputBtn').on('click', function (e) {
+                e.preventDefault();
+                const label       = $('#inputLabel').val().trim() || 'Field';
+                const type        = $('#inputType').val();
+                const placeholder = $('#inputPlaceholder').val().trim();
+                closeModal('inputModal', function () {
+                    self.$editor[0].focus();
+                    self.restoreSelection();
+                    const inputId = 'input-' + Date.now();
+                    const inputHtml = `<span class="editor-input-field" contenteditable="false" data-input-id="${inputId}" style="margin:0.25rem 0.125rem;padding:0.375rem 0.625rem;gap:0.5rem;background:rgb(254,243,199);border:1.33px solid rgb(180,83,9);border-radius:4px;font-size:0.875rem;color:rgb(26,26,26);font-family:&quot;open sans&quot;,&quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif;display:inline-flex;align-items:center;"><span class="input-label" style="color:rgb(146,64,14);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;">${label}:</span><input type="${type}" placeholder="${placeholder}" name="${label.toLowerCase().replace(/\s+/g, '_')}" style="font-size:0.8125rem;font-family:&quot;JetBrains Mono&quot;,monospace;color:rgb(146,64,14);width:auto;min-width:80px;border:none;background:rgb(254,243,199);outline:none;padding:0;"><button class="remove-input" onclick="window.editorInstance.removeInputField('${inputId}')" title="Remove field" style="color:rgb(180,83,9);display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:none;background:transparent;border-radius:50%;cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button></span>&nbsp;`;
+                    document.execCommand('insertHTML', false, inputHtml);
+                    self.updatePreview();
+                    self.showToast('Input field added');
+                });
+            });
+
+            // Close modals on overlay click
+            $('.modal-overlay').on('click', function (e) {
+                if (e.target === this) {
+                    $(this).removeClass('active');
+                    setTimeout(() => $(this).hide(), 250);
+                }
+            });
+
+            // Close modals on Escape key
+            $(document).on('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    $('.modal-overlay.active').each(function () {
+                        $(this).removeClass('active');
+                        setTimeout(() => $(this).hide(), 250);
+                    });
+                }
+            });
+        }
+
+        // Remove input field from editor
+        removeInputField(inputId) {
+            this.$editor.find(`[data-input-id="${inputId}"]`).remove();
+            this.updatePreview();
+            this.showToast('Input field removed');
+        }
+
+        // Bind editor events
+        bindEditorEvents() {
+            const self = this;
+
+            // Update preview and stats on input
+            this.$editor.on('input', function () {
+                self.updatePreview();
+                self.updateStats();
+            });
+
+            this.$editor.on('mouseup keyup', function () {
+                self.saveSelection();
+                self.updateToolbarState();
+            });
+
+            // Update formatting button states on selection change
+            $(document).on('selectionchange', function () {
+                var selection = window.getSelection();
+                if (selection && selection.rangeCount > 0 && self.$editor[0].contains(selection.anchorNode)) {
+                    self.saveSelection();
+                    self.updateToolbarState();
+                }
+            });
+
+            // Keyboard shortcuts
+            this.$editor.on('keydown', function (e) {
+                // Tab key for indentation
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        self.execCommand('outdent');
+                    } else {
+                        self.execCommand('indent');
+                    }
+                }
+            });
+
+            // ── Link hover tooltip ──
+            const $tooltip = $('#rte-link-tooltip');
+            let tooltipTimer = null;
+
+            this.$editor.on('mouseover', 'a', function (e) {
+                const $a = $(this);
+                const href = $a.attr('href') || '';
+                if (!href) return;
+
+                clearTimeout(tooltipTimer);
+                $tooltip.find('.rte-link-url').text(href);
+                $tooltip.find('.rte-link-open').attr('href', href);
+
+                // Position near the cursor
+                $tooltip.css({ display: 'flex', top: e.clientY + 16, left: e.clientX });
+
+                // Keep tooltip in viewport horizontally
+                const tipW = $tooltip.outerWidth();
+                const winW = $(window).width();
+                if (e.clientX + tipW > winW - 10) {
+                    $tooltip.css('left', winW - tipW - 10);
+                }
+            });
+
+            this.$editor.on('mouseout', 'a', function () {
+                tooltipTimer = setTimeout(() => $tooltip.css('display', 'none'), 200);
+            });
+
+            $tooltip.on('mouseenter', function () {
+                clearTimeout(tooltipTimer); // keep visible while hovering tooltip itself
+            });
+            $tooltip.on('mouseleave', function () {
+                tooltipTimer = setTimeout(() => $tooltip.css('display', 'none'), 200);
+            });
+        }
+
+        // Update toolbar button states
+        updateToolbarState() {
+            if (document.activeElement !== this.$editor[0]) return;
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            // Check via computed style so <b> tags AND font-weight:700 spans both register
+            let node = sel.getRangeAt(0).startContainer;
+            if (node.nodeType === 3) node = node.parentElement;
+            const cs = window.getComputedStyle(node);
+            $('[data-command="bold"]').toggleClass('active', parseInt(cs.fontWeight) >= 600);
+            $('[data-command="italic"]').toggleClass('active', cs.fontStyle === 'italic');
+            $('[data-command="underline"]').toggleClass('active', cs.textDecorationLine.includes('underline'));
+            $('[data-command="strikeThrough"]').toggleClass('active', cs.textDecorationLine.includes('line-through'));
+        }
+
+        // Update preview
+        updatePreview() {
+            const content = this.$editor.html();
+            this.$preview.html(content);
+
+            // Make preview inputs functional
+            this.$preview.find('.editor-input-field input').removeAttr('contenteditable');
+        }
+
+        // Update statistics
+        updateStats() {
+            const text = this.$editor.text() || '';
+
+            // Word count
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            $('#wordCount').text(words.length);
+
+            // Character count
+            $('#charCount').text(text.length);
+
+            // Paragraph count
+            const paras = text.split(/\n\n+/).filter(p => p.trim().length > 0);
+            $('#paraCount').text(paras.length || 0);
+
+            // Reading time (assuming 200 words per minute)
+            const readingTime = Math.ceil(words.length / 200);
+            $('#readTime').text(`${readingTime} min`);
+        }
+
+        // Bind export buttons
+        bindExportButtons() {
+            const self = this;
+
+            // Copy HTML
+            $('#copyHtmlBtn').on('click', function () {
+                const html = self.$editor.html();
+                navigator.clipboard.writeText(html).then(() => {
+                    self.showToast('HTML copied to clipboard', 'success');
+                }).catch(() => {
+                    self.showToast('Failed to copy', 'error');
+                });
+            });
+
+            // Export as HTML file
+            $('#exportBtn').on('click', function () {
+                const html = self.generateExportHtml();
+                const blob = new Blob([html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'document.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                self.showToast('Document exported successfully', 'success');
+            });
+        }
+
+        // Generate export HTML
+        generateExportHtml() {
+            return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Exported Document</title>
+                <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Fraunces:wght@400;500;600&display=swap" rel="stylesheet">
+                <style>
+                    body {
+                        font-family: 'IBM Plex Sans', sans-serif;
+                        max-width: 800px;
+                        margin: 2rem auto;
+                        padding: 2rem;
+                        line-height: 1.75;
+                        color: #1a1a1a;
+                    }
+                    h1, h2, h3 { font-family: 'Fraunces', serif; }
+                    h1 { font-size: 2rem; margin: 1.5rem 0 1rem; }
+                    h2 { font-size: 1.5rem; margin: 1.25rem 0 0.75rem; }
+                    h3 { font-size: 1.25rem; margin: 1rem 0 0.5rem; }
+                    blockquote { border-left: 3px solid #b45309; padding-left: 1.5rem; color: #525252; font-style: italic; }
+                    pre { background: #0a0a0a; color: #e5e5e5; padding: 1rem; border-radius: 8px; }
+                    code { background: #e5e5e5; padding: 0.125rem 0.375rem; border-radius: 4px; }
+                    a { color: #b45309; }
+                    .editor-input-field {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        background: #fef3c7;
+                        border: 1px solid #b45309;
+                        border-radius: 4px;
+                        padding: 0.375rem 0.625rem;
+                        margin: 0.25rem 0.125rem;
+                    }
+                    .editor-input-field .input-label {
+                        color: #92400e;
+                        font-weight: 500;
+                        font-size: 0.75rem;
+                        text-transform: uppercase;
+                    }
+                    .editor-input-field input {
+                        border: none;
+                        background: transparent;
+                        font-family: monospace;
+                        font-size: 0.8125rem;
+                        color: #92400e;
+                    }
+                    .editor-input-field .remove-input { display: none; }
+                </style>
+            </head>
+            <body>
+            ${this.$editor.html()}
+            </body>
+            </html>`;
+        }
+
+        // Show toast notification
+        showToast(message, type = 'default') {
+            let $container = $('#toastContainer');
+            if ($container.length === 0) {
+                $container = $('<div>', {
+                    id: 'toastContainer',
+                    class: 'toast-container'
+                }).css({
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    zIndex: 100000,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem'
+                }).appendTo('body');
+            }
+
+            const svgIcon = type === 'success'
+                ? '<path d="M20 6L9 17l-5-5"/>'
+                : type === 'error'
+                    ? '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'
+                    : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>';
+
+            const $toast = $('<div>', {
+                class: `toast ${type}`,
+                html: `
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    ${svgIcon}
+                </svg>
+                ${message}
+            `
+            }).appendTo($container);
+
+            setTimeout(() => {
+                $toast.css({
+                    opacity: '0',
+                    transform: 'translateX(100%)'
+                });
+                setTimeout(() => $toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ===== DATABASE INTEGRATION FUNCTIONS =====
+
+        /**
+         * Set content in the editor (populate from database)
+         */
+        setContent(htmlContent, options = {}) {
+            const { triggerChange = true, sanitize = true } = options;
+
+            try {
+                let content = htmlContent || '';
+
+                if (sanitize) {
+                    content = this.sanitizeHtml(content);
+                }
+
+                this.$editor.html(content);
+
+                if (triggerChange) {
+                    this.updatePreview();
+                    this.updateStats();
+                }
+
+                this.$editor.trigger('contentLoaded', { content, timestamp: Date.now() });
+
+                return true;
+            } catch (error) {
+                this.showToast('Failed to load content', 'error');
+                return false;
+            }
+        }
+
+        /**
+         * Sanitize HTML to prevent XSS attacks
+         */
+        sanitizeHtml(html) {
+            const $temp = $('<div>').html(html);
+
+            const dangerousTags = ['script', 'iframe', 'object', 'embed', 'form'];
+            dangerousTags.forEach(tag => {
+                $temp.find(tag).remove();
+            });
+
+            const dangerousAttrs = ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'];
+            $temp.find('*').each(function () {
+                const $el = $(this);
+                dangerousAttrs.forEach(attr => $el.removeAttr(attr));
+
+                const href = $el.attr('href');
+                const src = $el.attr('src');
+
+                if (href && href.toLowerCase().startsWith('javascript:')) {
+                    $el.removeAttr('href');
+                }
+                if (src && src.toLowerCase().startsWith('javascript:')) {
+                    $el.removeAttr('src');
+                }
+            });
+
+            return $temp.html();
+        }
+
+        /**
+         * Get raw HTML content from the editor (for saving to database)
+         */
+        getContent(options = {}) {
+            const { includeInputValues = true, minify = false } = options;
+
+            const $clone = this.$editor.clone();
+
+            if (includeInputValues) {
+                this.$editor.find('.editor-input-field input').each(function (index) {
+                    const value = $(this).val();
+                    $clone.find('.editor-input-field input').eq(index).attr('value', value);
+                });
+            }
+
+            let html = $clone.html();
+
+            if (minify) {
+                html = html
+                    .replace(/\s+/g, ' ')
+                    .replace(/>\s+</g, '><')
+                    .trim();
+            }
+
+            return html;
+        }
+
+        /**
+         * Get content as JSON object (useful for database storage)
+         */
+        getContentAsJSON() {
+            const text = this.$editor.text() || '';
+            const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+
+            const inputFields = [];
+            this.$editor.find('.editor-input-field').each(function () {
+                const $field = $(this);
+                const $input = $field.find('input');
+                const $label = $field.find('.input-label');
+
+                if ($input.length) {
+                    inputFields.push({
+                        id: $field.data('input-id'),
+                        label: $label.length ? $label.text().replace(':', '') : '',
+                        type: $input.attr('type'),
+                        name: $input.attr('name'),
+                        placeholder: $input.attr('placeholder'),
+                        value: $input.val()
+                    });
+                }
+            });
+
+            return {
+                html: this.getContent({ includeInputValues: true }),
+                plainText: text,
+                metadata: {
+                    wordCount: words.length,
+                    charCount: text.length,
+                    inputFieldCount: inputFields.length,
+                    createdAt: new Date().toISOString(),
+                    version: '1.0'
+                },
+                inputFields
+            };
+        }
+
+        /**
+         * Clear all content from the editor
+         */
+        clearContent() {
+            this.$editor.html('');
+            this.updatePreview();
+            this.updateStats();
+            this.showToast('Content cleared');
+        }
+
+        /**
+         * Check if editor has content
+         */
+        hasContent() {
+            return this.$editor.text().trim().length > 0;
+        }
+
+        /**
+         * Listen for content changes
+         */
+        onChange(callback) {
+            this.$editor.on('input', () => {
+                callback({
+                    html: this.getContent(),
+                    text: this.$editor.text(),
+                    timestamp: Date.now()
+                });
+            });
+        }
+    }
+
+    function bindDemoButtons() {
+        $('#loadSampleBtn').on('click', function () {
+            const sampleContent = `
+            <h1>Welcome to Prose Studio</h1>
+            <p>This is a <strong>sample document</strong> loaded from a simulated database. It demonstrates the editor's capabilities including <em>formatted text</em>, various heading levels, and embedded input fields.</p>
+
+            <h2>Features Overview</h2>
+            <p>The rich text editor supports multiple formatting options:</p>
+            <ul>
+                <li><strong>Bold</strong>, <em>italic</em>, and <u>underlined</u> text</li>
+                <li>Multiple heading levels</li>
+                <li>Ordered and unordered lists</li>
+                <li>Blockquotes and code blocks</li>
+            </ul>
+
+            <h2>Interactive Form Fields</h2>
+            <p>You can embed input fields directly in your content. Here's an example:</p>
+            <p>Please enter your name: <span class="editor-input-field" contenteditable="false" data-input-id="demo-name"><span class="input-label">Name:</span><input type="text" placeholder="John Doe" name="name"><button class="remove-input" onclick="window.editorInstance.removeInputField('demo-name')" title="Remove field">×</button></span></p>
+
+            <blockquote>This content was loaded using the <code>setContent()</code> method, simulating a database fetch operation.</blockquote>
+        `;
+
+            if (window.editorInstance) {
+                window.editorInstance.setContent(sampleContent);
+                window.editorInstance.showToast('Sample content loaded', 'success');
+            }
+        });
+
+        $(document).on('click', '#richTextSaveBtn', async function () {
+            const content = window.editorInstance.getContent();
+            if (!currentTestId) {
+                showError('Test ID missing');
+                return;
+            }
+            try {
+                await requestJson('/api/lab-services/' + currentTestId, 'PUT', { 'instruction': content });
+                $('#richTextPanel').hide();
+                $('#editTestPanel').show();
+                worksheetOpen = false;
+
+            } catch (err) {
+                console.error(err);
+                showError('Failed to save instruction');
+            }
+        });
+
+        // Code tab switching
+        $('.code-tab').on('click', function () {
+            $('.code-tab').removeClass('active');
+            $(this).addClass('active');
+
+            const tabName = $(this).data('tab');
+            $('.code-block').addClass('hidden');
+
+            const blockMap = {
+                'setContent': 'codeSetContent',
+                'getContent': 'codeGetContent',
+                'getRendered': 'codeGetRendered',
+                'json': 'codeJson'
+            };
+
+            $(`#${blockMap[tabName]}`).removeClass('hidden');
+        });
+    }
+
+    // Initialize on document ready
+    $(document).ready(function () {
+        bindDemoButtons();
+    });
 </script>

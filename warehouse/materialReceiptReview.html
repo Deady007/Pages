@@ -1213,7 +1213,7 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-secondary" id="completeVerificationBtn"> Sign In to Approve
                         Signing</button>
 
@@ -1963,7 +1963,7 @@
         $('#materialInwardInput3').val('');
         $('#materialInwardInput4').val('');
         $('#materialInwardInput5').val('');
-        // location.reload();
+        location.reload();
     }
 
     // New Receipt button removed - review page is read-only
@@ -3875,10 +3875,12 @@
     }
 
     function updateInspectionResultForItems(items, callback) {
+        console.log("Item abcd", items)
         var itemsToUpdate = items.map(function (item) {
             return {
                 id: item.id,
-                inspectionResult: 'Approved'
+                inspectionResult: 'Approved',
+                quantityApproved: (parseFloat(item.quantityApproved) || 0) + (parseFloat(item.quantityReceived) || 0)
             };
         });
 
@@ -3901,21 +3903,23 @@
         if (dataflag == true) {
             // Check if all items are general materials
             var allGeneralMaterials = currentProductsDetails.every(function (item) {
-                return item.product && item.product.category === 'General Material';
+                return item.product && (item.product.type != 'Raw Material' && item.product.type != 'Packaging Material');
             });
 
             var newStatus = allGeneralMaterials ? 'Quality Inspection Complete' : 'GIM Approved';
 
             var receiptUpdateData = {
                 processStatus: newStatus,
-                modifiedBy:{id:FOX.employeeId}
+                modifiedBy: { id: FOX.employeeId },
+                reviewerId: { id: FOX.employeeId }
             };
+            console.log('Updating receipt status to  with data:', receiptUpdateData);
             JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
                 console.log('Receipt status updated to ' + newStatus + ':', receiptRes);
 
                 // Mark general material items as approved
                 var itemsToUpdate = currentProductsDetails.filter(function (item) {
-                    return item.product && item.product.category === 'General Material';
+                    return item.product && (item.product.type != 'Raw Material' && item.product.type != 'Packaging Material');
                 });
 
                 if (itemsToUpdate.length > 0) {
@@ -4000,15 +4004,14 @@
             });
 
         }
-        else if(dataflag == false){
-                    var receiptUpdateData = {
-            processStatus: 'GIM Rejected'
-        };
-        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
-            console.log('Receipt rejected:', receiptRes);
-            alert('GIM has been rejected.');
-            location.reload();
-        });
+        else if (dataflag == false) {
+            var receiptUpdateData = {
+                processStatus: 'GIM Rejected'
+            };
+            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
+                console.log('Receipt rejected:', receiptRes);
+                location.reload();
+            });
 
         }
     }
@@ -4104,22 +4107,10 @@
     // Accept button click
     // Accept button click
     $('#acceptBtn').on('click', function () {
-
-        if (!confirm('Are you sure you want to accept this GIM?')) {
-            return;
-        }
-        else {
-            console.log('abcd')
-            dataflag = true
-
-            var myModal = new bootstrap.Modal(document.getElementById('esignModal'));
-            myModal.show();
-            //  $('#esignModal').modal('show')
-            $('#eSignUserName').val(FOX.employeeUsername)
-        }
-
-
-
+        dataflag = true;
+        var myModal = new bootstrap.Modal(document.getElementById('esignModal'));
+        myModal.show();
+        $('#eSignUserName').val(FOX.employeeUsername);
     });
 
     function createProductTransactions(approvedItems, poItemPriceMap) {
@@ -4132,10 +4123,17 @@
 
                 var transactionAmount = 0;
                 if (item.purchaseOrderItem && item.purchaseOrderItem.id) {
-                    transactionAmount = item.purchaseOrderItem.lineTotal || 0;
+                    var poPrice = parseFloat(poItemPriceMap[item.purchaseOrderItem.id]) || 0;
+                    if (poPrice > 0) {
+                        transactionAmount = poPrice * qtyApproved;
+                    } else {
+                        transactionAmount = parseFloat(item.purchaseOrderItem.lineTotal) || 0;
+                    }
+                } else {
+                    transactionAmount = (parseFloat(item.product.unitPrice) || 0) * qtyApproved;
                 }
 
-                productTransactionsToCreate.push({
+                var transactionObj = {
                     quantityReceipt: qtyApproved,
                     transactionDate: transactionDate,
                     product: { id: item.product.id },
@@ -4143,7 +4141,13 @@
                     transactionAmount: transactionAmount,
                     arn: item.number || '',          // ← directly from ProductReceiptItem.number
                     docNumber: currentReceiptData.number || ''
-                });
+                };
+
+                if (item.product.category === 'General Material') {
+                    transactionObj.status = 'Approved';
+                }
+
+                productTransactionsToCreate.push(transactionObj);
             }
         });
 
@@ -4234,8 +4238,8 @@
 
                 lots.forEach(function (lot) {
                     var updateData = { arn: item.number };
-                    if (item.product && item.product.category === 'General Material') {
-                        updateData.status = 'Approved';
+                    if (item.product && (item.product.type != 'Raw Material' && item.product.type != 'Packaging Material')) {
+                        updateData.processStatus = 'Approved';
                     }
                     updates.push({ lotId: lot.id, updateData: updateData });
                 });
@@ -4260,47 +4264,12 @@
     }
 
     /**
-     * Create ProductTransactions for each approved item, then update product inventory.
-     */
-    function createProductTransactions(approvedItems, arnMap, poItemPriceMap) {
-        var productTransactionsToCreate = [];
-        var transactionDate = new Date().toISOString();
-
-        approvedItems.forEach(function (item) {
-            if (item.product && item.product.id) {
-                var qtyApproved = parseFloat(item.quantityReceived) || 0;
-                var transaction = {
-                    quantityReceipt: qtyApproved,
-                    transactionDate: transactionDate,
-                    product: { id: item.product.id },
-                    batchNumber: item.batchNumber || '',
-                    transactionAmount: item.product.unitPrice * item.quantityReceived,
-                    arn: item.number,
-                    docNumber: currentReceiptData.number || ''
-                };
-                if (item.product.category === 'General Material') {
-                    transaction.status = 'Approved';
-                }
-                productTransactionsToCreate.push(transaction);
-            }
-        });
-
-        console.log('[createProductTransactions] Transactions to create:', productTransactionsToCreate);
-
-        var _txIdx2 = 0;
-        function _saveTx2() {
-            if (_txIdx2 >= productTransactionsToCreate.length) { updateProductInventory(approvedItems); return; }
-            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-transactions'), JSON.stringify(productTransactionsToCreate[_txIdx2]), function () { _txIdx2++; _saveTx2(); });
-        }
-        _saveTx2();
-    }
-
-    /**
      * Update product inventory quantities after transactions are created.
      */
     function updateProductInventory(approvedItems) {
         var productQuantities = {};
         var productDataMap = {};
+        var productUnderInspectionReductions = {};
         var category = '';
         var oldReservedQty = {};
 
@@ -4308,10 +4277,17 @@
             if (item.product && item.product.id) {
                 var productId = item.product.id;
                 var qtyApproved = parseFloat(item.quantityApproved) || 0;
+                var qtyReceived = parseFloat(item.quantityReceived) || 0;
+                // Use approved quantity when present; otherwise fallback to received quantity.
+                var qtyForInventory = qtyApproved > 0 ? qtyApproved : qtyReceived;
 
                 if (!productQuantities[productId]) {
                     productQuantities[productId] = 0;
                     productDataMap[productId] = item.product;
+                }
+
+                if (!productUnderInspectionReductions[productId]) {
+                    productUnderInspectionReductions[productId] = 0;
                 }
 
                 if (!oldReservedQty[productId]) {
@@ -4319,7 +4295,8 @@
                 }
 
                 category = item.product.Category;
-                productQuantities[productId] += qtyApproved;
+                productQuantities[productId] += qtyForInventory;
+                productUnderInspectionReductions[productId] += qtyForInventory;
             }
         });
 
@@ -4338,7 +4315,9 @@
             var product = productDataMap[productId];
             var currentQty = parseFloat(product.quantityOnHand) || 0;
             var currentQtyOnOrder = parseFloat(product.quantityOnOrder) || 0;
+            var currentUnderInspection = parseFloat(product.quantityUnderInspection) || 0;
             var qtyToAdd = productQuantities[productId];
+            var underInspectionToReduce = productUnderInspectionReductions[productId] || 0;
             var reservedQty = 0;
 
             if (category === 'Blending Material') {
@@ -4347,6 +4326,7 @@
 
             var newQty = currentQty + qtyToAdd;
             var newQtyOnOrder = currentQtyOnOrder;
+            var newUnderInspectionQty = Math.max(0, currentUnderInspection - underInspectionToReduce);
             if (currentReceiptData.purchaseOrder) {
                 newQtyOnOrder = Math.max(0, currentQtyOnOrder - qtyToAdd);
             }
@@ -4355,6 +4335,7 @@
                 id: productId,
                 quantityOnHand: newQty,
                 quantityOnOrder: newQtyOnOrder,
+                quantityUnderInspection: newUnderInspectionQty,
                 quantityReserved: reservedQty
             });
         });
@@ -4375,16 +4356,10 @@
 
     // Reject button click
     $('#rejectBtn').on('click', function () {
-        if (!confirm('Are you sure you want to reject this GIM?')) {
-            return;
-        }
-        else{
-                   dataflag = false
-            var myModal = new bootstrap.Modal(document.getElementById('esignModal'));
-            myModal.show();
-            //  $('#esignModal').modal('show')
-            $('#eSignUserName').val(FOX.employeeUsername)
-        }
+        dataflag = false;
+        var myModal = new bootstrap.Modal(document.getElementById('esignModal'));
+        myModal.show();
+        $('#eSignUserName').val(FOX.employeeUsername);
     });
 
     function loadReceiptDocuments(receiptId) {

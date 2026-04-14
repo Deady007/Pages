@@ -1,0 +1,300 @@
+<style>
+.tabs {
+  display: flex;
+  gap: 10px;
+}
+.tab-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.tab-content {
+  display: none !important;
+}
+
+.tab-content.active {
+  display: block !important;
+}
+
+.report-output.hidden {
+  display: none;
+}
+
+.tab-btn.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.report-toolbar .search-container {
+  flex: 1;
+  max-width: 360px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.pagination .page-btn {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pagination .page-btn.active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+</style>
+<!-- Reports Page -->
+<div class="page-content" id="reports-page">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon blue">
+              <i class="ri-bar-chart-fill"></i>
+            </div>
+            <div class="stat-title">Revenue</div>
+          </div>
+          <div class="stat-value">
+            <span id="revenueReportValue"></span>
+            <span class="stat-unit">Monthly</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon green">
+              <i class="ri-line-chart-line"></i>
+            </div>
+            <div class="stat-title">Consultations</div>
+          </div>
+          <div class="stat-value">
+            <span id="consultationsReportValue"></span>
+            <span class="stat-unit">Consultations in total</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon yellow">
+              <i class="ri-star-smile-fill"></i>
+            </div>
+            <div class="stat-title">Reviews</div>
+          </div>
+          <div class="stat-value">
+            <span id="patientReviewValue"></span>
+            <span class="stat-unit">Stars out of 5</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon red">
+              <i class="ri-pie-chart-2-line"></i>
+            </div>
+            <div class="stat-title">Occupancy</div>
+          </div>
+          <div class="stat-value">
+            <span id="occupancyReportValue">0%</span>
+            <span class="stat-unit">Occupied</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- <div class="page-form">
+        <h3 class="card-title">Generate Reports</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Report Type</label>
+            <select id="reportType">
+               <option>Patient Report</option>
+              <option>Profit Report</option>
+              <option>Invoice Report</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Duration</label>
+            <select id="reportDuration" onchange="updateDateInputs()"> 
+              <option value=" ">None</option>
+              <option value="month">Month</option>
+               <option value="custom">Custom Range</option>
+               <option value="date">Date</option>
+            </select>
+          </div>
+        </div>
+        <div id="date" class="form-group" style="width: 200px;">
+          <label>Select Date/Month</label>
+          <input type="date" id="reportDate">
+        </div>
+        <div class="form-group" id="fromDateGroup" style="display: none;">
+            <label>From Date</label>
+            <input type="date" id="reportFromDate">
+          </div>
+          <div class="form-group" id="toDateGroup" style="display: none;">
+            <label>To Date</label>
+            <input type="date" id="reportToDate">
+          </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+          <button class="btn btn-outline" onclick="exportReport()">Export PDF</button>
+        </div>
+        <div id="generatedReport" class="report-output hidden"></div>
+      </div>   -->
+<!-- Tabs Navigation -->
+<div class="report-tabs">
+  <button class="tab-btn active" data-report-tab="patient" onclick="showReportTab('patient')">Patient Report</button>
+  <button class="tab-btn" data-report-tab="profit" onclick="showReportTab('profit')">Profit Report</button>
+  <button class="tab-btn" data-report-tab="invoice" onclick="showReportTab('invoice')">Invoice Report</button>
+  <button class="tab-btn" data-report-tab="allPatients" onclick="showReportTab('allPatients')">All Patients</button>
+</div>
+
+<!-- Patient Report Tab Content -->
+<div id="patientReportTab" class="tab-content active">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Search Patient</label>
+      <input 
+        type="text" 
+        id="patientSearchInputPatient" 
+        placeholder="Search by name or mobile number..." 
+        oninput="searchPatientForReport('patient')"
+      />
+      <div id="patientSearchResultsPatient" class="search-results" style="display:none;"></div>
+    </div>
+    <div class="form-group">
+      <label>Duration</label>
+      <select id="reportDurationPatient" onchange="updateDateInputs('patient')">
+        <option value=" ">None</option>
+        <option value="month">Month</option>
+        <option value="custom">Custom Range</option>
+        <option value="date">Date</option>
+      </select>
+    </div>
+    <div class="form-group" id="datePatient" style="display:none;">
+      <label>Select Date/Month</label>
+      <input type="date" id="reportDatePatient">
+    </div>
+    <div class="form-group" id="fromDateGroupPatient" style="display:none;">
+      <label>From Date</label>
+      <input type="date" id="reportFromDatePatient">
+    </div>
+    <div class="form-group" id="toDateGroupPatient" style="display:none;">
+      <label>To Date</label>
+      <input type="date" id="reportToDatePatient">
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" onclick="generateReport('patient')">Generate Report</button>
+  </div>
+  <div id="generatedPatientReport" class="report-output hidden"></div>
+</div>
+
+<!-- Profit Report Tab Content -->
+<div id="profitReportTab" class="tab-content" style="display:none;">
+  <div class="form-row">
+    <!-- <div class="form-group">
+      <label>Search Patient</label>
+      <input 
+        type="text" 
+        id="patientSearchInputProfit" 
+        placeholder="Search by name or mobile number..." 
+        oninput="searchPatientForReport('profit')"
+      />
+      <div id="patientSearchResultsProfit" class="search-results" style="display:none;"></div>
+    </div> -->
+    <div class="form-group">
+      <label>Duration</label>
+      <select id="reportDurationProfit" onchange="updateDateInputs('profit')">
+        <option value=" ">None</option>
+        <option value="month">Month</option>
+        <option value="custom">Custom Range</option>
+        <option value="date">Date</option>
+      </select>
+    </div>
+    <div class="form-group" id="dateProfit" style="display:none;">
+      <label>Select Date/Month</label>
+      <input type="date" id="reportDateProfit">
+    </div>
+    <div class="form-group" id="fromDateGroupProfit" style="display:none;">
+      <label>From Date</label>
+      <input type="date" id="reportFromDateProfit">
+    </div>
+    <div class="form-group" id="toDateGroupProfit" style="display:none;">
+      <label>To Date</label>
+      <input type="date" id="reportToDateProfit">
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" onclick="generateReport('profit')">Generate Report</button>
+  </div>
+  <div id="generatedProfitReport" class="report-output hidden"></div>
+</div>
+
+<!-- Invoice Report Tab Content -->
+<div id="invoiceReportTab" class="tab-content" style="display:none;">
+  <div class="form-row">
+    <div class="form-group">
+      <label>Search Patient</label>
+      <input 
+        type="text" 
+        id="patientSearchInputInvoice" 
+        placeholder="Search by name or mobile number..." 
+        oninput="searchPatientForReport('invoice')"
+      />
+      <div id="patientSearchResultsInvoice" class="search-results" style="display:none;"></div>
+    </div>
+    <div class="form-group">
+      <label>Duration</label>
+      <select id="reportDurationInvoice" onchange="updateDateInputs('invoice')">
+        <option value=" ">None</option>
+        <option value="month">Month</option>
+        <option value="custom">Custom Range</option>
+        <option value="date">Date</option>
+      </select>
+    </div>
+    <div class="form-group" id="dateInvoice" style="display:none;">
+      <label>Select Date/Month</label>
+      <input type="date" id="reportDateInvoice">
+    </div>
+    <div class="form-group" id="fromDateGroupInvoice" style="display:none;">
+      <label>From Date</label>
+      <input type="date" id="reportFromDateInvoice">
+    </div>
+    <div class="form-group" id="toDateGroupInvoice" style="display:none;">
+      <label>To Date</label>
+      <input type="date" id="reportToDateInvoice">
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" onclick="generateReport('invoice')">Generate Report</button>
+  </div>
+  <div id="generatedInvoiceReport" class="report-output hidden"></div>
+</div>
+
+<!-- All Patients Report Tab Content -->
+<div id="allPatientsReportTab" class="tab-content" style="display:none;">
+  <div id="allPatientsReportContainer" class="report-output"></div>
+</div>
+</div>

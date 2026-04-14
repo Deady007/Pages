@@ -2184,7 +2184,7 @@ if (document.readyState === 'loading') {
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label for="tpl-applicable-depts">Applicable Departments</label>
+                                <label for="tpl-applicable-depts">Applicable Departments <span class="required-asterisk">*</span></label>
                                 <select id="tpl-applicable-depts" class="select2 form-control editRecordInput departmentDropDown" multiple="multiple" data-placeholder="Select departments">
                                     <option value="">--none--</option>
                                 </select>
@@ -2192,7 +2192,7 @@ if (document.readyState === 'loading') {
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label for="tpl-preparing-depts">Departments Allowed to Prepare Entries</label>
+                                <label for="tpl-preparing-depts">Departments Allowed to Prepare Entries <span class="required-asterisk">*</span></label>
                                 <select id="tpl-preparing-depts" class="select2 form-control editRecordInput departmentDropDown" multiple="multiple" data-placeholder="Select departments">
                                     <option value="">--none--</option>
                                 </select>
@@ -2203,7 +2203,7 @@ if (document.readyState === 'loading') {
                     <div class="row">
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label for="tpl-reviewing-depts">Reviewing Departments</label>
+                                <label for="tpl-reviewing-depts">Reviewing Departments <span class="required-asterisk">*</span></label>
                                 <select id="tpl-reviewing-depts" class="select2 form-control editRecordInput departmentDropDown" multiple="multiple" data-placeholder="Select departments">
                                     <option value="">--none--</option>
                                 </select>
@@ -2223,7 +2223,7 @@ if (document.readyState === 'loading') {
                     <div class="row" style="margin-top:12px;">
                         <div class="col-sm-12">
                             <div class="form-group">
-                                <label for="tpl-desc">Description / SOP Reference</label>
+                                <label for="tpl-desc">Description / SOP Reference <span class="required-asterisk">*</span></label>
                                 <textarea id="tpl-desc" class="form-control editRecordInput" rows="3"
                                     placeholder="Describe the purpose of this logbook and reference applicable SOPs..."></textarea>
                             </div>
@@ -2246,21 +2246,21 @@ if (document.readyState === 'loading') {
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label for="tpl-header-left" style="font-size:12px; color:#888;">Left</label>
+                                        <label for="tpl-header-left" style="font-size:12px; color:#888;">Left <span class="required-asterisk">*</span></label>
                                         <input type="text" id="tpl-header-left" class="form-control editRecordInput"
                                             placeholder="e.g., Company Name">
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label for="tpl-header-center" style="font-size:12px; color:#888;">Center</label>
+                                        <label for="tpl-header-center" style="font-size:12px; color:#888;">Center <span class="required-asterisk">*</span></label>
                                         <input type="text" id="tpl-header-center" class="form-control editRecordInput"
                                             placeholder="e.g., Document Title">
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label for="tpl-header-right" style="font-size:12px; color:#888;">Right</label>
+                                        <label for="tpl-header-right" style="font-size:12px; color:#888;">Right <span class="required-asterisk">*</span></label>
                                         <input type="text" id="tpl-header-right" class="form-control editRecordInput"
                                             placeholder="e.g., Version / Date">
                                     </div>
@@ -2274,21 +2274,21 @@ if (document.readyState === 'loading') {
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label for="tpl-footer-left" style="font-size:12px; color:#888;">Left</label>
+                                        <label for="tpl-footer-left" style="font-size:12px; color:#888;">Left <span class="required-asterisk">*</span></label>
                                         <input type="text" id="tpl-footer-left" class="form-control editRecordInput"
                                             placeholder="e.g., Prepared By">
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label for="tpl-footer-center" style="font-size:12px; color:#888;">Center</label>
+                                        <label for="tpl-footer-center" style="font-size:12px; color:#888;">Center <span class="required-asterisk">*</span></label>
                                         <input type="text" id="tpl-footer-center" class="form-control editRecordInput"
                                             placeholder="e.g., Page {n} of {total}">
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label for="tpl-footer-right" style="font-size:12px; color:#888;">Right</label>
+                                        <label for="tpl-footer-right" style="font-size:12px; color:#888;">Right <span class="required-asterisk">*</span></label>
                                         <input type="text" id="tpl-footer-right" class="form-control editRecordInput"
                                             placeholder="e.g., Approved By">
                                     </div>
@@ -2545,16 +2545,24 @@ function saveTemplate(status) {
   var footerRight  = ((document.getElementById('tpl-footer-right')  || {}).value || '').trim();
   var footerValue  = [footerLeft, footerCenter, footerRight].join(';');
 
-  if (!name) {
-    showToast('Please enter a template name', 'error');
-    return;
-  }
+  // ── Collect every empty required field ──────────────────────────────
+  var missing = [];
+  if (!name) missing.push('Template Name');
+  if (!applicableDepartmentIds.length) missing.push('Applicable Departments');
+  if (!preparingDepartmentIds.length) missing.push('Departments Allowed to Prepare Entries');
+  if (!reviewingDepartmentIds.length) missing.push('Reviewing Departments');
+  if (!desc) missing.push('Description / SOP Reference');
+  if (!headerLeft) missing.push('Header Left');
+  if (!headerCenter) missing.push('Header Center');
+  if (!headerRight) missing.push('Header Right');
+  if (!footerLeft) missing.push('Footer Left');
+  if (!footerCenter) missing.push('Footer Center');
+  if (!footerRight) missing.push('Footer Right');
 
   var fieldElements = document.querySelectorAll('#field-list .field-item');
   var fields = [];
-  var valid = true;
 
-  fieldElements.forEach(function (f) {
+  fieldElements.forEach(function (f, idx) {
     var fieldName = f.querySelector('[data-role="name"]').value.trim();
     var fieldType = f.querySelector('[data-role="type"]').value;
     var fieldReq = f.querySelector('[data-role="required"]').checked;
@@ -2562,7 +2570,7 @@ function saveTemplate(status) {
     fieldOpts = (fieldOpts || '').trim();
 
     if (!fieldName) {
-      valid = false;
+      missing.push('Column #' + (idx + 1) + ' name');
       return;
     }
 
@@ -2574,10 +2582,19 @@ function saveTemplate(status) {
     });
   });
 
-  // if (!valid || fields.length === 0) {
-  //   showToast('Please name all columns and add at least one', 'error');
-  //   return;
-  // }
+  if (!fieldElements.length) {
+    missing.push('At least one Table Column');
+  }
+
+  if (missing.length) {
+    var msg = 'Please fill the following required field(s):\n• ' + missing.join('\n• ');
+    if (typeof JSUTIL !== 'undefined' && typeof JSUTIL.buildErrorModal === 'function') {
+      JSUTIL.buildErrorModal(msg);
+    } else {
+      showToast(msg, 'error');
+    }
+    return;
+  }
 
   var createdByName = (document.getElementById('userNameSidebar') || {}).textContent || '';
   createdByName = createdByName.trim();
