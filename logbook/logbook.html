@@ -255,12 +255,14 @@
         if (type === 'date') {
             var dateVal = '';
             if (safeValue) {
-                var parsed = new Date(safeValue);
-                if (!isNaN(parsed.getTime())) {
-                    dateVal = parsed.toISOString().slice(0, 10);
+                if (/^\d{2}\/\d{2}\/\d{4}$/.test(safeValue)) {
+                    dateVal = safeValue;
+                } else {
+                    var parsedMoment = moment(safeValue);
+                    if (parsedMoment.isValid()) dateVal = parsedMoment.format('DD/MM/YYYY');
                 }
             }
-            inputHtml = '<input type="date" class="form-control input-sm edit-data-entry-input" data-col="' + index + '" value="' + dateVal + '" ' + disabledAttr + '>';
+            inputHtml = '<input type="text" class="form-control input-sm edit-data-entry-input logbook-date-input" data-col="' + index + '" value="' + dateVal + '" placeholder="DD/MM/YYYY" autocomplete="off" ' + disabledAttr + '>';
         } else if (type === 'time') {
             inputHtml = '<input type="time" class="form-control input-sm edit-data-entry-input" data-col="' + index + '" value="' + escapedValue + '" ' + disabledAttr + '>';
         } else if (type === 'number') {
@@ -301,6 +303,7 @@
         });
 
         $('#editDataEntryFieldsWrap').html(html || '<div class="text-muted">No fields available.</div>');
+        JSUTIL.initDatePicker('#editDataEntryFieldsWrap .logbook-date-input');
         setEditDataEntryMode(isEditDataEntryMode);
     }
 
@@ -1048,7 +1051,7 @@
             return '<input type="number" step="any" class="form-control input-sm logbook-entry-input" ' + colAttr + ' ' + reqAttr + '>';
         }
         if (type === 'date') {
-            return '<input type="date" class="form-control input-sm logbook-entry-input" ' + colAttr + ' ' + reqAttr + '>';
+            return '<input type="text" class="form-control input-sm logbook-entry-input logbook-date-input" placeholder="DD/MM/YYYY" autocomplete="off" ' + colAttr + ' ' + reqAttr + '>';
         }
         if (type === 'time') {
             return '<input type="time" class="form-control input-sm logbook-entry-input" ' + colAttr + ' ' + reqAttr + '>';
@@ -1106,6 +1109,7 @@
         $('#logbookEntryTable tbody').append(rowHtml);
         renumberLogbookEntryRows();
         initSelect2InLogbook($('#logbookEntryTable tbody tr:last'));
+        JSUTIL.initDatePicker($('#logbookEntryTable tbody tr:last .logbook-date-input'));
         if (!skipPagination) {
             refreshLogbookEntryPagination(true);
         }

@@ -635,7 +635,7 @@
                 <h5><span id="editRequestTitle"></span></h5>
                 <div class="ibox-tools">
                     <button type="button" class="btn btn-default btn-sm close-box showAllRequestsOnCancel"><i data-lucide="x"></i> Close </button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="printLabelBtn"><i data-lucide="printer"></i> Print Label </button>
+                    <button type="button" class="btn btn-default btn-sm" id="printLabelBtn"><i data-lucide="printer"></i> Print Approved Label </button>
                     <button class="btn btn-secondary btn-sm labControlBtn generateCoaBtn"><i data-lucide="printer"></i> Print COA</button>
                 </div>
             </div>
@@ -703,6 +703,12 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group mb-3">
+                            <label>Retest Date</label>
+                            <input type="text" class="form-control datepicker editRecordInput" name="retestDate" autocomplete="off" disabled/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
                             <label>Batch / Lot #</label>
                             <input type="text" class="form-control editRecordInput" name="batchNumber" readonly placeholder="Enter Batch / Lot #"/>
                             </div>
@@ -721,7 +727,7 @@
                 <div class="tabs-container">
                     <ul class="nav nav-tabs">
                         <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#worksheet" aria-expanded="true">Worksheets</a></li>
-                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parameter" aria-expanded="false">Test Parameters</a></li>
+                        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#parameter" aria-expanded="false">Variables & Formula</a></li>
                     </ul>
                     <div class="tab-content">
                         <div id="samples" class="tab-pane" style="display:none;"></div>
@@ -752,6 +758,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Parameter</th>
+                                                <th>Specification</th>
                                                 <th>Test Result</th>
                                                 <th>Unit</th>
                                             </tr>
@@ -948,6 +955,8 @@ var selectedRequests = [];
 var layoutFields = [];
 var currentContacts = [];
 var reportTemplateList = [];
+var currentReceiptData = {};
+var productReceipts = [];
 
 // Populate UOM dropdown from global uomList
 (function populateUomSelect() {
@@ -1022,26 +1031,8 @@ $(document).ready(function(){
     $('#allReviewPanel').show();
 
     // Initialize datepickers for from/to date filters
-    if ($.fn && $.fn.daterangepicker) {
-        $.each(['fromDate', 'toDate'], function(i, id) {
-            var $input = $('#' + id);
-            if (!$input.length) return;
-            $input.daterangepicker({
-                singleDatePicker: true,
-                showDropdowns: true,
-                autoUpdateInput: false,
-                minYear: 1901,
-                maxYear: parseInt(moment().format('YYYY'), 10) + 10,
-                locale: { cancelLabel: 'Clear', format: 'DD/MM/YYYY' }
-            });
-            $input.on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('DD/MM/YYYY'));
-            });
-            $input.on('cancel.daterangepicker', function() {
-                $(this).val('');
-            });
-        });
-    }
+    JSUTIL.initDatePicker('#fromDate');
+    JSUTIL.initDatePicker('#toDate');
 
     $('#allServiceRequestTable').on('click', '.selectRequestBtn', function() {
         JSUTIL.startSpinner();
@@ -1052,6 +1043,8 @@ $(document).ready(function(){
             if(currentId.indexOf(objList.id) >= 0) {
                 console.log("Request data:", objList);
                 currentSampleRequest = objList;
+                currentReceiptData = objList.productReceiptItem.productReceipt;
+                productReceipts.push(objList.productReceiptItem);
                 $('#editRequestTitle').text('ARN - ' + objList.referenceNumber);
                 $('#editRequestStatus').text(objList.requestStatus);
                 $('.editRecordInput[name="description"]').val(objList.description || '');
@@ -1062,6 +1055,7 @@ $(document).ready(function(){
                 $('.editRecordInput[name="sampleUnit"]').val(objList.sampleUnit || '');
                 $('.editRecordInput[name="manufacturingDate"]').val(JSUTIL.getDate(objList.manufacturingDate));
                 $('.editRecordInput[name="expiryDate"]').val(JSUTIL.getDate(objList.expiryDate));
+                $('.editRecordInput[name="retestDate"]').val(JSUTIL.getDate(objList.retestDate));
                 $('.editRecordInput[name="batchNumber"]').val(objList.batchNumber);
                 if(objList.testProcedure && objList.testProcedure.id) {
                     $('#editStpSelectionInput').val(objList.testProcedure.id);
@@ -1245,15 +1239,470 @@ $(document).ready(function(){
             JSUTIL.callAJAXGet(postUrl, selectServiceCallback);
         });
     });
-    $('#printLabelBtn').on('click', function() {
-        console.log('Print Under Test Label clicked');
-        if (!currentSampleRequest || !currentSampleRequest.id) {
-            JSUTIL.buildErrorModal('No request selected');
-            return;
-        }
-        generateUnderTestLabels();
+    $("#printLabelBtn").on("click", function () {
+        JSUTIL.callAJAXPut(JSUTIL.getUrl("/api/product-receipts/" + currentReceiptData.id),JSON.stringify({ reprintStatus: "Under Test Label" }), function (res) {
+            if (!currentReceiptData || !currentReceiptData.id) {
+                JSUTIL.buildErrorModal("No receipt data available to print");
+                return;
+            }
+            if (!productReceipts || productReceipts.length === 0) {
+                JSUTIL.buildErrorModal("No products available in this receipt");
+                return;
+            }
+            // Update buttons in-place
+            currentReceiptData.reprintStatus = "Approved Label";
+            // $(".printUnderTestLabel").hide();
+            // $("#reprintRequestBtnQI").show().prop("disabled", false);
+            // $("#labelApproveBtnQI").hide();
+            // $("#labelRejectBtnQI").hide();
+            var itemIds = productReceipts.map(function (item) {
+                return item.id;
+            });
+            JSUTIL.callAJAXGet(JSUTIL.getUrl("/api/product-receipt-items"), function (allItems) {
+                var testRequests = (allItems || []).filter(function (t) {
+                    return itemIds.indexOf(t.id) !== -1;
+                });
+                var arnMap = {};
+                testRequests.forEach(function (tr) {
+                    if (tr.id) arnMap[tr.id] = tr.number || "";
+                });
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-containers'), function (allContainers) {
+                    function getContainerPriId(c) {
+                        return (c && c.productReceiptItem && (c.productReceiptItem.id || c.productReceiptItem.Id)) ||
+                            (c && (c.productReceiptItemId || c.productReceiptItemID || c.productreceiptitemid)) || null;
+                    }
+
+                    // Group containers by productReceiptItem id
+                    var containersByItemId = {};
+                    (allContainers || []).forEach(function (c) {
+                        var priId = getContainerPriId(c);
+                        if (!priId) return;
+                        if (!containersByItemId[priId]) containersByItemId[priId] = [];
+                        containersByItemId[priId].push(c);
+                    });
+
+                    generateApprovedLabels(currentReceiptData, productReceipts, arnMap, containersByItemId);
+                });
+            });
+        });
     });
 });
+function generateApprovedLabels(receiptData, itemDetails, arnMap, containersByItemId) {
+    var grnNumber = receiptData.number;
+    var poNumber = receiptData.purchaseOrder ? receiptData.purchaseOrder.number : 'N/A';
+    var supplierName = receiptData.vendor ?
+        receiptData.vendor.name : 'N/A';
+    var receiptDateFormatted = receiptData.receiptDate ?
+        new Date(receiptData.receiptDate).toLocaleDateString('en-GB') : 'N/A';
+
+    var allLabelsHtml = '';
+    var productItemCounter = 0;
+
+    // 2. Iterate over ProductReceiptItems
+    itemDetails.forEach(item => {
+        productItemCounter++;
+
+        // Get ARN number from the map
+        var arnNumber = arnMap[item.id] || 'N/A';
+
+        var materialCode = item.product ? item.product.number : 'N/A';
+        var productName = item.product ? item.product.name : 'N/A';
+        var batchNumber = item.batchNumber || 'N/A';
+        var quantity = item.quantityReceived || 0;
+        var numberOfContainers = item.numberOfContainers || 0;
+        var manufacturerName = (item.manufacturer && item.manufacturer.name) ? item.manufacturer.name : 'N/A';
+        var mfgDate = item.manufacturingDate ?
+            new Date(item.manufacturingDate).toLocaleDateString('en-GB') : 'N/A';
+        var expDate = item.expiryDate ?
+            new Date(item.expiryDate).toLocaleDateString('en-GB') : 'N/A';
+        var retestDate = item.retestDate ?
+            new Date(item.retestDate).toLocaleDateString('en-GB') : 'N/A';
+
+        // Calculate pack details and generate per-container labels
+        var itemContainers = (containersByItemId && containersByItemId[item.id]) || [];
+
+        // Build a flat list of individual container slots from container rows
+        // e.g. a row with quantity=3, netWeight=5 expands to 3 slots each showing "1 x 5 Kg"
+        var containerSlots = [];
+        if (itemContainers.length > 0) {
+            itemContainers.forEach(function (c) {
+                var qty = parseInt(c.quantity) || 0;
+                var nw = parseFloat(c.netWeight) || 0;
+                for (var s = 0; s < qty; s++) {
+                    containerSlots.push({ netWeight: nw, groupCount: qty });
+                }
+            });
+        } else {
+            // Fallback: divide evenly across numberOfContainers
+            var nwEach = numberOfContainers > 0 ? (quantity / numberOfContainers) : 0;
+            for (var s = 0; s < numberOfContainers; s++) {
+                containerSlots.push({ netWeight: parseFloat(nwEach.toFixed(3)), groupCount: numberOfContainers });
+            }
+        }
+
+        // Full pack details summary (same for all labels of this item)
+        var fullPackDetails = 'N/A';
+        if (itemContainers.length > 0) {
+            var groups = [];
+            itemContainers.forEach(function (c) {
+                var qty = parseInt(c.quantity) || 0;
+                var nw = parseFloat(c.netWeight) || 0;
+                var existing = groups.find(function (g) { return g.nw === nw; });
+                if (existing) { existing.count += qty; } else { groups.push({ nw: nw, count: qty }); }
+            });
+            var parts = groups.map(function (g) { return g.count + ' x ' + g.nw + ' Kg'; });
+            var totalKg = groups.reduce(function (sum, g) { return sum + (g.count * g.nw); }, 0);
+            fullPackDetails = parts.join(' + ');
+        } else if (numberOfContainers > 0 && quantity > 0) {
+            var qtyPerContainer = (quantity / numberOfContainers).toFixed(2);
+            fullPackDetails = numberOfContainers + ' x ' + qtyPerContainer + ' Kg';
+        }
+
+        allLabelsHtml += `
+            <div class="quarantine-label">
+                <div class="company-header">
+                    <div class="company-logo"><img src="/assets/images/logo1.png" alt="logo" style="width:100px; height:auto; object-fit:contain; border-radius:50%; flex-shrink:0;"></div>
+                    <div class="header-title">
+                        <div class="quarantine-title">"UNDER TEST MATERIAL"</div>
+                        <div class="stores-subtitle">( STORES )</div>
+                    </div>
+                </div>
+                
+                <div class="product-title">${productName}</div>
+                <table class="info-table">
+                    <tr>
+                            <td class="label-cell">Item Code:</td>
+                            <td class="value-cell">${materialCode}</td>
+                            <td class="label-cell">A.R. No:</td>
+                            <td class="value-cell">${arnNumber}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">GIM No:</td>
+                            <td class="value-cell">${grnNumber}</td>
+                            <td class="label-cell">Recd. Date:</td>
+                            <td class="value-cell">${receiptDateFormatted}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Recd. Qty:</td>
+                            <td class="value-cell">${quantity}</td>
+                            <td class="label-cell">UOM:</td>
+                            <td class="value-cell">Kgs.</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Batch No:</td>
+                            <td class="value-cell">${batchNumber}</td>
+                            <td class="label-cell" colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Supplier: </td>
+                            <td class="value-cell" colspan="3">${supplierName}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell" colspan="4">Mfg. Name: ${manufacturerName}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell" colspan="4">Pack Details: ${fullPackDetails}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Mfg. Date:</td>
+                            <td class="value-cell">${mfgDate}</td>
+                            <td class="label-cell">Exp. Date:</td>
+                            <td class="value-cell">${expDate}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Retest Date:</td>
+                            <td class="value-cell">${retestDate}</td>
+                            <td class="label-cell" colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">User Id:</td>
+                            <td class="value-cell">${(typeof FOX.employeeId !== 'undefined' ? FOX.employeeId : null) || 'N/A'}</td>
+                            <td class="label-cell">User Name:</td>
+                            <td class="value-cell">${(typeof FOX.employeeName !== 'undefined' ? FOX.employeeName : null) || 'System User'}</td>
+                        </tr>
+                </table>
+                <div class="label-footer">0 of 0</div>
+            </div>
+            <div class="page-break"></div>`;
+
+            // Generate one label per container slot
+        var totalPages = containerSlots.length;
+        containerSlots.forEach(function (slot, slotIndex) {
+            var pageNum = slotIndex + 1;
+            var uniqueCode = grnNumber + '/' + productItemCounter + '/' + pageNum;
+            // This page's specific pack detail: 1 x netWeight Kg
+            var pagePackDetails = slot.groupCount + ' x ' + slot.netWeight + ' Kg';
+
+            allLabelsHtml += `
+            <div class="quarantine-label">
+                <div class="company-header">
+                    <div class="company-logo"><img src="/assets/images/logo1.png" alt="logo" style="width:100px; height:auto; object-fit:contain; border-radius:50%; flex-shrink:0;"></div>
+                    <div class="header-title">
+                        <div class="quarantine-title">"APPROVED MATERIAL"</div>
+                        <div class="stores-subtitle">( STORES )</div>
+                    </div>
+                </div>
+                
+                <div class="product-title">${productName}</div>
+                <table class="info-table">
+                    <tr>
+                            <td class="label-cell">Item Code:</td>
+                            <td class="value-cell">${materialCode}</td>
+                            <td class="label-cell">A.R. No:</td>
+                            <td class="value-cell">${arnNumber}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">GIM No:</td>
+                            <td class="value-cell">${grnNumber}</td>
+                            <td class="label-cell">Recd. Date:</td>
+                            <td class="value-cell">${receiptDateFormatted}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Recd. Qty:</td>
+                            <td class="value-cell">${quantity}</td>
+                            <td class="label-cell">UOM:</td>
+                            <td class="value-cell">Kgs.</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Batch No:</td>
+                            <td class="value-cell">${batchNumber}</td>
+                            <td class="label-cell" colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Supplier: </td>
+                            <td class="value-cell" colspan="3">${supplierName}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell" colspan="4">Mfg. Name: ${manufacturerName}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell" colspan="4">Pack Details: ${pagePackDetails}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Mfg. Date:</td>
+                            <td class="value-cell">${mfgDate}</td>
+                            <td class="label-cell">Exp. Date:</td>
+                            <td class="value-cell">${expDate}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Retest Date:</td>
+                            <td class="value-cell">${retestDate}</td>
+                            <td class="label-cell" colspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">User Id:</td>
+                            <td class="value-cell">${(typeof FOX.employeeId !== 'undefined' ? FOX.employeeId : null) || 'N/A'}</td>
+                            <td class="label-cell">User Name:</td>
+                            <td class="value-cell">${(typeof FOX.employeeName !== 'undefined' ? FOX.employeeName : null) || 'System User'}</td>
+                        </tr>
+                </table>
+                <div class="label-footer">${item.containerType} ${pageNum} of ${totalPages}</div>
+            </div>
+            <div class="page-break"></div>`;
+        });
+    });
+    if (allLabelsHtml) {
+        printApprovedLabels(allLabelsHtml); // ✅ reuse same print function
+    } else {
+        JSUTIL.buildErrorModal("No containers found to print under test labels.");
+    }
+}
+function printApprovedLabels(htmlContent) {
+    if (!htmlContent) {
+        console.error("No content provided to print.");
+        return;
+    }
+
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    var doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+
+    doc.write(`
+    <html>
+    <head>
+        <title>Approved Label Print</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                margin: 0;
+                padding: 20px;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                print-color-adjust: exact;
+                font-family: Arial, sans-serif;
+            }
+            
+            .quarantine-label {
+                width: 100%;
+                max-width: 800px;
+                margin: 0 auto 20px;
+                border: 3px solid #000;
+                background: white;
+                page-break-inside: avoid;
+                padding: 10px;
+                position: relative;
+                min-height: 500px;
+                padding-bottom: 40px; 
+            }
+
+            .label-footer {
+                position: absolute;
+                bottom: 10px;
+                right: 15px;
+                font-weight: bold;
+                font-size: 13px;
+            }
+            
+            .company-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 15px;
+                padding: 10px;
+                border-bottom: 2px solid #000;
+            }
+            
+            .company-logo {
+                font-size: 36px;
+                font-weight: bold;
+                color: #000;
+                letter-spacing: 2px;
+            }
+            
+            .header-title {
+                flex: 1;
+                text-align: center;
+            }
+            
+            .quarantine-title {
+                font-size: 24px;
+                font-weight: bold;
+                color: #000;
+                margin-bottom: 5px;
+            }
+            
+            .stores-subtitle {
+                font-size: 18px;
+                color: #000;
+            }
+            
+            .product-title {
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
+                text-transform: uppercase;
+                padding: 10px;
+                border: 2px solid #000;
+                margin-bottom: 15px;
+                background: #f0f0f0;
+            }
+            
+            .info-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 0;
+            }
+            
+            .info-table tr {
+                border: 1px solid #000;
+            }
+            
+            .label-cell {
+                padding: 8px 10px;
+                font-weight: bold;
+                color: #000;
+                font-size: 14px;
+                border: 1px solid #000;
+                width: 25%;
+            }
+            
+            .value-cell {
+                padding: 8px 10px;
+                color: #000;
+                font-size: 14px;
+                border: 1px solid #000;
+                width: 25%;
+            }
+            
+            .page-break {
+                page-break-after: always;
+            }
+            
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+            
+            @media print {
+                body {
+                    padding: 0;
+                }
+                
+                .quarantine-label {
+                    margin: 0 auto;
+                    page-break-inside: avoid;
+                }
+                
+                .page-break:last-child {
+                    display: none;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        ${htmlContent}
+    </body>
+    </html>
+`);
+    doc.close();
+
+    var cleanup = function () {
+        try {
+            if (iframe && iframe.parentNode) {
+                document.body.removeChild(iframe);
+            }
+        } catch (e) {
+            console.error('Error removing print iframe:', e);
+        }
+    };
+
+    iframe.onload = function () {
+        try {
+            setTimeout(function () {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+
+                setTimeout(cleanup, 500);
+
+                window.addEventListener('focus', function cleanupOnFocus() {
+                    setTimeout(function () {
+                        cleanup();
+                        window.removeEventListener('focus', cleanupOnFocus);
+                    }, 500);
+                }, { once: true });
+
+            }, 100);
+        } catch (e) {
+            console.error('Error during print:', e);
+            cleanup();
+        }
+    };
+
+    setTimeout(cleanup, 5000);
+};
 function displayWorksheetPreview(worksheetHtml) {
     console.log(worksheetHtml);
     let $previewContainer = $('#worksheetPreviewContainer');
@@ -1275,6 +1724,7 @@ function selectServiceCallback(parameterList) {
     $.each(parameterList, function(i, val) {
         innerHtml += `<tr>
             <td>${val.name}</td>
+            <td>${val.specification}</td>
             <td>`;
         if (val.numberOfReadings > 1) {
             for (let k = 0; k < val.numberOfReadings; k++) {
@@ -1316,69 +1766,69 @@ function selectServiceCallback(parameterList) {
     }
     JSUTIL.stopSpinner();
 }
-function generateUnderTestLabels() {
-    var req = currentSampleRequest;
-    var receipt = req.productReceiptItem || {};
-    var qtyUnderTest = receipt.quantityReceived || 0;
-    var uom = (receipt.product && receipt.product.unitOfMeasure) ? receipt.product.unitOfMeasure : (req.sampleUnit || 'Kgs');
-    var userName = localStorage.getItem('username') || localStorage.getItem('userName') || 'N/A';
-    var userId = localStorage.getItem('userId') || 'N/A';
-    var printDate = new Date().toLocaleString('en-GB', {
-        year: 'numeric', month: '2-digit', day: '2-digit'
-    }).replace(',', '');
+// function generateUnderTestLabels() {
+//     var req = currentSampleRequest;
+//     var receipt = req.productReceiptItem || {};
+//     var qtyUnderTest = receipt.quantityReceived || 0;
+//     var uom = (receipt.product && receipt.product.unitOfMeasure) ? receipt.product.unitOfMeasure : (req.sampleUnit || 'Kgs');
+//     var userName = localStorage.getItem('username') || localStorage.getItem('userName') || 'N/A';
+//     var userId = localStorage.getItem('userId') || 'N/A';
+//     var printDate = new Date().toLocaleString('en-GB', {
+//         year: 'numeric', month: '2-digit', day: '2-digit'
+//     }).replace(',', '');
 
-    var allLabelsHtml = '';
-    allLabelsHtml += '<div class="label-container">';
-    allLabelsHtml += '  <div class="label-header">';
-    allLabelsHtml += '      <div class="label-title">Suleshvari Pharma, Ankleshwar</div>';
-    allLabelsHtml += '      <div class="product-name">Quality Control Department</div>';
-    allLabelsHtml += '  </div>';
-    allLabelsHtml += '  <div class="label-body">';
-    allLabelsHtml += '      <div class="product-name" style="text-align:center;">SAMPLE</div>';
-    allLabelsHtml += '      <div class="label-row"><span class="label-field">Product :</span><span class="label-value">' + (req.sampleCondition || '') + '</span></div>';
-    allLabelsHtml += '      <div class="label-row"><span class="label-field">Batch No. :</span><span class="label-value">' + (req.batchNumber || '') + '</span>';
-    allLabelsHtml += '          <span class="label-field">Batch Size :</span><span class="label-value">' + qtyUnderTest + ' ' + uom + '</span></div>';
-    allLabelsHtml += '      <div class="label-row"><span class="label-field">Mfg. Date :</span><span class="label-value">' + JSUTIL.getDate(req.manufacturingDate) + '</span>';
-    allLabelsHtml += '          <span class="label-field" style="margin-left:30px;">Expiry Date :</span><span class="label-value">' + JSUTIL.getDate(req.expiryDate) + '</span></div>';
-    allLabelsHtml += '      <div class="label-row"><span class="label-field">Sample Quantity :</span><span class="label-value">' + (req.sampleQuantity || 0) + ' ' + (req.sampleUnit || '') + '</span>';
-    allLabelsHtml += '          <span class="label-field" style="margin-left:30px;">LIMS AR No. :</span><span class="label-value">' + (req.referenceNumber || '') + '</span></div>';
-    allLabelsHtml += '      <div class="label-row"><span class="label-field">SampledBy/Date :</span><span class="label-value">' + (req.samplingLocation || '') + '</span></div>';
-    allLabelsHtml += '      <div class="label-row"><span class="label-field">Printed By/On :</span><span class="label-value">' + userName + ' / ' + printDate + '</span></div>';
-    allLabelsHtml += '      <div class="label-row"><span class="label-field">Remarks :</span><span class="label-value"></span></div>';
-    allLabelsHtml += '  </div>';
-    allLabelsHtml += '</div>';
-    allLabelsHtml += '<div class="page-break"></div>';
+//     var allLabelsHtml = '';
+//     allLabelsHtml += '<div class="label-container">';
+//     allLabelsHtml += '  <div class="label-header">';
+//     allLabelsHtml += '      <div class="label-title">Suleshvari Pharma, Ankleshwar</div>';
+//     allLabelsHtml += '      <div class="product-name">Quality Control Department</div>';
+//     allLabelsHtml += '  </div>';
+//     allLabelsHtml += '  <div class="label-body">';
+//     allLabelsHtml += '      <div class="product-name" style="text-align:center;">SAMPLE</div>';
+//     allLabelsHtml += '      <div class="label-row"><span class="label-field">Product :</span><span class="label-value">' + (req.sampleCondition || '') + '</span></div>';
+//     allLabelsHtml += '      <div class="label-row"><span class="label-field">Batch No. :</span><span class="label-value">' + (req.batchNumber || '') + '</span>';
+//     allLabelsHtml += '          <span class="label-field">Batch Size :</span><span class="label-value">' + qtyUnderTest + ' ' + uom + '</span></div>';
+//     allLabelsHtml += '      <div class="label-row"><span class="label-field">Mfg. Date :</span><span class="label-value">' + JSUTIL.getDate(req.manufacturingDate) + '</span>';
+//     allLabelsHtml += '          <span class="label-field" style="margin-left:30px;">Expiry Date :</span><span class="label-value">' + JSUTIL.getDate(req.expiryDate) + '</span></div>';
+//     allLabelsHtml += '      <div class="label-row"><span class="label-field">Sample Quantity :</span><span class="label-value">' + (req.sampleQuantity || 0) + ' ' + (req.sampleUnit || '') + '</span>';
+//     allLabelsHtml += '          <span class="label-field" style="margin-left:30px;">LIMS AR No. :</span><span class="label-value">' + (req.referenceNumber || '') + '</span></div>';
+//     allLabelsHtml += '      <div class="label-row"><span class="label-field">SampledBy/Date :</span><span class="label-value">' + (req.samplingLocation || '') + '</span></div>';
+//     allLabelsHtml += '      <div class="label-row"><span class="label-field">Printed By/On :</span><span class="label-value">' + userName + ' / ' + printDate + '</span></div>';
+//     allLabelsHtml += '      <div class="label-row"><span class="label-field">Remarks :</span><span class="label-value"></span></div>';
+//     allLabelsHtml += '  </div>';
+//     allLabelsHtml += '</div>';
+//     allLabelsHtml += '<div class="page-break"></div>';
 
-    JSUTIL.printUnderTestLabels(allLabelsHtml);
-}
+//     JSUTIL.printUnderTestLabels(allLabelsHtml);
+// }
 
-// Print helper function for Under Test Labels
-JSUTIL.printUnderTestLabels = function(htmlContent) {
-    if (!htmlContent) {
-        console.error("No content provided to print.");
-        return;
-    }
-    var printWin = window.open('', '_blank', 'width=900,height=700');
-    if (!printWin) { alert('Popup blocked. Please allow popups for this site.'); return; }
-    printWin.document.write('<!DOCTYPE html><html><head><title>Sample Label</title><style>' +
-        '* { margin:0; padding:0; box-sizing:border-box; }' +
-        'body { padding:20px; font-family:Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }' +
-        '.label-container { width:100%; max-width:800px; margin:0 auto 20px; border:3px solid #000; background:#fff; page-break-inside:avoid; padding:15px; }' +
-        '.label-header { text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px; }' +
-        '.label-title { font-size:32px; font-weight:bold; letter-spacing:3px; margin:10px 0; }' +
-        '.product-name { font-size:16px; font-weight:bold; margin-top:5px; }' +
-        '.label-body { margin-top:15px; }' +
-        '.label-row { display:flex; margin-bottom:8px; font-size:13px; align-items:baseline; }' +
-        '.label-field { font-weight:bold; min-width:150px; }' +
-        '.label-value { flex:1; }' +
-        '.page-break { page-break-after:always; }' +
-        '@page { size:A4; margin:15mm; }' +
-        '@media print { body { padding:0; } .page-break:last-child { display:none; } }' +
-    '</style></head><body>' + htmlContent + '</body></html>');
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(function() { printWin.print(); }, 300);
-};
+// // Print helper function for Under Test Labels
+// JSUTIL.printUnderTestLabels = function(htmlContent) {
+//     if (!htmlContent) {
+//         console.error("No content provided to print.");
+//         return;
+//     }
+//     var printWin = window.open('', '_blank', 'width=900,height=700');
+//     if (!printWin) { alert('Popup blocked. Please allow popups for this site.'); return; }
+//     printWin.document.write('<!DOCTYPE html><html><head><title>Sample Label</title><style>' +
+//         '* { margin:0; padding:0; box-sizing:border-box; }' +
+//         'body { padding:20px; font-family:Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }' +
+//         '.label-container { width:100%; max-width:800px; margin:0 auto 20px; border:3px solid #000; background:#fff; page-break-inside:avoid; padding:15px; }' +
+//         '.label-header { text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px; }' +
+//         '.label-title { font-size:32px; font-weight:bold; letter-spacing:3px; margin:10px 0; }' +
+//         '.product-name { font-size:16px; font-weight:bold; margin-top:5px; }' +
+//         '.label-body { margin-top:15px; }' +
+//         '.label-row { display:flex; margin-bottom:8px; font-size:13px; align-items:baseline; }' +
+//         '.label-field { font-weight:bold; min-width:150px; }' +
+//         '.label-value { flex:1; }' +
+//         '.page-break { page-break-after:always; }' +
+//         '@page { size:A4; margin:15mm; }' +
+//         '@media print { body { padding:0; } .page-break:last-child { display:none; } }' +
+//     '</style></head><body>' + htmlContent + '</body></html>');
+//     printWin.document.close();
+//     printWin.focus();
+//     setTimeout(function() { printWin.print(); }, 300);
+// };
 
     // editReportGenerationPanel.js end 
 
@@ -1418,14 +1868,20 @@ JSUTIL.printUnderTestLabels = function(htmlContent) {
 });
 
 function generateCoaPreview(template) {
-    var today = new Date();
-    var formatDate = function(d) { return d.toISOString().slice(0, 10); };
+    function sanitizeDate(val) {
+        var d = JSUTIL.getDate(val);
+        return (!d || d.includes('NaN') || d.trim() === '') ? 'NA' : d;
+    }       
 
+    var today = new Date();
     var sampleId = currentSampleRequest.sampleId;
     var batchNo = currentSampleRequest.batchNumber;
     var productName = currentSampleRequest.sampleCondition;
-    var mfgDate = new Date(currentSampleRequest.manufacturingDate);
-    var expDate = new Date(currentSampleRequest.expiryDate);
+    var mfgDate = sanitizeDate(currentSampleRequest.manufacturingDate);
+    var expDate = sanitizeDate(currentSampleRequest.expiryDate);
+    var retestDate = sanitizeDate(currentSampleRequest.retestDate);
+    var arNo = currentSampleRequest.referenceNumber;
+    var specNo = currentSampleRequest.testProcedure.number;
 
     var fieldsData = [];
     if (template.fields) {
@@ -1459,22 +1915,28 @@ function generateCoaPreview(template) {
 
             <div class="coa-meta-grid">
                 <div class="coa-meta-item">
-                    <span class="label">Sample ID:</span><span>${sampleId}</span>
-                </div>
-                <div class="coa-meta-item">
-                    <span class="label">Batch/Lot No.:</span><span>${batchNo}</span>
+                    <span class="label">Product Code:</span><span>${sampleId}</span>
                 </div>
                 <div class="coa-meta-item">
                     <span class="label">Product:</span><span>${productName}</span>
                 </div>
                 <div class="coa-meta-item">
-                    <span class="label">Mfg. Date:</span><span>${formatDate(mfgDate)}</span>
+                    <span class="label">Batch/Lot No.:</span><span>${batchNo}</span>
                 </div>
                 <div class="coa-meta-item">
-                    <span class="label">Exp. Date:</span><span>${formatDate(expDate)}</span>
+                    <span class="label">Mfg. Date:</span><span>${mfgDate}</span>
                 </div>
                 <div class="coa-meta-item">
-                    <span class="label">COA Date:</span><span>${formatDate(today)}</span>
+                    <span class="label">Exp. Date:</span><span>${expDate}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Retest Date:</span><span>${(retestDate)}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">AR No:</span><span>${arNo}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Specification No:</span><span>${specNo}</span>
                 </div>
             </div>
     `;
@@ -1487,9 +1949,8 @@ function generateCoaPreview(template) {
         if (isResultSection) {
             coaHtml += '<table class="coa-table"><thead><tr>' +
                 '<th style="width:30%;">Parameter</th>' +
-                '<th style="width:30%;">Specification</th>' +
-                '<th style="width:20%;">Result</th>' +
-                '<th style="width:20%;">Remark</th>' +
+                '<th style="width:35%;">Specification</th>' +
+                '<th style="width:35%;">Result</th>' +
                 '</tr></thead><tbody>';
 
             $.each(currentRequestLineItems, function(idx, field) {

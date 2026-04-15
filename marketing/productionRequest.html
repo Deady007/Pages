@@ -940,30 +940,13 @@
         // Set employee ID (get from session or default)
         employeeId = FOX.employeeId;
         $('.newProductTransactionInput[name="requester.id"]').val(employeeId);
-        // Initialize daterangepickers for new form date fields
+        // Initialize datepickers for new form date fields
         function initializeNewFormDatePickers() {
             var newDateFields = ['#newRequestDate', '#newEpoDate', '#newPlannedStartDate', '#newPlannedEndDate', '#newActualStartDate', '#newActualEndDate'];
             newDateFields.forEach(function (fieldId) {
                 var $dateField = $(fieldId);
                 if ($dateField.length) {
-                    try {
-                        if ($dateField.data('daterangepicker')) {
-                            $dateField.data('daterangepicker').remove();
-                        }
-                        $dateField.daterangepicker({
-                            singleDatePicker: true,
-                            showDropdowns: true,
-                            autoUpdateInput: false,
-                            locale: {
-                                format: 'DD/MM/YYYY'
-                            }
-                        });
-                        $dateField.on('apply.daterangepicker', function (ev, picker) {
-                            $(this).val(picker.startDate.format('DD/MM/YYYY'));
-                        });
-                    } catch (e) {
-                        console.log('daterangepicker not available for', fieldId);
-                    }
+                    JSUTIL.initDatePicker(fieldId);
                 }
             });
         }

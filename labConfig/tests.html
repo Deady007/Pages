@@ -5,6 +5,8 @@
 <script src="pages/lib/dataTables.js"></script>
 <script src="pages/lib/lucide.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<script src="/lib/html2pdf.bundle.min.js"></script>
+<script src="/lib/math.min.js"></script>
 <!-- tests.html start -->
 <style>
     #allTestsPanelTable thead th {
@@ -139,6 +141,100 @@
     #allTestParameterDataTable td:nth-child(5) {
         width: 10%;
     }
+    .qa-white-panel .dropdown .btn-light {
+        background: #fff;
+        /* border: 1px solid #ced4da; */
+        color: #495057;
+        font-size: 14px;
+        font-weight: 400;
+        text-align: left;
+    }
+
+    .qa-white-panel .dropdown .btn-light:focus,
+    .qa-white-panel .dropdown .btn-light:active {
+        /* box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); */
+        /* border-color: #80bdff; */
+        background-color: #fff;
+        color: #495057;
+    }
+
+    .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+    }
+
+    .qa-white-panel .dropdown .btn-light:disabled,
+    .qa-white-panel .dropdown .btn-light[disabled] {
+        /* background-color: #e9ecef; */
+        opacity: 1;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .qa-white-panel .dropdown-menu {
+        font-size: 14px;
+        /* border: 1px solid #ced4da; */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        border-radius: 4px;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 4px 0;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item {
+        padding: 7px 14px;
+        color: #495057;
+        font-size: 13px;
+        /* border-bottom: 1px solid #f0f0f0; */
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item:last-child {
+        border-bottom: none;
+    }
+
+    /* .qa-white-panel .dropdown-menu .dropdown-item:hover,
+    .qa-white-panel .dropdown-menu .dropdown-item:focus {
+        background-color: #f0f4ff;
+        color: #1a6faf;
+    }
+
+    .qa-white-panel .dropdown-menu .dropdown-item.active {
+        background-color: #007bff;
+        color: #fff;
+    } */
+
+    /* ── Dark mode ── */
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light {
+        background-color: #2c2c2e;
+        /* border-color: #444; */
+        color: #c9d1d9;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:hover {
+        background-color: #3a3a3c;
+        border-color: #666;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown .btn-light:disabled {
+        background-color: #1e1e1e;
+        color: #6c757d;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu {
+        background-color: #2b2b2b;
+        border-color: #444;
+    }
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item {
+        color: #e0e0e0;
+        /* border-bottom-color: #3d3d3d; */
+        background-color: #2b2b2b;
+    } 
+
+    [data-bs-theme="dark"] .qa-white-panel .dropdown-menu .dropdown-item:hover {
+        background-color: #4d4d4e;
+        color: #fff;
+    } 
 </style>
 <div class="qa-white-panel">
 
@@ -243,6 +339,7 @@
                     <div class="tabs-container">
                         <ul class="nav nav-tabs" id="testTabNav">
                             <li class="nav-item active"><a class="nav-link active" data-toggle="tab" href="#parameter" aria-expanded="true">Parameters</a></li>
+                            <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#formula" aria-expanded="false">Validate formula</a></li>
                         </ul>
                         <div class="tab-content">
                             <div id="parameter" class="tab-pane active">
@@ -267,6 +364,23 @@
                                             </tr>
                                             </thead>
                                             <tbody id="allTestParameterTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="formula" class="tab-pane">
+                                <div class="panel-body">
+                                    <div class="table-responsive" style="padding-top: 20px;">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Formula</th>
+                                                <th>Value</th>
+                                                <th>Unit</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="allTestParameterFormulaTable"></tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -411,9 +525,13 @@
                                 </div>
                                 <div class="form-group mb-3">
                                     <label>Unit</label>
-                                    <select class="select2 form-control newParameterInput" name="Unit" id="newUnitList">
-                                        <option value="">--none--</option>
-                                    </select>
+                                    <div class="dropdown">
+                                        <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="newParameterUnitBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                            style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
+                                        <div class="dropdown-menu w-100" id="newUnitList"></div>
+                                    </div>
+                                    <input type="hidden" class="inward-dropdown-hidden newParameterInput" name="Unit" value="">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label>Default Values</label>
@@ -505,9 +623,13 @@
                                 </div>
                                 <div class="form-group mb-3">
                                     <label>Unit</label>
-                                    <select class="select2 form-control editParameterInput" name="Unit" id="editUnitList" disabled>
-                                        <option value="">--none--</option>
-                                    </select>
+                                    <div class="dropdown">
+                                        <button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
+                                            type="button" id="editParameterUnitBtn" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                            style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
+                                        <div class="dropdown-menu w-100" id="editUnitList"></div>
+                                    </div>
+                                    <input type="hidden" class="inward-dropdown-hidden editParameterInput" name="Unit" value="">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label>Default Values</label>
@@ -1428,7 +1550,7 @@
     var currentParameterName = '';
     var currentParameterUcTypeBList = [];
     var currentParameterList = [];
-    var uomList = [{"name":"kg", "description":"Kilogram"}, {"name":"gm", "description":"Gram"}, {"name":"lt", "description":"Liter"}, {"name":"ml", "description":"Mililiter"}];
+    // var uomList = [{"name":"kg", "description":"Kilogram"}, {"name":"gm", "description":"Gram"}, {"name":"lt", "description":"Liter"}, {"name":"ml", "description":"Mililiter"}];
     var parameterDeleteArray = [];
     var elementToDelete = $('#sampleDiv');
     var btnClicked = '';
@@ -1508,16 +1630,14 @@
         });
         return payload;
     }
-
-    function populateUnitOptions(selectSelector, selectedValue) {
-        var innerHtml = '<option value="">--none--</option>';
-        if (Array.isArray(uomList)) {
-            $.each(uomList, function (i, val) {
-                innerHtml += '<option value="' + val.name + '">' + val.name + ' (' + val.description + ')' + '</option>';
-            });
-        }
-        $(selectSelector).html(innerHtml);
-        $(selectSelector).val(selectedValue || '').trigger('change');
+    function  populateUnitOptions() {
+        var html = '<a class="dropdown-item" data-value="">-- None --</a>';
+        if (typeof uomList === 'undefined' || !uomList) return;
+        $.each(uomList, function(i, val) {
+            html += '<a class="dropdown-item" data-value="' + val.name + '">' + val.name + '</a>';
+        });
+        $('#editUnitList').html(html);
+        $('#newUnitList').html(html);
     }
 
 
@@ -1588,7 +1708,7 @@
     async function loadParameters(serviceId) {
         try {
             var apiResponse = await requestJson('/api/lab-services/' + serviceId + '/parameters', 'GET');
-            currentParameterList = Array.isArray(apiResponse) ? apiResponse : [];
+            currentParameterList = Array.isArray(apiResponse) ? apiResponse.sort((a, b) => a.id - b.id) : [];
         } catch (apiErr) {
             console.error(apiErr);
             currentParameterList = [];
@@ -1597,6 +1717,7 @@
     }
 
     function renderParameterTable() {
+        console.log(1);
         $("#allTestParameterTable").empty();
         var innerHtml = '';
         $.each(currentParameterList, function (i, val) {
@@ -1615,10 +1736,35 @@
                 '</tr>';
         });
         $("#allTestParameterTable").append(innerHtml);
+        $("#allTestParameterFormulaTable").empty();
+        var innerHtml2 = '';
+        $.each(currentParameterList, function (i, val) {
+            var isFormula = val.formula && val.formula.trim() !== '';
+            var readonlyAttr = isFormula ? 'readonly' : '';
+            var fieldClass = isFormula ? 'nonEditableField' : 'editableField';  
+            var pNumber = '';
+            if (val.number) { pNumber += '(' + val.number + ')'; }
+            innerHtml2 += '<tr>' +
+                '<td>' + val.name + ' ' + pNumber + '</td>' +
+                '<td>' + (val.formula || '') + '</td><td>';
+            if (val.numberOfReadings > 1) {
+                for (var k = 0; k < val.numberOfReadings; k++) {
+                    var savedVal = '';
+                    if (savedValues && savedValues[val.id]) {
+                        var parts = savedValues[val.id].split(';');
+                        savedVal = parts[k] || '';
+                    }
+                    innerHtml2 += '<input type="text class="form-control result-param-input ' + fieldClass + '" name="requestLnItem_' + val.id + '_Reading_' + k + '"  aria-details="' + val.number + '" aria-parameter-id="' + val.id + '" aria-description="' + k + '" ' + readonlyAttr + '>';
+                }
+            } else {
+                innerHtml2 += '<input type="text" class="form-control result-param-input ' + fieldClass + '" name="requestLnItem_' + val.id + '_Reading_' + k + '" aria-details="' + val.number + '" aria-parameter-id="' + val.id + '" aria-description="0" ' + readonlyAttr + '>';
+            }
+            innerHtml2 += '</td><td>' + (val.unit || '') + '</td>' +
+                '</tr>';
+        });
+        $("#allTestParameterFormulaTable").append(innerHtml2);
         lucide.createIcons();
     }
-
-
     // ================================================================
     // CRUD: Create test
     // ================================================================
@@ -1780,6 +1926,7 @@
         $('.parameterEditBtn').show();
         $('#editParameterSaveBtn').hide();
         $('.editParameterInput').prop('readonly', true).prop('disabled', true);
+        $('#editParameterUnitBtn').prop('disabled', true);
         await loadParameters(currentTestId);
         setView('editTest');
     }
@@ -1817,9 +1964,8 @@
     var currentRecord = {};
     $(document).ready(function () {
         // $(".select2").select2();
+        populateUnitOptions();
         console.log('Document ready - tests');
-        populateUnitOptions('#newUnitList', '');
-        populateUnitOptions('#editUnitList', '');
         $('#editTestSaveBtn').hide();
         $('#editParameterSaveBtn').hide();
 
@@ -1875,6 +2021,22 @@
             updateTestData();
         });
 
+        $(document).on('click', '#newUnitList .dropdown-item', function () {
+            var value = $(this).data('value');
+            var text = $(this).text();
+
+            $('#newParameterUnitBtn').text(text);
+            $('input[name="Unit"].newParameterInput').val(value);
+        });
+
+        $(document).on('click', '#editUnitList .dropdown-item', function () {
+            var value = $(this).data('value');
+            var text = $(this).text();
+
+            $('#editParameterUnitBtn').text(text);
+            $('input[name="Unit"].editParameterInput').val(value);
+        });
+
         $('#deleteTestBtn').on('click', function () {
             deleteCallback = deleteTestData;
             var modal = new bootstrap.Modal(document.getElementById('standard-modal'));
@@ -1920,7 +2082,6 @@
 
         // ---------- Parameter navigation ----------
         $('#newParameterBtn').on('click', function () {
-            populateUnitOptions('#newUnitList', '');
             setView('newParam');
         });
 
@@ -1929,6 +2090,7 @@
             $('.parameterEditBtn').show();
             $('#editParameterSaveBtn').hide();
             $('.editParameterInput').prop('readonly', true).prop('disabled', true);
+            $('#editParameterUnitBtn').prop('disabled', true);
             $('.editParameterInput[name="Equipments"]').val('');
             $('.editParameterInput[name="Analysts"]').val('');
             try {
@@ -1950,6 +2112,7 @@
             $(this).hide();
             $('#editParameterSaveBtn').show();
             $('.editParameterInput').prop('readonly', false).prop('disabled', false);
+            $('#editParameterUnitBtn').prop('disabled', false);
         });
 
         $('#editParameterSaveBtn').on('click', function () {
@@ -1995,9 +2158,26 @@
                     } else {
                         $('.editParameterInput[name="Type"]').prop('checked', false);
                     }
-                    populateUnitOptions('#editUnitList', val.unit || '');
+                    var unitLabel = '-- None --';
+                    if (val.unit) {
+                        $.each(uomList, function(i, val2){
+                            if (val2.name === val.unit){
+                                unitLabel = val2.name;
+                                return false;
+                            }
+                        });
+                    }
+                    // Worksheet panel unit
+                    $('#editParameterUnitBtn').text(unitLabel);
+                    $('#editUnitList .dropdown-item').removeClass('active');
+                    $('#editUnitList .dropdown-item[data-value="' + (val.unit || '') + '"]').addClass('active');
+                    $('#editUnitList').closest('.form-group').find('.inward-dropdown-hidden').val(val.unit || '');
                     $('#editParameterId').val(val.id);
+
+                    $('#editParameterUnitBtn').text(val.unit || '-- None --');
+                    $('input[name="Unit"].editParameterInput').val(val.unit || '');
                     return false;
+
                 }
             });
             setView('editParam');
@@ -2041,6 +2221,11 @@
             if (typeof deleteCallback === 'function') {
                 deleteCallback();
             }
+        });
+        $(document).on('input change', '#allTestParameterFormulaTable .result-param-input', function () {
+            var paramId = $(this).attr('aria-details');
+            var idx = parseInt($(this).attr('aria-description')) || 0;
+            MATHJS.calculate(paramId, idx);
         });
     });
 
@@ -3148,4 +3333,110 @@
     $(document).ready(function () {
         bindDemoButtons();
     });
+
+    const MATHJS = {
+        calculate: function (fieldId, index, visitedIds = new Set()) {
+            console.log("🔄 Recalculation Triggered for:", fieldId);
+            if (visitedIds.has(String(fieldId))) return;
+            visitedIds.add(String(fieldId));
+            $.each(currentParameterList, function (_, param) {
+                if (param.formula && param.formula.includes(`{${fieldId}}`)) {
+                    console.log("Level 1 ->", param.id, param.formula);
+                    if (param.numberOfReadings > 1) {
+                        MATHJS.recalculateFormulaMultiple(param.formula, param.id, true, param.numberOfDecimals, index);
+                    } else {
+                        MATHJS.recalculateFormula(param.formula, param.id, true, param.numberOfDecimals);
+                    }
+                    MATHJS.calculate(param.id, index, visitedIds);
+                    $.each(currentParameterList, function (_, param2) {
+                        if (param2.formula && param2.formula.includes(`{${param.number}}`)) {
+                            console.log("Level 2 ->", param2.id, param2.formula);
+                            if (param2.numberOfReadings > 1) {
+                                MATHJS.recalculateFormulaMultiple(param2.formula, param2.id, true, param2.numberOfDecimals, index);
+                            } else {
+                                MATHJS.recalculateFormula(param2.formula, param2.id, true, param2.numberOfDecimals);
+                            }
+                            MATHJS.calculate(param2.id, index, visitedIds);
+                            $.each(currentParameterList, function (_, param3) {
+                                if (param3.formula && param3.formula.includes(`{${param2.number}}`)) {
+                                    console.log("Level 3 ->", param3.id, param3.formula);
+                                    if (param2.numberOfReadings > 1) {
+                                        MATHJS.recalculateFormulaMultiple(param3.formula, param3.id, true, param3.numberOfDecimals, index);
+                                    } else {
+                                        MATHJS.recalculateFormula(param3.formula, param3.id, true, param3.numberOfDecimals);
+                                    }
+                                    MATHJS.calculate(param.id, index, visitedIds);
+                                    
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        },
+        recalculateFormula: function (formula, targetFieldId, isTestResult, numberOfDecimals) {
+            let matches = [], regEx = /{([^}]+)}/g, text = '';
+            let avgList = [];
+            while ((text = regEx.exec(formula))) { matches.push(text[1]); }
+            $.each(matches, function (i, paramId) {
+                let inputs = $(`input[aria-details="${paramId}"]`);
+
+                if (inputs.length > 1) {
+                    let values = [];
+                    $.each(inputs, function (_, el) {
+                        if (el.value && !isNaN(el.value)) values.push(el.value.trim());
+                    });
+                    avgList.push(...values);
+                    formula = formula.replaceAll(`{${paramId}}`, values.join(","));
+                } else {
+                    let singleValue = inputs.val();
+                    if (singleValue && !isNaN(singleValue)) {
+                        avgList.push(singleValue.trim());
+                        formula = formula.replaceAll(`{${paramId}}`, singleValue.trim());
+                    }
+                }
+            });
+            try {
+                let result = MATHJS.computeFormulaResult(formula, avgList);
+                if (!isNaN(result)) {
+                    let dec = numberOfDecimals ? Number(numberOfDecimals) : 2;
+                    $(`input[aria-parameter-id="${targetFieldId}"]`).val(result.toFixed(dec));
+                }
+            } catch (e) {
+                console.error("Formula Error:", e);
+            }
+        },
+        recalculateFormulaMultiple: function (formula, targetFieldId, isTestResult, numberOfDecimals, index) {
+            let matches = [], regEx = /{([^}]+)}/g, text = '';
+            let avgList = [];
+            while ((text = regEx.exec(formula))) { matches.push(text[1]); }
+            $.each(matches, function (i, paramId) {
+                let inputs = $(`input[aria-details="${paramId}"]`);
+                let oneVal = inputs[index];
+
+                if (oneVal && oneVal.value && !isNaN(oneVal.value)) {
+                    avgList.push(oneVal.value.trim());
+                    formula = formula.replaceAll(`{${paramId}}`, oneVal.value.trim());
+                }
+            });
+            try {
+                let result = MATHJS.computeFormulaResult(formula, avgList);
+                if (!isNaN(result)) {
+                    let dec = numberOfDecimals ? Number(numberOfDecimals) : 2;
+                    $(`input[aria-parameter-id="${targetFieldId}"][aria-description="${index}"]`)
+                        .val(result.toFixed(dec));
+                }
+            } catch (e) { console.error("Formula Error:", e); }
+        },
+        computeFormulaResult: function (expr, avgList) {
+            if (expr.includes("AVG(") && avgList.length) return math.mean(avgList);
+            if (expr.includes("MIN(")) return math.min(avgList);
+            if (expr.includes("MAX(")) return math.max(avgList);
+            if (expr.includes("SUM(")) return math.sum(avgList);
+            if (expr.includes("STDEV(")) return math.std(avgList);
+            if (expr.includes("SQRT(")) return math.sqrt(avgList);
+            return math.eval(expr);
+        }
+    };
+ 
 </script>

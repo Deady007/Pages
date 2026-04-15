@@ -1,7 +1,7 @@
 <script src="pages/lib/jquery-3.7.1.js"></script>
 <script src="pages/lib/moment.min.js"></script>
-<link rel="stylesheet" href="pages/lib/daterangepicker.css">
-<script src="pages/lib/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="pages/lib/dataTables.js"></script>
 <script src="pages/lib/lucide.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
@@ -1382,7 +1382,7 @@
                     </div>
                     <div class="form-group">
                         <label for="bpcrTransferDate">Date</label>
-                        <input type="date" class="form-control" id="bpcrTransferDate">
+                        <input type="text" class="form-control datepicker" id="bpcrTransferDate" placeholder="DD/MM/YYYY" autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="bpcrTransferAvailableQty">Available Quantity</label>
@@ -2248,7 +2248,7 @@
             <td>${productDisplay}</td>
             <td>${u.productStage.number}</td>
             <td>${plantName}</td>
-            <td>${u.orderOwner?.firstName + " " + u.orderOwner?.lastName || 'Not Assigned'}</td>
+            <td>${(u.orderOwner?.firstName||'') + " " + (u.orderOwner?.lastName||'') || 'Not Assigned'}</td>
             <td>${statusLabel}</td>
         </tr>
     `;
@@ -2485,10 +2485,16 @@
         function loadProductStages(defaultStageId) {
             // Fetch stages separately (for the stage dropdown)
             var payload = {
-                fields: 'Id;Name;Number;Product.Id;Product.Name;Product.Number;Plant.Id;Plant.Name;Plant.Number;'
+                'fields': 'Id;Name;Number;Product.Id;Product.Name;Product.Number;Plant.Id;Plant.Name;Plant.Number;ProcessStatus;',
+                'conditions': ["ProcessStatus = 'Approved'"],
+                'logic': '{0}'
             };
             JSUTIL.callAJAXPost('/data/ProductStage/list', JSON.stringify(payload), function (response) {
-                stageOptions = (response || []).map(function (item) {
+                var list = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+                stageOptions = list.filter(function (item) {
+                    var status = (item?.processStatus || item?.ProcessStatus || '').toString().trim();
+                    return status === 'Approved';
+                }).map(function (item) {
                     var id = item.id || item.Id;
                     if (!id) {
                         return null;
@@ -3024,80 +3030,31 @@
 
         function initializeBatchStartDatePickers(container) {
             var $scope = container ? $(container) : $(document);
-            var $inputs = $scope.find('.batch-start-date-input');
+            var $inputs = $scope.find('.batch-start-date-input, .datepicker');
             if (!$inputs.length || !$.fn) {
                 return;
             }
 
-            if (typeof $.fn.daterangepicker === 'function' && typeof moment === 'function') {
-                $inputs.each(function () {
-                    var $input = $(this);
-                    var existingValue = ($input.val() || '').trim();
-
-                    if ($input.data('daterangepicker')) {
-                        $input.data('daterangepicker').remove();
-                    }
-
-                    var shouldDropUp = shouldOpenBatchStartDatePickerUp($input);
-
-                    $input.daterangepicker({
-                        singleDatePicker: true,
-                        showDropdowns: true,
-                        autoUpdateInput: false,
-                        minYear: 1901,
-                        maxYear: parseInt(moment().format('YYYY'), 10),
-                        drops: shouldDropUp ? 'up' : 'down',
-                        locale: {
-                            cancelLabel: 'Clear'
-                        }
-                    });
-
-                    $input.off('show.daterangepicker.batchStartPosition').on('show.daterangepicker.batchStartPosition', function (ev, picker) {
-                        var openUp = shouldOpenBatchStartDatePickerUp($(this));
-                        picker.drops = openUp ? 'up' : 'down';
-                        if (typeof picker.move === 'function') {
-                            picker.move();
-                        }
-                    });
-
-                    $input.off('apply.daterangepicker.batchStart').on('apply.daterangepicker.batchStart', function (ev, picker) {
-                        $(this).val(picker.startDate.format('DD/MM/YYYY')).trigger('input');
-                    });
-
-                    $input.off('cancel.daterangepicker.batchStart').on('cancel.daterangepicker.batchStart', function () {
-                        $(this).val('').trigger('input');
-                    });
-
-                    if (existingValue) {
-                        var parsedValue = moment(existingValue, ['DD/MM/YYYY', 'YYYY-MM-DD', 'MM/DD/YYYY'], true);
-                        if (parsedValue.isValid()) {
-                            var pickerObj = $input.data('daterangepicker');
-                            if (pickerObj) {
-                                pickerObj.setStartDate(parsedValue);
-                                pickerObj.setEndDate(parsedValue);
-                            }
-                            $input.val(parsedValue.format('DD/MM/YYYY'));
-                        }
-                    } else {
-                        $input.val('');
-                    }
-                });
-                return;
-            }
-
-            if (typeof $.fn.datepicker !== 'function') {
-                return;
-            }
             $inputs.each(function () {
                 var $input = $(this);
-                if ($input.data('datepicker')) {
-                    $input.datepicker('destroy');
+                var element = $input.get(0);
+                if (!element) {
+                    return;
                 }
-                var shouldOpenUp = shouldOpenBatchStartDatePickerUp($input);
-                $input.datepicker({
-                    format: 'dd/mm/yyyy',
-                    orientation: shouldOpenUp ? 'top auto' : 'bottom auto',
-                    autoclose: true
+                JSUTIL.initDatePicker(element, {
+                    disableMobile: true,
+                    onChange: function () {
+                        $input.trigger('input');
+                    },
+                    onOpen: function (selectedDates, dateStr, instance) {
+                        var shouldOpenUp = shouldOpenBatchStartDatePickerUp($input);
+                        if (instance && instance.calendarContainer) {
+                            instance.calendarContainer.classList.toggle('arrowTop', shouldOpenUp);
+                            instance.calendarContainer.classList.toggle('arrowBottom', !shouldOpenUp);
+                            instance.calendarContainer.style.top = '';
+                            instance.calendarContainer.style.bottom = '';
+                        }
+                    }
                 });
             });
         }
@@ -3763,8 +3720,10 @@
             const numberOfContainers = Number($('#finalProductNumberOfContainers').val());
             const productId = $('#finalProductProductId').val();
             const existingId = $('#finalProductId').val();
-            const manufacturingDate = $('#finalProductManufacturingDate').val();
-            const expiryDate = $('#finalProductExpiryDate').val();
+            const manufacturingDateRaw = $('#finalProductManufacturingDate').val();
+            const expiryDateRaw = $('#finalProductExpiryDate').val();
+            const manufacturingDate = manufacturingDateRaw ? moment(manufacturingDateRaw, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
+            const expiryDate = expiryDateRaw ? moment(expiryDateRaw, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
             const expiryType = normalizeExpiryType($('#finalProductExpiryType').val() || 'Expiry');
             const docNumber = ($('#finalProductDocNumber').val() || getBPCRDocNumber() || '').toString().trim();
             const netQtyRaw = $('#finalProductNetQtyPerContainer').val();
@@ -3857,15 +3816,19 @@
                 $('#finalProductNumberOfContainers').val(),
                 0
             );
+            const _mfgInputVal = $('#finalProductManufacturingDate').val();
+            const _expInputVal = $('#finalProductExpiryDate').val();
+            const _mfgFromInput = _mfgInputVal ? moment(_mfgInputVal, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
+            const _expFromInput = _expInputVal ? moment(_expInputVal, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
             const manufacturingDate = baseItem.manufacturingDate
-                || $('#finalProductManufacturingDate').val()
+                || _mfgFromInput
                 || '';
             const expiryDate = baseItem.expiryDate
-                || $('#finalProductExpiryDate').val()
+                || _expFromInput
                 || '';
             const retestDate = baseItem.retestDate
                 || baseItem.expiryDate
-                || $('#finalProductExpiryDate').val()
+                || _expFromInput
                 || '';
             const expiryType = normalizeExpiryType(
                 baseItem.expiryType
@@ -4877,7 +4840,8 @@
             }
             const defaultDoc = ($('#finalProductDocNumber').val() || getBPCRDocNumber() || batchNumber || '').toString().trim();
             $('#bpcrTransferDocCode').val(defaultDoc || batchNumber);
-            $('#bpcrTransferDate').val(formatDateInputValue(new Date().toISOString()));
+            $('#bpcrTransferDate').val(moment().format('DD/MM/YYYY'));
+            JSUTIL.initDatePicker('#bpcrTransferDate');
             $('#bpcrTransferQuantity').val('');
             $('#bpcrTransferTypeSelect').val('QC');
             $('#bpcrTransferTargetBatchName').val('');
@@ -5092,7 +5056,7 @@
             const docCodeInput = ($('#bpcrTransferDocCode').val() || '').toString().trim();
             const docCode = docCodeInput || batchNumber || getBPCRDocNumber() || '';
             const dateValue = $('#bpcrTransferDate').val();
-            const transactionDate = dateValue ? new Date(dateValue).toISOString() : new Date().toISOString();
+            const transactionDate = dateValue ? moment(dateValue, 'DD/MM/YYYY').toDate().toISOString() : new Date().toISOString();
             const orderMaterialId = finalProductItem?.id || '';
             const buildTxnPayload = function (changeReasonId) {
                 const payload = {
@@ -5179,15 +5143,19 @@
             if (!docNumber) {
                 return { valid: false, message: 'Doc number missing for BSR entry.' };
             }
+            const _mfgInputVal = $('#finalProductManufacturingDate').val();
+            const _expInputVal = $('#finalProductExpiryDate').val();
+            const _mfgFromInput = _mfgInputVal ? moment(_mfgInputVal, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
+            const _expFromInput = _expInputVal ? moment(_expInputVal, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
             const manufacturingDate = baseItem.manufacturingDate
-                || $('#finalProductManufacturingDate').val()
+                || _mfgFromInput
                 || '';
             const expiryDate = baseItem.expiryDate
-                || $('#finalProductExpiryDate').val()
+                || _expFromInput
                 || '';
             const retestDate = baseItem.retestDate
                 || baseItem.expiryDate
-                || $('#finalProductExpiryDate').val()
+                || _expFromInput
                 || '';
             const expiryType = normalizeExpiryType(
                 baseItem.expiryType
@@ -6594,7 +6562,7 @@
 
             const resetRequestButton = function () {
                 $('.request-materials').prop('disabled', false);
-                location.reload();
+                // location.reload();
             };
 
             persistRequestedMaterialQuantities(materials, function () {
@@ -6996,8 +6964,9 @@
             var netQtyPerContainer = (item && Number.isFinite(Number(item.actualQuantity))) ? Number(item.actualQuantity) : '';
             var variationPerContainer = (item && Number.isFinite(Number(item.variation))) ? Number(item.variation) : '';
             var gradeValue = (item && item.grade) || '';
-            var mfgDate = formatDateInputValue((item && item.manufacturingDate) || new Date());
-            var expiryDate = formatDateInputValue(item && item.expiryDate);
+            var mfgDateRaw = (item && item.manufacturingDate) || new Date();
+            var mfgDate = mfgDateRaw ? moment(mfgDateRaw).format('DD/MM/YYYY') : '';
+            var expiryDate = (item && item.expiryDate) ? moment(item.expiryDate).format('DD/MM/YYYY') : '';
             var expiryType = normalizeExpiryType((item && item.expiryType) || 'Expiry');
             var expiryDateLabel = expiryType === 'Retest' ? 'Retest Date' : 'Expiry Date';
             var expiryTypeDisabled = (isLocked || !finalProductEditEnabled) ? 'disabled' : '';
@@ -7067,7 +7036,7 @@
                 + gradeOptions + '</select></div>'
                 + '<div class="form-group col-sm-6">'
                 + '<label>Manufacturing Date <span class="text-danger">*</span></label>'
-                + '<input type="date" class="form-control" id="finalProductManufacturingDate"'
+                + '<input type="text" class="form-control datepicker" id="finalProductManufacturingDate" placeholder="DD/MM/YYYY" autocomplete="off"'
                 + ' value="' + mfgDate + '" ' + readOnlyAttr + ' /></div>'
                 + '<div class="form-group col-sm-6">'
                 + '<label id="finalProductExpiryDateLabel">' + expiryDateLabel + '</label>'
@@ -7076,7 +7045,7 @@
                 + ' style="max-width:100px;" ' + expiryTypeDisabled + '>'
                 + expiryTypeOptionsHtml
                 + '</select>'
-                + '<input type="date" class="form-control" id="finalProductExpiryDate"'
+                + '<input type="text" class="form-control datepicker" id="finalProductExpiryDate" placeholder="DD/MM/YYYY" autocomplete="off"'
                 + ' value="' + expiryDate + '" ' + readOnlyAttr + ' /></div></div>'
                 + '<input type="hidden" id="finalProductDocNumber"  value="' + docNumberValue + '" />'
                 + '<input type="hidden" id="finalProductId"         value="' + id + '" />'
@@ -7089,6 +7058,10 @@
             updateFinalProductDateLabel();
             applyFinalProductQtyRangeAttributes();
             renderPackingListSection();
+
+            // Init flatpickr on the final product date inputs
+            JSUTIL.initDatePicker('#finalProductManufacturingDate');
+            JSUTIL.initDatePicker('#finalProductExpiryDate');
 
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
@@ -7827,8 +7800,12 @@
                 || {};
             const quantity = firstDefinedNumber(baseItem.plannedQuantity, $('#finalProductQty').val(), 0);
             const containerCount = firstDefinedNumber(baseItem.numberOfContainers, $('#finalProductNumberOfContainers').val(), 0);
-            const manufacturingDateValue = baseItem.manufacturingDate || $('#finalProductManufacturingDate').val() || '';
-            const expiryDateValue = baseItem.expiryDate || $('#finalProductExpiryDate').val() || '';
+            const _mfgInputVal = $('#finalProductManufacturingDate').val();
+            const _expInputVal = $('#finalProductExpiryDate').val();
+            const _mfgFromInput = _mfgInputVal ? moment(_mfgInputVal, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
+            const _expFromInput = _expInputVal ? moment(_expInputVal, 'DD/MM/YYYY').format('YYYY-MM-DD') : '';
+            const manufacturingDateValue = baseItem.manufacturingDate || _mfgFromInput || '';
+            const expiryDateValue = baseItem.expiryDate || _expFromInput || '';
             const expiryType = normalizeExpiryType(
                 baseItem.expiryType
                 || $('#finalProductExpiryType').val()
@@ -8451,6 +8428,11 @@
         function formatDateInputValue(value) {
             if (!value) {
                 return '';
+            }
+            // If already in DD/MM/YYYY format, parse via moment
+            if (typeof value === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                const m = moment(value, 'DD/MM/YYYY');
+                return m.isValid() ? m.format('YYYY-MM-DD') : '';
             }
             const date = new Date(value);
             if (Number.isNaN(date.getTime())) {

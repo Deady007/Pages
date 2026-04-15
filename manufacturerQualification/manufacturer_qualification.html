@@ -459,6 +459,18 @@
                                        placeholder="DD/MM/YYYY" autocomplete="off" required disabled />
                             </div>
                         </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="">Type of Manufacturer</label>
+                                <select name="manuType" class="form-control editVendorQuali" disabled>
+                                    <option value="">--none--</option>
+                                      <option value="RM">Raw Materials</option>
+                                    <option value="PM">Packing Materials</option>
+                                    <option value="GM">General Materials</option>
+
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <input type="hidden" id="hiddenVendorQualificationId" name="vendorQualificationId">
                 </div>
@@ -794,7 +806,7 @@
                                     <option value="">--none--</option>
                                     <option value="RM">Raw Materials</option>
                                     <option value="PM">Packing Materials</option>
-                                    <option value="Products">Products</option>
+                                    <option value="GM">General Materials</option>
                                 </select>
                             </div>
                         </div>
@@ -1003,12 +1015,9 @@
         $("#vendorUploadFilesPanel").hide(); $("#newManuQualificationPanel").show();
         resetNewManufacturerQualificationForm();
         var $newDate = $('.newManuQuali[name="startDate"]');
-        if ($newDate.data('daterangepicker')) { $newDate.data('daterangepicker').remove(); }
         $newDate.prop('disabled', false).prop('readonly', false);
-        $newDate.daterangepicker({ singleDatePicker: true, showDropdowns: true, autoUpdateInput: false, minYear: 1901, maxYear: parseInt(moment().format('YYYY'), 10) + 5, locale: { cancelLabel: 'Clear', format: 'DD/MM/YYYY' } });
+        JSUTIL.initDatePicker($newDate);
         $newDate.val(moment().format('DD/MM/YYYY'));
-        $newDate.on('apply.daterangepicker', function (ev, picker) { $(this).val(picker.startDate.format('DD/MM/YYYY')); });
-        $newDate.off('cancel.daterangepicker').on('cancel.daterangepicker', function () { $(this).val(''); });
         renderLucideIcons();
     }
 
@@ -1250,11 +1259,7 @@
             $("#newContactSearch").prop("disabled", false);
             initializeVendorSearchForEdit(); $("#editVendorName").focus();
             var $startDate = $('.editVendorQualificationInput[name="StartDate"]');
-            var displayVal = $startDate.val();
-            if ($startDate.data('daterangepicker')) { $startDate.data('daterangepicker').remove(); }
-            $startDate.daterangepicker(Object.assign({ singleDatePicker: true, showDropdowns: true, autoUpdateInput: false, minYear: 1901, maxYear: parseInt(moment().format('YYYY'), 10) + 5, locale: { cancelLabel: 'Clear', format: 'DD/MM/YYYY' } }, displayVal ? { startDate: moment(displayVal, 'DD/MM/YYYY') } : {}));
-            $startDate.on('apply.daterangepicker', function (ev, picker) { $(this).val(picker.startDate.format('DD/MM/YYYY')); });
-            $startDate.off('cancel.daterangepicker').on('cancel.daterangepicker', function () { $(this).val(''); });
+            JSUTIL.initDatePicker($startDate);
         });
 
         $(".vendorQualificationSaveBtn").on("click", function () { if (currentVendorQualificationId) { vendorQualificationSave(); } });
@@ -1292,21 +1297,46 @@
                     $("#editVendorName").val(getAccountDisplayName(val2.vendor));
                     $("#vendorNumber").html(val2.number); $("#vendorNumber1").html(val2.number); $("#vendorNumberQau").html(val2.number);
                     $("#allManuQualificationPanel").hide(); $("#editManuQualificationPanel").show(); $(".newManuQualificationBtn").hide();
+                    $('.editVendorQuali[name="manuType"]').val(val2?.vendor?.vendorType).trigger('change')
                     currentProcessStatus = val2.processStatus;
 
                     if (val2.processStatus === "Initiation" || val2.processStatus == 'QA Rejected') {
-                        activateStep(0); $("#deleteVendorQualificationBtn").show(); $(".vendorQualificationEditBtn").show();
-                        $("#addProductsItemRowsBtn,#saveProductsItemRowsBtn,#deleteProductsItemBtn,#saveQuestionsBtn,#uploadVendorBtn,.addQuestionsBtn,.saveQuestionsBtn").show();
-                        $(".recordApprovalBtn,.printVqBtn").show(); $(".vendorQualificationEditBtn").show();
+                        activateStep(0); 
+
                         $(".recordApprovRejectBtn,.recordReviewSaveBtn").hide();
+
                         $(".editVendorQualificationInput").prop("readonly", true).prop("disabled", true);
-                        $('a[href="#Questions"]').closest("li").show();
+                        if(FOX.employeeId == val2?.approvedBy?.id){
+                            $("#deleteVendorQualificationBtn").show(); 
+                        $(".vendorQualificationEditBtn").show();
+                        $("#addProductsItemRowsBtn,#saveProductsItemRowsBtn,#deleteProductsItemBtn,#saveQuestionsBtn,#uploadVendorBtn,.addQuestionsBtn,.saveQuestionsBtn").show();
+                        $(".recordApprovalBtn,.printVqBtn").show(); 
+                        $(".vendorQualificationEditBtn").show();
                         $(".selectProduct,#editVendorName").prop("readonly", false);
+                        }
+                        else{
+                            $("#deleteVendorQualificationBtn").hide(); 
+                        $(".vendorQualificationEditBtn").hide();
+                        $("#addProductsItemRowsBtn,#saveProductsItemRowsBtn,#deleteProductsItemBtn,#saveQuestionsBtn,#uploadVendorBtn,.addQuestionsBtn,.saveQuestionsBtn").hide();
+                        $(".recordApprovalBtn,.printVqBtn").hide(); 
+                        $(".vendorQualificationEditBtn").hide();
+                        $(".selectProduct,#editVendorName").prop("readonly", true);
+                        }
+                        $('a[href="#Questions"]').closest("li").show();
                     } else if (val2.processStatus === "QA Review") {
                         activateStep(1);
                         $("#deleteVendorQualificationBtn,#addProductsItemRowsBtn,#saveProductsItemRowsBtn,#deleteProductsItemBtn,#uploadVendorBtn,.addQuestionsBtn,.saveQuestionsBtn").hide();
                         $(".vendorQualificationEditBtn,.recordApprovalBtn,.recordApprovRejectBtn").hide();
-                        $(".recordReviewSaveBtn").show(); $(".printVqBtn").show();
+                        // Prevent self-approval: hide approve/reject (Save) when current user is the assignee
+                        var __assignedToId = val2 && (
+                            (val2.assignedTo && (val2.assignedTo.id || val2.assignedTo.Id)) ||
+                            val2.assignedToId || val2.AssignedToId
+                        );
+                        var __currentEmpId = (window.FOX && (FOX.employeeId || FOX.EmployeeId)) || null;
+                        var __isSelfInitiated = __assignedToId != null && __currentEmpId != null
+                            && String(__assignedToId) === String(__currentEmpId);
+                        $(".recordReviewSaveBtn").toggle(!__isSelfInitiated);
+                        $(".printVqBtn").show();
                         $("#qauVendorName").val(getAccountDisplayName(val2.vendor));
                         $("#qauStartDate").val(JSUTIL.getDate(val2.startDate));
                         _loadQauData(val2);
@@ -1384,7 +1414,15 @@
     // ═══════════════════════════════════════════════════════════════
 
     function _loadQauData(val2) {
-        var isLocked = val2.processStatus === "QA Approved";
+        // Lock when status is QA Approved OR when current user is the assignee (self-review prevention)
+        var __assignedToId = val2 && (
+            (val2.assignedTo && (val2.assignedTo.id || val2.assignedTo.Id)) ||
+            val2.assignedToId || val2.AssignedToId
+        );
+        var __currentEmpId = (window.FOX && (FOX.employeeId || FOX.EmployeeId)) || null;
+        var __isSelfInitiated = __assignedToId != null && __currentEmpId != null
+            && String(__assignedToId) === String(__currentEmpId);
+        var isLocked = val2.processStatus === "QA Approved" || __isSelfInitiated;
 
         // PATCH #2: Use /vendor-qualification/{id} endpoint + client-side filter
         // (NOT /search?qualificationId=X&type=Product which doesn't exist)
@@ -1488,14 +1526,44 @@
         }
         $tbody.html(innerHtml);
     }
+    function showSaveSuccessToast(message, onDone) {
+            var $container = $('#saveSuccessToastContainer');
+            if (!$container.length) {
+                $('body').append('<div id="saveSuccessToastContainer" class="save-success-toast-container"></div>');
+                $container = $('#saveSuccessToastContainer');
+            }
 
+            var toastId = 'saveToast_' + Date.now();
+            $container.html(
+                '<div id="' + toastId + '" class="save-success-toast" role="status" aria-live="polite">' +
+                '<i class="bi bi-check-circle-fill"></i>' +
+                '<span>' + (message || 'Saved successfully.') + '</span>' +
+                '</div>'
+            );
+
+            var $toast = $('#' + toastId);
+            setTimeout(function () {
+                $toast.addClass('show');
+            }, 10);
+
+            setTimeout(function () {
+                $toast.removeClass('show');
+            }, 1400);
+
+            setTimeout(function () {
+                $toast.remove();
+                if (typeof onDone === 'function') {
+                    onDone();
+                }
+            }, 1850);
+        }
     // ═══════════════════════════════════════════════════════════════
     // PATCH #6 + #7 + #10: QA Review Save (PUT per item + PUT status + PUT account)
     // ═══════════════════════════════════════════════════════════════
 
     $(".recordReviewSaveBtn").on("click", function () {
         // Open password confirm modal — on success perform the QA review save
-        requirePasswordThen(function () {
+        JSUTIL.buildAuthenticationModal(function () {
             let items = [];
             $("#qauProductsTable tr").each(function () {
                 const itemId = $(this).attr("data-item-id"); if (!itemId) return;
@@ -1527,17 +1595,27 @@
                             const currentVendorStatus = (currentRecord && currentRecord.vendor && (currentRecord.vendor.accountStatus || currentRecord.vendor.AccountStatus) || "").toLowerCase();
                             if (anyApproved) {
                                 // PATCH #10: PUT for account update (not POST)
-                                JSUTIL.callAJAXPut(JSUTIL.getUrl("/api/account/" + vendorId), JSON.stringify({ accountStatus: "Approved" }), function () { location.reload(); });
-                            } else { location.reload(); }
+                                JSUTIL.callAJAXPut(JSUTIL.getUrl("/api/account/" + vendorId), JSON.stringify({ accountStatus: "Approved" }), function () { 
+                                    showSaveSuccessToast('Manufacturer Qualification Closed ',function(){
+                                        location.reload()
+                                    })
+                                });
+                            } else { 
+                                showSaveSuccessToast('Manufacturer Qualification Updated',function(){
+                                    location.reload()
+                                })
+                             }
                         });
                     });
             }).catch(function (error) { console.error("Error saving review items:", error); JSUTIL.buildErrorModal("Error saving review decisions: " + error); });
         });
     });
 
-    $(".recordApprovalBtn").on("click", function () {
-        // Open Confirm Password modal
-        requirePasswordThen(function () {
+    // Use delegated binding + .off so a stale / double-loaded page-script
+    // can't stack multiple handlers or open the older leftover modals.
+    $(document).off("click.vqApproval", ".recordApprovalBtn");
+    $(document).on("click.vqApproval", ".recordApprovalBtn", function () {
+        JSUTIL.buildAuthenticationModal(function () {
             JSUTIL.callAJAXPut(
                 JSUTIL.getUrl("/api/vendor-qualification/" + currentVendorQualificationId),
                 JSON.stringify({ processStatus: "QA Review" }),
@@ -1549,7 +1627,11 @@
 
     function completeImcheckCallback(res) {
         var historyObj = { name: "Record submitted for QA Review", startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: currentRecord.id };
-        JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function () { location.reload(); });
+        JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function () { 
+            showSaveSuccessToast('Manufacturer Qualification sent to Review',function(){
+                location.reload()
+            })
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1704,14 +1786,14 @@
     // ═══════════════════════════════════════════════════════════════
 
     $("#addProductsItemRowsBtn").on("click", function () {
-        var $row = $('<tr class="newItemEntry" name=""><td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow" name="" type="checkbox"><label></label></div></td><td><input type="text" placeholder="Search product name..." class="form-control selectProduct vq-product-search-name" required/><input type="hidden" name="Product.Name" class="newItemInput vq-product-id"></td><td><input type="text" placeholder="Search product code..." class="form-control selectProduct vq-product-search-code"/></td></tr>');
+        var $row = $('<tr class="newItemEntry" name=""><td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow" name="" type="checkbox"><label></label></div></td><td><input type="text" placeholder="Search product name..." class="form-control selectProduct vq-product-search-name" required /><input type="hidden" name="Product.Name" class="newItemInput vq-product-id"></td><td><input type="text" placeholder="Search product code..." class="form-control selectProduct vq-product-search-code"/></td></tr>');
         $("#productsTable").append($row); initVQProductTypeahead($row);
     });
 
     function callbackAfterVendorItemRes(response) {
         console.log("Vendor items response for products/services:", response);
         let filteredResponse = response.filter((item) => item.type === "Product");
-        var isEditable = currentRecord.processStatus === "Initiation" || currentRecord.processStatus == 'QA Rejected';
+        var isEditable = (currentRecord.processStatus === "Initiation" || currentRecord.processStatus == 'QA Rejected') && currentRecord?.approvedBy?.id == FOX.employeeId;
         filteredResponse.forEach(function (item) {
             let productId = item.product?.Id || item.product?.id || "";
             let productName = item.product?.name || "";
@@ -1747,7 +1829,11 @@
 
     function callbackAfterDeleteProductsDetails(response) {
         var historyObj = { name: "Products removed from record", startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: currentRecord.id };
-        JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function () { location.reload(); });
+        JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function () { 
+            showSaveSuccessToast('Product Deleted Successfully',function(){
+                location.reload();
+            })
+         });
     }
 
     function toggleDeleteButton(checkboxSelector, buttonSelector) { $(buttonSelector).prop("disabled", !$(checkboxSelector).is(":checked")); }
@@ -1784,7 +1870,11 @@
     function callbackAfterAddProduct(response) {
         showManuNotification('Products saved successfully.', 'success');
         var historyObj = { name: "Product List updated", startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: currentRecord.id };
-        JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function () { location.reload(); });
+        JSUTIL.callAJAXPost("/api/process-activities", JSON.stringify(historyObj), function () { 
+            showSaveSuccessToast('Product Added Successfully',function(){
+                location.reload()
+            })
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -2061,7 +2151,7 @@
                             JSUTIL.buildErrorModal('Failed to create manufacturer account.');
                             return;
                         }
-                        var obj2 = { number: nextNumber, vendor: { id: Number(newAccountId) }, startDate: convertToISO($('.newManuQuali[name="startDate"]').val()), processStatus: 'Initiation' };
+                        var obj2 = { number: nextNumber, vendor: { id: Number(newAccountId) }, startDate: convertToISO($('.newManuQuali[name="startDate"]').val()), processStatus: 'Initiation',approvedBy:{id:FOX.employeeId }};
                         JSUTIL.callAJAXPost('/api/vendor-qualification/create_with_sequence', JSON.stringify(obj2), function (res2) {
                             console.log('[saveNewManu] create_with_sequence response =', res2);
                             var vqId = res2 && (res2.id || res2.Id || (res2.data && (res2.data.id || res2.data.Id)));
@@ -2091,8 +2181,13 @@
                     var obj = { number: nextNumber, vendor: { id: selectedVendorId }, startDate: convertToISO($('.newManuQuali[name="startDate"]').val()), processStatus: 'Initiation' };
                     var contactId = Number($('#ManuContactId').val() || $('#invoiceContactSearch').val() || 0);
                     if (contactId > 0) { obj['contact'] = { id: contactId }; }
+                    obj['approvedBy'] = {id:FOX.employeeId}
                     JSUTIL.callAJAXPost('/api/vendor-qualification/create_with_sequence', JSON.stringify(obj), function (res) {
-                        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify({ name: "Vendor Qualification Record Created", startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: res.id }), function () { location.reload(); });
+                        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify({ name: "Vendor Qualification Record Created", startDate: new Date(), performedBy: { id: Number(FOX.employeeId) }, parentRecordId: res.id }), function () { 
+                            showSaveSuccessToast('Manufacturing Qualification Created Successfully',function(){
+                                location.reload()
+                            })
+                         });
                     });
                 } else {
                     console.warn('[saveNewManu] no branch matched. type =', JSON.stringify($('.newManuType').val()));

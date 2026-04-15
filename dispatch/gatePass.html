@@ -226,7 +226,7 @@
                         <div class="col-sm-4">
                             <div class="form-group mb-3">
                                 <label>Gate Pass Date</label>
-                                <input type="date" class="form-control newGatePassInput" name="gatePassDate">
+                                <input type="text" class="form-control newGatePassInput" name="gatePassDate" id="newGatePassDate" placeholder="DD/MM/YYYY" autocomplete="off">
                             </div>
                         </div>
                         <!-- Outward Request (normal select, filtered by type + bill-to) -->
@@ -242,8 +242,8 @@
                         <div class="col-sm-4" id="newReturnDateCol" style="display:none;">
                             <div class="form-group mb-3">
                                 <label>Expected Return Date <span style="color:red;">*</span></label>
-                                <input type="date" class="form-control newGatePassInput" name="returnDate"
-                                    id="newReturnDate">
+                                <input type="text" class="form-control newGatePassInput" name="returnDate"
+                                    id="newReturnDate" placeholder="DD/MM/YYYY" autocomplete="off">
                             </div>
                         </div>
                     </div>
@@ -387,15 +387,15 @@
                         <div class="col-sm-3">
                             <div class="form-group mb-3">
                                 <label>Date</label>
-                                <input type="date" class="form-control editGatePassInput" name="gatePassDate" disabled>
+                                <input type="text" class="form-control editGatePassInput" name="gatePassDate" id="editGatePassDate" placeholder="DD/MM/YYYY" autocomplete="off" disabled>
                             </div>
                         </div>
                         <!-- Return Date in edit — shown only when type is Returnable -->
                         <div class="col-sm-3" id="editReturnDateCol" style="display:none;">
                             <div class="form-group mb-3">
                                 <label>Expected Return Date</label>
-                                <input type="date" class="form-control editGatePassInput" name="returnDate"
-                                    id="editReturnDate" disabled>
+                                <input type="text" class="form-control editGatePassInput" name="returnDate"
+                                    id="editReturnDate" placeholder="DD/MM/YYYY" autocomplete="off" disabled>
                             </div>
                         </div>
                         <div class="col-sm-3">
@@ -1108,20 +1108,14 @@ if (selectedType && selectedGorId && !selectedBillId) {
         $('#editGPType').val(gatePass.type || '');
 
         if (gatePass.gatePassDate) {
-            var d = new Date(gatePass.gatePassDate);
-            var yyyy = d.getFullYear();
-            var mm = String(d.getMonth() + 1).padStart(2, '0');
-            var dd = String(d.getDate()).padStart(2, '0');
-            $('.editGatePassInput[name="gatePassDate"]').val(yyyy + '-' + mm + '-' + dd);
+            $('.editGatePassInput[name="gatePassDate"]').val(moment(gatePass.gatePassDate).format('DD/MM/YYYY'));
         } else {
             $('.editGatePassInput[name="gatePassDate"]').val('');
         }
 
         // Return date
         if (gatePass.returnDate) {
-            var rd = new Date(gatePass.returnDate);
-            var ry = rd.getFullYear(), rm = String(rd.getMonth() + 1).padStart(2, '0'), rdd = String(rd.getDate()).padStart(2, '0');
-            $('#editReturnDate').val(ry + '-' + rm + '-' + rdd);
+            $('#editReturnDate').val(moment(gatePass.returnDate).format('DD/MM/YYYY'));
         } else {
             $('#editReturnDate').val('');
         }
@@ -1312,6 +1306,11 @@ if (selectedType && selectedGorId && !selectedBillId) {
     // ================================================================
     $(document).ready(function () {
         loadGatePasses();
+        // Initialize flatpickr DD/MM/YYYY date pickers
+        JSUTIL.initDatePicker('#newGatePassDate');
+        JSUTIL.initDatePicker('#newReturnDate');
+        JSUTIL.initDatePicker('#editGatePassDate');
+        JSUTIL.initDatePicker('#editReturnDate');
 
         // ---- New Gate Pass ----
         $('#newGatePassBtn').on('click', function () {
@@ -1488,8 +1487,8 @@ if (selectedType && selectedGorId && !selectedBillId) {
                 processStatus: 'New'
             };
             var gpDate = $('.newGatePassInput[name="gatePassDate"]').val();
-            if (gpDate) payload.gatePassDate = gpDate;
-            if (returnDate) payload.returnDate = returnDate;
+            if (gpDate) payload.gatePassDate = moment(gpDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+            if (returnDate) payload.returnDate = moment(returnDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
 
             // Bill To
             // CHANGE 6d: Read from #newBillToId hidden input instead of old #newBillToSelect
@@ -1577,8 +1576,8 @@ if (selectedType && selectedGorId && !selectedBillId) {
                 remarks: $('.editGatePassInput[name="remarks"]').val() || null
             };
             var gpDate = $('.editGatePassInput[name="gatePassDate"]').val();
-            if (gpDate) payload.gatePassDate = gpDate;
-            if (returnDate) payload.returnDate = returnDate;
+            if (gpDate) payload.gatePassDate = moment(gpDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+            if (returnDate) payload.returnDate = moment(returnDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
 
             requestJson('/api/gate-passes/' + currentGatePassId, 'PUT', payload)
                 .then(function () {

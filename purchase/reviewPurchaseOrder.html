@@ -1132,62 +1132,68 @@
     //         });
     //     });
     // });
-    $('#approveBtn').off('click').on('click', async function () {
-    // Hide modal first (BS5)
-    var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
-    if (modalInstance) modalInstance.hide();
+//     $('#approveBtn').off('click').on('click', async function () {
+//     // Hide modal first (BS5)
+//     var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
+//     if (modalInstance) modalInstance.hide();
 
-    JSUTIL.startSpinner();
+//     JSUTIL.startSpinner();
 
-    try {
-        // 1) Update each product quantityOnOrder using PUT /api/products/{id}
-        for (var i = 0; i < orderItemList.length; i++) {
-            var item = orderItemList[i];
-            var product = item.product || {};
-            var productId = Number(product.id);
+//     try {
+//         // 1) Update each product quantityOnOrder using PUT /api/products/{id}
+//         for (var i = 0; i < orderItemList.length; i++) {
+//             var item = orderItemList[i];
+//             var product = item.product || {};
+//             var productId = Number(product.id);
 
-            if (!productId) continue;
+//             if (!productId) continue;
 
-            var currentQtyOnOrder = Number(product.quantityOnOrder) || 0;
-            var orderQuantity = Number(item.quantity) || 0;
-            var newQtyOnOrder = currentQtyOnOrder + orderQuantity;
+//             var currentQtyOnOrder = Number(product.quantityOnOrder) || 0;
+//             var orderQuantity = Number(item.quantity) || 0;
+//             var newQtyOnOrder = currentQtyOnOrder + orderQuantity;
 
-            // If your Product PUT requires full object, keep `...product` fields explicitly.
-            // If partial update is accepted, this minimal payload is enough.
-            var productPayload = {
-                quantityOnOrder: newQtyOnOrder
-            };
+//             // If your Product PUT requires full object, keep `...product` fields explicitly.
+//             // If partial update is accepted, this minimal payload is enough.
+//             var productPayload = {
+//                 quantityOnOrder: newQtyOnOrder
+//             };
 
-            var productRes = await fetch(JSUTIL.getUrl('/api/products/' + productId), {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(productPayload)
-            });
+//             var productRes = await fetch(JSUTIL.getUrl('/api/products/' + productId), {
+//                 method: 'PUT',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify(productPayload)
+//             });
 
-            if (!productRes.ok) {
-                // throw new Error('Product update failed for productId=' + productId + ' status=' + productRes.status);
-            }
-        }
+//             if (!productRes.ok) {
+//                 // throw new Error('Product update failed for productId=' + productId + ' status=' + productRes.status);
+//             }
+//         }
 
-        // 2) After all products updated, approve PO
-        var statusRes = await fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'text/plain' },
-            body: 'Bussiness Head Review'
-        });
+//         // 2) After all products updated, approve PO
+//         var statusRes = await fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
+//             method: 'PATCH',
+//             headers: { 'Content-Type': 'text/plain' },
+//             body: 'Business Head Review'
+//         });
 
-        if (!statusRes.ok) {
-            // throw new Error('Status update failed: ' + statusRes.status);
-        }
+//         if (!statusRes.ok) {
+//             // throw new Error('Status update failed: ' + statusRes.status);
+//         }
 
-        submitForApprovalCallback(statusRes);
-    } catch (err) {
-        console.error('Approve flow failed:', err);
-        // JSUTIL.buildErrorModal('Unable to approve. Please check product update API payload.');
-    } finally {
-        JSUTIL.stopSpinner();
-    }
-});
+//         submitForApprovalCallback(statusRes);
+//     } catch (err) {
+//         console.error('Approve flow failed:', err);
+//         // JSUTIL.buildErrorModal('Unable to approve. Please check product update API payload.');
+//     } finally {
+//         JSUTIL.stopSpinner();
+//     }
+// });
+
+    $(document).on('click','#approveBtn',function(){
+        JSUTIL.buildAuthenticationModal(function(){
+            JSUTIL.callAJAXPut('/api/purchase/orders/'+currentRecordId ,JSON.stringify({orderStatus:'Business Head Review'}),submitForApprovalCallback)
+        })
+    })
     $('#rejectBtn').on('click', function () {
         // Hide modal first (BS5)
         var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
@@ -1198,7 +1204,8 @@
         // OLD: JSUTIL.callAJAXPost(postUrl, JSON.stringify(obj), function (res) { location.reload(); });
 
         // NEW: PATCH /api/purchase/orders/{id}/status
-        fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
+        JSUTIL.buildAuthenticationModal(function(){
+            fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
             method: 'PATCH',
             headers: { 'Content-Type': 'text/plain' },
             body: 'Rejected'
@@ -1210,6 +1217,7 @@
         .catch(function (err) {
             console.error('Reject PATCH failed:', err);
         });
+        })
 
         
     });
@@ -1252,7 +1260,7 @@
         dataflag = (orderObj.orderStatus === 'HOD Review') ? false : true;
 
         // NEW: read from orderObj directly
-        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "QA Review" || orderObj.orderStatus === "Approved") {
+        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "Business Head Review" || orderObj.orderStatus === "Approved") {
             $('.approvedBtn').hide();
             $('.orderEditBtn').hide();
             $('.orderCancelBtn').hide();

@@ -315,22 +315,25 @@
         </div>
     </div>
 
-    <div class="modal inmodal fade" id="allocationOverviewModal" tabindex="-1" role="dialog"
-        aria-hidden="true" style="display: none;">
+    <div class="modal inmodal fade" id="allocationOverviewModal" tabindex="-1" role="dialog" aria-hidden="true"
+        style="display: none;">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <div style="width: 100%; text-align: center;">
                         <h4 class="modal-title" style="margin: 0;">Auto Allocation</h4>
-                        <small class="font-bold" style="display: block; margin-top: 4px;">Review allocated batches and container quantities for this request</small>
+                        <small class="font-bold" style="display: block; margin-top: 4px;">Review allocated batches and
+                            container quantities for this request</small>
                     </div>
                 </div>
                 <div class="modal-body">
                     <div id="allocationOverviewSections" style="max-height:420px; overflow-y:auto;">
                         <div class="text-center text-muted">No allocation available.</div>
                     </div>
+                    <div id="allocationContainerValidationMessage" class="alert alert-danger small" style="display:none; margin-top:8px;"></div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="saveAllocationContainersBtn">Save Containers</button>
                     <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -432,6 +435,7 @@
         state.containersByLot = state.containersByLot || {};
         state.allocationResults = state.allocationResults || { products: [] };
         state.containerSourceById = state.containerSourceById || {};
+        state.containerSaveByRequest = state.containerSaveByRequest || {};
         state.containerView = state.containerView || {
             productId: '',
             lotId: '',
@@ -799,6 +803,32 @@
                 openAllocationOverview();
             });
 
+            $(document).on('click', '#saveAllocationContainersBtn', function () {
+                saveAllocationContainers();
+            });
+
+            $(document).on('click', '.add-container-row-btn', function () {
+                const lotId = $(this).data('lot-id');
+                const lotUom = $(this).data('lot-uom') || '';
+                const targetBodyId = $(this).data('target-body') || '';
+                addContainerRow(lotId, lotUom, targetBodyId);
+                refreshAllocationSaveState();
+            });
+
+            $(document).on('click', '.remove-container-row-btn', function () {
+                const $tr = $(this).closest('tr');
+                const $tbody = $tr.closest('tbody');
+                $tr.remove();
+                if (!$tbody.find('tr:not(.no-containers-placeholder)').length) {
+                    $tbody.html('<tr class="no-containers-placeholder"><td colspan="4" class="text-muted small text-center" style="padding:4px;">No containers added.</td></tr>');
+                }
+                refreshAllocationSaveState();
+            });
+
+            $(document).on('input change', '.container-qty-input, .container-netweight-input', function () {
+                refreshAllocationSaveState();
+            });
+
             $(document).on('change', '.allocation-batch-select', function () {
                 const $select = $(this);
                 const productId = $select.data('product-id');
@@ -817,29 +847,29 @@
             });
         }
 
-    function getAvailableContainersForLot(lotId) {
-        if (!lotId) {
-            return [];
-        }
-        const list = state.containersByLot && state.containersByLot[String(lotId)];
-        if (!Array.isArray(list) || !list.length) {
-            return [];
-        }
-        return list.filter(function (row) {
-            const qty = Number(row?.quantity || 0);
-            const status = (row?.processStatus || '').toString().toLowerCase();
-            return qty > 0 && status !== 'consumed';
-        }).sort(function (a, b) {
-            const wA = Number(a?.netWeight || 0);
-            const wB = Number(b?.netWeight || 0);
-            if (wA !== wB) {
-                return wA - wB;
+        function getAvailableContainersForLot(lotId) {
+            if (!lotId) {
+                return [];
             }
-            const numA = (a?.number || '').toString().toLowerCase();
-            const numB = (b?.number || '').toString().toLowerCase();
-            return numA.localeCompare(numB);
-        });
-    }
+            const list = state.containersByLot && state.containersByLot[String(lotId)];
+            if (!Array.isArray(list) || !list.length) {
+                return [];
+            }
+            return list.filter(function (row) {
+                const qty = Number(row?.quantity || 0);
+                const status = (row?.processStatus || '').toString().toLowerCase();
+                return qty > 0 && status !== 'consumed';
+            }).sort(function (a, b) {
+                const wA = Number(a?.netWeight || 0);
+                const wB = Number(b?.netWeight || 0);
+                if (wA !== wB) {
+                    return wA - wB;
+                }
+                const numA = (a?.number || '').toString().toLowerCase();
+                const numB = (b?.number || '').toString().toLowerCase();
+                return numA.localeCompare(numB);
+            });
+        }
         function handleLotQtyInput($input) {
             if (!$input || !$input.length) {
                 return;
@@ -938,7 +968,9 @@
             const s = (status || '').toString().toLowerCase();
             const canAct = module.canIssueStatus ? module.canIssueStatus(s) : false;
             const isIssued = s === 'issued';
-            $('.issue-request-btn').prop('disabled', !canAct);
+            const hasSavedContainers = !!(state.currentRequestId && state.containerSaveByRequest[state.currentRequestId]);
+            const showIssueButton = canAct && hasSavedContainers;
+            $('.issue-request-btn').toggle(showIssueButton).prop('disabled', !showIssueButton);
             $('.reject-request-btn').prop('disabled', !canAct);
             $('#printProductIssueLabelBtn').toggle(isIssued);
             $('#printProductIssueReportBtn').toggle(isIssued);
@@ -1160,7 +1192,7 @@
         }
 
         function fetchProductLotsForItems(items, callback) {
-            console.log('fetch sss',items)
+            console.log('fetch sss', items)
             const productIds = [];
             (items || []).forEach(function (item) {
                 const rawPid = item?.product?.id
@@ -1190,7 +1222,7 @@
                 pending -= 1;
                 if (pending <= 0) {
                     state.productLots = lotMap;
-                    console.log('on prpoduct lots ss',state)
+                    console.log('on prpoduct lots ss', state)
                     if (typeof callback === 'function') {
                         callback(lotMap);
                     }
@@ -1240,6 +1272,7 @@
                     if (lotId) {
                         const url = '/api/product-containers/search?productLotId=' + encodeURIComponent(lotId);
                         JSUTIL.callAJAXGet(url, function (res) {
+                        console.log("product containers for lot", lotId, res);  
                             const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
                             containersByLot[lotId] = list;
                             pending--;
@@ -1288,7 +1321,7 @@
                 manufacturingDate: lot?.manufacturingDate || lot?.ManufacturingDate || '',
                 processStatus: lot?.processStatus || lot?.ProcessStatus || '',
                 receiptItem: lot?.receiptItem,
-                arn:lot?.arn || '',
+                arn: lot?.arn || '',
             };
         }
 
@@ -1332,7 +1365,7 @@
         }
 
         function renderRequestItems(items) {
-            console.log('data for render',items)
+            console.log('data for render', items)
             const body = $('#productIssueMaterialTable');
             body.empty();
             if (!Array.isArray(items) || !items.length) {
@@ -1553,6 +1586,93 @@
             $el.text(msg).show();
         }
 
+        function ensureAllocationSaveButton() {
+            const $footer = $('#allocationOverviewModal .modal-footer');
+            if (!$footer.length) {
+                return;
+            }
+            if ($footer.find('#saveAllocationContainersBtn').length) {
+                return;
+            }
+            $footer.prepend('<button type="button" class="btn btn-primary" id="saveAllocationContainersBtn" style="margin-right:6px;">Save Containers</button>');
+        }
+
+        function setAllocationValidationMessage(messages) {
+            const $msg = $('#allocationContainerValidationMessage');
+            if (!$msg.length) {
+                return;
+            }
+            const list = Array.isArray(messages)
+                ? messages.filter(Boolean)
+                : (messages ? [messages] : []);
+            if (!list.length) {
+                $msg.hide().text('');
+                return;
+            }
+            $msg.html(list.map(function (m) { return `<div>${m}</div>`; }).join('')).show();
+        }
+
+        function getAllocatedWeightForLot(lotId) {
+            const lotKey = String(lotId || '');
+            if (!lotKey) {
+                return 0;
+            }
+            const $tbody = $(`#allocationOverviewModal .allocation-lot-containers-body[data-lot-id="${lotKey}"]`).first();
+            const fromDom = Number($tbody.attr('data-allocated-weight'));
+            if (Number.isFinite(fromDom)) {
+                return fromDom;
+            }
+            const products = state.allocationResults?.products || [];
+            for (let i = 0; i < products.length; i += 1) {
+                const lots = products[i]?.lots || [];
+                for (let j = 0; j < lots.length; j += 1) {
+                    if (String(lots[j]?.lotId || '') === lotKey) {
+                        return Number(lots[j]?.allocatedWeight || 0);
+                    }
+                }
+            }
+            return 0;
+        }
+
+        function validateAllocationContainerInputs() {
+            const errors = [];
+            $('#allocationOverviewModal .allocation-lot-containers-body').each(function () {
+                const $tbody = $(this);
+                const lotId = String($tbody.data('lot-id') || '');
+                if (!lotId) {
+                    return;
+                }
+                const batch = ($tbody.data('batch-number') || '-').toString();
+                const lotUom = ($tbody.data('lot-uom') || '').toString();
+                const allocatedWeight = getAllocatedWeightForLot(lotId);
+                let enteredWeight = 0;
+
+                $tbody.find('tr.container-input-row').each(function () {
+                    const qty = Number($(this).find('.container-qty-input').val());
+                    const netWeight = Number($(this).find('.container-netweight-input').val());
+                    if (qty > 0 && netWeight > 0) {
+                        enteredWeight += qty * netWeight;
+                    }
+                });
+
+                if (enteredWeight - allocatedWeight > 1e-6) {
+                    errors.push(`Weight is over the allocated weight for batch ${batch}. Entered ${formatWeightVal(enteredWeight, lotUom)}, allocated ${formatWeightVal(allocatedWeight, lotUom)}.`);
+                }
+            });
+
+            return {
+                isValid: errors.length === 0,
+                errors: errors
+            };
+        }
+
+        function refreshAllocationSaveState() {
+            ensureAllocationSaveButton();
+            const validation = validateAllocationContainerInputs();
+            setAllocationValidationMessage(validation.errors);
+            $('#saveAllocationContainersBtn').prop('disabled', !validation.isValid);
+        }
+
         function formatDisplayValue(val) {
             if (val === null || typeof val === 'undefined' || val === '') {
                 return '-';
@@ -1702,15 +1822,37 @@
                 }
                 const metaText = metaParts.join(' • ');
                 const filterText = [lot.batchNumber || '', expiryText || '', mfgText || ''].join(' ').trim();
+                const lotUom = lot.uom || '';
                 return `
                 <tr class="lot-row" data-filter-text="${filterText.toLowerCase()}">
                     <td>
                         <div class="lot-batch">${lot.batchNumber || '-'}</div>
                         ${metaText ? `<div class="text-muted small">${metaText}</div>` : ''}
                     </td>
-                    <td>${available}${lot.uom ? ' ' + lot.uom : ''}</td>
+                    <td>${available}${lotUom ? ' ' + lotUom : ''}</td>
                     <td>
                         <input type="number" class="form-control lot-qty-input" value="0" min="0" max="${available}" step="any" data-lot-id="${lot.id}" data-available="${available}" ${readOnlyAttr}>
+                    </td>
+                </tr>
+                <tr class="lot-containers-row" data-lot-id="${lot.id}" style="background:#f9f9f9;">
+                    <td colspan="3" style="padding:6px 10px 10px 28px;">
+                        <div style="margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+                            <span class="text-muted small" style="font-weight:600;">Containers for batch <em>${lot.batchNumber || '-'}</em></span>
+                            ${canAct ? `<button type="button" class="btn btn-xs btn-default add-container-row-btn" data-lot-id="${lot.id}" data-lot-uom="${lotUom}" style="padding:1px 8px;">+ Add Container</button>` : ''}
+                        </div>
+                        <table class="table table-condensed lot-containers-table" data-lot-id="${lot.id}" style="margin-bottom:4px; width:100%; max-width:480px;">
+                            <thead>
+                                <tr>
+                                    <th style="width:30%;">Qty</th>
+                                    <th style="width:38%;">Net Weight</th>
+                                    <th style="width:22%;">UOM</th>
+                                    ${canAct ? '<th style="width:10%;"></th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody class="lot-containers-body" data-lot-id="${lot.id}">
+                                <tr class="no-containers-placeholder"><td colspan="${canAct ? 4 : 3}" class="text-muted small text-center" style="padding:4px;">No containers added.</td></tr>
+                            </tbody>
+                        </table>
                     </td>
                 </tr>
             `;
@@ -1970,6 +2112,7 @@
                     console.log('Fetched issued containers for request', requestId, list);
                     if (list.length) {
                         state.issuedContainers = list;
+                        state.containerSaveByRequest[requestId] = true;
                         const alloc = buildAllocationFromIssuedContainers(list);
                         state.allocationResults = alloc;
                         state.allocationCache = state.allocationCache || {};
@@ -1981,6 +2124,7 @@
                         return;
                     }
                     state.issuedContainers = [];
+                    state.containerSaveByRequest[requestId] = false;
                     if (typeof callback === 'function') {
                         callback(false);
                     }
@@ -1988,6 +2132,7 @@
                 function (err) {
                     console.error('Failed to fetch issued containers for request', err);
                     state.issuedContainers = [];
+                    state.containerSaveByRequest[requestId] = false;
                     if (typeof callback === 'function') {
                         callback(false);
                     }
@@ -2023,7 +2168,7 @@
                     lotEntry = {
                         lotId: lotId,
                         batchNumber: lotInfo.batchNumber || lotInfo.lotNumber || lotInfo.name || '',
-                        arn:lotInfo.arn || '',
+                        arn: lotInfo.arn || '',
                         lotName: lotInfo.name || '',
                         expiryDate: lotInfo.expiryDate || '',
                         uom: lotInfo.uom || c.uom || '',
@@ -2054,7 +2199,9 @@
         }
 
         function openAllocationOverview() {
+            ensureAllocationSaveButton();
             renderAllocationOverviewTable(state.allocationResults?.products || []);
+            refreshAllocationSaveState();
             const $m = $('#allocationOverviewModal');
             if (typeof $m.modal === 'function') {
                 $m.modal('show');
@@ -2093,6 +2240,7 @@
                     tableHtml = '<div class="text-muted" style="margin-left:8px;">No batches allocated.</div>';
                 } else {
                     const rows = [];
+                    const lotContainerBlocks = [];
                     const approvedLots = getSortedAvailableLots(product.productId);
 
                     lots.forEach(function (lot, lotIdx) {
@@ -2116,13 +2264,13 @@
                                 ${selectOptions}
                             </select>
                         `;
-const arnVal = lot.arn || '-';
-const availableLot = (approvedLots || []).find(function(avail) {
-    return String(avail?.id || avail?.Id || '') === String(lot.lotId || '');
-});
-const availableQty = availableLot ? formatWeightVal(Number(availableLot.quantity || 0), uom) : '-';
+                        const arnVal = lot.arn || '-';
+                        const availableLot = (approvedLots || []).find(function (avail) {
+                            return String(avail?.id || avail?.Id || '') === String(lot.lotId || '');
+                        });
+                        const availableQty = availableLot ? formatWeightVal(Number(availableLot.quantity || 0), uom) : '-';
 
-rows.push(`
+                        rows.push(`
     <tr>
         <td>${batchCellHtml}</td>
         <td>${arnVal}</td>
@@ -2131,6 +2279,46 @@ rows.push(`
         <td>${formatWeightVal(totalAllocated, uom)}</td>
     </tr>
 `);
+
+                                                const rawBodyId = `allocation-lot-containers-${product.productId || 'p'}-${lot.lotId || lotIdx}-${lotIdx}`;
+                                                const bodyId = rawBodyId.replace(/[^a-zA-Z0-9_-]/g, '_');
+                                                const existingContainers = Array.isArray(lot?.containers) ? lot.containers : [];
+                                                const containerRowsHtml = existingContainers.length
+                                                    ? existingContainers.map(function (container) {
+                                                        const qtyVal = Number(container?.quantity);
+                                                        const netWeightVal = Number(container?.netWeight);
+                                                        const rowUom = container?.uom || uom || '';
+                                                        return buildContainerInputRowHtml(
+                                                            Number.isFinite(qtyVal) ? qtyVal : '',
+                                                            Number.isFinite(netWeightVal) ? netWeightVal : '',
+                                                            rowUom
+                                                        );
+                                                    }).join('')
+                                                    : buildContainerInputRowHtml('', '', uom);
+
+                                                lotContainerBlocks.push(`
+                                                    <div class="allocation-lot-container-block" style="margin:10px 0 14px 0; border:1px solid #e5e5e5; border-radius:4px; padding:10px; background:#fafafa;">
+                                                        <div style="margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                                                            <span class="text-muted small" style="font-weight:600;">Container details for batch <em>${lot.batchNumber || '-'}</em></span>
+                                                            <button type="button" class="btn btn-xs btn-default add-container-row-btn" data-lot-id="${lot.lotId || ''}" data-lot-uom="${uom}" data-target-body="${bodyId}" style="padding:1px 8px;">+ Add</button>
+                                                        </div>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-condensed" style="margin-bottom:0;">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="width:30%;">No. of Containers</th>
+                                                                        <th style="width:38%;">Net Wt / Container</th>
+                                                                        <th style="width:22%;">UOM</th>
+                                                                        <th style="width:10%;"></th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody id="${bodyId}" class="lot-containers-body allocation-lot-containers-body" data-lot-id="${lot.lotId || ''}" data-allocated-weight="${totalAllocated}" data-lot-uom="${uom}" data-batch-number="${lot.batchNumber || ''}">
+                                                                    ${containerRowsHtml}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                `);
                     });
                     tableHtml = `
                     <div class="table-responsive">
@@ -2147,25 +2335,27 @@ rows.push(`
                             <tbody>${rows.join('')}</tbody>
                         </table>
                     </div>
+                    ${lotContainerBlocks.join('')}
                 `;
                 }
                 $sections.append(`<div class="allocation-product-block">${productTitle}${tableHtml}</div>`);
             });
+            refreshAllocationSaveState();
         }
-         function findLotDetails(productId, lotId) {
-        if (!state.productLots || !productId || !lotId) {
+        function findLotDetails(productId, lotId) {
+            if (!state.productLots || !productId || !lotId) {
+                return null;
+            }
+            const lots = state.productLots[productId] || state.productLots[String(productId)] || [];
+            const target = String(lotId);
+            for (let i = 0; i < lots.length; i += 1) {
+                const lot = lots[i];
+                if (lot && String(lot.id) === target) {
+                    return lot;
+                }
+            }
             return null;
         }
-        const lots = state.productLots[productId] || state.productLots[String(productId)] || [];
-        const target = String(lotId);
-        for (let i = 0; i < lots.length; i += 1) {
-            const lot = lots[i];
-            if (lot && String(lot.id) === target) {
-                return lot;
-            }
-        }
-        return null;
-    }
         function changeAllocationLot(productId, requestItemId, oldLotId, newLotId, requiredWeight) {
             const productKey = String(productId || '');
             const itemKey = String(requestItemId || '');
@@ -2288,6 +2478,182 @@ rows.push(`
             }
         }
 
+        function buildContainerInputRowHtml(qtyVal, netWeightVal, uomVal) {
+            const qty = (qtyVal === null || typeof qtyVal === 'undefined') ? '' : qtyVal;
+            const netWeight = (netWeightVal === null || typeof netWeightVal === 'undefined') ? '' : netWeightVal;
+            const uom = (uomVal === null || typeof uomVal === 'undefined') ? '' : uomVal;
+            return `
+                <tr class="container-input-row">
+                    <td><input type="number" class="form-control input-sm container-qty-input" placeholder="Qty" min="0" step="any" value="${qty}" style="width:80px;"></td>
+                    <td><input type="number" class="form-control input-sm container-netweight-input" placeholder="Net Wt" min="0" step="any" value="${netWeight}" style="width:100px;"></td>
+                    <td><input type="text" class="form-control input-sm container-uom-input" placeholder="UOM" value="${uom}" style="width:70px;"></td>
+                    <td><button type="button" class="btn btn-xs btn-danger remove-container-row-btn" style="padding:2px 6px;">&times;</button></td>
+                </tr>
+            `;
+        }
+
+        function addContainerRow(lotId, defaultUom, targetBodyId) {
+            let $tbody = $();
+            if (targetBodyId) {
+                $tbody = $('#' + targetBodyId);
+            }
+            if (!$tbody.length) {
+                $tbody = $(`.lot-containers-body[data-lot-id="${lotId}"]`).first();
+            }
+            if (!$tbody.length) return;
+            $tbody.find('.no-containers-placeholder').remove();
+            const uomVal = defaultUom || '';
+            $tbody.append(buildContainerInputRowHtml('', '', uomVal));
+        }
+
+        function collectContainerRowsForLot(lotId) {
+            const rows = [];
+            let $tbody = $(`#allocationOverviewModal .allocation-lot-containers-body[data-lot-id="${lotId}"]`).first();
+            if (!$tbody.length) {
+                $tbody = $(`.lot-containers-body[data-lot-id="${lotId}"]`).first();
+            }
+            $tbody.find('tr.container-input-row').each(function () {
+                const qty = Number($(this).find('.container-qty-input').val());
+                const netWeight = Number($(this).find('.container-netweight-input').val());
+                const uom = $(this).find('.container-uom-input').val() || '';
+                if (qty > 0 && netWeight > 0) {
+                    rows.push({ qty, netWeight, uom });
+                }
+            });
+            return rows;
+        }
+
+        function setAllocationContainerSaveLoading(isLoading) {
+            const $btn = $('#saveAllocationContainersBtn');
+            if (!$btn.length) {
+                return;
+            }
+            $btn.prop('disabled', !!isLoading);
+            $btn.text(isLoading ? 'Saving...' : 'Save Containers');
+        }
+
+        function validateContainerRowsAgainstAllocation(allocationProducts) {
+            const errors = [];
+            const payload = [];
+
+            (allocationProducts || []).forEach(function (product) {
+                (product.lots || []).forEach(function (lot) {
+                    const lotId = String(lot.lotId || '');
+                    if (!lotId) {
+                        return;
+                    }
+
+                    const rows = collectContainerRowsForLot(lotId);
+                    if (!rows.length) {
+                        return;
+                    }
+
+                    const allocatedWeight = Number(lot.allocatedWeight || 0);
+                    const enteredWeight = rows.reduce(function (sum, row) {
+                        return sum + ((Number(row.qty) || 0) * (Number(row.netWeight) || 0));
+                    }, 0);
+                    const rowUom = lot.uom || product.uom || '';
+
+                    if (enteredWeight - allocatedWeight > 1e-6) {
+                        errors.push(`Weight is over the allocated weight for batch ${lot.batchNumber || '-'}. Entered ${formatWeightVal(enteredWeight, rowUom)}, allocated ${formatWeightVal(allocatedWeight, rowUom)}.`);
+                        return;
+                    }
+
+                    rows.forEach(function (row) {
+                        payload.push({
+                            quantity: row.qty,
+                            netWeight: row.netWeight,
+                            uom: row.uom || rowUom,
+                            processStatus: 'Issued',
+                            productLot: { id: lotId }
+                        });
+                    });
+                });
+            });
+
+            return {
+                errors: errors,
+                payload: payload
+            };
+        }
+
+        function createContainersForLots(allocationProducts, requestId, callback) {
+            const validation = validateContainerRowsAgainstAllocation(allocationProducts);
+            if (validation.errors.length) {
+                if (typeof callback === 'function') callback({ ok: false, reason: 'validation', message: validation.errors[0] });
+                return;
+            }
+
+            const containerPayload = validation.payload.map(function (row) {
+                return {
+                    quantity: row.quantity,
+                    netWeight: row.netWeight,
+                    uom: row.uom,
+                    processStatus: row.processStatus,
+                    productLot: row.productLot,
+                    remarks: requestId ? `PR:${requestId}` : ''
+                };
+            });
+
+            if (!containerPayload.length) {
+                if (typeof callback === 'function') callback({ ok: false, reason: 'empty', message: 'Please enter at least one valid container row before saving.' });
+                return;
+            }
+
+            JSUTIL.callAJAXPost(
+                '/api/product-containers/create_multiple',
+                JSON.stringify(containerPayload),
+                function () {
+                    if (typeof callback === 'function') callback({ ok: true });
+                },
+                function (err) {
+                    console.error('Failed to create containers', err);
+                    if (typeof callback === 'function') callback({ ok: false, reason: 'api', message: 'Failed to create containers.' });
+                }
+            );
+        }
+
+        function saveAllocationContainers() {
+            if (!state.currentRequestId) {
+                JSUTIL.buildErrorModal('Select a request before saving containers.');
+                return;
+            }
+            console.log('saveAllocationContainers', state.containerSaveByRequest[state.currentRequestId])
+
+            // if (state.containerSaveByRequest[state.currentRequestId]) {
+            //     JSUTIL.buildErrorModal('Containers are already saved for this request.');
+            //     return;
+            // }
+
+            syncAllocationFromInputs();
+            const liveValidation = validateAllocationContainerInputs();
+            if (!liveValidation.isValid) {
+                setAllocationValidationMessage(liveValidation.errors);
+                $('#saveAllocationContainersBtn').prop('disabled', true);
+                JSUTIL.buildErrorModal(liveValidation.errors[0] || 'Weight is over the allocated weight.');
+                return;
+            }
+            const allocationProducts = state.allocationResults?.products || [];
+            if (!allocationProducts.length) {
+                JSUTIL.buildErrorModal('No allocation found to save containers.');
+                return;
+            }
+
+            setAllocationContainerSaveLoading(true);
+            createContainersForLots(allocationProducts, state.currentRequestId, function (result) {
+                setAllocationContainerSaveLoading(false);
+                const outcome = result || { ok: false, reason: 'unknown', message: 'Failed to save containers.' };
+                if (!outcome.ok) {
+                    JSUTIL.buildErrorModal(outcome.message || 'Failed to save containers.');
+                    return;
+                }
+                state.containerSaveByRequest[state.currentRequestId] = true;
+                JSUTIL.buildErrorModal('Containers saved successfully.');
+                toggleDetailActions(module.getStatusValue ? module.getStatusValue(state.currentRecord) : null);
+                fetchIssuedContainersForRequest(state.currentRequestId, function () { });
+            });
+        }
+
         function issueCurrentRequest() {
             if (!state.currentRequestId) {
                 JSUTIL.buildErrorModal('Select a request before issuing.');
@@ -2296,6 +2662,10 @@ rows.push(`
             const statusValue = getStatusValue(state.currentRecord);
             if (!canIssueStatus(statusValue)) {
                 JSUTIL.buildErrorModal('This request is already processed.');
+                return;
+            }
+            if (!state.containerSaveByRequest[state.currentRequestId]) {
+                JSUTIL.buildErrorModal('Save containers first before issuing this request.');
                 return;
             }
 
@@ -2307,7 +2677,7 @@ rows.push(`
             const lotUsageMap = {};
             const transactionEntries = [];
             let hasQty = false;
-            console.log('sattet',state)
+            console.log('sattet', state)
             const allocation = state.allocationResults || { products: [] };
 
             allocation.products.forEach(function (product) {
@@ -2340,7 +2710,7 @@ rows.push(`
                 // });
                 (product.lots || []).forEach(function (lot) {
                     const val = Number(lot.allocatedWeight) || 0;
-                    console.log(lot,'lot')
+                    console.log(lot, 'lot')
                     if (val > 0) {
                         productIssuedNow += val;
                         const lotId = String(lot.lotId || '');
@@ -2350,7 +2720,7 @@ rows.push(`
                                 productId: productId,
                                 lotId: lotId,                        // for productLot relation
                                 batchNumber: lot.batchNumber || '',
-                                arn: lot.arn  || '', // field is "arn" on the lot
+                                arn: lot.arn || '', // field is "arn" on the lot
                                 quantity: val,
                                 productRequestItemId: itemId
                             });                                // ← TO HERE
@@ -2379,7 +2749,7 @@ rows.push(`
 
 
 
-            console.log('transaction',transactionEntries)
+            console.log('transaction', transactionEntries)
             // JSUTIL.callAJAXPost('/api/product-request-items/bulk', JSON.stringify(itemsPayload), function () {
             //     updateProductOnHand(productUsageMap, function () {
             //         updateLotOnHand(lotUsageMap, function () {
@@ -2397,13 +2767,13 @@ rows.push(`
             JSUTIL.callAJAXPost('/api/product-request-items/bulk', JSON.stringify(itemsPayload), function () {
                 updateProductOnHand(productUsageMap, function () {
                     updateLotOnHand(lotUsageMap, function () {
-                        createProductTransactions(transactionEntries, function () {   // ← WRAP
+                        createProductTransactions(transactionEntries, function () {
                             updateRequestStatus('Issued', function () {
                                 JSUTIL.buildErrorModal('Request issued.');
                                 $(document).trigger('productIssue:refreshList');
                                 fetchRequestItems(state.currentRequestId);
                             });
-                        });                                                           // ← END WRAP
+                        });
                     });
                 });
             }, function (err) {
@@ -2414,85 +2784,85 @@ rows.push(`
 
 
 
-            
+
         }
 
         function createProductTransactions(entries, callback) {
-    const validEntries = (entries || []).filter(function (entry) {
-        return entry && entry.productId && entry.quantity > 0;
-    });
-    if (!validEntries.length) {
-        if (typeof callback === 'function') callback();
-        return;
-    }
-
-    const transactionDate = new Date().toISOString();
-    const docNumber = state.currentRecord?.number || state.currentRecord?.Number || String(state.currentRequestId || '');
-    const requestId = state.currentRequestId || null;
-
-    const requestedByName = state.currentRecord?.requestedByName
-        || state.currentRecord?.RequestedByName
-        || state.currentRecord?.requestedBy?.name
-        || state.currentRecord?.RequestedBy?.Name
-        || '';
-
-    let index = 0;
-
-    function createNext() {
-        if (index >= validEntries.length) {
-            if (typeof callback === 'function') callback();
-            return;
-        }
-
-        const entry = validEntries[index];
-        index++;
-        var type
-        if(window?.ProductIssueModule?.state?.currentRecord.type == 'Raw Material' ||window?.ProductIssueModule?.state?.currentRecord.type == 'Raw Material'){
-            type = 'Production Issue'
-        }
-        else if(window?.ProductIssueModule?.state?.currentRecord.type == 'Departmental Issue'){
-            type = 'Departmental Issue'
-            
-        }
-        else{
-            type = 'Production Issue'
-        }
-            
-            
-            const issuedQty = Number(entry.quantity) || 0;
-        const txn = {
-            transactionDate: transactionDate,
-            type:type,
-            product: { id: entry.productId },
-            productLot: { id: entry.lotId },
-            batchNumber: window?.ProductIssueModule.state?.currentRecord?.remarks?.split(' ')[0] || entry.batchNumber || '',
-            arn: entry.arn || '',
-            quantityIssued: issuedQty,
-            docNumber: docNumber || '',
-            // requestedByName: requestedByName
-        };
-
-        if (requestId) {
-            txn.productRequest = { id: requestId };
-        }
-        if (entry.productRequestItemId) {
-            txn.productRequestItem = { id: entry.productRequestItemId };
-        }
-        console.log('txn',txn)
-        JSUTIL.callAJAXPost('/api/product-transactions',
-            JSON.stringify(txn),
-            function () {
-                createNext();
-            },
-            function (err) {
-                console.error('Failed to create product transaction', entry, err);
-                createNext();
+            const validEntries = (entries || []).filter(function (entry) {
+                return entry && entry.productId && entry.quantity > 0;
+            });
+            if (!validEntries.length) {
+                if (typeof callback === 'function') callback();
+                return;
             }
-        );
-    }
 
-    createNext();
-}
+            const transactionDate = new Date().toISOString();
+            const docNumber = state.currentRecord?.number || state.currentRecord?.Number || String(state.currentRequestId || '');
+            const requestId = state.currentRequestId || null;
+
+            const requestedByName = state.currentRecord?.requestedByName
+                || state.currentRecord?.RequestedByName
+                || state.currentRecord?.requestedBy?.name
+                || state.currentRecord?.RequestedBy?.Name
+                || '';
+
+            let index = 0;
+
+            function createNext() {
+                if (index >= validEntries.length) {
+                    if (typeof callback === 'function') callback();
+                    return;
+                }
+
+                const entry = validEntries[index];
+                index++;
+                var type
+                if (window?.ProductIssueModule?.state?.currentRecord.type == 'Raw Material' || window?.ProductIssueModule?.state?.currentRecord.type == 'Raw Material') {
+                    type = 'Production Issue'
+                }
+                else if (window?.ProductIssueModule?.state?.currentRecord.type == 'Departmental Issue') {
+                    type = 'Departmental Issue'
+
+                }
+                else {
+                    type = 'Production Issue'
+                }
+
+
+                const issuedQty = Number(entry.quantity) || 0;
+                const txn = {
+                    transactionDate: transactionDate,
+                    type: type,
+                    product: { id: entry.productId },
+                    productLot: { id: entry.lotId },
+                    batchNumber: window?.ProductIssueModule.state?.currentRecord?.remarks?.split(' ')[0] || entry.batchNumber || '',
+                    arn: entry.arn || '',
+                    quantityIssued: issuedQty,
+                    docNumber: docNumber || '',
+                    // requestedByName: requestedByName
+                };
+
+                if (requestId) {
+                    txn.productRequest = { id: requestId };
+                }
+                if (entry.productRequestItemId) {
+                    txn.productRequestItem = { id: entry.productRequestItemId };
+                }
+                console.log('txn', txn)
+                JSUTIL.callAJAXPost('/api/product-transactions',
+                    JSON.stringify(txn),
+                    function () {
+                        createNext();
+                    },
+                    function (err) {
+                        console.error('Failed to create product transaction', entry, err);
+                        createNext();
+                    }
+                );
+            }
+
+            createNext();
+        }
         function updateLotOnHand(usageMap, onSuccess) {
             const lotIds = Object.keys(usageMap || {}).filter(k => usageMap[k] > 0);
             if (!lotIds.length) {
@@ -2542,8 +2912,8 @@ rows.push(`
                         return;
                     }
                     const u = updates[pIdx];
-                    console.log('abcd',u)
-                    JSUTIL.callAJAXPut('/api/products/' + u.id, JSON.stringify({ quantity: u.quantity,quantityOnHand:u.quantityOnHand }), function () {
+                    console.log('abcd', u)
+                    JSUTIL.callAJAXPut('/api/products/' + u.id, JSON.stringify({ quantity: u.quantity, quantityOnHand: u.quantityOnHand }), function () {
                         pIdx++; saveNextProduct();
                     }, function (err) {
                         console.error('Failed to update product on hand', err);

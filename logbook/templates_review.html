@@ -537,7 +537,7 @@ function renderTemplateStatusSteps(statusValue) {
   if ($('#editTemplatePanel').is(':visible')) {
     $('#templateStatusStepsWrap').show();
   }
-  var $steps = $('#allTemplateReviewPanel #template-status-steps .step');
+  var $steps = $('#template-status-steps .step');
   if (!$steps.length) return;
 
   $steps.removeClass('completed current');
@@ -959,6 +959,15 @@ function populateEditTemplatePanel(record) {
   $('#editTemplateTitle').text('Template: ' + recordNumber);
   renderEditTemplateStatus(currentStatus);
   renderTemplateStatusSteps(currentStatus);
+
+  // Reset tab state so History is always the active tab when the panel opens
+  var $editTabs = $('#editTemplatePanel .nav-tabs');
+  $editTabs.find('li').removeClass('active');
+  $editTabs.find('a.nav-link').removeClass('active').attr('aria-expanded', 'false');
+  $editTabs.find('a[href="#editTemplateHistoryTab"]').addClass('active').attr('aria-expanded', 'true').closest('li').addClass('active');
+  $('#editTemplatePanel .tab-content > .tab-pane').removeClass('active in show');
+  $('#editTemplateHistoryTab').addClass('active in show');
+
   loadEditTemplateHistory(getEditTemplateRecordId(currentEditTemplateRecord));
 
   // Load revision history for this template family (all records sharing the same root parentId)
@@ -1333,6 +1342,7 @@ function showEditTemplatePanel(record) {
   $('#allTemplateReviewPanel').show();
   $('#allTemplateReviewListWrap').hide();
   $('#createTemplatePanel').hide();
+  $('#templateStatusStepsWrap').insertBefore('#editTemplatePanel');
   $('#editTemplatePanel').show();
   $('.newCreateTemplateBtn').hide();
 
@@ -1864,7 +1874,7 @@ if (document.readyState === 'loading') {
         right: auto;
     }
 
-    #allTemplateReviewPanel #template-status-steps {
+    #template-status-steps {
         display: flex;
         align-items: flex-start;
         justify-content: center;
@@ -1872,7 +1882,7 @@ if (document.readyState === 'loading') {
         padding: 22px 0;
     }
 
-    #allTemplateReviewPanel #template-status-steps .step {
+    #template-status-steps .step {
         position: relative;
         z-index: 3;
         display: flex;
@@ -1884,7 +1894,7 @@ if (document.readyState === 'loading') {
         color: #1f6fb6;
     }
 
-    #allTemplateReviewPanel #template-status-steps .step:not(:last-child)::after {
+    #template-status-steps .step:not(:last-child)::after {
         content: "";
         position: absolute;
         top: 17px;
@@ -1895,7 +1905,7 @@ if (document.readyState === 'loading') {
         z-index: -1;
     }
 
-    #allTemplateReviewPanel #template-status-steps .step-circle {
+    #template-status-steps .step-circle {
         width: 36px;
         height: 36px;
         border-radius: 50%;
@@ -1909,24 +1919,24 @@ if (document.readyState === 'loading') {
         margin-bottom: 8px;
     }
 
-    #allTemplateReviewPanel #template-status-steps .step-label {
+    #template-status-steps .step-label {
         font-weight: 600;
         width: 100%;
         min-height: 20px;
         white-space: nowrap;
     }
 
-    #allTemplateReviewPanel #template-status-steps .step.completed .step-circle {
+    #template-status-steps .step.completed .step-circle {
         background: #f3d400;
         border-color: #fff;
         color: #333;
     }
 
-    #allTemplateReviewPanel #template-status-steps .step.completed::after {
+    #template-status-steps .step.completed::after {
         background: #f3d400;
     }
 
-    #allTemplateReviewPanel #template-status-steps .step.current .step-circle {
+    #template-status-steps .step.current .step-circle {
         background: #f39c12;
         border-color: #fff;
 

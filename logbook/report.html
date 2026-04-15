@@ -87,13 +87,13 @@
                         <div class="col-sm-3">
                             <div class="form-group mb-3">
                                 <label>From</label>
-                                <input type="date" class="form-control" id="viewLogbookFromDate">
+                                <input type="text" class="form-control" id="viewLogbookFromDate" placeholder="DD/MM/YYYY" autocomplete="off">
                             </div>
                         </div>
                         <div class="col-sm-3">
                             <div class="form-group mb-3">
                                 <label>To</label>
-                                <input type="date" class="form-control" id="viewLogbookToDate">
+                                <input type="text" class="form-control" id="viewLogbookToDate" placeholder="DD/MM/YYYY" autocomplete="off">
                             </div>
                         </div>
                     </div>
@@ -548,13 +548,15 @@ function loadViewLogbookEntries(logbookId, dateRange, callback) {
         var from = dateRange && dateRange.from ? dateRange.from : '';
         var to = dateRange && dateRange.to ? dateRange.to : '';
         if (from || to) {
+            var fromM = from ? moment(from, 'DD/MM/YYYY').startOf('day') : null;
+            var toM = to ? moment(to, 'DD/MM/YYYY').endOf('day') : null;
             filtered = filtered.filter(function(entry) {
                 var created = (entry.createdDate || entry.CreatedDate || '').toString();
                 if (!created) return true;
-                var d = new Date(created);
-                if (isNaN(d.getTime())) return true;
-                if (from && d < new Date(from + 'T00:00:00')) return false;
-                if (to && d > new Date(to + 'T23:59:59')) return false;
+                var d = moment(created);
+                if (!d.isValid()) return true;
+                if (fromM && d.isBefore(fromM)) return false;
+                if (toM && d.isAfter(toM)) return false;
                 return true;
             });
         }
@@ -752,6 +754,8 @@ function bindViewLogbookEvents() {
             document.body.removeChild(link);
         }
     });
+
+    JSUTIL.initDatePicker('#viewLogbookFromDate, #viewLogbookToDate');
 
     $('#viewLogbookFromDate, #viewLogbookToDate').off('change').on('change', function () {
         if (isViewLogbookLoading) return;

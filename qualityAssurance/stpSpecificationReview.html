@@ -1,12 +1,4 @@
 <!-- allApprovalStpPanel.html start -->
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.dataTables.css">
-<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-<script src="https://cdn.datatables.net/2.3.7/js/dataTables.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-<script src=https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js></script> -->
 <script src="pages/lib/jquery-3.7.1.js"></script>
 <script src="pages/lib/moment.min.js"></script>
 <link rel="stylesheet" href="pages/lib/daterangepicker.css">
@@ -14,14 +6,7 @@
 <script src="pages/lib/dataTables.js"></script>
 <script src="pages/lib/lucide.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
-<script src="pages/lib/math.min.js"></script>
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
-<script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js"></script>
-<script src="pages/lib/dataTables.js"></script>
-<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css"> -->
+<script src="/lib/math.min.js"></script>
 
 <style>
     #allApprovalStpPanelTable thead th {
@@ -1670,7 +1655,7 @@
                         <i class="fa fa-times"></i> Close
                     </button>
                     <button type="button" class="btn btn-secondary btn-sm" id="approveRejectBtn"><i class="fa fa-check-double"></i> Approve / Reject </button>
-<button type="button" class="btn btn-secondary btn-sm" id="revisionApproveRejectBtn" style="display:none;"><i class="fa fa-check-double"></i> Revision Approve / Reject </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="revisionApproveRejectBtn" style="display:none;"><i class="fa fa-check-double"></i> Revision Approve / Reject </button>
 
                 </div>
             </div>
@@ -3146,135 +3131,132 @@ $('#rejectBtn').on('click', function() {
         $('#allApprovalStpPanel').show();
         initStpDataTable();
     });
-$('#approveRejectBtn').on('click', function() {
-    var modal = new bootstrap.Modal($('#approvalModal')[0]);
-    modal.show();
-});
-$('#revisionApproveRejectBtn').on('click', function() {
-    var modal = new bootstrap.Modal($('#revisionApprovalModal')[0]);
-    modal.show();
-});
-$('#approveBtn').on('click', function() {
-    var remarks = $('#approvalRemarks').val();
-    var approvalObj = {
-        remarks: remarks,
-        processStatus: 'Active',
-        approver: {
-            id: Number(FOX.employeeId)
-        }
-    };
-
-    console.log(approvalObj);
-    var putUrl = JSUTIL.getUrl('/api/test-procedures/' + currentRequestId);
-
-   JSUTIL.callAJAXPut(putUrl, JSON.stringify(approvalObj), function(response){
-        console.log(response);
-        var activityPayload = {
-            name: 'STP Approved',
-            type: 'STP',
-            parentRecordId: Number(currentRequestId),
-            performedBy: { id: Number(FOX.employeeId) },
-            startDate: new Date().toISOString().slice(0, 19),
-            notes: remarks
-        };
-        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(activityPayload), function(){
-            location.reload();
-        });
+    $('#approveRejectBtn').on('click', function() {
+        var modal = new bootstrap.Modal($('#approvalModal')[0]);
+        modal.show();
     });
-});
+    $('#revisionApproveRejectBtn').on('click', function() {
+        var modal = new bootstrap.Modal($('#revisionApprovalModal')[0]);
+        modal.show();
+    });
+    $('#approveBtn').on('click', function() {
+        JSUTIL.buildAuthenticationModal(function() {
+            var remarks = $('#approvalRemarks').val();
+            var approvalObj = {
+                remarks: remarks,
+                processStatus: 'Active',
+                approver: {
+                    id: Number(FOX.employeeId)
+                }
+            };
+            console.log(approvalObj);
+            var putUrl = JSUTIL.getUrl('/api/test-procedures/' + currentRequestId);
+            JSUTIL.callAJAXPut(putUrl, JSON.stringify(approvalObj), function(response){
+                console.log(response);
+                var activityPayload = {
+                    name: 'STP Approved',
+                    type: 'STP',
+                    parentRecordId: Number(currentRequestId),
+                    performedBy: { id: Number(FOX.employeeId) },
+                    startDate: new Date().toISOString().slice(0, 19),
+                    notes: remarks
+                };
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(activityPayload), function(){
+                    location.reload();
+                });
+            });
+        }); 
+    });
     $("#revisionRemarks").on('input', function(){
         var comments = $(this).val().trim();
         if(comments.length > 0){
             $('#revisionRejectBtn').prop('disabled', false);
         } else{
-           $('#revisionRejectBtn').prop('disabled', true); 
+            $('#revisionRejectBtn').prop('disabled', true); 
         }
     });
-   $("#revisionRejectBtn").on('click', function(){
-    var jsObj = {
-        'remarks': $('#revisionRemarks').val(),
-        'processStatus': 'Revision Rejected'
-    }
-    var putUrl = JSUTIL.getUrl('/api/test-procedures/' + currentRequestId);
-   JSUTIL.callAJAXPut(putUrl, JSON.stringify(jsObj), function(response){
-        console.log(response);
-        var activityPayload = {
-            name: 'STP Revision Rejected',
-            type: 'STP',
-            parentRecordId: Number(currentRequestId),
-            performedBy: { id: Number(FOX.employeeId) },
-            startDate: new Date().toISOString().slice(0, 19),
-            notes: $('#revisionRemarks').val()
-        };
-        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(activityPayload), function(){
-            location.reload();
+    $("#revisionRejectBtn").on('click', function(){
+        var jsObj = {
+            'remarks': $('#revisionRemarks').val(),
+            'processStatus': 'Revision Rejected'
+        }
+        var putUrl = JSUTIL.getUrl('/api/test-procedures/' + currentRequestId);
+        JSUTIL.callAJAXPut(putUrl, JSON.stringify(jsObj), function(response){
+            console.log(response);
+            var activityPayload = {
+                name: 'STP Revision Rejected',
+                type: 'STP',
+                parentRecordId: Number(currentRequestId),
+                performedBy: { id: Number(FOX.employeeId) },
+                startDate: new Date().toISOString().slice(0, 19),
+                notes: $('#revisionRemarks').val()
+            };
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(activityPayload), function(){
+                location.reload();
+            });
         });
     });
-});
     $("#revisionApprovalBtn").on('click', function(){
-    const newProcedureNumber = getNextProcedureNumber(currentRecord.number);
-    console.log(newProcedureNumber);
-    var testProcedurePayload = {
-        "number": newProcedureNumber,
-        "title": currentRecord.title,
-        "department": currentRecord.department,
-        "category": currentRecord.category,
-        "version": Number(currentRecord.version) + 1,
-        "processStatus": "Draft",
-        "reviewDate": JSUTIL.toDatabaseDate(currentRecord.reviewDate),
-        "changeControlNumber": currentRecord.changeControlNumber,
-        "samplingPlan": currentRecord.samplingPlan,
-        "collectionProcedure": currentRecord.collectionProcedure,
-        "storage": currentRecord.storage,
-        "environmentalConditions": currentRecord.environmentalConditions,
-        "safety": currentRecord.safety,
-        "isArchived": false,
-       "analyst": currentRecord.analyst ? { id: Number(currentRecord.analyst.id) } : null,
-"product": currentRecord.product ? { id: Number(currentRecord.product.id) } : null
-    };
-    console.log('TestProcedure Payload:', testProcedurePayload);
-
-    // Step 1 — Create new TestProcedure
-    var createUrl = JSUTIL.getUrl('/api/test-procedures');
-    JSUTIL.callAJAXPost(createUrl, JSON.stringify(testProcedurePayload), function(response) {
-        console.log('TestProcedure created:', response);
-        var newProcedureId = response.id;
-
-        // Step 2 — Bulk create items for new procedure
-        var testProcedureItems = [];
-        $.each(currentRequestItems, function(i, item){
-      var cleanExpiryDate = null;
-if (item.expiryDate) {
-    var dateMatch = item.expiryDate.match(/(\d{4}-\d{2}-\d{2})/);
-    cleanExpiryDate = dateMatch ? dateMatch[1] : null;
-}
-const payload = {
-    'concentration': item.concentration || "",
-    'expiryDate': cleanExpiryDate,
-    'instruction': item.instruction || ""
-};
-            if (item.product && item.product.id){
-                payload.product = { id: item.product.id };
-            }
-            if (item.equipmentType && item.equipmentType.id){
-                payload.equipmentType = { id: item.equipmentType.id };
-            }
-            if (item.service && item.service.id) {
-                payload.service = { id: item.service.id };
-            }
-            testProcedureItems.push(payload);
-        });
-
-        if (testProcedureItems.length > 0) {
-            console.log('Creating TestProcedureItems:', testProcedureItems);
-            console.log('Items payload:', JSON.stringify(testProcedureItems));
-            var bulkUrl = JSUTIL.getUrl('/api/test-procedures/' + newProcedureId + '/items/bulk');
-            JSUTIL.callAJAXPost(bulkUrl, JSON.stringify(testProcedureItems), callbackAfterItemsCreate);
-        } else {
-            callbackAfterItemsCreate(response);
-        }
+        JSUTIL.buildAuthenticationModal(function() {
+            const newProcedureNumber = getNextProcedureNumber(currentRecord.number);
+            console.log(newProcedureNumber);
+            var testProcedurePayload = {
+                "number": newProcedureNumber,
+                "title": currentRecord.title,
+                "department": currentRecord.department,
+                "category": currentRecord.category,
+                "version": Number(currentRecord.version) + 1,
+                "processStatus": "Draft",
+                "reviewDate": JSUTIL.toDatabaseDate(currentRecord.reviewDate),
+                "changeControlNumber": currentRecord.changeControlNumber,
+                "samplingPlan": currentRecord.samplingPlan,
+                "collectionProcedure": currentRecord.collectionProcedure,
+                "storage": currentRecord.storage,
+                "environmentalConditions": currentRecord.environmentalConditions,
+                "safety": currentRecord.safety,
+                "isArchived": false,
+                "analyst": currentRecord.analyst ? { id: Number(currentRecord.analyst.id) } : null,
+                "product": currentRecord.product ? { id: Number(currentRecord.product.id) } : null
+            };
+            console.log('TestProcedure Payload:', testProcedurePayload);
+            var createUrl = JSUTIL.getUrl('/api/test-procedures');
+            JSUTIL.callAJAXPost(createUrl, JSON.stringify(testProcedurePayload), function(response) {
+                console.log('TestProcedure created:', response);
+                var newProcedureId = response.id;
+                var testProcedureItems = [];
+                $.each(currentRequestItems, function(i, item){
+                    var cleanExpiryDate = null;
+                    if (item.expiryDate) {
+                        var dateMatch = item.expiryDate.match(/(\d{4}-\d{2}-\d{2})/);
+                        cleanExpiryDate = dateMatch ? dateMatch[1] : null;
+                    }
+                    const payload = {
+                        'concentration': item.concentration || "",
+                        'expiryDate': cleanExpiryDate,
+                        'instruction': item.instruction || ""
+                    };
+                    if (item.product && item.product.id){
+                        payload.product = { id: item.product.id };
+                    }
+                    if (item.equipmentType && item.equipmentType.id){
+                        payload.equipmentType = { id: item.equipmentType.id };
+                    }
+                    if (item.service && item.service.id) {
+                        payload.service = { id: item.service.id };
+                    }
+                    testProcedureItems.push(payload);
+                });
+                if (testProcedureItems.length > 0) {
+                    console.log('Creating TestProcedureItems:', testProcedureItems);
+                    console.log('Items payload:', JSON.stringify(testProcedureItems));
+                    var bulkUrl = JSUTIL.getUrl('/api/test-procedures/' + newProcedureId + '/items/bulk');
+                    JSUTIL.callAJAXPost(bulkUrl, JSON.stringify(testProcedureItems), callbackAfterItemsCreate);
+                } else {
+                    callbackAfterItemsCreate(response);
+                }
+            });
+        }); 
     });
-});
 });
 function getNextProcedureNumber(number) {
     if (!number) return number;

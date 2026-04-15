@@ -797,6 +797,12 @@ html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group mb-3">
+                                <label>Retest Date</label>
+                                <input type="text" class="form-control editRecordInput" id="editRetestDate" name="retestDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
                                 <label>Batch / Lot #</label>
                                 <input type="text" class="form-control editRecordInput" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
                             </div>
@@ -1006,7 +1012,7 @@ html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-
         var $menu = $(menuId);
         var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
         $.each(uomList, function (i, val) {
-            html += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + ' (' + val.description + ')</a>';
+            html += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + '</a>';
         });
         $menu.html(html);
     }
@@ -1074,6 +1080,7 @@ html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-
         // Dates
         $('#editManufacturingDate').val(JSUTIL.getDate(objList.manufacturingDate));
         $('#editExpiryDate').val(JSUTIL.getDate(objList.expiryDate));
+        $('#editRetestDate').val(JSUTIL.getDate(objList.retestDate));
         $('.editRecordInput[name="batchNumber"]').val(objList.batchNumber || '');
 
         // STP
@@ -1178,6 +1185,7 @@ html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-
         $.each(currentRequestItemList, function(i, val) {
             var analystValue = $('#requestLnItem_' + val.id + '_Analyst').val();
             var payload = {};
+            payload['processStatus'] = 'Worksheet'
             if (analystValue) {
                 payload.analyst = { id: Number(analystValue) };
             } else {
@@ -1324,15 +1332,17 @@ html[data-bs-theme="dark"] .qa-white-panel .select2-container--default .select2-
 
         // ── Send to QC Analysis button ──
         $('#complTestingBtn').on('click', function() {
-            var hasIncomplete = false;
-            $('.analystUseSelect').each(function() {
-                if (!$(this).val()) { hasIncomplete = true; }
+            JSUTIL.buildAuthenticationModal(function() {
+                var hasIncomplete = false;
+                $('.analystUseSelect').each(function() {
+                    if (!$(this).val()) { hasIncomplete = true; }
+                });
+                if (hasIncomplete) {
+                    JSUTIL.buildErrorModal('Please allocate all parameters.');
+                } else {
+                    saveTestResults(true);
+                }
             });
-            if (hasIncomplete) {
-                JSUTIL.buildErrorModal('Please allocate all parameters.');
-            } else {
-                saveTestResults(true);
-            }
         });
 
         // ── Bulk Allocation modal ──

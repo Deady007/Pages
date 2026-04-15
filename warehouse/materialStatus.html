@@ -170,10 +170,24 @@ html[data-bs-theme="dark"] #materialProductDropdown li.active {
             if (!query) { hideDropdown(); return; }
 
             searchDebounce = setTimeout(function () {
-                fetch('/api/products?name=' + encodeURIComponent(query))
-                    .then(function (res) { return res.json(); })
-                    .then(function (data) { showDropdown(data || []); })
-                    .catch(function (err) { console.error('Product search error:', err); });
+                var enc = encodeURIComponent(query);
+                // Fire two requests in parallel — by name and by code — then merge & de-dupe
+                Promise.all([
+                    fetch('/api/products?name=' + enc).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+                    fetch('/api/products?number=' + enc).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; })
+                ]).then(function (results) {
+                    var merged = [].concat(results[0] || [], results[1] || []);
+                    var seen = {};
+                    var deduped = merged.filter(function (p) {
+                        var id = p.Id || p.id;
+                        if (id == null || seen[id]) return false;
+                        seen[id] = true;
+                        return true;
+                    });
+                    showDropdown(deduped);
+                }).catch(function (err) {
+                    console.error('Product search error:', err);
+                });
             }, 300);
         });
 
@@ -207,13 +221,20 @@ html[data-bs-theme="dark"] #materialProductDropdown li.active {
                         return Promise.resolve(null);
                     }
 
-                    var itemRequests = orders.map(function (order) {
-                        var orderId = order.id || order.Id;
-                        return fetch('/api/purchase/orders/' + orderId + '/items')
-                            .then(function (res) { return res.ok ? res.json() : []; })
-                            .then(function (items) {
-                                return (items || []).map(function (item) {
-                                    item.purchaseOrder = item.purchaseOrder || order;
+                    // For each order, fetch the full wrapper /api/purchase/orders/{id}
+                    // which returns { order, items } with the order hydrated
+                    // (vendor / manufacturer / orderStatus all populated).
+                    var itemRequests = orders.map(function (listOrder) {
+                        var orderId = listOrder.id || listOrder.Id;
+                        return fetch('/api/purchase/orders/' + orderId)
+                            .then(function (res) { return res.ok ? res.json() : null; })
+                            .then(function (body) {
+                                if (!body) return [];
+                                // Prefer the fully-hydrated order from the wrapper; fall back to list entry
+                                var hydratedOrder = body.order || listOrder;
+                                var items = body.items || [];
+                                return items.map(function (item) {
+                                    item.purchaseOrder = hydratedOrder;
                                     return item;
                                 });
                             })

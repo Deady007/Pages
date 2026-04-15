@@ -894,7 +894,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>Challan Date</label>
-            <input type="date" id="challanDate" class="form-control" />
+            <input type="text" id="challanDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" />
           </div>
         </div>
         <div class="col-md-3">
@@ -906,7 +906,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>LR Date</label>
-            <input type="date" id="lrDate" class="form-control" />
+            <input type="text" id="lrDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" />
           </div>
         </div>
         <div class="col-md-3">
@@ -927,7 +927,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>Invoice Date</label>
-            <input type="date" id="invoiceDate" class="form-control" />
+            <input type="text" id="invoiceDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" />
           </div>
         </div>
         <div class="col-md-3">
@@ -1317,9 +1317,11 @@
               <div class="form-group">
                 <label>Challan Date</label>
                 <input
-                  type="date"
+                  type="text"
                   id="editChallanDate"
                   class="form-control"
+                  placeholder="DD/MM/YYYY"
+                  autocomplete="off"
                   readonly
                 />
               </div>
@@ -1339,9 +1341,11 @@
               <div class="form-group">
                 <label>LR Date</label>
                 <input
-                  type="date"
+                  type="text"
                   id="editLrDate"
                   class="form-control"
+                  placeholder="DD/MM/YYYY"
+                  autocomplete="off"
                   readonly
                 />
               </div>
@@ -1364,9 +1368,11 @@
               <div class="form-group">
                 <label>Invoice Date</label>
                 <input
-                  type="date"
+                  type="text"
                   id="editInvoiceDate"
                   class="form-control"
+                  placeholder="DD/MM/YYYY"
+                  autocomplete="off"
                   readonly
                 />
               </div>
@@ -1375,9 +1381,11 @@
               <div class="form-group">
                 <label>Receipt Date</label>
                 <input
-                  type="date"
+                  type="text"
                   id="editReceiptDate"
                   class="form-control"
+                  placeholder="DD/MM/YYYY"
+                  autocomplete="off"
                   readonly
                 />
               </div>
@@ -1957,6 +1965,14 @@
     updateTaxColumns();
     // On change
     $("#taxTypeSelect").on("change", updateTaxColumns);
+    // Initialize flatpickr DD/MM/YYYY date pickers
+    JSUTIL.initDatePicker('#challanDate');
+    JSUTIL.initDatePicker('#lrDate');
+    JSUTIL.initDatePicker('#invoiceDate');
+    JSUTIL.initDatePicker('#editChallanDate');
+    JSUTIL.initDatePicker('#editLrDate');
+    JSUTIL.initDatePicker('#editInvoiceDate');
+    JSUTIL.initDatePicker('#editReceiptDate');
   });
   var products = [];
   var manufacturers = [];
@@ -2700,14 +2716,14 @@
           $("#challanNumber").val(gateEntry.challanNumber || "");
           if (gateEntry.challanDate) {
             $("#challanDate").val(
-              new Date(gateEntry.challanDate).toISOString().split("T")[0],
+              moment(gateEntry.challanDate).format('DD/MM/YYYY'),
             );
           }
 
           $("#lrNumber").val(gateEntry.lrNumber || "");
           if (gateEntry.lrDate) {
             $("#lrDate").val(
-              new Date(gateEntry.lrDate).toISOString().split("T")[0],
+              moment(gateEntry.lrDate).format('DD/MM/YYYY'),
             );
           }
 
@@ -2716,7 +2732,7 @@
 
           if (gateEntry.invoiceDate) {
             $("#invoiceDate").val(
-              new Date(gateEntry.invoiceDate).toISOString().split("T")[0],
+              moment(gateEntry.invoiceDate).format('DD/MM/YYYY'),
             );
           }
 
@@ -2781,13 +2797,13 @@
                   $("#challanNumber").val(receipt.challanNumber);
                 if (receipt.challanDate) {
                   $("#challanDate").val(
-                    new Date(receipt.challanDate).toISOString().split("T")[0],
+                    moment(receipt.challanDate).format('DD/MM/YYYY'),
                   );
                 }
                 if (receipt.lrNumber) $("#lrNumber").val(receipt.lrNumber);
                 if (receipt.lrDate) {
                   $("#lrDate").val(
-                    new Date(receipt.lrDate).toISOString().split("T")[0],
+                    moment(receipt.lrDate).format('DD/MM/YYYY'),
                   );
                 }
                 if (receipt.awbNumber) $("#awbNumber").val(receipt.awbNumber);
@@ -2795,7 +2811,7 @@
                   $("#invoiceNumber").val(receipt.invoiceNumber);
                 if (receipt.invoiceDate) {
                   $("#invoiceDate").val(
-                    new Date(receipt.invoiceDate).toISOString().split("T")[0],
+                    moment(receipt.invoiceDate).format('DD/MM/YYYY'),
                   );
                 }
                 if (receipt.invoiceAmount)
@@ -3457,13 +3473,13 @@
                         <input type="hidden" class="manufacturerId" value="${(selectedPoManufacturer && (selectedPoManufacturer.id || selectedPoManufacturer.Id)) || productData.manufacturerId || ""}" />
                     </td>
                     <td>
-                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class=" form-control mfgDateInput datepicker" required/>
+                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control mfgDateInput datepicker" required/>
                     </td>
                     <td>
                         <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control expDateInput datepicker"/>
                     </td>
                     <td>
-                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class=" form-control retestDateInput datepicker"/>
+                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control retestDateInput datepicker"/>
                     </td>
                     <td>
                         <input type="number" class="form-control receivedQtyInput" min="0" max="${productData.remainingQty}" value="0" required>
@@ -3818,12 +3834,12 @@
 
       // New Fields from GateEntry
       challanNumber: $("#challanNumber").val(),
-      challanDate: $("#challanDate").val(),
+      challanDate: $("#challanDate").val() ? moment($("#challanDate").val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
       lrNumber: $("#lrNumber").val(),
-      lrDate: $("#lrDate").val(),
+      lrDate: $("#lrDate").val() ? moment($("#lrDate").val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
       awbNumber: $("#awbNumber").val(),
       invoiceNumber: $("#invoiceNumber").val(),
-      invoiceDate: $("#invoiceDate").val(),
+      invoiceDate: $("#invoiceDate").val() ? moment($("#invoiceDate").val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
       invoiceAmount: $("#invoiceAmount").val() || 0,
       exchangeRate: $("#exchangeRate").val() || 0,
       deliveryVehicle: $("#deliveryVehicle").val(),
@@ -4188,27 +4204,27 @@
     $("#editChallanNumber").val(currentReceipt.challanNumber || "");
     if (currentReceipt.challanDate) {
       $("#editChallanDate").val(
-        new Date(currentReceipt.challanDate).toISOString().split("T")[0],
+        moment(currentReceipt.challanDate).format('DD/MM/YYYY'),
       );
     }
 
     $("#editLrNumber").val(currentReceipt.lrNumber || "");
     if (currentReceipt.lrDate) {
       $("#editLrDate").val(
-        new Date(currentReceipt.lrDate).toISOString().split("T")[0],
+        moment(currentReceipt.lrDate).format('DD/MM/YYYY'),
       );
     }
 
     $("#editInvoiceNumber").val(currentReceipt.invoiceNumber || "");
     if (currentReceipt.invoiceDate) {
       $("#editInvoiceDate").val(
-        new Date(currentReceipt.invoiceDate).toISOString().split("T")[0],
+        moment(currentReceipt.invoiceDate).format('DD/MM/YYYY'),
       );
     }
 
     if (currentReceipt.receiptDate) {
       $("#editReceiptDate").val(
-        new Date(currentReceipt.receiptDate).toISOString().split("T")[0],
+        moment(currentReceipt.receiptDate).format('DD/MM/YYYY'),
       );
     }
 
@@ -4832,8 +4848,8 @@ ${
                                 </td>
                                 <td><strong>Manufacturing Date:</strong></td>
                                 <td>
-                                    <input type="date" class="form-control mfg-date-input" 
-                                           value="${val.manufacturingDate ? val.manufacturingDate.slice(0, 10) : ""}"
+                                    <input type="text" class="form-control mfg-date-input" placeholder="DD/MM/YYYY" autocomplete="off"
+                                           value="${val.manufacturingDate ? moment(val.manufacturingDate).format('DD/MM/YYYY') : ""}"
                                            readonly>
                                 </td>
                             </tr>
@@ -4841,13 +4857,13 @@ ${
                                 <td><strong>Expiry Date:</strong></td>
                                 <td>
                                     ${val.expiryDate
-                                        ? '<input type="date" class="form-control exp-date-input" value="' + val.expiryDate.slice(0,10) + '" readonly>'
+                                        ? '<input type="text" class="form-control exp-date-input" placeholder="DD/MM/YYYY" autocomplete="off" value="' + moment(val.expiryDate).format('DD/MM/YYYY') + '" readonly>'
                                         : '<input type="text" class="form-control" value="N/A" readonly>'}
                                 </td>
                                 <td><strong>Retest Date:</strong></td>
                                 <td>
                                     ${val.retestDate
-                                        ? '<input type="date" class="form-control retest-date-input" value="' + val.retestDate.slice(0,10) + '" readonly>'
+                                        ? '<input type="text" class="form-control retest-date-input" placeholder="DD/MM/YYYY" autocomplete="off" value="' + moment(val.retestDate).format('DD/MM/YYYY') + '" readonly>'
                                         : '<input type="text" class="form-control" value="N/A" readonly>'}
                                 </td>
                             </tr>

@@ -687,7 +687,7 @@
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label for="edit-tpl-applicable-depts">Applicable Departments</label>
+                                <label for="edit-tpl-applicable-depts">Applicable Departments <span class="required-asterisk">*</span></label>
                                 <select id="edit-tpl-applicable-depts" class="select2 form-control edit-template-input departmentDropDown" multiple="multiple" data-placeholder="Select departments" disabled>
                                     <option value="">--none--</option>
                                 </select>
@@ -695,7 +695,7 @@
                         </div>
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label for="edit-tpl-preparing-depts">Departments Allowed to Prepare Entries</label>
+                                <label for="edit-tpl-preparing-depts">Departments Allowed to Prepare Entries <span class="required-asterisk">*</span></label>
                                 <select id="edit-tpl-preparing-depts" class="select2 form-control edit-template-input departmentDropDown" multiple="multiple" data-placeholder="Select departments" disabled>
                                     <option value="">--none--</option>
                                 </select>
@@ -706,7 +706,7 @@
                     <div class="row">
                         <div class="col-sm-4">
                             <div class="form-group">
-                                <label for="edit-tpl-reviewing-depts">Reviewing Departments</label>
+                                <label for="edit-tpl-reviewing-depts">Reviewing Departments <span class="required-asterisk">*</span></label>
                                 <select id="edit-tpl-reviewing-depts" class="select2 form-control edit-template-input departmentDropDown" multiple="multiple" data-placeholder="Select departments" disabled>
                                     <option value="">--none--</option>
                                 </select>
@@ -726,7 +726,7 @@
                     <div class="row" style="margin-top:12px;">
                         <div class="col-sm-12">
                             <div class="form-group">
-                                <label for="edit-tpl-desc">Description / SOP Reference</label>
+                                <label for="edit-tpl-desc">Description / SOP Reference <span class="required-asterisk">*</span></label>
                                 <textarea id="edit-tpl-desc" class="form-control edit-template-input" rows="3"
                                     placeholder="Describe the purpose of this logbook and reference applicable SOPs..." readonly></textarea>
                             </div>
@@ -748,19 +748,19 @@
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-size:12px; color:#888;">Left</label>
+                                        <label style="font-size:12px; color:#888;">Left <span class="required-asterisk">*</span></label>
                                         <input type="text" id="edit-tpl-header-left" class="form-control edit-template-input" placeholder="e.g., Company Name" readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-size:12px; color:#888;">Center</label>
+                                        <label style="font-size:12px; color:#888;">Center <span class="required-asterisk">*</span></label>
                                         <input type="text" id="edit-tpl-header-center" class="form-control edit-template-input" placeholder="e.g., Document Title" readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-size:12px; color:#888;">Right</label>
+                                        <label style="font-size:12px; color:#888;">Right <span class="required-asterisk">*</span></label>
                                         <input type="text" id="edit-tpl-header-right" class="form-control edit-template-input" placeholder="e.g., Version / Date" readonly>
                                     </div>
                                 </div>
@@ -773,19 +773,19 @@
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-size:12px; color:#888;">Left</label>
+                                        <label style="font-size:12px; color:#888;">Left <span class="required-asterisk">*</span></label>
                                         <input type="text" id="edit-tpl-footer-left" class="form-control edit-template-input" placeholder="e.g., Prepared By" readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-size:12px; color:#888;">Center</label>
+                                        <label style="font-size:12px; color:#888;">Center <span class="required-asterisk">*</span></label>
                                         <input type="text" id="edit-tpl-footer-center" class="form-control edit-template-input" placeholder="e.g., Page {n} of {total}" readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label style="font-size:12px; color:#888;">Right</label>
+                                        <label style="font-size:12px; color:#888;">Right <span class="required-asterisk">*</span></label>
                                         <input type="text" id="edit-tpl-footer-right" class="form-control edit-template-input" placeholder="e.g., Approved By" readonly>
                                     </div>
                                 </div>
@@ -1511,22 +1511,37 @@ function getEditTemplatePayload(nextStatus, options) {
   var domParentId = ($('#edit-tpl-parent-id').val() || '').toString().trim();
   var parentId = domParentId || recordId;
 
-  if (!name) {
-    editTemplateShowToast('Please enter a template name', 'error');
-    return null;
-  }
+  var headerLeft = ($('#edit-tpl-header-left').val() || '').trim();
+  var headerCenter = ($('#edit-tpl-header-center').val() || '').trim();
+  var headerRight = ($('#edit-tpl-header-right').val() || '').trim();
+  var footerLeft = ($('#edit-tpl-footer-left').val() || '').trim();
+  var footerCenter = ($('#edit-tpl-footer-center').val() || '').trim();
+  var footerRight = ($('#edit-tpl-footer-right').val() || '').trim();
+
+  var missing = [];
+  if (!name) missing.push('Template Name');
+  if (!applicableDeptIds) missing.push('Applicable Departments');
+  if (!preparingDeptIds) missing.push('Departments Allowed to Prepare Entries');
+  if (!reviewingDeptIds) missing.push('Reviewing Departments');
+  if (!description) missing.push('Description / SOP Reference');
+  if (!headerLeft) missing.push('Header Left');
+  if (!headerCenter) missing.push('Header Center');
+  if (!headerRight) missing.push('Header Right');
+  if (!footerLeft) missing.push('Footer Left');
+  if (!footerCenter) missing.push('Footer Center');
+  if (!footerRight) missing.push('Footer Right');
 
   var fields = [];
-  var hasInvalidField = false;
+  var $fieldItems = $('#edit-template-field-list .field-item');
 
-  $('#edit-template-field-list .field-item').each(function () {
+  $fieldItems.each(function (idx) {
     var fieldName = ($(this).find('[data-role="name"]').val() || '').trim();
     var fieldType = ($(this).find('[data-role="type"]').val() || 'text').trim();
     var fieldRequired = !!$(this).find('[data-role="required"]').prop('checked');
     var fieldOptions = ($(this).find('[data-role="options"]').val() || '').trim();
 
     if (!fieldName) {
-      hasInvalidField = true;
+      missing.push('Column #' + (idx + 1) + ' name');
       return;
     }
 
@@ -1538,8 +1553,17 @@ function getEditTemplatePayload(nextStatus, options) {
     });
   });
 
-  if (hasInvalidField) {
-    editTemplateShowToast('Please enter column names for all fields.', 'error');
+  if (!$fieldItems.length) {
+    missing.push('At least one Table Column');
+  }
+
+  if (missing.length) {
+    var msg = 'Please fill the following required field(s):\n• ' + missing.join('\n• ');
+    if (typeof JSUTIL !== 'undefined' && typeof JSUTIL.buildErrorModal === 'function') {
+      JSUTIL.buildErrorModal(msg);
+    } else {
+      editTemplateShowToast(msg, 'error');
+    }
     return null;
   }
 
@@ -1560,16 +1584,8 @@ function getEditTemplatePayload(nextStatus, options) {
     applicableDepartments: applicableDeptIds,
     preparingDepartments: preparingDeptIds,
     reviewingDepartments: reviewingDeptIds,
-    header: [
-      ($('#edit-tpl-header-left').val() || '').trim(),
-      ($('#edit-tpl-header-center').val() || '').trim(),
-      ($('#edit-tpl-header-right').val() || '').trim()
-    ].join(';'),
-    footer: [
-      ($('#edit-tpl-footer-left').val() || '').trim(),
-      ($('#edit-tpl-footer-center').val() || '').trim(),
-      ($('#edit-tpl-footer-right').val() || '').trim()
-    ].join(';')
+    header: [headerLeft, headerCenter, headerRight].join(';'),
+    footer: [footerLeft, footerCenter, footerRight].join(';')
   };
 
   if (parentId) {

@@ -102,7 +102,7 @@
 </style>
 
 <!--allQAChecklistPanel.html start -->
-<div class="qa-white-panel" style="background: #fff; padding: 16px; border-radius: 8px;">
+<div class="qa-white-panel">
 
     <div class="row animated fadeInRight aasaanPanel" id="allQAChecklistPanel">
         <div class="col-lg-12">
@@ -660,7 +660,11 @@
                 setChecklistReadOnly(false);
             });
             $('.qa-checklist-submit-btn').on('click', function () { handleChecklistSubmit(); });
-            $('.qa-checklist-approve-btn').on('click', function () { handleChecklistApprove(); });
+            $('.qa-checklist-approve-btn').on('click', function () { 
+                JSUTIL.builAuthenticationModal(function(){
+                    handleChecklistApprove()
+                })
+             });
             $('.qa-checklist-reject-btn').on('click', function () {
                 if (!qaChecklistPermissions.canApprove) {
                     qaNotify('warning', 'You do not have permission to reject this checklist.');
@@ -670,7 +674,11 @@
                 $('#qaRejectError').hide();
                 var rejectModal = new bootstrap.Modal($('#qaChecklistRejectModal')[0]); rejectModal.show();
             });
-            $('#qaRejectConfirmBtn').on('click', function () { handleChecklistReject(); });
+            $('#qaRejectConfirmBtn').on('click', function () { 
+                JSUTIL.builAuthenticationModal(function(){
+                    handleChecklistReject()
+                })
+             });
             $('#qaRejectModalCloseBtn').on('click', function () {
                 var rejectModal = bootstrap.Modal.getInstance($('#qaChecklistRejectModal')[0]);
                 if (rejectModal) rejectModal.hide();

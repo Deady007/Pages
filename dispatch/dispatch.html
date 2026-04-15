@@ -288,7 +288,7 @@
                             <label for="invoiceDate">
                                 <i class="ti ti-calendar"></i> Invoice Date <span class="text-danger">*</span>
                             </label>
-                            <input type="date" class="form-control" id="invoiceDate">
+                            <input type="text" class="form-control" id="invoiceDate" placeholder="DD/MM/YYYY" autocomplete="off">
                         </div>
 
                         <!-- Distance (approx) -->
@@ -618,16 +618,9 @@
             }
         });
 
-        // Initialize daterangepicker for EPO Date (safe check in case lib loads late)
-        if ($.fn.daterangepicker) {
-            $('#epoDate').daterangepicker({
-                singleDatePicker: true,
-                showDropdowns: true,
-                locale: {
-                    format: 'DD/MM/YYYY'
-                }
-            });
-        }
+        // Initialize flatpickr DD/MM/YYYY date pickers
+        JSUTIL.initDatePicker('#invoiceDate');
+        JSUTIL.initDatePicker('#epoDate');
         // Product lot selection - directly add item when lot is selected
         $('#productLotSelect').on('change', function () {
             var lotId = $(this).val();
@@ -1489,8 +1482,7 @@
         selectedCustomerForInvoice = null;
         $('#invoiceCustomerResults').empty();
 
-        var today = new Date().toISOString().split('T')[0];
-        $('#invoiceDate').val(today);
+        $('#invoiceDate').val(moment().format('DD/MM/YYYY'));
         $('#invoiceDistance').val('');
 
         $('#modalDispatchNumber').text(currentDispatchData.number || 'N/A');
@@ -1660,7 +1652,7 @@
             }
 
             var dateValue = $('#invoiceDate').val();
-            var invoiceDateIso = dateValue ? dateValue + 'T00:00:00Z' : new Date().toISOString().split('.')[0] + 'Z';
+            var invoiceDateIso = dateValue ? moment(dateValue, 'DD/MM/YYYY').format('YYYY-MM-DD') + 'T00:00:00Z' : new Date().toISOString().split('.')[0] + 'Z';
             var subTotal = 0.0;
             var lineItems = [];
             var lineItemsMap = {}; // key -> aggregated line item

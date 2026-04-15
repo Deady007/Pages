@@ -642,7 +642,7 @@
 
             var innerHtml = '';
             $.each(recordList, function (i, val) {
-                if(val.orderStatus !== "Bussiness Head Review") return; 
+                if(val.orderStatus !== "Business Head Review") return; 
                 innerHtml += '<tr>' +
                     '<td class="itemNum"><a href="javascript:void(0);" class="selectPOBtn" id="' + val.id + '">' + val.number + '</a></td>' +
                     '<td>' + JSUTIL.getDate(val.orderDate) + '</td>' +
@@ -1080,10 +1080,12 @@ $(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
     $(document).on('change', '.lnItemInputVal1', function () {
         calculateTotals1();
     });
-    $('#approveBtn').off('click').on('click', async function () {
+    $('#approveBtn').off('click').on('click',function(){
+    //         var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
+    // if (modalInstance) modalInstance.hide();
+        JSUTIL.buildAuthenticationModal( async function () {
     // Hide modal first (BS5)
-    var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
-    if (modalInstance) modalInstance.hide();
+
 
     JSUTIL.startSpinner();
 
@@ -1135,7 +1137,8 @@ $(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
     } finally {
         JSUTIL.stopSpinner();
     }
-});
+})
+    });
     $('#rejectBtn').on('click', function () {
         // Hide modal first (BS5)
         var modalInstance = bootstrap.Modal.getInstance(document.getElementById('approvalModal'));
@@ -1146,7 +1149,8 @@ $(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
         // OLD: JSUTIL.callAJAXPost(postUrl, JSON.stringify(obj), function (res) { location.reload(); });
 
         // NEW: PATCH /api/purchase/orders/{id}/status
-        fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
+        JSUTIL.buildAuthenticationModal(function(){
+            fetch(JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/status'), {
             method: 'PATCH',
             headers: { 'Content-Type': 'text/plain' },
             body: 'Rejected'
@@ -1158,6 +1162,7 @@ $(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
         .catch(function (err) {
             console.error('Reject PATCH failed:', err);
         });
+        })
 
         
     });
@@ -1197,10 +1202,10 @@ $(document).off('click', '.printPoBtn').on('click', '.printPoBtn', function () {
         customeremail = orderObj.vendor ? orderObj.vendor.email : '';
 
         // Set dataflag: false = show approveRejectBtn (order is "Bussiness Head Review"), true = hide it
-        dataflag = (orderObj.orderStatus === 'Bussiness Head Review') ? false : true;
+        dataflag = (orderObj.orderStatus === 'Business Head Review') ? false : true;
 
         // NEW: read from orderObj directly
-        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "Bussiness Head Review" || orderObj.orderStatus === "Approved") {
+        if (orderObj.orderStatus === "Cancelled" || orderObj.orderStatus === "HOD Review" || orderObj.orderStatus === "Business Head Review" || orderObj.orderStatus === "Approved") {
             $('.approvedBtn').hide();
             $('.orderEditBtn').hide();
             $('.orderCancelBtn').hide();

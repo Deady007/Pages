@@ -1,5 +1,4 @@
 <!--allStpPanel.html start-->
-<!-- <script src=https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js></script> -->
 <script src="pages/lib/jquery-3.7.1.js"></script>
 <script src="pages/lib/moment.min.js"></script>
 <link rel="stylesheet" href="pages/lib/daterangepicker.css">
@@ -2741,6 +2740,18 @@
                         $('#addDocumentsBtn').show();
                         $('#approverFieldWrapper').hide();
                         $('#reviseStpBtn').hide();
+                    } else if(val.processStatus === 'Under Review') {
+                        $('.editStpEditBtn').hide();
+                        $('.sendToApprovalBtn').show();
+                        $('.sendToApprovalBtn').prop('disabled', false);
+                        $('.stpRemarksPanel').hide();
+                        $('#editAddReagentsRowsBtn').hide();
+                        $('#editAddInstrumentBtn').hide();
+                        $('#editAddProceduresBtn').hide();
+                        $('#editAddParameterBtn').hide();
+                        $('#addDocumentsBtn').hide();
+                        $('#approverFieldWrapper').hide();
+                        $('#reviseStpBtn').hide();
                     } else {
                         $('.editStpEditBtn').show();
                         $('.sendToApprovalBtn').show();
@@ -2836,21 +2847,23 @@
             }
         });
         $("#revisionApprovalBtn").on('click', function () {
-            var jsObj = {
-                'purpose': $('#revisionRemarks').val(),
-                'processStatus': 'Revision Approval'
-            }
-            apiRequest('PUT', '/api/test-procedures/' + currentRequestId, jsObj).then(function (response) {
-                createProcessActivity('STP', 'STP under Revision Approval', { notes: $('#revisionRemarks').val().trim() })
-                    .then(function (activityResponse) {
-                        location.reload();
-                    })
-                    .catch(function (activityError) {
-                        location.reload();
-                    });
-            }).catch(function (error) {
-                JSUTIL.buildErrorModal('Unable to send STP for revision approval.');
-            });
+            JSUTIL.buildAuthenticationModal(function() {
+                var jsObj = {
+                    'purpose': $('#revisionRemarks').val(),
+                    'processStatus': 'Revision Approval'
+                }
+                apiRequest('PUT', '/api/test-procedures/' + currentRequestId, jsObj).then(function (response) {
+                    createProcessActivity('STP', 'STP under Revision Approval', { notes: $('#revisionRemarks').val().trim() })
+                        .then(function (activityResponse) {
+                            location.reload();
+                        })
+                        .catch(function (activityError) {
+                            location.reload();
+                        });
+                }).catch(function (error) {
+                    JSUTIL.buildErrorModal('Unable to send STP for revision approval.');
+                });
+            }); 
         })
         $('#fileInput').on('change', function (e) {
             $('#fileNameText').text(e.target.files[0].name);
@@ -3077,7 +3090,8 @@
             $('#newLabServiceModal').addClass('open');
         });
         $('.sendToApprovalBtn').on('click', function () {
-            createProcessActivity('STP', 'Send for Approval', { notes: 'Send for Approval' })
+            JSUTIL.buildAuthenticationModal(function() {
+                createProcessActivity('STP', 'Send for Approval', { notes: 'Send for Approval' })
                 .then(function (activityResponse) {
                     var payload = {
                         "processStatus": "Under Review"
@@ -3088,6 +3102,7 @@
                 }).catch(function (updateErr) {
                     JSUTIL.buildErrorModal('Unable to update STP status.');
                 });
+            }); 
         });
         $('.editStpSaveBtn').on('click', async function () {
             JSUTIL.startSpinner();
@@ -3694,20 +3709,20 @@
             // Removed 'name' and 'effectiveDate' since they don't exist or are disabled
             fields: ['number', 'title', 'department', 'category', 'version', 'changeControlNumber']
         },
-<!--        'sampling': {-->
-<!--            name: 'Sampling & Storage',-->
-<!--            fields: ['samplingPlan', 'collectionProcedure', 'storage']-->
-<!--        },-->
+// <!--        'sampling': {-->
+// <!--            name: 'Sampling & Storage',-->
+// <!--            fields: ['samplingPlan', 'collectionProcedure', 'storage']-->
+// <!--        },-->
         'reagents': {
             name: 'Reagents, Standards & Materials',
             tableId: 'reagentsTable',
             minRows: 1,
             checkFields: ['product.id_']
         },
-<!--        'environmental': {-->
-<!--            name: 'Environmental & Safety',-->
-<!--            fields: ['environmentalConditions', 'safety']-->
-<!--        },-->
+// <!--        'environmental': {-->
+// <!--            name: 'Environmental & Safety',-->
+// <!--            fields: ['environmentalConditions', 'safety']-->
+// <!--        },-->
         'acceptance': {
             name: 'Acceptance Criteria',
             tableId: 'editParametersTable',
@@ -5220,48 +5235,14 @@ ${this.$editor.html()}
 
     function initDateInput($targets, options) {
         var $inputs = $targets || $();
-        var pickerOptions = options || {};
 
         if (!$inputs.length) {
             return;
         }
 
-        if ($.fn.datepicker) {
-            $inputs.each(function () {
-                var $el = $(this);
-                try {
-                    $el.datepicker('destroy');
-                } catch (e) {
-                    // Ignore when no instance exists yet.
-                }
-                $el.datepicker(pickerOptions);
-            });
-            return;
-        }
-
-        if ($.fn.daterangepicker) {
-            $inputs.each(function () {
-                var $el = $(this);
-                if ($el.data('daterangepicker')) {
-                    $el.data('daterangepicker').remove();
-                }
-                $el.daterangepicker({
-                    singleDatePicker: true,
-                    autoUpdateInput: false,
-                    showDropdowns: true,
-                    locale: { format: 'DD/MM/YYYY' }
-                });
-                $el.off('.stpDateFallback');
-                $el.on('apply.daterangepicker.stpDateFallback', function (ev, picker) {
-                    $el.val(picker.startDate.format('DD/MM/YYYY')).trigger('change');
-                });
-                $el.on('cancel.daterangepicker.stpDateFallback', function () {
-                    $el.val('').trigger('change');
-                });
-            });
-            return;
-        }
-
+        $inputs.each(function () {
+            JSUTIL.initDatePicker(this);
+        });
     }
 
     function safeInitializeTypeahead(element, dataObject, field, retryCount = 0) {

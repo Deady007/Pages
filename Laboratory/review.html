@@ -119,20 +119,45 @@
         white-space: nowrap;
     }
 
-    .status-new{
+    .status-new {
         background: #f3f4f6;
         color: #6b7280;
     }
-    .status-submitted  { background: #dbeafe;
-        color: #1e40af; }
-    .status-completed  { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+
+    .status-submitted {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-completed {
+        background: #dff0d8;
+        color: #3c763d;
+        border: 1px solid #d6e9c6;
+    }
+
     .danger {
         background: #fee2e2;
         color: #991b1b;
     }
-    [data-bs-theme="dark"] .status-new       { background: #0d3349; color: #7ec8e3; border-color: #1a5a7a; }
-    [data-bs-theme="dark"] .status-submitted { background: #3a2e00; color: #f0c040; border-color: #6b5500; }
-    [data-bs-theme="dark"] .status-completed { background: #0d2e0d; color: #5cb85c; border-color: #1a5c1a; }
+
+    [data-bs-theme="dark"] .status-new {
+        background: #0d3349;
+        color: #7ec8e3;
+        border-color: #1a5a7a;
+    }
+
+    [data-bs-theme="dark"] .status-submitted {
+        background: #3a2e00;
+        color: #f0c040;
+        border-color: #6b5500;
+    }
+
+    [data-bs-theme="dark"] .status-completed {
+        background: #0d2e0d;
+        color: #5cb85c;
+        border-color: #1a5c1a;
+    }
+
     /* ── Readonly inputs ── */
     .qa-white-panel .form-control[readonly] {
         cursor: not-allowed;
@@ -509,9 +534,9 @@
     <div class="row animated fadeInRight aasaanPanel" id="allReviewPanel" style="display: none;">
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
-               <div class="ibox-title">
+                <div class="ibox-title">
                     <h5>Review <small>Laboratory</small></h5>
-               </div>
+                </div>
                 <div class="ibox-content m-b-sm border-bottom">
                     <div class="table-responsive">
                         <table id="allServiceRequestDataTable" class="table table-bordered table-hover">
@@ -656,6 +681,13 @@
                                 <label>Expiry Date</label>
                                 <input type="text" class="form-control editRecordInput" id="editExpiryDate2"
                                     name="expiryDate" autocomplete="off" readonly />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
+                                <label>Retest Date</label>
+                                <input type="text" class="form-control editRecordInput" id="editRetestDate2"
+                                    name="retestDate" autocomplete="off" readonly />
                             </div>
                         </div>
                         <div class="col-sm-6">
@@ -865,6 +897,13 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group mb-3">
+                                <label>Retest Date</label>
+                                <input type="text" class="form-control editRecordInput" id="editRetestDate"
+                                    name="retestDate" autocomplete="off" readonly />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group mb-3">
                                 <label>Batch / Lot #</label>
                                 <input type="text" class="form-control editRecordInput" name="batchNumber"
                                     placeholder="Enter Batch / Lot #" readonly />
@@ -890,7 +929,7 @@
                     <div class="tabs-container">
                         <ul class="nav nav-tabs">
                             <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#resultWorksheet"
-                                    aria-expanded="true">Test Parameters</a></li>
+                                    aria-expanded="true">Variables & Formula</a></li>
                         </ul>
                         <div class="tab-content">
                             <div id="resultWorksheet" class="tab-pane active">
@@ -901,6 +940,11 @@
                                             <select class="form-control" id="selectTestResultInput">
                                                 <option value="">--none--</option>
                                             </select>
+                                        </div>
+                                        <div class="col-sm-6" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+                                            <button type="button" class="btn btn-default btn-sm" id="printRawDataSheetBtn" style="display:none;">
+                                                <i data-lucide="printer"></i> Print Raw Data Sheet
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -914,7 +958,7 @@
     <div class="modal fade" id="resultApprovalModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
-              <div class="modal-header modal-header-simple">
+                <div class="modal-header modal-header-simple">
                     <h4 class="modal-title">Approve / Reject</h4>
                     <small class="font-bold">Approve or reject a request by reviewing all related information.</small>
                 </div>
@@ -1148,7 +1192,7 @@
             var innerHtml2 = '<a class="dropdown-item edit-sampleunit-item2" href="#" data-value="">-- None --</a>';
             if (typeof uomList !== 'undefined' && uomList.length > 0) {
                 $.each(uomList, function (i, val) {
-                    var label = val.name + ' (' + val.description + ')';
+                    var label = val.name;
                     innerHtml += '<a class="dropdown-item edit-sampleunit-item" href="#" data-value="' + val.name + '">' + label + '</a>';
                     innerHtml2 += '<a class="dropdown-item edit-sampleunit-item2" href="#" data-value="' + val.name + '">' + label + '</a>';
                 });
@@ -1203,8 +1247,8 @@
             var innerHtml = '';
             $.each(recordList, function (i, val) {
                 if (val.requestStatus === "QC Worksheet Review" || val.requestStatus === "QC Review") {
-                     var badge = '';
-                     badge = getRequestStatusBadge(val.requestStatus);
+                    var badge = '';
+                    badge = getRequestStatusBadge(val.requestStatus);
                     innerHtml += '<tr>' +
                         '<td class="itemNum"><a href="javascript:void(0)" class="selectRequestBtn" id="' + val.id + '">' + val.referenceNumber + '</a></td>' +
                         '<td>' + val.description + '</td>' +
@@ -1222,7 +1266,6 @@
 
         $(document).ready(function () {
             $('#allReviewPanel').show();
-
             // ── Dropdown click handlers for editReviewPanel2 (result review) ──
             $(document).on('click', '#editDepartmentDropdownMenu .edit-department-item', function (e) {
                 e.preventDefault();
@@ -1342,10 +1385,12 @@
                         // Dates — Panel 2
                         $('#editManufacturingDate').val(JSUTIL.getDate(objList.manufacturingDate));
                         $('#editExpiryDate').val(JSUTIL.getDate(objList.expiryDate));
+                        $('#editRetestDate').val(JSUTIL.getDate(objList.retestDate));
 
                         // Dates — Panel 1
                         $('#editManufacturingDate2').val(JSUTIL.getDate(objList.manufacturingDate));
                         $('#editExpiryDate2').val(JSUTIL.getDate(objList.expiryDate));
+                        $('#editRetestDate2').val(JSUTIL.getDate(objList.retestDate));
 
                         // STP — Panel 2
                         if (objList.testProcedure && objList.testProcedure.id) {
@@ -1398,6 +1443,7 @@
             });
             $('#selectTestInput').append(innerHtml);
             $('#selectTestResultInput').append(innerHtml);
+            $('#printRawDataSheetBtn').hide();
         }
         function callbackAfterGetReportTemplate(response) {
             console.log(response);
@@ -1427,8 +1473,10 @@
                 JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), approveRequestsCallback);
             });
             $(document).on('click', '#worksheetApproveBtn', function () {
-                var requestObj = { 'requestStatus': 'QC Result Recording' };
-                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), approveRequestsCallback);
+                JSUTIL.buildAuthenticationModal(function() {
+                    var requestObj = { 'requestStatus': 'QC Result Recording' };
+                    JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), approveRequestsCallback);
+                }); 
             });
             // $('#printGenerateULRBtn').on('click', function () {
             //     JSUTIL.startSpinner();
@@ -1452,6 +1500,8 @@
                     $('#worksheetPreviewContainer').hide();
                 }
             });
+
+
         });
         function displayWorksheetPreview(worksheetHtml) {
             console.log(worksheetHtml);
@@ -1486,11 +1536,259 @@
                 var requestObj = { 'requestStatus': 'QC Result Recording' };
                 JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), approveRequestsCallback);
             });
-            $('.generateCoaBtn').on('click', function() {
+            $('.generateCoaBtn').on('click', function () {
                 $('#generateCoaPanel').show();
                 $('#editReviewPanel2').hide();
             });
+            $('#printRawDataSheetBtn').on('click', function () {
+                var selectedTestId = $('#selectTestResultInput').val();
+                if (!selectedTestId) return;
+
+                var selectedItem = currentRequestLineItems.find(function (i) {
+                    return i.service.id.toString() === selectedTestId.toString();
+                });
+
+                // Fetch full parameters for this service
+                JSUTIL.startSpinner();
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/test-request-items/' + selectedItem.id), function (fullItem) {
+                    var savedResult = fullItem.testResult || null;
+                    if (savedResult && typeof savedResult === 'string') {
+                        try { savedResult = JSON.parse(savedResult); } catch (e) { savedResult = null; }
+                    }
+
+                    var serviceId = selectedItem.service.id;
+                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/lab-services/' + serviceId + '/parameters'), function (paramList) {
+                        JSUTIL.stopSpinner();
+                        buildAndPrintRawDataSheet(selectedItem, paramList, savedResult);
+                    });
+                });
+            });
         });
+        function buildAndPrintRawDataSheet(selectedItem, paramList, savedResult) {
+            function safe(v) {
+                if (v === null || v === undefined || v === '') return '';
+                return String(v)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
+            var req = currentSampleRequest;
+            var nowText = moment().format('DD/MM/YY, h:mm A');
+            var printedBy = (typeof FOX !== 'undefined' && FOX.employeeName) ? FOX.employeeName : 'System';
+
+            var productName  = safe(req.sampleCondition || '');
+            var limsArNo     = safe(req.referenceNumber || '');
+            var productCode  = safe(req.sampleId || '');
+            var batchNo      = safe(req.batchNumber || '');
+            var specNo       = safe(req.testProcedure ? req.testProcedure.number : '');
+            var testName     = safe(selectedItem && selectedItem.service ? selectedItem.service.name : '');
+            var deptLabel    = safe(req.description || '');
+            var analystName  = safe((selectedItem.analyst.firstName + ' ' + selectedItem.analyst.lastName) || '');
+
+            // ── Split params into variables, formulas ──
+            var variables   = [];
+            var formulas    = [];
+
+            $.each(paramList, function (i, param) {
+                var pType = (param.type || param.parameterType || '').toLowerCase();
+                var name  = param.name || param.parameterName || '';
+                var num   = param.number || '';
+                var unit  = param.unit || '';
+                var decs  = param.numberOfDecimals != null ? param.numberOfDecimals : '';
+                var formula = param.formula || '';
+                var spec  = param.specification || param.passLimit || param.description || '';
+
+                // Saved value for this param
+                var savedVal = '';
+                if (savedResult && param.id !== undefined && savedResult[param.id] !== undefined) {
+                    savedVal = savedResult[param.id];
+                } else if (savedResult && savedResult[num] !== undefined) {
+                    savedVal = savedResult[num];
+                }
+
+                if (pType === 'instrument' || /instrument/i.test(name)) {
+                    instruments.push({ name: name, id: num, scheduleId: '', calDone: '', calDue: '', savedVal: savedVal });
+                } else if (formula && formula.trim() !== '') {
+                    // Has a formula → formula row
+                    formulas.push({ sno: formulas.length + 1, name: name, number: num, formula: formula, unit: unit, decimals: decs, result: savedVal, spec: spec });
+                } else {
+                    // Plain variable
+                    variables.push({ sno: variables.length + 1, name: name, symbol: num, value: savedVal, unit: unit });
+                }
+            });
+
+            // ── Overall result ──
+            var overallResult = '';
+            if (formulas.length > 0 && formulas[formulas.length - 1].result) {
+                overallResult = formulas[formulas.length - 1].result;
+            }
+
+            
+            // ── Build variable rows ──
+            var varRows = '';
+            if (variables.length === 0) {
+                varRows = '<tr><td colspan="5" style="color:#888;font-style:italic;">No variable data</td></tr>';
+            } else {
+                $.each(variables, function (i, v) {
+                    varRows += '<tr>' +
+                        '<td style="text-align:center;">' + safe(String(v.sno)) + '</td>' +
+                        '<td>' + safe(v.name) + '</td>' +
+                        '<td style="text-align:center;">' + safe(v.symbol) + '</td>' +
+                        '<td style="text-align:right; padding-right:8px;">' + safe(String(v.value)) + '</td>' +
+                        '<td>' + safe(v.unit) + '</td>' +
+                        '</tr>';
+                });
+            }
+
+            // ── Build formula rows ──
+            var formulaRows = '';
+            if (formulas.length === 0) {
+                formulaRows = '<tr><td colspan="5" style="color:#888;font-style:italic;">No formula data</td></tr>';
+            } else {
+                $.each(formulas, function (i, f) {
+                    formulaRows += '<tr>' +
+                        '<td style="text-align:center;">' + safe(String(f.sno)) + '</td>' +
+                        '<td>' + safe(f.name) + '</td>' +
+                        '<td style="text-align:center;">' + safe(f.number) + '</td>' +
+                        '<td style="font-family:\'Courier New\',monospace;font-size:10pt;">' + safe(f.formula) + '</td>' +
+                        '<td style="text-align:center;">' + safe(f.unit) + '</td>' +
+                        '<td style="text-align:center;">' + safe(String(f.decimals)) + '</td>' +
+                        '<td style="text-align:center;font-weight:600;">' + safe(String(f.result)) + '</td>' +
+                        '<td>' + safe(f.spec) + '</td>' +
+                        '</tr>';
+                });
+            }
+
+            // ── Result line ──
+            var resultLine = overallResult
+                ? '<p style="font-size:13pt;font-weight:700;margin:10px 0 4px;">RESULT: ' + safe(String(overallResult)) + '</p>'
+                : '<p style="font-size:13pt;font-weight:700;margin:10px 0 4px;">RESULT: ___________</p>';
+
+            // ── Full print document ──
+            var printDoc =
+                '<!doctype html><html><head><meta charset="utf-8">' +
+                '<title>Raw Data Sheet</title>' +
+                '<style>' +
+                '@page { size: A4 portrait; margin: 12mm 10mm; }' +
+                'html, body { margin:0; padding:0; font-family:"Times New Roman",serif; font-size:11pt; color:#111; background:#fff; }' +
+                '.page { width:100%; }' +
+
+                /* ── Top header ── */
+                '.top-header { width:100%; border-collapse:collapse; margin-bottom:4px; }' +
+                '.top-header td { padding:2px 4px; font-size:10pt; }' +
+                '.top-header .date-cell { text-align:left; vertical-align:top; width:30%; font-size:9.5pt; color:#333; }' +
+                '.top-header .blank-cell { text-align:center; font-size:9pt; color:#666; }' +
+
+                /* ── Company header box ── */
+                '.company-header { width:100%; border-collapse:collapse; border:1.5px solid #222; margin-bottom:6px; }' +
+                '.company-header td { padding:4px 8px; vertical-align:middle; }' +
+                '.company-title-cell { text-align:center; }' +
+                '.company-title-cell .dept { font-size:13pt; font-weight:700; }' +
+                '.company-title-cell .rds { font-size:15pt; font-weight:700; letter-spacing:1px; }' +
+                '.company-title-cell .sub { font-size:12pt; font-weight:700; }' +
+
+                /* ── Info grid ── */
+                '.info-table { width:100%; border-collapse:collapse; margin-bottom:6px; }' +
+                '.info-table td { padding:3px 6px; vertical-align:top; font-size:10.5pt; }' +
+                '.info-label { font-weight:600; white-space:nowrap; width:18%; }' +
+                '.info-sep   { width:1%; }' +
+                '.info-value { width:31%; }' +
+
+                /* ── Section heading ── */
+                '.section-heading { font-size:11.5pt; font-weight:700; margin:8px 0 3px; padding-bottom:2px; }' +
+
+                /* ── Data tables ── */
+                '.data-table { width:100%; border-collapse:collapse; margin-bottom:8px; }' +
+                '.data-table th { border:1px solid #222; padding:5px 7px; font-weight:700; font-size:10.5pt; background:#f0f0f0; text-align:center; }' +
+                '.data-table td { border:1px solid #222; padding:5px 7px; font-size:10.5pt; vertical-align:middle; }' +
+
+                /* ── Footer ── */
+                '.footer-line { margin-top:14px; font-size:10.5pt; }' +
+                '.analyst-line { margin-top:30px; font-size:10.5pt; }' +
+                '.printed-line  { margin-top:8px; font-size:9.5pt; color:#444; }' +
+                '</style></head><body>' +
+
+                '<div class="page">' +
+
+
+                // ── Company header ──
+                '<table class="company-header"><tr>' +
+                '<td class="company-title-cell">' +
+                '<div class="dept">(Quality Control Department)</div>' +
+                '<div class="rds">RAW DATA SHEET</div>' +
+                '<div class="sub">(' + safe(deptLabel || 'Finished Goods') + ')</div>' +
+                '</td>' +
+                '</tr></table>' +
+
+                // ── Info grid ──
+                '<table class="info-table"><tr>' +
+                '<td class="info-label">Product Name:</td><td class="info-sep"></td><td class="info-value">' + productName + '</td>' +
+                '<td class="info-label">Batch No:</td><td class="info-sep"></td><td class="info-value">' + batchNo + '</td>' +
+                '</tr><tr>' +
+                '<td class="info-label">AR No:</td><td class="info-sep"></td><td class="info-value">' + limsArNo + '</td>' +
+                '<td class="info-label">Specification No:</td><td class="info-sep"></td><td class="info-value">' + specNo + '</td>' +
+                '</tr><tr>' +
+                '<td class="info-label">Product Code:</td><td class="info-sep"></td><td class="info-value">' + productCode + '</td>' +
+                '<td></td><td></td><td></td>' +
+                '</tr>' +
+                '</table>' +
+
+                // ── Test name heading ──
+                '<div class="section-heading" style="border-top:1.5px solid #222;border-bottom:1.5px solid #222;">' + testName + '</div>' +
+
+                // ── Variables section ──
+                '<div class="section-heading" style="font-size:10.5pt;">Variables:</div>' +
+                '<table class="data-table"><thead><tr>' +
+                '<th style="width:6%;">S.No.</th>' +
+                '<th style="width:35%;">Variable Name</th>' +
+                '<th style="width:20%;">Variables (Symbol)</th>' +
+                '<th style="width:20%;">Value</th>' +
+                '<th style="width:19%;">UOM</th>' +
+                '</tr></thead><tbody>' + varRows + '</tbody></table>' +
+
+                // ── Formula section ──
+                '<div class="section-heading" style="font-size:10.5pt;">Formula / Subtests:</div>' +
+                '<table class="data-table"><thead><tr>' +
+                '<th style="width:5%;">S.No.</th>' +
+                '<th style="width:20%;">Subtest/Formula Description</th>' +
+                '<th style="width:7%;">Variables (Symbol)</th>' +
+                '<th style="width:25%;">Formula</th>' +
+                '<th style="width:7%;">UOM</th>' +
+                '<th style="width:7%;">No.of Decimals</th>' +
+                '<th style="width:15%;">Result</th>' +
+                '<th style="width:23%;">Pass limit Description</th>' +
+                '</tr></thead><tbody>' + formulaRows + '</tbody></table>' +
+
+                // ── Analyst line ──
+                '<div class="analyst-line">Initiated Analyst: ' + analystName + '</div>' +
+                '<div class="printed-line">Printed By: ' + safe(printedBy) + '&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Printed On: ' + safe(nowText) + '</div>' +
+
+                '</div></body></html>';
+
+            var printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                alert('Popup blocked. Please allow popups for this site.');
+                return;
+            }
+            printWindow.document.open();
+            printWindow.document.write(printDoc);
+            printWindow.document.close();
+            setTimeout(function () {
+                try { printWindow.focus(); printWindow.print(); } catch (e) { console.error(e); }
+            }, 400);
+            printWindow.onload = function () {
+                try { printWindow.focus(); printWindow.print(); } catch (e) { }
+            };
+        }
+
+        function getWorksheetHtmlWithValues() {
+            var html = $('#worksheetPreviewContent').clone();
+            html.find('input[type="text"], input[type="number"]').each(function () {
+                $(this).attr('value', $(this).val());
+            });
+            return html.html();
+        }
         // $(document).on('click', '#resultApproveBtn', function () {
 
         //     var dept = currentSampleRequest.description;
@@ -1592,87 +1890,79 @@
         //         }
         //     );
         // });
-     
+
         $(document).on('click', '#resultApproveBtn', function () {
-            var dept = currentSampleRequest.description;
-            var sampleType = currentSampleRequest.sampleType;
-            var productReceiptItem = currentSampleRequest.productReceiptItem;
-
-            var isKsm = productReceiptItem &&
-                        productReceiptItem.product &&
-                        productReceiptItem.product.isKsm === 'Yes';
-
-            console.log('dept:', dept);
-            console.log('sampleType:', sampleType);
-            console.log('isKsm:', isKsm);
-
-            // ✅ Step 1: Always set Complete first
-            var requestObj = { requestStatus: 'Complete' };
-
-            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), function(response){
-                console.log('Step 1 - Set Complete:', response);
-
-                // ✅ Step 2: Determine if QA Review is needed
-                var needsQAReview = false;
-                if (dept === 'Warehouse' && sampleType === 'Raw Material' && isKsm) {
-                    needsQAReview = true;
-                } else if (dept === 'Production' && sampleType === 'Finished Goods') {
-                    needsQAReview = true;
-                }
-
-                function afterStatusFinalized() {
-                    // ✅ Step 3: Handle department-specific side effects
-                    $.each(recordList, function(i, val){
-                        if(Number(currentTestRequestId) === val.id){
-                            console.log('matched record:', val);
-                            if(val.description === "Production" && val.samplingMethod != ""){
-                                var orderId = val.samplingMethod;
-                                var payload = { orderStatus: "QC-Approved" };
-                                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/production-orders/' + orderId), JSON.stringify(payload), function(res2){
-                                    console.log(res2);
+            JSUTIL.buildAuthenticationModal(function() {
+                var dept = currentSampleRequest.description;
+                var sampleType = currentSampleRequest.sampleType;
+                var productReceiptItem = currentSampleRequest.productReceiptItem;
+                var isKsm = productReceiptItem && productReceiptItem.product && productReceiptItem.product.isKsm === 'Yes';
+                console.log('dept:', dept);
+                console.log('sampleType:', sampleType);
+                console.log('isKsm:', isKsm);
+                var requestObj = { requestStatus: 'Complete' };
+                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), function (response) {
+                    console.log('Step 1 - Set Complete:', response);
+                    var needsQAReview = false;
+                    if (dept === 'Warehouse' && sampleType === 'Raw Material' && isKsm) {
+                        needsQAReview = true;
+                    } else if (dept === 'Production' && sampleType === 'Finished Goods') {
+                        needsQAReview = true;
+                    }
+                    function afterStatusFinalized() {
+                        $.each(recordList, function (i, val) {
+                            if (Number(currentTestRequestId) === val.id) {
+                                console.log('matched record:', val);
+                                if (val.description === "Production" && val.samplingMethod != "") {
+                                    var orderId = val.samplingMethod;
+                                    var payload = { orderStatus: "QC-Approved" };
+                                    JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/production-orders/' + orderId), JSON.stringify(payload), function (res2) {
+                                        console.log(res2);
+                                        var modal = bootstrap.Modal.getInstance($('#resultApprovalModal')[0]);
+                                        if (modal) { modal.hide(); }
+                                        location.reload();
+                                    });
+                                } else if (val.description === "Warehouse" && val.productReceiptItem != "") {
+                                    var orderId = val.productReceiptItem.id;
+                                    var payload = {
+                                        'inspectionResult': "Approved",
+                                        'quantityApproved': val.productReceiptItem.quantityApproved + val.productReceiptItem.quantityReceived
+                                    };
+                                    JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipt-items/' + orderId), JSON.stringify(payload), function (res1) {
+                                        console.log(res1);
+                                        var modal = bootstrap.Modal.getInstance($('#resultApprovalModal')[0]);
+                                        if (modal) { modal.hide(); }
+                                        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-lots'), function (allLots) {
+                                            var filtered = allLots.filter(function (lot) {
+                                                return lot.receiptItem && lot.receiptItem.id == orderId;
+                                            });
+                                            console.log('Filtered lots:', filtered);
+                                            callbackAfterGetProductLot(filtered);
+                                        });
+                                    });
+                                } else {
                                     var modal = bootstrap.Modal.getInstance($('#resultApprovalModal')[0]);
                                     if (modal) { modal.hide(); }
                                     location.reload();
-                                });
-                            } else if(val.description === "Warehouse" && val.productReceiptItem != ""){
-                                var orderId = val.productReceiptItem.id;
-                                var payload = {
-                                    'inspectionResult': "Approved",
-                                    'quantityApproved': val.productReceiptItem.quantityApproved + val.productReceiptItem.quantityReceived
-                                };
-                                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipt-items/' + orderId), JSON.stringify(payload), function(res1){
-                                    console.log(res1);
-                                    var modal = bootstrap.Modal.getInstance($('#resultApprovalModal')[0]);
-                                    if (modal) { modal.hide(); }
-                                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-lots'), function(allLots) {
-                                        var filtered = allLots.filter(function(lot) {
-                                            return lot.receiptItem && lot.receiptItem.id == orderId;
-                                        });
-                                        console.log('Filtered lots:', filtered);
-                                        callbackAfterGetProductLot(filtered);
-                                    });
-                                });
-                            } else {
-                                var modal = bootstrap.Modal.getInstance($('#resultApprovalModal')[0]);
-                                if (modal) { modal.hide(); }
-                                location.reload();
+                                }
                             }
-                        }
-                    });
-                }
+                        });
+                    }
 
-                if (needsQAReview) {
-                    // ✅ Step 2b: Update to QA Review, then proceed with side effects
-                    var qaObj = { requestStatus: 'QA Review' };
-                    JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(qaObj), function(qaResponse){
-                        console.log('Step 2 - Set QA Review:', qaResponse);
+                    if (needsQAReview) {
+                        // ✅ Step 2b: Update to QA Review, then proceed with side effects
+                        var qaObj = { requestStatus: 'QA Review' };
+                        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(qaObj), function (qaResponse) {
+                            console.log('Step 2 - Set QA Review:', qaResponse);
+                            location.reload();
+                            // afterStatusFinalized();
+                        });
+                    } else {
+                        // Already Complete, proceed directly
                         afterStatusFinalized();
-                    });
-                } else {
-                    // Already Complete, proceed directly
-                    afterStatusFinalized();
-                }
-            });
+                    }
+                });
+            }); 
         });
         $('#selectTestResultInput').on('change', function () {
             var newTestId = $(this).val();
@@ -1682,6 +1972,11 @@
             });
             if (selectedItem) {
                 loadResultFormReadonly(selectedItem);
+            }
+            if (newTestId != '') {
+                $('#printRawDataSheetBtn').show();
+            } else {
+                $('#printRawDataSheetBtn').hide();
             }
         });
         $('#editReviewPanel2 .showCoaTemplateCancel').on('click', function () {
@@ -1715,9 +2010,10 @@
                 $container = $('<div id="resultParameterContainer" style="margin-top:15px;"></div>');
                 $('#selectTestResultInput').closest('.row').after($container);
             }
-            var html = '<table class="table table-bordered table-hover"><thead><tr><th>Parameter</th><th>Test Result</th><th>Unit</th></tr></thead><tbody>';
+            var html = '<table class="table table-bordered table-hover"><thead><tr><th>Parameter</th><th>Specification</th><th>Test Result</th><th>Unit</th></tr></thead><tbody>';
             $.each(parameterList, function (i, val) {
-                html += '<tr><td>' + val.name + (val.number ? ' (' + val.number + ')' : '') + '</td><td>';
+                html += '<tr><td>' + val.name + (val.number ? ' (' + val.number + ')' : '') + '</td>' + 
+                    '<td>' + val.specification + '</td><td>';
                 if (val.numberOfReadings > 1) {
                     for (var k = 0; k < val.numberOfReadings; k++) {
                         var savedVal = '';
@@ -1761,37 +2057,46 @@
         //         });
         //     });
         // }
-      
-        function callbackAfterGetProductLot(objList){
-    console.log('ProductLot : ', objList);
-    var items = [];
-    $.each(objList, function(i, val){
-        var jsObj = {
-            'id': val.id,
-            'processStatus': 'Approved'
-        }
-        items.push(jsObj);
-    });
 
-    var updatePromises = items.map(function(item) {
-        return new Promise(function(resolve) {
-            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-lots/' + item.id), JSON.stringify({ processStatus: 'Approved' }), resolve);
-        });
-    });
+        function callbackAfterGetProductLot(objList) {
+            console.log('ProductLot : ', objList);
+            var items = [];
+            $.each(objList, function (i, val) {
+                var jsObj = {
+                    'id': val.id,
+                    'processStatus': 'Approved'
+                }
+                items.push(jsObj);
+            });
 
-    Promise.all(updatePromises).then(function(responses) {
-        console.log(responses);
-        var product = currentSampleRequest.productReceiptItem.product;
-        var productObj = {
-            'quantityUnderInspection': product.quantityUnderInspection - currentSampleRequest.productReceiptItem.quantityReceived,
-            'quantityOnHand': product.quantityOnHand + currentSampleRequest.productReceiptItem.quantityReceived
+            var updatePromises = items.map(function (item) {
+                return new Promise(function (resolve) {
+                    JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-lots/' + item.id), JSON.stringify({ processStatus: 'Approved' }), resolve);
+                });
+            });
+
+            Promise.all(updatePromises).then(function (responses) {
+                console.log(responses);
+                var product = currentSampleRequest.productReceiptItem.product;
+                var retestPeriodDays = Number(product.retestPeriod) || 0;
+                var retestDate = new Date();
+                retestDate.setHours(0, 0, 0, 0);
+                retestDate.setDate(retestDate.getDate() + retestPeriodDays);
+                var year = retestDate.getFullYear();
+                var month = String(retestDate.getMonth() + 1).padStart(2, '0');
+                var day = String(retestDate.getDate()).padStart(2, '0');
+                var formattedRetestDate = year + '-' + month + '-' + day + 'T18:30:00.000+00:00';
+                var productObj = {
+                    'quantityUnderInspection': product.quantityUnderInspection - currentSampleRequest.productReceiptItem.quantityReceived,
+                    'quantityOnHand': product.quantityOnHand + currentSampleRequest.productReceiptItem.quantityReceived,
+                    'retestDate': formattedRetestDate
+                }
+                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/products/' + product.id), JSON.stringify(productObj), function (res1) {
+                    console.log(res1);
+                    productReceiptDetails(currentSampleRequest.productReceiptItem.productReceipt.id);
+                });
+            });
         }
-        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/products/' + product.id), JSON.stringify(productObj), function(res1){
-            console.log(res1);
-            productReceiptDetails(currentSampleRequest.productReceiptItem.productReceipt.id);
-        });
-    });
-}
         // function productReceiptDetails(orderId) {
         //     JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-receipt-items?productReceiptId=' + orderId), function (items) {
         //         console.log('ProductReceiptItems: ', items);
@@ -1820,39 +2125,39 @@
 
         // generateCoaPanel2.js start
 
-     function productReceiptDetails(orderId) {
-    console.log('productReceiptDetails called with orderId:', orderId);
-    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-receipt-items/search?productReceiptId=' + orderId), function (items) {
-        console.log('ProductReceiptItems fetched:', items);
-        console.log('Total items:', items.length);
-        if (items.length > 0) {
-            var allApproved = true;
-            $.each(items, function (i, val) {
-                console.log('Item', i, '- id:', val.id, '- inspectionResult:', val.inspectionResult);
-                if (val.inspectionResult !== 'Approved') {
-                    allApproved = false;
-                    return false;
+        function productReceiptDetails(orderId) {
+            console.log('productReceiptDetails called with orderId:', orderId);
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-receipt-items/search?productReceiptId=' + orderId), function (items) {
+                console.log('ProductReceiptItems fetched:', items);
+                console.log('Total items:', items.length);
+                if (items.length > 0) {
+                    var allApproved = true;
+                    $.each(items, function (i, val) {
+                        console.log('Item', i, '- id:', val.id, '- inspectionResult:', val.inspectionResult);
+                        if (val.inspectionResult !== 'Approved') {
+                            allApproved = false;
+                            return false;
+                        }
+                    });
+                    console.log('allApproved:', allApproved);
+                    if (allApproved) {
+                        console.log('All approved - updating product receipt status to Inspection Complete');
+                        var jsObj = { processStatus: 'Quality Inspection Complete' };
+                        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + orderId), JSON.stringify(jsObj), approveRequestsCallback);
+                    } else {
+                        console.log('Not all approved - skipping receipt status update');
+                        location.reload();
+                    }
+                } else {
+                    console.log('No items found - reloading');
+                    location.reload();
                 }
             });
-            console.log('allApproved:', allApproved);
-            if (allApproved) {
-                console.log('All approved - updating product receipt status to Inspection Complete');
-                var jsObj = { processStatus: 'Quality Inspection Complete' };
-                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + orderId), JSON.stringify(jsObj), approveRequestsCallback);
-            } else {
-                console.log('Not all approved - skipping receipt status update');
-                location.reload();
-            }
-        } else {
-            console.log('No items found - reloading');
-            location.reload();
         }
-    });
-}
-        $(document).ready(function(){
-    
-        // Generate COA Button Handler
-            $('.generateCoaBtn').on('click', function(){
+        $(document).ready(function () {
+
+            // Generate COA Button Handler
+            $('.generateCoaBtn').on('click', function () {
                 if (!currentRequestId || !window.currentCoaTemplate) {
                     alert('Please select a COA template first');
                     return;
@@ -1861,58 +2166,64 @@
                 $('#generateCoaPanel2').show();
                 $('#editCoaTemplatePanel').hide();
             });
-        
-        // Close Generate COA Panel
-        $('.showCoaTemplateCancel').on('click', function(){
-            $('#generateCoaPanel2').hide();
-            $('#editReviewPanel2').show();
-            $('#editCoaTemplatePanel').show();
-            $('#editRequestPanel').show();
-        });
-    
-    // Print COA
-    $('.printCoaBtn').on('click', function(){
-        printCoa();
-    });
-    
-    // Export PDF COA
-    $('.exportPdfCoaBtn').on('click', function(){
-        exportCoaToPdf();
-    });
-});
 
-function generateCoaPreview(template) {
-    var today = new Date();
-    var formatDate = function(d) { return d.toISOString().slice(0, 10); };
-    
-    var sampleId = currentSampleRequest.sampleId;
-    var batchNo = currentSampleRequest.batchNumber;
-    var productName = currentSampleRequest.sampleCondition;
-    var mfgDate = new Date(currentSampleRequest.manufacturingDate);
-    var expDate = new Date(currentSampleRequest.expiryDate);
-    
-    var fieldsData = [];
-    if (template.fields) {
-        try {
-            fieldsData = typeof template.fields === 'string' ? JSON.parse(template.fields) : template.fields;
-        } catch (e) {
-            console.error('Error parsing fields:', e);
-        }
-    }
-    
-    var sectionMap = {};
-    $.each(fieldsData, function(idx, field) {
-        if (!sectionMap[field.section]) {
-            sectionMap[field.section] = [];
-        }
-        sectionMap[field.section].push({
-            label: field.fieldLabel,
-            type: field.fieldType,
-            unit: field.unit
+            // Close Generate COA Panel
+            $('.showCoaTemplateCancel').on('click', function () {
+                $('#generateCoaPanel2').hide();
+                $('#editReviewPanel2').show();
+                $('#editCoaTemplatePanel').show();
+                $('#editRequestPanel').show();
+            });
+
+            // Print COA
+            $('.printCoaBtn').on('click', function () {
+                printCoa();
+            });
+
+            // Export PDF COA
+            $('.exportPdfCoaBtn').on('click', function () {
+                exportCoaToPdf();
+            });
         });
-    });
-    
-    var coaHtml = `
+
+        function generateCoaPreview(template) {
+            function sanitizeDate(val) {
+                var d = JSUTIL.getDate(val);
+                return (!d || d.includes('NaN') || d.trim() === '') ? 'NA' : d;
+            }       
+
+            var today = new Date();
+            var sampleId = currentSampleRequest.sampleId;
+            var batchNo = currentSampleRequest.batchNumber;
+            var productName = currentSampleRequest.sampleCondition;
+            var mfgDate = sanitizeDate(currentSampleRequest.manufacturingDate);
+            var expDate = sanitizeDate(currentSampleRequest.expiryDate);
+            var retestDate = sanitizeDate(currentSampleRequest.retestDate);
+            var arNo = currentSampleRequest.referenceNumber;
+            var specNo = currentSampleRequest.testProcedure.number;
+
+            var fieldsData = [];
+            if (template.fields) {
+                try {
+                    fieldsData = typeof template.fields === 'string' ? JSON.parse(template.fields) : template.fields;
+                } catch (e) {
+                    console.error('Error parsing fields:', e);
+                }
+            }
+
+            var sectionMap = {};
+            $.each(fieldsData, function (idx, field) {
+                if (!sectionMap[field.section]) {
+                    sectionMap[field.section] = [];
+                }
+                sectionMap[field.section].push({
+                    label: field.fieldLabel,
+                    type: field.fieldType,
+                    unit: field.unit
+                });
+            });
+
+            var coaHtml = `
         <div id="coaPreview" class="coa-preview">
             <div class="coa-header">
                 <div class="header-text">${(template.header || 'QC Laboratory Header').replace(/\n/g, '<br>')}</div>
@@ -1923,183 +2234,188 @@ function generateCoaPreview(template) {
             
             <div class="coa-meta-grid">
                 <div class="coa-meta-item">
-                    <span class="label">Sample ID:</span><span>${sampleId}</span>
-                </div>
-                <div class="coa-meta-item">
-                    <span class="label">Batch/Lot No.:</span><span>${batchNo}</span>
+                    <span class="label">Product Code:</span><span>${sampleId}</span>
                 </div>
                 <div class="coa-meta-item">
                     <span class="label">Product:</span><span>${productName}</span>
                 </div>
                 <div class="coa-meta-item">
-                    <span class="label">Mfg. Date:</span><span>${formatDate(mfgDate)}</span>
+                    <span class="label">Batch/Lot No.:</span><span>${batchNo}</span>
                 </div>
                 <div class="coa-meta-item">
-                    <span class="label">Exp. Date:</span><span>${formatDate(expDate)}</span>
+                    <span class="label">Mfg. Date:</span><span>${mfgDate}</span>
                 </div>
                 <div class="coa-meta-item">
-                    <span class="label">COA Date:</span><span>${formatDate(today)}</span>
+                    <span class="label">Exp. Date:</span><span>${expDate}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Retest Date:</span><span>${(retestDate)}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">AR No:</span><span>${arNo}</span>
+                </div>
+                <div class="coa-meta-item">
+                    <span class="label">Specification No:</span><span>${specNo}</span>
                 </div>
             </div>
     `;
-    
-    $.each(sectionMap, function(sectionName, fields) {
-        var isResultSection = /result/i.test(sectionName) || /test/i.test(sectionName);
-        
-        coaHtml += '<div class="coa-section"><h4>' + escapeHtml(sectionName) + '</h4>';
-        
-        if (isResultSection) {
-            coaHtml += '<table class="coa-table"><thead><tr>' +
-                '<th style="width:30%;">Parameter</th>' +
-                '<th style="width:30%;">Specification</th>' +
-                '<th style="width:20%;">Result</th>' +
-                '<th style="width:20%;">Remark</th>' +
-                '</tr></thead><tbody>';
-            
-            $.each(currentRequestLineItems, function(idx, field) {
-                coaHtml += '<tr>' +
-                    '<td>' + escapeHtml(field.service.name || '') + '</td>' +
-                    '<td>' + escapeHtml(field.service.description) + '</td>' +
-                    '<td>' + escapeHtml(field.testResult2) + '</td>' +
-                    '<td>' + escapeHtml(field.remarks) + '</td>' +
-                    '</tr>';
+
+            $.each(sectionMap, function (sectionName, fields) {
+                var isResultSection = /result/i.test(sectionName) || /test/i.test(sectionName);
+
+                coaHtml += '<div class="coa-section"><h4>' + escapeHtml(sectionName) + '</h4>';
+
+                if (isResultSection) {
+                    coaHtml += '<table class="coa-table"><thead><tr>' +
+                        '<th style="width:30%;">Parameter</th>' +
+                        '<th style="width:35%;">Specification</th>' +
+                        '<th style="width:35%;">Result</th>' +
+                        '</tr></thead><tbody>';
+
+                    $.each(currentRequestLineItems, function (idx, field) {
+                        coaHtml += '<tr>' +
+                            '<td>' + escapeHtml(field.service.name || '') + '</td>' +
+                            '<td>' + escapeHtml(field.service.description) + '</td>' +
+                            '<td>' + escapeHtml(field.testResult2) + '</td>' +
+                            '<td>' + escapeHtml(field.remarks) + '</td>' +
+                            '</tr>';
+                    });
+
+                    coaHtml += '</tbody></table>';
+                } else {
+                    coaHtml += '<table class="coa-table">';
+                    $.each(fields, function (idx, field) {
+                        var dummy = generateDummyValue(field);
+                        coaHtml += '<tr>' +
+                            '<td style="width:30%;font-weight:600;">' + escapeHtml(field.label || '') + '</td>' +
+                            '<td style="width:70%;">' + escapeHtml(dummy) + '</td>' +
+                            '</tr>';
+                    });
+                    coaHtml += '</table>';
+                }
+
+                coaHtml += '</div>';
             });
-            
-            coaHtml += '</tbody></table>';
-        } else {
-            coaHtml += '<table class="coa-table">';
-            $.each(fields, function(idx, field) {
-                var dummy = generateDummyValue(field);
-                coaHtml += '<tr>' +
-                    '<td style="width:30%;font-weight:600;">' + escapeHtml(field.label || '') + '</td>' +
-                    '<td style="width:70%;">' + escapeHtml(dummy) + '</td>' +
-                    '</tr>';
-            });
-            coaHtml += '</table>';
+
+            coaHtml += '<div class="coa-footer">' +
+                (template.footer || 'This is a system-generated COA with dummy data for template validation purposes only.').replace(/\n/g, '<br>') +
+                '</div></div>';
+
+            console.log(coaHtml);
+            $('#generateCoaPanel2 .ibox-content').html(coaHtml);
         }
-        
-        coaHtml += '</div>';
-    });
-    
-    coaHtml += '<div class="coa-footer">' +
-        (template.footer || 'This is a system-generated COA with dummy data for template validation purposes only.').replace(/\n/g, '<br>') +
-        '</div></div>';
-    
-    console.log(coaHtml);
-    $('#generateCoaPanel2 .ibox-content').html(coaHtml);
-}
 
-function generateDummyValue(field) {
-    var type = field.type || 'text';
-    var label = (field.label || '').toLowerCase();
-    var unit = field.unit || '';
-    
-    switch (type) {
-        case 'text':
-            if (/batch/.test(label)) return 'BATCH-' + Math.floor(Math.random() * 900000 + 100000);
-            if (/customer/.test(label)) return 'ABC Pharma Pvt. Ltd.';
-            if (/product/.test(label)) return 'Paracetamol Tablets 500 mg';
-            if (/description/.test(label)) return 'White, round tablets, free from visible defects.';
-            if (/remarks?/.test(label)) return 'Sample received intact and tested as per SOP.';
-            return 'Dummy text value';
-        case 'number':
-            return (Math.random() * 100).toFixed(2);
-        case 'date':
-            return new Date().toISOString().slice(0, 10);
-        case 'passfail':
-            return Math.random() > 0.05 ? 'Pass' : 'Fail';
-        case 'numeric_unit':
-            return (95 + Math.random() * 5).toFixed(2) + (unit ? ' ' + unit : '');
-        case 'spec_text':
-            return 'As per approved specification';
-        case 'method_ref':
-            return 'SOP-QC-012 / BP 2024, Monograph 123';
-        case 'limit_nmt':
-            return 'NMT ' + (0.1 + Math.random() * 0.9).toFixed(2) + (unit ? ' ' + unit : '');
-        case 'limit_nlt':
-            return 'NLT ' + (80 + Math.random() * 10).toFixed(1) + (unit ? ' ' + unit : '');
-        case 'compliance':
-            return Math.random() > 0.05 ? 'Complies' : 'Does Not Comply';
-        case 'signature_block':
-            return 'Signed electronically by Dr. A. Analyst (QC Analyst) on ' + new Date().toISOString().slice(0, 10);
-        default:
-            return '—';
-    }
-}
+        function generateDummyValue(field) {
+            var type = field.type || 'text';
+            var label = (field.label || '').toLowerCase();
+            var unit = field.unit || '';
 
-function escapeHtml(str) {
-    if (str == null) return '';
-    var div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
+            switch (type) {
+                case 'text':
+                    if (/batch/.test(label)) return 'BATCH-' + Math.floor(Math.random() * 900000 + 100000);
+                    if (/customer/.test(label)) return 'ABC Pharma Pvt. Ltd.';
+                    if (/product/.test(label)) return 'Paracetamol Tablets 500 mg';
+                    if (/description/.test(label)) return 'White, round tablets, free from visible defects.';
+                    if (/remarks?/.test(label)) return 'Sample received intact and tested as per SOP.';
+                    return 'Dummy text value';
+                case 'number':
+                    return (Math.random() * 100).toFixed(2);
+                case 'date':
+                    return new Date().toISOString().slice(0, 10);
+                case 'passfail':
+                    return Math.random() > 0.05 ? 'Pass' : 'Fail';
+                case 'numeric_unit':
+                    return (95 + Math.random() * 5).toFixed(2) + (unit ? ' ' + unit : '');
+                case 'spec_text':
+                    return 'As per approved specification';
+                case 'method_ref':
+                    return 'SOP-QC-012 / BP 2024, Monograph 123';
+                case 'limit_nmt':
+                    return 'NMT ' + (0.1 + Math.random() * 0.9).toFixed(2) + (unit ? ' ' + unit : '');
+                case 'limit_nlt':
+                    return 'NLT ' + (80 + Math.random() * 10).toFixed(1) + (unit ? ' ' + unit : '');
+                case 'compliance':
+                    return Math.random() > 0.05 ? 'Complies' : 'Does Not Comply';
+                case 'signature_block':
+                    return 'Signed electronically by Dr. A. Analyst (QC Analyst) on ' + new Date().toISOString().slice(0, 10);
+                default:
+                    return '—';
+            }
+        }
 
-function printCoa() {
-    var printContent = document.getElementById('coaPreview');
-    if (!printContent) {
-        toastr.warning('No COA to print');
-        return;
-    }
-    
-    var printWindow = window.open('', '', 'height=800,width=800');
-    
-    printWindow.document.write('<html><head><title>Certificate of Analysis</title>');
-    printWindow.document.write('<style>');
-    printWindow.document.write(
-        'body { font-family: Arial, sans-serif; margin: 20px; }' +
-        '.coa-preview { background: white; padding: 20px; }' +
-        '.coa-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }' +
-        '.coa-header h2 { margin: 10px 0; text-transform: uppercase; letter-spacing: 2px; }' +
-        '.coa-header .subtitle { font-size: 14px; color: #555; }' +
-        '.coa-header .regulatory-tags { font-size: 12px; color: #555; margin-top: 5px; }' +
-        '.coa-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; font-size: 13px; }' +
-        '.coa-meta-item .label { font-weight: 600; margin-right: 5px; }' +
-        '.coa-section { margin-top: 20px; page-break-inside: avoid; }' +
-        '.coa-section h4 { font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; }' +
-        '.coa-table { width: 100%; border-collapse: collapse; margin-top: 10px; }' +
-        '.coa-table th, .coa-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }' +
-        '.coa-table th { background: #f5f5f5; font-weight: 600; }' +
-        '.coa-footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; text-align: center; color: #555; }' +
-        '@media print { body { margin: 0; } .coa-section { page-break-inside: avoid; } }'
-    );
-    printWindow.document.write('</style></head><body>');
-    printWindow.document.write(printContent.outerHTML);
-    printWindow.document.write('</body></html>');
-    
-    printWindow.document.close();
-    printWindow.focus();
-    
-    setTimeout(function() {
-        printWindow.print();
-        printWindow.close();
-    }, 250);
-}
+        function escapeHtml(str) {
+            if (str == null) return '';
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
 
-function exportCoaToPdf() {
-    var element = document.getElementById('coaPreview');
-    if (!element) {
-        toastr.warning('No COA to export');
-        return;
-    }
-    
-    if (typeof html2pdf === 'undefined') {
-        toastr.error('PDF library not loaded. Please include html2pdf.js');
-        return;
-    }
-    
-    var template = window.currentCoaTemplate;
-    var filename = 'COA-' + (template?.name || 'template') + '-' + new Date().getTime() + '.pdf';
-    
-    var opt = {
-        margin: 10,
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    html2pdf().set(opt).from(element).save();
-}
+        function printCoa() {
+            var printContent = document.getElementById('coaPreview');
+            if (!printContent) {
+                toastr.warning('No COA to print');
+                return;
+            }
+
+            var printWindow = window.open('', '', 'height=800,width=800');
+
+            printWindow.document.write('<html><head><title>Certificate of Analysis</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write(
+                'body { font-family: Arial, sans-serif; margin: 20px; }' +
+                '.coa-preview { background: white; padding: 20px; }' +
+                '.coa-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }' +
+                '.coa-header h2 { margin: 10px 0; text-transform: uppercase; letter-spacing: 2px; }' +
+                '.coa-header .subtitle { font-size: 14px; color: #555; }' +
+                '.coa-header .regulatory-tags { font-size: 12px; color: #555; margin-top: 5px; }' +
+                '.coa-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; font-size: 13px; }' +
+                '.coa-meta-item .label { font-weight: 600; margin-right: 5px; }' +
+                '.coa-section { margin-top: 20px; page-break-inside: avoid; }' +
+                '.coa-section h4 { font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 5px; }' +
+                '.coa-table { width: 100%; border-collapse: collapse; margin-top: 10px; }' +
+                '.coa-table th, .coa-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }' +
+                '.coa-table th { background: #f5f5f5; font-weight: 600; }' +
+                '.coa-footer { margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 11px; text-align: center; color: #555; }' +
+                '@media print { body { margin: 0; } .coa-section { page-break-inside: avoid; } }'
+            );
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write(printContent.outerHTML);
+            printWindow.document.write('</body></html>');
+
+            printWindow.document.close();
+            printWindow.focus();
+
+            setTimeout(function () {
+                printWindow.print();
+                printWindow.close();
+            }, 250);
+        }
+
+        function exportCoaToPdf() {
+            var element = document.getElementById('coaPreview');
+            if (!element) {
+                toastr.warning('No COA to export');
+                return;
+            }
+
+            if (typeof html2pdf === 'undefined') {
+                toastr.error('PDF library not loaded. Please include html2pdf.js');
+                return;
+            }
+
+            var template = window.currentCoaTemplate;
+            var filename = 'COA-' + (template?.name || 'template') + '-' + new Date().getTime() + '.pdf';
+
+            var opt = {
+                margin: 10,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
 
         // generateCoaPanel2.js end
 

@@ -873,7 +873,7 @@
               <div class="col-sm-6">
                 <div class="form-group">
                   <label>Revision Number</label>
-                  <input type="number" class="form-control editBOMInput" name="version" min="0" step="1" readonly>
+                  <input type="text" class="form-control editBOMInput" name="version" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
@@ -1047,6 +1047,7 @@
                   <th style="width: 100px;">Version</th>
                   <th style="width: 150px;">Status</th>
                   <th>Name</th>
+                  <th>Initiator Name</th>
                   <th style="width: 200px;">Created Date</th>
                   <th style="width: 200px;">Approved Date</th>
                 </tr>
@@ -1153,7 +1154,7 @@
               <div class="col-sm-6">
                 <div class="form-group">
                   <label>Revision Number</label>
-                  <input type="number" class="form-control newBOMInput" name="version" min="1" step="1" value="1">
+                  <input type="text" class="form-control newBOMInput" name="version" value="00" readonly>
                 </div>
               </div>
               <div class="col-sm-6">
@@ -1426,6 +1427,7 @@
 
       if (record) {
         if (typeof showEditBOMPanel === 'function') {
+          
           showEditBOMPanel(record);
         }
       } else {
@@ -1696,7 +1698,8 @@
     });
 
     $('.submitBOMReview').on('click', function () {
-      var permissions = getBOMPermissionFlags();
+      JSUTIL.buildAuthenticationModal(function(){
+              var permissions = getBOMPermissionFlags();
       if (!permissions.canSubmit || !currentBOMRecordId) {
         return;
       }
@@ -1704,10 +1707,13 @@
         return;
       }
       updateBOMProcessStatus('In-Review');
+
+      })
     });
 
     $('.approveBOMBtn').on('click', function () {
-      var permissions = getBOMPermissionFlags();
+      JSUTIL.buildAuthenticationModal(function(){
+        var permissions = getBOMPermissionFlags();
       if (!permissions.canApprove || !currentBOMRecordId) {
         return;
       }
@@ -1715,6 +1721,7 @@
         return;
       }
       updateBOMProcessStatus('Approved');
+      })
     });
 
     $('.rejectBOMBtn').on('click', function () {
@@ -1729,7 +1736,9 @@
     });
 
     $('#confirmReturnBOMBtn').on('click', function () {
-      submitReturnBOM();
+      JSUTIL.buildAuthenticationModal(function(){
+        submitReturnBOM();
+      })
     });
 
     $('#returnCommentInput').on('input', function () {
@@ -1828,7 +1837,21 @@
     $('.editBOMInput[name="type"]').val(record.type || '').trigger('change');
     $('.editBOMInput[name="productQuantity"]').val(record.productQuantity || '');
     $('.editBOMInput[name="processStatus"]').val(record.processStatus || '');
-    $('.editBOMInput[name="version"]').val(record.version || record.Version || '');
+    // Revision number is always derived from the BOM name suffix (e.g. TI-0015-00 → "00")
+    // so it stays correct regardless of what `version` is stored in the DB.
+    var bomName = String(record.name || record.Name || '').trim();
+    var revMatch = bomName.match(/-(\d+)$/);
+    var revDisplay;
+    if (revMatch) {
+      revDisplay = String(parseInt(revMatch[1], 10)).padStart(2, '0');
+    } else {
+      // Legacy records without a -RR suffix: fall back to stored version, padded
+      var verNum = Number(record && record.version);
+      if (!Number.isFinite(verNum) || verNum < 0) verNum = 0;
+      revDisplay = String(verNum).padStart(2, '0');
+    }
+    $('.editBOMInput[name="version"]').val(revDisplay);
+    console.log('master bom record',record)
     var quantityVariation = record.quantityVariation;
     if (quantityVariation === undefined || quantityVariation === null) {
       quantityVariation = record.QuantityVariation;
@@ -2347,6 +2370,7 @@
     list.sort(function (a, b) {
       return Number(b.version || b.Version || 0) - Number(a.version || a.Version || 0);
     });
+    console.log('abcd',list)
     list.forEach(function (item) {
       var version = item.version || item.Version || '';
       var status = item.processStatus || item.ProcessStatus || '';
@@ -2357,11 +2381,14 @@
       var isCurrent = currentId && rowId && String(currentId) === String(rowId);
       var approvedDisplay = approvedDate ? formatDisplayDate(approvedDate) : '';
       var createdDisplay = createdDate ? formatDisplayDate(createdDate) : '';
+      var currentEmployee = allEmployees.find(v=>v.id == item?.initiator?.id)
+      console.log('curr',currentEmployee)
       var rowHtml = '' +
               '<tr class="' + (isCurrent ? 'info' : '') + '">' +
               '<td>' + sanitizeInputValue(version) + (isCurrent ? ' (current)' : '') + '</td>' +
               '<td>' + sanitizeInputValue(status) + '</td>' +
               '<td>' + sanitizeInputValue(name) + '</td>' +
+              `<td>${((currentEmployee?.firstName || ' ') + ' ' + (currentEmployee?.lastName||'')) || ' '}</td>`+
               '<td>' + sanitizeInputValue(createdDisplay) + '</td>' +
               '<td>' + sanitizeInputValue(approvedDisplay) + '</td>' +
               '</tr>';
@@ -2468,7 +2495,15 @@
     $('.material-save-btn').toggle(showEditActions);
     $('.add-step-btn').toggle(showEditActions);
     $('.submitBOMReview').toggle(permissions.canSubmit && !isLocked);
-    $('.approveBOMBtn, .rejectBOMBtn').toggle(permissions.canApprove && isInReview);
+    // Prevent self-approval: hide approve/reject when current user is the initiator
+    var initiatorId = currentBOMRecord && (
+        (currentBOMRecord.initiator && (currentBOMRecord.initiator.id || currentBOMRecord.initiator.Id)) ||
+        currentBOMRecord.initiatorId || currentBOMRecord.InitiatorId
+    );
+    var currentEmpId = (window.FOX && (FOX.employeeId || FOX.EmployeeId)) || null;
+    var isSelfInitiated = initiatorId != null && currentEmpId != null
+        && String(initiatorId) === String(currentEmpId);
+    $('.approveBOMBtn, .rejectBOMBtn').toggle(permissions.canApprove && isInReview && !isSelfInitiated);
     $('.material-qty-input').prop('disabled', !!isLocked);
     $('.material-product-search').prop('disabled', !!isLocked);
     $('.material-product-code').prop('disabled', !!isLocked);
@@ -3645,9 +3680,11 @@
   // newBOMPanel.js start
   var stageOptionsCache = [];
   var plantOptionsCache = [];
-
+  var allEmployees = []
   $(document).ready(function () {
-
+    JSUTIL.callAJAXGet('/api/employees',function(res){
+      allEmployees = res
+    })
     bindUppercaseInput('.newBOMInput[name="masterBatchRecord"]');
 
     $('.newRecipesButton').on("click", function () {
@@ -3663,7 +3700,10 @@
       var $form = $('#newBOMForm');
       var compoundObj = {
         masterBatchRecord: toUpperSafe($form.find('[name="masterBatchRecord"]').val()),
-        version: Number($form.find('[name="version"]').val()) || 1,
+        version: (function () {
+          var v = Number($form.find('[name="version"]').val());
+          return Number.isFinite(v) && v >= 0 ? v : 0;
+        })(),
         type: $form.find('[name="type"]').val(),
         productQuantity: Number($form.find('[name="productQuantity"]').val()) || 0,
         quantityVariation: Number($form.find('[name="quantityVariation"]').val()) || 0,
@@ -3671,7 +3711,8 @@
           id: Number($('#stageId').val())
         },
         name: getNextBOMNumber(),
-        processStatus: 'New'
+        processStatus: 'New',
+        initiator:{id:FOX.employeeId}
       };
 
       var selectedPlantIds = normalizePlantIdArray($('#newBOMPlantSelect').val());

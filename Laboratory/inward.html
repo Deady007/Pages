@@ -957,7 +957,7 @@ function exportCoaToPdf() {
                         style="font-weight:400; border:1px solid #ced4da;">-- None --</button>
                     <div class="dropdown-menu w-100" id="newReceivedByMenu"></div>
                   </div>
-                  <input type="hidden" name="sampleDrawnBy" id="newSampleDrawnByInput" value="" >
+                  <input type="hidden" name="sampleDrawnBy" id="newSampleDrawnByInput" value="">
                 </div>
               </div>
 
@@ -1013,6 +1013,13 @@ function exportCoaToPdf() {
                 <div class="form-group ">
                   <label>Expiry Date</label>
                   <input type="text" class="form-control" id="newExpiryDate" name="expiryDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
+                </div>
+              </div>
+
+              <div class="col-sm-6">
+                <div class="form-group ">
+                  <label>Retest Date</label>
+                  <input type="text" class="form-control" id="newRetestDate" name="retestDate" placeholder="DD/MM/YYYY" autocomplete="off" readonly/>
                 </div>
               </div>
 
@@ -1161,6 +1168,7 @@ $(document).ready(function(){
             history.replaceState(null, '', url.pathname + url.search);
         }
     });
+
     $('#createRequestBtn').on('click', function() {
         function toISODate(ddmmyyyy) {
             if (!ddmmyyyy) return null;
@@ -1192,10 +1200,10 @@ $(document).ready(function(){
             var stpId = $('#newStpSelectionInput').val();
 
             if (!stpId || stpId === '') {
-                JSUTIL.buildErrorModal('Please select STP Test');
-                JSUTIL.stopSpinner();
-                return;
-            }
+    JSUTIL.buildErrorModal('Please select STP Test');
+    JSUTIL.stopSpinner();
+    return;
+}
 
             // Collect text/number inputs
             var rawForm = {};
@@ -1216,6 +1224,7 @@ $(document).ready(function(){
                 receivedDate:      toISODate(rawForm.receivedDate)      || null,
                 manufacturingDate: toISODate(rawForm.manufacturingDate) || null,
                 expiryDate:        toISODate(rawForm.expiryDate)        || null,
+                retestDate:        toISODate(rawForm.retestDate)        || null,
                 sampleId:          rawForm.sampleId          || '',
                 sampleCondition:   rawForm.sampleCondition   || '',
                 sampleQuantity:    parseFloat(rawForm.sampleQuantity)   || 0,
@@ -1317,7 +1326,7 @@ function saveSampleRequestCallback(response) {
                                         style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
                                     <div class="dropdown-menu w-100" id="editReceivedByMenu"></div>
                                 </div>
-                                <input type="hidden" class="inward-dropdown-hidden" name="sampleDrawnBy" value="" required>
+                                <input type="hidden" class="inward-dropdown-hidden" name="sampleDrawnBy" value="">
                                 </div>
                             </div>
 
@@ -1345,7 +1354,7 @@ function saveSampleRequestCallback(response) {
                             <div class="col-sm-6">
                                 <div class="form-group ">
                                 <label>Sample Quantity <span style="color:red;">*</span></label>
-                                <input type="number" class="form-control editRecordInput" name="sampleQuantity" placeholder="Enter Sample Quantity" readonly required/>
+                                <input type="number" class="form-control editRecordInput" name="sampleQuantity" placeholder="Enter Sample Quantity" readonly/>
                                 </div>
                             </div>
 
@@ -1358,7 +1367,7 @@ function saveSampleRequestCallback(response) {
                                         style="font-weight:400; border:1px solid #ced4da;" disabled>-- None --</button>
                                     <div class="dropdown-menu w-100" id="editSampleUnitMenu"></div>
                                 </div>
-                                <input type="hidden" class="inward-dropdown-hidden" name="sampleUnit" value="" required>
+                                <input type="hidden" class="inward-dropdown-hidden" name="sampleUnit" value="">
                                 </div>
                             </div>
 
@@ -1378,6 +1387,13 @@ function saveSampleRequestCallback(response) {
 
                             <div class="col-sm-6">
                                 <div class="form-group ">
+                                <label>Retest Date</label>
+                                <input type="text" class="form-control editRecordInput1" id="editRetestDate" name="retestDate" placeholder="DD/MM/YYYY" autocomplete="off" disabled/>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6">
+                                <div class="form-group ">
                                 <label>Batch / Lot #</label>
                                 <input type="text" class="form-control editRecordInput1" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
                                 </div>
@@ -1392,7 +1408,7 @@ function saveSampleRequestCallback(response) {
                                         style="font-weight:400; border:1px solid #ced4da;" data-value="" disabled>-- None --</button>
                                     <div class="dropdown-menu w-100" id="editStpDropdownMenu"></div>
                                 </div>
-                                <input type="hidden" id="editStpSelectionInput" name="testProcedure.id" value="" required>
+                                <input type="hidden" id="editStpSelectionInput" name="testProcedure.id" value="">
                                 </div>
                             </div>
 
@@ -1520,7 +1536,7 @@ function saveSampleRequestCallback(response) {
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="form-group " style="position: relative;">
-                            <label>Allocate Analyst <span style="color: red;">*</span></label>
+                            <label>Allocate Analyst</label>
                             <input type="text" placeholder="Search Analyst Name" name="AnalystName" class="typeahead_3 form-control selectSearchInputAutoCompleteStr" aria-description="search/employee" id="sampleAllocationEmployeeInput" autocomplete="off"/>
                         </div>
                     </div>
@@ -1672,6 +1688,7 @@ var multipartFile = '';
 var selectedLabSampleId = '';
 var selectedFieldSampleId = '';
 var currentFieldParameterId = '';
+// emailAttachmentPath is now a function — currentTestRequestId is not available at parse time
 function getEmailAttachmentPath() {
     return JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId + '/report?type=report');
 }
@@ -1679,6 +1696,7 @@ function getEmailAttachmentPath() {
 $(document).ready(function(){
    $('#sampleAllocationEmployeeInput').on('input', function() {
     var query = $(this).val().trim();
+    // Enable/disable Save button based on whether analyst is selected
     $('#saveSampleAllocationBtn').prop('disabled', query.length === 0);
     if (query.length < 2) {
         return;
@@ -1688,6 +1706,8 @@ $(document).ready(function(){
             method: 'GET',
             data: { name: query },
             success: function(data) {
+                // data should be an array of employee objects
+                // Show suggestions (basic example below)
                 var $list = $('#employeeSearchResults');
                 if ($list.length === 0) {
                     $list = $('<ul id="employeeSearchResults" class="list-group position-absolute w-100"></ul>');
@@ -1701,6 +1721,7 @@ $(document).ready(function(){
                 } else {
                     $list.append('<li class="list-group-item disabled">No results</li>');
                 }
+                // Click to select
                 $list.find('li').not('.disabled').on('click', function() {
                     $('#sampleAllocationEmployeeInput').val($(this).text());
                     $list.remove();
@@ -1713,6 +1734,7 @@ $(document).ready(function(){
             $('#employeeSearchResults').remove();
         }
     });
+    // ── newSamplePanel dropdown handlers ──
     $(document).on('click', '#newSampleTypeMenu .new-sampletype-item', function(e) {
         e.preventDefault();
         $('#newSampleTypeBtn').text($(this).text());
@@ -1756,8 +1778,16 @@ $(document).ready(function(){
         btnClicked = 'recordEditBtn';
         $('.updateSampleRequestBtn').show();
         $('.recordEditBtn').hide();
+        // Enable all readonly editRecordInput fields inside the edit panel
+        // (sampleId, sampleCondition, sampleQuantity, batchNumber,
+        //  receivedDate, manufacturingDate, expiryDate)
         $('#editRequestPanel .editRecordInput').removeAttr('readonly');
-        $('#editReceivedByBtn, #editStpBtn, #editSampleUnitBtn').removeAttr('disabled');
+
+        // Enable all disabled dropdown buttons in the edit panel
+        // Note: editSampleUnitBtn remains readonly and disabled
+      $('#editReceivedByBtn, #editStpBtn').removeAttr('disabled');
+
+        // Attach daterangepicker to the three date fields
         initRequestDatePickers('#editRequestPanel');
     });
 
@@ -1768,15 +1798,20 @@ $(document).ready(function(){
             if (parts.length === 3) return parts[2] + '-' + parts[1] + '-' + parts[0];
             return ddmmyyyy;
         }
+
         var stpId = $('#editStpSelectionInput').val();
-                if (!stpId || stpId === '') {
-            JSUTIL.buildErrorModal('Please select STP Test');
-            return;
-        }
+        if (!stpId || stpId === '') {
+    JSUTIL.buildErrorModal('Please select STP Test');
+    return;
+}
+
+
+        // Collect text/number inputs — scoped to editRequestPanel to avoid newSampleForm collision
         var rawForm = {};
         $('#editRequestPanel input[type="text"], #editRequestPanel input[type="number"]').each(function() {
             if ($(this).attr('name')) rawForm[$(this).attr('name')] = $(this).val();
         });
+        // Collect dropdown hidden inputs
         $('#editRequestPanel .inward-dropdown-hidden').each(function() {
             if ($(this).attr('name')) rawForm[$(this).attr('name')] = $(this).val();
         });
@@ -1788,6 +1823,7 @@ $(document).ready(function(){
             receivedDate:      toISODate(rawForm.receivedDate)      || null,
             manufacturingDate: toISODate(rawForm.manufacturingDate) || null,
             expiryDate:        toISODate(rawForm.expiryDate)        || null,
+            retestDate:        toISODate(rawForm.retestDate)        || null,
             sampleId:          rawForm.sampleId          || '',
             sampleCondition:   rawForm.sampleCondition   || '',
             sampleQuantity:    parseFloat(rawForm.sampleQuantity)   || 0,
@@ -1796,38 +1832,64 @@ $(document).ready(function(){
             sampleDrawnBy:     rawForm.sampleDrawnBy     || ''
         };
 
-        if (stpId && stpId !== '') {
-                requestObj['testProcedure'] = { 'id': Number(stpId) };
-            } else {
-                requestObj['testProcedure'] = null;  
-            }
-            JSUTIL.startSpinner();
-            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), saveSampleRequestUpdateCallback);
-        });
-    
+       if (stpId && stpId !== '') {
+            requestObj['testProcedure'] = { 'id': Number(stpId) };
+        } else {
+            requestObj['testProcedure'] = null;  
+        }
+                JSUTIL.startSpinner();
+        JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), saveSampleRequestUpdateCallback);
+    });
+    // $('#deleteRequestBtn').on('click', function() {
+    //     showConfirmationModal('Cancel Confirmation', '', 'This will cancel the sample request and you won\'t be able to see it in the list. Proceed?', hardDeleteSampleRequestCallback);
+    // });
+
     $('#sampleAllocationBtn').on('click', function(){
+        var errors = [];
+        var receivedBy = $('#editReceivedByMenu').closest('.form-group').find('.inward-dropdown-hidden').val();
+        if (!receivedBy || receivedBy.trim() === '') {
+            errors.push('Received By');
+        }
+        var sampleQty = $('#editRequestPanel input[name="sampleQuantity"]').val();
+        if (!sampleQty || sampleQty.trim() === '' || isNaN(Number(sampleQty)) || Number(sampleQty) <= 0) {
+            errors.push('Sample Quantity');
+        }
+        var sampleUnit = $('#editSampleUnitMenu').closest('.form-group').find('.inward-dropdown-hidden').val();
+        if (!sampleUnit || sampleUnit.trim() === '') {
+            errors.push('Sample Unit');
+        }
+        var stpId = $('#editStpSelectionInput').val();
+        if (!stpId || stpId.trim() === '') {
+            errors.push('STP Test');
+        }
+        if (errors.length > 0) {
+            JSUTIL.buildErrorModal('Please fill in the following Required (*) fields');
+            return;
+        }
         $('#sampleAllocationEmployeeInput').val('');
         $('#saveSampleAllocationBtn').prop('disabled', true);
         var allocateModal = new bootstrap.Modal(document.getElementById('allocateSampleModal'));
         allocateModal.show();
     });
     $('#saveSampleAllocationBtn').on('click', function(){
-        var testRequestItems = [];
-        $.each(currentProcedureItems, function(i, val){
-            var jsobj = {
-                'service' : { 'id' : String(val.service.id) },
-                'request' : { 'id' : String(currentTestRequestId) },
-                'worksheet': val.instruction
-            };
-            testRequestItems.push(jsobj);
-        });
-        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/test-request-items/create_multiple'), JSON.stringify(testRequestItems), function(response){
-            var requestObj = {
-                'requestStatus': 'Sampling',
-                'samplingLocation': $('#sampleAllocationEmployeeInput').val()
-            };
-            console.log('Saving sample allocation for request ID ' + currentTestRequestId);
-            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), saveSampleRequestCallback);
+        JSUTIL.buildAuthenticationModal(function() {
+            var testRequestItems = [];
+            $.each(currentProcedureItems, function(i, val){
+                var jsobj = {
+                    'service' : { 'id' : String(val.service.id) },
+                    'request' : { 'id' : String(currentTestRequestId) },
+                    'worksheet': val.instruction
+                };
+                testRequestItems.push(jsobj);
+            });
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/test-request-items/create_multiple'), JSON.stringify(testRequestItems), function(response){
+                var requestObj = {
+                    'requestStatus': 'Sampling',
+                    'samplingLocation': $('#sampleAllocationEmployeeInput').val()
+                };
+                console.log('Saving sample allocation for request ID ' + currentTestRequestId);
+                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/test-requests/' + currentTestRequestId), JSON.stringify(requestObj), saveSampleRequestCallback);
+            });
         });
     });
     $('#auditTrailBtn').on('click', function() {
@@ -2820,38 +2882,17 @@ if (typeof JSUTIL !== 'undefined' && !JSUTIL.callAJAXDelete) {
     };
 }
 
-// ── daterangepicker init ──
+// ── flatpickr init ──
 // Attaches to specific date inputs by ID — works regardless of readonly state
 function initRequestDatePickers(scope) {
-    if (!$.fn || !$.fn.daterangepicker) return;
-
     var dateIds = scope === '#newRequestForm'
-        ? ['newReceivedDate', 'newManufacturingDate', 'newExpiryDate']
-        : ['editReceivedDate', 'editManufacturingDate', 'editExpiryDate'];
+        ? ['newReceivedDate', 'newManufacturingDate', 'newExpiryDate', 'newRetestDate']
+        : ['editReceivedDate', 'editManufacturingDate', 'editExpiryDate', 'editRetestDate'];
 
     $.each(dateIds, function(i, id) {
         var $input = $('#' + id);
         if (!$input.length) return;
-        var existingVal = $input.val();
-        if ($input.data('daterangepicker')) { $input.data('daterangepicker').remove(); }
-        var opts = {
-            singleDatePicker: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            minYear: 1901,
-            maxYear: parseInt(moment().format('YYYY'), 10) + 10,
-            locale: { cancelLabel: 'Clear' }
-        };
-        if (existingVal && /^\d{2}\/\d{2}\/\d{4}$/.test(existingVal)) {
-            opts.startDate = moment(existingVal, 'DD/MM/YYYY');
-        }
-        $input.daterangepicker(opts);
-        $input.off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
-            $(this).val(picker.startDate.format('DD/MM/YYYY'));
-        });
-        $input.off('cancel.daterangepicker').on('cancel.daterangepicker', function() {
-            $(this).val('');
-        });
+        JSUTIL.initDatePicker('#' + id);
     });
 }
 
@@ -3190,6 +3231,7 @@ function populateRequestData(objList) {
     $('#editReceivedDate').val(JSUTIL.getDate(objList.receivedDate));
     $('#editManufacturingDate').val(JSUTIL.getDate(objList.manufacturingDate));
     $('#editExpiryDate').val(JSUTIL.getDate(objList.expiryDate));
+    $('#editRetestDate').val(JSUTIL.getDate(objList.retestDate));
 
     // Plain inputs
     $('.editRecordInput1[name="sampleId"]').val(objList.sampleId);
@@ -3202,7 +3244,7 @@ function populateRequestData(objList) {
     if (objList.sampleUnit) {
         $.each(uomList, function(i, val) {
             if (val.name === objList.sampleUnit) {
-                unitLabel = val.name;
+                unitLabel = val.name + ' (' + val.description + ')';
                 return false;
             }
         });
@@ -3260,7 +3302,7 @@ function callbackAfterGetParameters(objList) {
 function callbackAfterGetSamples(objList) {
     var unitOptionsHtml = '<option value="">--none--</option>';
     $.each(uomList, function (i, val) {
-        unitOptionsHtml += `<option value="${val.name}">${val.name}</option>`;
+        unitOptionsHtml += `<option value="${val.name}">${val.name} (${val.description})</option>`;
     });
     var packagingOptionsHtml = `
         <option value="">--none--</option>

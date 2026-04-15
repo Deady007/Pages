@@ -46,13 +46,13 @@
                             <div>
                                 <div class="form-group">
                                     <label><strong>From Date</strong></label>
-                                    <input type="date" id="fromDate" class="form-control" />
+                                    <input type="text" id="fromDate" class="form-control datepicker" placeholder="DD/MM/YYYY" autocomplete="off" />
                                 </div>
                             </div>
                             <div>
                                 <div class="form-group">
                                     <label><strong>To Date</strong></label>
-                                    <input type="date" id="toDate" class="form-control" />
+                                    <input type="text" id="toDate" class="form-control datepicker" placeholder="DD/MM/YYYY" autocomplete="off" />
                                 </div>
                             </div>
                         </div>
@@ -141,16 +141,12 @@ $(document).ready(function () {
         batchId: null,
         batchName: ''
     };
-
+    JSUTIL.initDatePicker('.datepicker');
     var currentTransactions = [];
 
-    // Initialize date inputs
-    var today = new Date().toISOString().split('T')[0];
-    $('#toDate').val(today);
-
-    var thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    $('#fromDate').val(thirtyDaysAgo.toISOString().split('T')[0]);
+    // Initialize date inputs (DD/MM/YYYY)
+    $('#toDate').val(moment().format('DD/MM/YYYY'));
+    $('#fromDate').val(moment().subtract(30, 'days').format('DD/MM/YYYY'));
 
     // Add product to selection list
     $('#addProductBtn').on('click', function () {
@@ -275,7 +271,7 @@ $(document).ready(function () {
                 return;
             }
 
-            if (new Date(fromDate) > new Date(toDate)) {
+            if (moment(fromDate, 'DD/MM/YYYY').isAfter(moment(toDate, 'DD/MM/YYYY'))) {
                 JSUTIL.buildErrorModal('From Date cannot be greater than To Date');
                 return;
             }
@@ -353,10 +349,8 @@ $(document).ready(function () {
         records = records.filter(function (v) {
             return v.processStatus == 'QA Approved' || v.type != 'Stock Adjustment';
         });
-        var fromDateTime = new Date(fromDate);
-        fromDateTime.setHours(0, 0, 0, 0);
-        var toDateTime = new Date(toDate);
-        toDateTime.setHours(23, 59, 59, 999);
+        var fromDateTime = moment(fromDate, 'DD/MM/YYYY').startOf('day').toDate();
+        var toDateTime = moment(toDate, 'DD/MM/YYYY').endOf('day').toDate();
 
         return records.filter(function (record) {
             var recordProductId =
@@ -611,11 +605,9 @@ $(document).ready(function () {
 
     function formatDateForReport(dateString) {
         if (!dateString) return '';
-        var date = new Date(dateString);
-        var day = String(date.getDate()).padStart(2, '0');
-        var month = String(date.getMonth() + 1).padStart(2, '0');
-        var year = date.getFullYear();
-        return day + '/' + month + '/' + year;
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) return dateString;
+        var m = moment(dateString);
+        return m.isValid() ? m.format('DD/MM/YYYY') : '';
     }
 
     function formatDateShort(dateString) {

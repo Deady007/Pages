@@ -326,7 +326,7 @@
                                             PO Date:</td>
                                         <td style="padding: 4px 0;">
                                             <input type="text" class="input-sm form-control datepicker" id="orderDate"
-                                                name="orderObj.OrderDate" placeholder="Enter PO Date" style="width: 100%;" disabled>
+                                                name="orderObj.OrderDate" placeholder="DD/MM/YYYY" autocomplete="off" style="width: 100%;" disabled>
                                         </td>
                                     </tr>
                                     <tr>
@@ -573,11 +573,11 @@
                                 <tr>
                                     <td
                                         style="width: 40%; padding: 4px 8px 4px 0; font-weight: 600; color: #555; white-space: nowrap; vertical-align: middle;">
-                                        PO Date:</td>
+                                        PO Date: <span style="color:red;">*</span></td>
                                     <td style="padding: 4px 0;">
                                         <!-- <input type="text" class="input-sm form-control datepicker" name="OrderDate"
                                             id="orderDate2" style="width: 100%;"> -->
-                                            <input type="text" class="input-sm form-control datepicker" name="OrderDate" placeholder="Enter PO Date" id="orderDate2" style="width: 100%;">
+                                            <input type="text" class="input-sm form-control datepicker" name="OrderDate" placeholder="DD/MM/YYYY" autocomplete="off" id="orderDate2" style="width: 100%;" required>
                                     </td>
                                 </tr>
                                 <tr>
@@ -587,7 +587,7 @@
                                     <td style="padding: 4px 0;">
                                         <!-- <input type="text" class="input-sm form-control datepicker" name="DeliveryDate"
                                             id="deliveryDate" style="width: 100%;"> -->
-                                            <input type="text" class=" form-control datepicker" name="DeliveryDate" placeholder="DD/MM/YYYY" id="deliveryDate" style="width: 100%;">
+                                            <input type="text" class="form-control datepicker" name="DeliveryDate" placeholder="DD/MM/YYYY" id="deliveryDate" style="width: 100%;">
                                     </td>
                                 </tr>
                             </tbody>
@@ -612,7 +612,7 @@
                                     <td style="padding: 4px 0;">
                                         <!-- <input type="text" class="input-sm form-control datepicker" name="QuotationDate"
                                             id="quotationDate" style="width: 100%;"> -->
-                                            <input type="text" class=" form-control datepicker" name="QuotationDate" id="quotationDate" placeholder="DD/MM/YYYY" style="width: 100%;">
+                                            <input type="text" class="form-control datepicker" name="QuotationDate" id="quotationDate" placeholder="DD/MM/YYYY" style="width: 100%;">
                                     </td>
                                 </tr>
                             </tbody>
@@ -938,9 +938,7 @@
     $(document).ready(function () {
         handlePanelVisibility();
         loadPurchaseOrders(); // Use new data loading system
-         flatpickr(".datepicker", {
-            dateFormat: "d/m/Y"
-        });
+         JSUTIL.initDatePicker(".datepicker");
     });
 
 
@@ -996,9 +994,7 @@
         
         // Set default value for order date
         // $('#orderDate2').val(moment().format('DD/MM/YYYY'));
-         flatpickr(".datepicker", {
-            dateFormat: "d/m/Y"
-        });
+         JSUTIL.initDatePicker(".datepicker");
     }, 200);
 });
 
@@ -1183,9 +1179,7 @@
             autoApply: true,
             locale: { format: 'YYYY-MM-DD' }
         };
-         flatpickr(".datepicker", {
-            dateFormat: "d/m/Y"
-        });
+         JSUTIL.initDatePicker(".datepicker");
         // $('#orderDate').daterangepicker(datePickerConfig, function(start) {
         //     $('#orderDate').val(start.format('YYYY-MM-DD'));
         // });
@@ -1277,7 +1271,8 @@
     
         
      $('.approvedBtn').on('click', function () {
-        JSUTIL.startSpinner();
+       JSUTIL.buildAuthenticationModal(function(){
+         JSUTIL.startSpinner();
 
         fetch('/api/purchase/orders/' + currentRecordId + '/status', {
             method: 'PATCH',
@@ -1297,6 +1292,7 @@
             console.error('Status PATCH failed:', error);
             JSUTIL.stopSpinner();
         });
+       })
     });
         // $('.approvedBtn').on('click', function () {
         //     var obj = {
@@ -2411,6 +2407,13 @@ $('.invoiceSaveBtn').on('click', function () {
     if ($('#manufacturerId').val() == null || $('#manufacturerId').val() == '') {
         $('#pageErrorPanel').text('Please select a manufacturer.');
         $('#pageErrorPanel').show().delay(5000).hide(0);
+        return;
+    }
+    var poDateVal = ($('#orderDate2').val() || '').trim();
+    if (!poDateVal || !moment(poDateVal, ['DD/MM/YYYY', 'YYYY-MM-DD'], true).isValid()) {
+        $('#pageErrorPanel').text('Please enter PO Date.');
+        $('#pageErrorPanel').show().delay(5000).hide(0);
+        $('#orderDate2').focus();
         return;
     }
 

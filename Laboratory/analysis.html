@@ -5,8 +5,8 @@
 <script src="pages/lib/dataTables.js"></script>
 <script src="pages/lib/lucide.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
-<script src="pages/lib/math.min.js"></script>
-<script src=https://cdnjs.cloudflare.com/ajax/libs/mathjs/3.3.0/math.min.js></script>
+<script src="/lib/html2pdf.bundle.min.js"></script>
+<script src="/lib/math.min.js"></script>
 <style>
      .nav-tabs .nav-link.active {
         color: #337AB7 !important;
@@ -535,6 +535,12 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group ">
+                            <label>Retest Date</label>
+                            <input type="text" class="form-control editRecordInput" name="retestDate" autocomplete="off" placeholder="DD/MM/YYYY" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
                             <label>Batch / Lot #</label>
                             <input type="text" class="form-control editRecordInput" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
                             </div>
@@ -556,7 +562,7 @@
                 <hr>
                 <div class="tabs-container">
                     <ul class="nav nav-tabs">
-                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#resultWorksheet">Test Parameters</a></li>
+                        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#resultWorksheet">Variables & Formula</a></li>
                     </ul>
                     <div class="tab-content">
                         <div id="resultWorksheet" class="tab-pane active">
@@ -760,6 +766,12 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group ">
+                            <label>Retest Date</label>
+                            <input type="text" class="form-control editRecordInput" name="retestDate" autocomplete="off" placeholder="DD/MM/YYYY" readonly/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group ">
                             <label>Batch / Lot #</label>
                             <input type="text" class="form-control editRecordInput" name="batchNumber" placeholder="Enter Batch / Lot #" readonly/>
                             </div>
@@ -809,8 +821,8 @@
                                         <input type="hidden" id="selectTestInput" value="">
                                     </div>
                                     <div class="col-sm-6" style="display:flex; align-items:flex-end; justify-content:flex-end;">
-                                        <button type="button" class="btn btn-secondary btn-sm" id="printCalculationSheetBtn" style="display:none;">
-                                            <i data-lucide="printer"></i> Print Calculation Sheet
+                                        <button type="button" class="btn btn-default btn-sm" id="printCalculationSheetBtn" style="display:none;">
+                                            <i data-lucide="printer"></i> Print Continuation Sheet
                                         </button>
                                     </div>
                                 </div>
@@ -1008,6 +1020,7 @@ $(document).ready(function(){
 
                 $('.editRecordInput[name="manufacturingDate"]').val(JSUTIL.getDate(objList.manufacturingDate));
                 $('.editRecordInput[name="expiryDate"]').val(JSUTIL.getDate(objList.expiryDate));
+                $('.editRecordInput[name="retestDate"]').val(JSUTIL.getDate(objList.retestDate));
                 $('.editRecordInput[name="batchNumber"]').val(objList.batchNumber);
 
                 // STP — both panels
@@ -1068,7 +1081,9 @@ $(document).ready(function(){
         saveTestResults(false);
     });
     $('#complTestingBtn').on('click', function() {
-        saveTestResults(true);
+        JSUTIL.buildAuthenticationModal(function() {
+            saveTestResults(true);
+        }); 
     });
     $('#resultParameterContainer').find('.result-param-input').on('input change', function () {
         const paramId = $(this).attr("aria-details");
@@ -1105,19 +1120,20 @@ function loadResultForm(selectedItem) {
     });
 }
 function buildResultParameterForm(serviceId, parameterList, savedValues) {
-    currentParameterItemList = parameterList;
+    currentParameterItemList = parameterList.slice().sort((a, b) => a.id - b.id);
     console.info('Building result form for service', serviceId, '- params:', parameterList.length, '- saved:', savedValues);
     var $container = $('#resultParameterContainer');
     if ($container.length === 0) {
         $container = $('<div id="resultParameterContainer" style="margin-top:15px;"></div>');
         $('#selectTestResultInput').closest('.row').after($container);
     }
-    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Parameter</th><th>Test Result</th><th>Unit</th></tr></thead><tbody>';
+    var html = '<table class="table table-bordered table-hover"><thead><tr><th>Parameter</th><th>Specification</th><th>Test Result</th><th>Unit</th></tr></thead><tbody>';
     $.each(parameterList, function(i, val) {
         var isFormula = val.formula && val.formula.trim() !== '';
         var readonlyAttr = isFormula ? 'readonly' : '';
         var fieldClass = isFormula ? 'nonEditableField' : 'editableField';
-        html += '<tr><td>' + val.name + (val.number ? ' (' + val.number + ')' : '') + '</td><td>';
+        html += '<tr><td>' + val.name + (val.number ? ' (' + val.number + ')' : '') + '</td>' + 
+            '<td>' + val.specification + '</td><td>';
         if (val.numberOfReadings > 1) {
             for (var k = 0; k < val.numberOfReadings; k++) {
                 var savedVal = '';
@@ -1340,8 +1356,10 @@ $(document).ready(function(){
         saveWorksheetResults(false);
     });
     $('#complWorksheetBtn').on('click', function() {
-        btnClicked = "complWorksheetBtn";
-        saveWorksheetResults(true);
+        JSUTIL.buildAuthenticationModal(function() {
+            btnClicked = "complWorksheetBtn";
+            saveWorksheetResults(true);
+        });   
     });
     $('#printCalculationSheetBtn').on('click', function() {
         var selectedTestId = $('#selectTestInput').val();
@@ -1370,12 +1388,10 @@ $(document).ready(function(){
         var productName = safe(currentSampleRequest.sampleCondition);
         var productCode = safe(currentSampleRequest.productCode || currentSampleRequest.sampleId);
         var testName = safe(selectedItem && selectedItem.service ? selectedItem.service.name : '');
-        var testCode = safe(selectedItem && selectedItem.service ? (selectedItem.service.code || selectedItem.service.number || selectedItem.service.id) : '');
+        var testCode = safe(selectedItem && selectedItem.service ? selectedItem.service.number : '');
         var limsArNo = safe(currentSampleRequest.referenceNumber);
-        var limsSpecId = safe(currentSampleRequest.limsSpecificationId || (currentSampleRequest.testProcedure ? currentSampleRequest.testProcedure.id : ''));
-        var specNo = safe(selectedItem ? (selectedItem.specificationNo || selectedItem.specificationNumber) : '');
-        var arNo = safe(currentSampleRequest.arNo || currentSampleRequest.id);
-        var printedBy = safe(currentSampleRequest.updatedBy || currentSampleRequest.createdBy || 'System');
+        var limsSpecId = safe(currentSampleRequest.testProcedure ? currentSampleRequest.testProcedure.number : '');
+        var printedBy = safe(FOX.employeeName || 'System');
 
         var continuationSheetHtml = '' +
             '<table class="sheet-table">' +
@@ -1396,21 +1412,13 @@ $(document).ready(function(){
             '<td class="value-cell">' + safe(currentSampleRequest.batchNumber) + '</td>' +
             '</tr>' +
             '<tr>' +
-            '<td class="label-cell">LIMS AR No.:-</td>' +
-            '<td class="value-cell">' + limsArNo + '</td>' +
-            '<td class="label-cell">LIMS Specification Id:-</td>' +
-            '<td class="value-cell">' + limsSpecId + '</td>' +
-            '</tr>' +
-            '<tr>' +
             '<td class="label-cell">Specification No:-</td>' +
-            '<td class="value-cell">' + specNo + '</td>' +
+            '<td class="value-cell">' + limsSpecId + '</td>' +
             '<td class="label-cell">AR No.:-</td>' +
-            '<td class="value-cell">' + arNo + '</td>' +
+            '<td class="value-cell">' + limsArNo + '</td>' +
             '</tr>' +
             '<tr>' +
-            '<td class="body-cell" colspan="4">' +
-            (worksheetHtml ? ('<div class="worksheet-inner">' + worksheetHtml + '</div>') : '<div class="worksheet-inner"></div>') +
-            '</td>' +
+            '<td class="body-cell" colspan="4"><div class="worksheet-inner"></div></td>' +
             '</tr>' +
             '<tr>' +
             '<td class="label-cell">Printed By:-</td>' +
@@ -1437,7 +1445,7 @@ $(document).ready(function(){
             '<html>' +
             '<head>' +
             '<meta charset="utf-8">' +
-            '<title>Calculation Sheet</title>' +
+            '<title>Continuation Sheet</title>' +
             '<style>' +
             '@page { size: A4 portrait; margin: 8mm; }' +
             'html, body { margin: 0; padding: 0; background: #fff; color: #111; font-family: "Times New Roman", serif; font-size: 11pt; }' +
@@ -1573,7 +1581,7 @@ function populateQcUomDropdown() {
     if (typeof uomList === 'undefined' || !uomList) return;
     var html = '<a class="dropdown-item" href="#" data-value="">-- None --</a>';
     $.each(uomList, function(i, val) {
-        html += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + ' (' + val.description + ')</a>';
+        html += '<a class="dropdown-item" href="#" data-value="' + val.name + '">' + val.name + '</a>';
     });
     $('#editSampleUnitMenu').html(html);
     $('#editSampleUnitMenu2').html(html);
