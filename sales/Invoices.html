@@ -1724,18 +1724,10 @@
             var el = this;
             var existingValue = ($(el).val() || "").trim();
 
-            // Destroy existing flatpickr instance if any
-            if (el._flatpickr) {
-                el._flatpickr.destroy();
-            }
-
-            var fpOptions = {
-                dateFormat: "d/m/Y",
-                allowInput: true,
+            var opts = {
                 onReady: function (selectedDates, dateStr, instance) {
                     // Restore pre-existing value after init
                     if (existingValue && !dateStr) {
-                        // Try to parse DD/MM/YYYY manually
                         var parts = existingValue.split('/');
                         if (parts.length === 3) {
                             var parsed = new Date(parts[2], parts[1] - 1, parts[0]);
@@ -1749,14 +1741,14 @@
 
             // datepickerCompliance: only allow dates from today onwards
             if ($(el).hasClass("datepickerCompliance")) {
-                fpOptions.minDate = "today";
+                opts.minDate = "today";
             }
             // datepickerCompliance2: only allow dates up to today
             if ($(el).hasClass("datepickerCompliance2")) {
-                fpOptions.maxDate = "today";
+                opts.maxDate = "today";
             }
 
-            flatpickr(el, fpOptions);
+            JSUTIL.initDatePicker(el, opts);
         });
     }
     function safeReinitializeInputTypes() {

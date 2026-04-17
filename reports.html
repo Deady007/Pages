@@ -82,13 +82,13 @@
             <div class="col-sm-3">
               <div class="form-group mb-3">
                 <label>From Date</label>
-                <input type="date" class="form-control" id="reportFromDate">
+                <input type="text" class="form-control reports-datepicker" id="reportFromDate" placeholder="DD/MM/YYYY" autocomplete="off">
               </div>
             </div>
             <div class="col-sm-3">
               <div class="form-group mb-3">
                 <label>To Date</label>
-                <input type="date" class="form-control" id="reportToDate">
+                <input type="text" class="form-control reports-datepicker" id="reportToDate" placeholder="DD/MM/YYYY" autocomplete="off">
               </div>
             </div>
             <div class="col-sm-2">
@@ -157,13 +157,15 @@
   function _initDT() { if ($.fn.DataTable && !$.fn.DataTable.isDataTable('#reportResultTable')) $('#reportResultTable').DataTable({ order: [], pageLength: 25, autoWidth: false }); if (window.lucide) lucide.createIcons(); }
 
   function _dateFilter(list, dateField) {
-    var from = $('#reportFromDate').val(), to = $('#reportToDate').val();
-    if (!from && !to) return list;
+    var fromDmy = $('#reportFromDate').val(), toDmy = $('#reportToDate').val();
+    if (!fromDmy && !toDmy) return list;
+    var fromM = fromDmy ? moment(fromDmy, 'DD/MM/YYYY').startOf('day') : null;
+    var toM = toDmy ? moment(toDmy, 'DD/MM/YYYY').endOf('day') : null;
     return list.filter(function(r) {
-      var d = r[dateField] ? new Date(r[dateField]) : null;
-      if (!d || isNaN(d.getTime())) return false;
-      if (from && d < new Date(from + 'T00:00:00')) return false;
-      if (to && d > new Date(to + 'T23:59:59')) return false;
+      var d = r[dateField] ? moment(r[dateField]) : null;
+      if (!d || !d.isValid()) return false;
+      if (fromM && d.isBefore(fromM)) return false;
+      if (toM && d.isAfter(toM)) return false;
       return true;
     });
   }
@@ -331,14 +333,16 @@
       };
     });
 
-    // Filter by date
-    var from = $('#reportFromDate').val(), to = $('#reportToDate').val();
-    if (from || to) {
+    // Filter by date (inputs are DD/MM/YYYY)
+    var fromDmy = $('#reportFromDate').val(), toDmy = $('#reportToDate').val();
+    if (fromDmy || toDmy) {
+      var fromM = fromDmy ? moment(fromDmy, 'DD/MM/YYYY').startOf('day') : null;
+      var toM = toDmy ? moment(toDmy, 'DD/MM/YYYY').endOf('day') : null;
       enriched = enriched.filter(function(m) {
         if (!m.createdDate) return false;
-        var d = new Date(m.createdDate); if (isNaN(d.getTime())) return false;
-        if (from && d < new Date(from + 'T00:00:00')) return false;
-        if (to && d > new Date(to + 'T23:59:59')) return false;
+        var d = moment(m.createdDate); if (!d.isValid()) return false;
+        if (fromM && d.isBefore(fromM)) return false;
+        if (toM && d.isAfter(toM)) return false;
         return true;
       });
     }
@@ -477,10 +481,11 @@
   // Events
   // ════════════════════════════════════════════════════════════════════
   $(document).ready(function() {
-    var today = new Date();
-    var thirtyAgo = new Date(today.getTime() - 30 * 86400000);
-    $('#reportToDate').val(today.toISOString().split('T')[0]);
-    $('#reportFromDate').val(thirtyAgo.toISOString().split('T')[0]);
+    if (window.JSUTIL && typeof JSUTIL.initDatePicker === 'function') {
+      JSUTIL.initDatePicker('.reports-datepicker');
+    }
+    $('#reportToDate').val(moment().format('DD/MM/YYYY'));
+    $('#reportFromDate').val(moment().subtract(30, 'days').format('DD/MM/YYYY'));
 
     $('#generateReportBtn').on('click', generateReport);
     $('#reportCloseBtn').on('click', function() { _destroyDT(); $('#reportResultWrap').hide(); $('#reportResultHead, #reportResultBody, #reportSummaryRow').empty(); });
