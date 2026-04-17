@@ -1,0 +1,4199 @@
+<!-- allInvestigation.html      Start -->
+
+
+<style>
+    /* Compact filter panel styling */
+    #filterPanel .ibox {
+        margin-bottom: 0 !important;
+    }
+
+    #filterPanel .ibox-content {
+        padding: 8px 15px !important;
+        min-height: auto !important;
+    }
+
+    #filterPanel .form-control {
+        height: 32px;
+        padding: 4px 12px;
+        font-size: 13px;
+    }
+
+    #filterPanel label {
+        font-size: 13px;
+        margin-bottom: 3px;
+    }
+
+    .filter-panel-overlay.active {
+        display: block;
+    }
+
+    .filter-panel {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 80%;
+        width: 380px;
+        max-width: 90vw;
+        background: #ffffff;
+        box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        transform: translateX(100%);
+        transition: transform 0.25s ease-out;
+    }
+
+    .filter-panel.open {
+        transform: translateX(0);
+    }
+
+    .filter-panel-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .filter-panel-header h2 {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .close-panel-btn {
+        border: none;
+        background: none;
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .filter-panel-body {
+        padding: 16px 20px;
+        overflow-y: auto;
+        flex: 1;
+    }
+</style>
+<div class="row animated fadeInRight aasaanPanel" id="allInvestigationPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="row fadeInRight aasaanPanel" id="filterPanel" style="margin-bottom: 15px; margin-top: 15px;">
+            <div class="col-lg-12">
+                <div class="ibox float-e-margins" style="margin-bottom: 0;">
+                    <div class="ibox-content border-bottom" style="padding: 8px 15px;height: 100px;">
+                        <div class="row" style="margin: 0; margin-top: 10px; margin-bottom: 8px;">
+                            <div class="form-group col-sm-3" style="margin-bottom: 0;">
+                                <label style="font-size: 13px; font-weight: 600; margin-bottom: 3px;">Filters</label>
+                                <select class="form-control filteroptions select2" style="height: 32px; padding: 4px 12px; font-size: 13px;">
+                                    <option val="">--none--</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-4" style="padding-top: 20px; margin-bottom: 0;">
+                                <button type="button" class="applyFilters btn btn-sm btn-white" style="display: none;">Apply Filter</button>
+                                <button type="button" class="addFilters btn btn-sm btn-white"><i class="fa fa-plus"></i> New Filter</button>
+                                <button type="button" class="editFilters btn btn-sm btn-warning" style="display: none;"><i class="fa fa-pencil"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="ibox float-e-margins">
+            <div class="ibox-content m-b-sm border-bottom">
+                <table class="table table-hover dataTables">
+                    <thead>
+                        <th>Number</th>
+                        <th>StartDate</th>
+                        <th>DueDate</th>
+                        <th>Source</th>
+                        <th>Process Status</th>
+                        <th>Action</th>
+                    </thead>
+                    <tbody class="dataTableRecordList" id="allInvestigationTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="filter-panel-overlay row aasaanPanel" id="filterPanelOverlay">
+    <div class="filter-panel" id="filterPanelSlider">
+        <div class="filter-panel-header">
+            <h2>Create Filter</h2>
+            <button class="close-panel-btn" id="closePanelBtn">&times;</button>
+        </div>
+
+        <div class="filter-panel-body">
+            <!-- Filter Name -->
+            <div class="section">
+                <label>Filter Name</label>
+                <input type="text" class="form-control" id="filterName" placeholder="Filter Name" />
+            </div>
+            
+            <!-- Conditions -->
+            <div class="section" style="padding-top: 20px;">
+                <div class="conditions-header">
+                    <label>Conditions</label>
+                    <button class="add-condition-btn btn btn-sm" id="addConditionBtn">+</button>
+                </div>
+                <hr>
+                <div class="conditions-container" id="conditionsContainer">
+                    <!-- Condition rows injected by JS -->
+                </div>
+            </div>
+
+            <!-- Order By -->
+            <div class="section" style="padding-top: 20px;">
+                <label>Order By</label>
+                <hr>
+                <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 8px;">
+                    <div>
+                        <select class="form-control select2" id="orderField">
+                            <option val="">--none--</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select id="orderDirection" class="form-control select2">
+                            <option value="">None</option>
+                            <option value="ASC">ASCENDING</option>
+                            <option value="DESC">DESCENDING</option>
+                        </select>
+                    </div>
+                </div>
+            </div><br>
+            <div class="filter-panel-footer">
+                <button class="btn btn-sm" id="resetBtn">Reset</button>
+                <button class="btn-success btn btn-sm" id="saveBtn">Save Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row animated fadeInRight aasaanPanel" id="printRequestPanel" style="display: none;" data-flag="true">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5> Print</h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-white btn-sm" id="closeSampleMemo"><i class="fa fa-times"></i>
+                        Close </button>
+                    <button type="button" class="btn btn-white btn-sm" id="printRequestScheduleBtn"><i
+                            class="fa fa-print"></i> Print </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="row" id="reportContent" class="content">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="historyPanel1 " style="display: none;">
+
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+
+
+            <div class="ibox-tools">
+                <button type="button" class="btn btn-white btn-sm closeHistory1"><i class="fa-solid fa-arrow-left"></i>
+                    Back to Investigation </button>
+            </div>
+            </div>
+            <div class="ibox-content">
+                <div class="history">
+                    <div id="qmsHistory">
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Date</th>
+                                        <th>Performed By</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allHistoryTable1"></tbody>
+                            </table>
+                        </div>
+
+                    </div>
+               
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- allInvestigation.html      End -->
+
+
+
+<!-- editDeviationInvestigationPanel.html       Start -->
+ <style>
+    .progress-container2 {
+        position: relative;
+        width: 100%;
+        margin: 12px 0;
+        padding: 0;
+    }
+
+    #process-steps2 {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    /* Full gray track */
+    .progress-track {
+        position: absolute;
+        top: 20px;
+        left: calc(100% / 10);
+        height: 4px;
+        background: #d3d5d8;
+        width: calc(100% - 100% / 5);
+        z-index: 1;
+        border-radius: 2px;
+    }
+
+    /* Dynamic yellow progress */
+    .progress-bar2 {
+        position: absolute;
+        top: 20px;
+        left: calc(100% / 10);
+        height: 4px;
+        background: #fed804;
+        width: 0;
+        z-index: 2;
+        border-radius: 2px;
+        transition: width 0.4s ease;
+    }
+
+    .step2 {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .step-circle2 {
+        width: 40px;
+        height: 40px;
+        background: #d3d5d8;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        transition: background 0.3s, transform 0.3s;
+    }
+
+    .step2.completed .step-circle2 {
+        background: #fed804;
+        color: #111;
+    }
+
+    .step2.current .step-circle2 {
+        background: #ff9800;
+        transform: scale(1.1);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .step-label2 {
+        margin-top: 8px;
+        max-width: 150px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .custom-arrow {
+        position: relative;
+        display: inline-block;
+        padding: 7px 18px;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: center;
+        color: white;
+        min-width: 80px;
+        white-space: normal;
+        word-wrap: break-word;
+        background-color: #868e94;
+        clip-path: polygon(12% 0%, 94% 0%, 100% 50%, 94% 100%, 12% 100%, 18% 50%);
+        width: 200px;
+        height: 33px;
+        line-height: 17px;
+        white-space: nowrap;
+        transition: background-color 0.3s ease;
+    }
+
+    .arrow-container {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .custom-arrow {
+        margin-right: 2px;
+        padding: 3px 8px;
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+
+    .custom-arrow:last-child {
+        margin-right: 0;
+    }
+
+    .process-step.completed {
+        background-color: #fed804 !important;
+        color: rgb(28, 25, 25) !important;
+        transition: background-color 0.3s ease;
+    }
+
+    .process-flow {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 10px;
+        gap: 0;
+    }
+
+    .process-step {
+        background: #d3d5d8;
+        color: #111;
+        padding: 8px 16px;
+        border-radius: 20px 0 0 20px;
+        position: relative;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .process-step::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: -15px;
+        width: 0;
+        height: 0;
+        border-top: 20px solid transparent;
+        border-bottom: 20px solid transparent;
+        border-left: 15px solid #d3d5d8;
+        z-index: 1;
+    }
+
+    .process-step:last-child {
+        border-radius: 20px;
+    }
+
+    .process-step:last-child::after {
+        display: none;
+    }
+
+    .process-step.completed {
+        background: #fed804 !important;
+    }
+
+    .process-step.completed::after {
+        border-left-color: #fed804 !important;
+    }
+
+
+
+    .ibox {
+        margin-top: 10px;
+    }
+
+    .small-checkbox {
+        width: 25px;
+        height: 14px;
+        margin-right: 5px;
+    }
+
+    select {
+        width: 100%;
+        border: 1px solid black;
+    }
+
+    .col-md-12 .form-group label {
+        text-align: left !important;
+        display: block;
+        width: 100%;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        /* This controls spacing between elements */
+        cursor: pointer;
+        user-select: none;
+        margin-bottom: 10px;
+        margin-top: 10px;
+    }
+
+    .details-subtitle {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        color: #2563eb;
+        border-left: 3px solid #2563eb;
+        padding-left: 8px;
+    }
+</style>
+
+<div class="row animated fadeInRight aasaanPanel" id="editDeviationInvestigationPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="progress-container2">
+            <!-- <div class="progress-track"></div> -->
+            <div class="progress-bar2"></div>
+            <div id="process-steps2"></div>
+        </div>
+        <div class="ibox float-e-margins allDeviationInvestigationFields">
+            <div class="ibox-title">
+                <h5 id="currInvestigationId2"></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-white btn-sm close-box newInvestigationCancelBtn"><i
+                            class="fa fa-times"></i> Close </button>
+                    <button type="button" class="btn btn-sm btn-white viewHistory2"><i class="fa-regular fa-clock"></i>
+                        View History</button>
+                        <button type="button" class="btn btn-sm btn-white editdeviationBtn"><i class="fa-pencil fa"></i>Edit</button>
+                    <button type="button" class="btn btn-success btn-sm" id="createNewInvestigationDeviationSaveBtn"><i
+                            class="fa fa-check "></i> Save </button>
+                            <button type="button" class="btn btn-success btn-sm" id="saveOriginatorReviewBtn"><i
+                            class="fa fa-check "></i> Save </button>
+                    <button type="button" class="btn btn-success btn-sm" id="rootCauseAnalysisBtn"><i
+                            class="fa fa-check-double "></i> Root Cause Analysis </button>
+                    <button type="button" class="btn btn-success btn-sm" id="originatorReviewBtn"><i
+                            class="fa fa-check-double "></i> Originator Review </button>
+                            <button type="button" class="btn btn-white btn-sm extensionDueDateBtn" style="display: none;">
+                        <i class="fa fa-calendar"></i> Request Extension
+                    </button>
+                    <button type="button" class="btn btn-sm redirectToSource"><i class="fa-regular fa-paper-plane"></i> Redirect To Parent</button>
+                    <button type="button" class="btn btn-success btn-sm" id="qaReviewReturnBtn"><i class="fa-solid fa-circle-arrow-left"></i> Return to Root Cause Analysis </button>        
+                    <button type="button" class="btn btn-success btn-sm" id="qaReviewBtn"><i
+                            class="fa fa-check-double "></i> QA Review </button>
+                            <button type="button" class="btn btn-success btn-sm" id="returnDeviationInvestigationBtn"><i class="fa-solid fa-circle-arrow-left"></i> Return to Originator Review </button>        
+                    <button type="button" class="btn btn-success btn-sm" id="approveDeviationInvestigationBtn"><i
+                            class="fa fa-check-double "></i> Approve </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="section-card collapsible-section">
+                    <div class="section-body">
+                        <form role="form">
+
+                            <div class="initiationFields" style="display: none;">
+                                <div class="section-header" onclick="toggleStandardSection(this)">
+                                    <h6 class="details-subtitle">Parent Information</h6>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="">Parent ID</label>
+                                            <input type="text" class="parentNumber form-control" disabled readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label for="">Parent Type</label>
+                                            <select class="parentType select2 form-control" disabled>
+                                                <option value="">--none--</option>
+                                                <option value="deviation">Deviation</option>
+                                                <option value="complaint">Complaint</option>
+                                                <option value="incident">Incident</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+
+                                    <div class="col-sm-12">
+                                        <label for="">Parent Description</label>
+                                        <textarea class="form-control parentInfo" rows="4" disabled readonly></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <div class="generalInformation">
+                                                <div class="section-header" onclick="toggleStandardSection(this)">
+                                                    <h6 class="details-subtitle">General Information</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Originator</label>
+                                            <input type="text" class="form-control editDeviationInvestigationInput2"
+                                                name="originator.id" placeholder="Enter originator..." readonly />
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Date Opened</label>
+                                            <input type="text"
+                                                class="form-control editDeviationInvestigationInput1 datepicker"
+                                                id="invoiceDate2" name="startDate" readonly  />
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Due Date</label>
+                                            <input type="text"
+                                                class="form-control editDeviationInvestigationInput datepicker"
+                                                 name="dueDate" readonly  />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label>Investigator</label>
+                                            <select class="form-control editDeviationInvestigationInput select2"
+                                                id="investigator2" name="assignedTo.id" required>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Description</label>
+                                            <textarea class="form-control editDeviationInvestigationInput"
+                                                name="description" rows="4"
+                                                style="font-size: 15px; text-align: left; font-weight: 400;"
+                                                placeholder="Describe the investigation in detail..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Scope of Investigation</label>
+                                            <textarea class="form-control editDeviationInvestigationInput"
+                                                name="subject" rows="4"
+                                                style="font-size: 15px; text-align: left; font-weight: 400;"
+                                                placeholder="Enter scope of investigation..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <div class="investigationDetails">
+                                                <div class="section-header" onclick="toggleStandardSection(this)">
+                                                    <h6 class="details-subtitle">Investigation Details</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Investigation Report</label>
+                                            <textarea class="form-control editDeviationInvestigationInput"
+                                                name="investigationReport" rows="4"
+                                                style="font-size: 15px; text-align: left; font-weight: 400;"
+                                                placeholder="Enter investigation report..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label>Impact Analysis</label>
+                                            <textarea class="form-control editDeviationInvestigationInput"
+                                                name="impactAnalysis" rows="4"
+                                                style="font-size: 15px; text-align: left; font-weight: 400;"
+                                                placeholder="Describe the impact analysis in detail..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                 <div class="section-header" style="border-bottom: none;">
+                        <h6 class="details-subtitle">Related Records</h6>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="">Record Type</label>
+                                <select class="btn btn-sm relrectype  form-control select2">
+                                    <option value="">--none--</option>
+                                    <option value="Capa">CAPA</option>
+                                    <option value="Complaint">Complaint</option>
+                                    <option value="ChangeRequest">Change Control</option>
+                                    <option value="Deviation">Deviation</option>
+                                    <option value="Investigation">Investigation</option>
+                                    <option value="QualityEvent-OOS">OOS</option>
+                                    <option value="QualityEvent-OOC">OOC</option>
+                                    <option value="QualityEvent-OOT">OOT</option>
+                                    <option value="Incident">Incident</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label for="">Search Record</label>
+
+                                <input type="text" class="form-control linkrecord " autocomplete="off">
+
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="form-group">
+                                 <button type="button" class="btn btn-sm linkrecordbtn ">Link</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <label for="">Related Records Table</label>
+                                <table class="table   table-hover   table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                    <th>Record Type</th>
+                                    <th>Record Number</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="recordtablebody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                            </div>
+                            <div class="rootCauseAnalysisFields">
+                                <div class="row rccinv">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Root Cause Category</label>
+                                        <div id="rootCauseCategoryContainer">
+                                            <select class="form-control editRootCauseAnalysisInput select2"
+                                                id="rootCauseCategory2" name="rootCauseCategory.id">
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>Root Cause</label>
+                                        <textarea class="form-control editRootCauseAnalysisInput"
+                                            name="rootCauseAnalysis" rows="4"
+                                            style="font-size: 15px; text-align: left; font-weight: 400;"
+                                            placeholder="Enter root cause analysis..."></textarea>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>CA Proposed</label>
+                                        <textarea class="form-control editRootCauseAnalysisInput" name="caProposed"
+                                            rows="4" style="font-size: 15px; text-align: left; font-weight: 400;"
+                                            placeholder="Enter CA Proposed..."></textarea>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>PA Proposed</label>
+                                        <textarea class="form-control editRootCauseAnalysisInput" name="paProposed"
+                                            rows="4" style="font-size: 15px; text-align: left; font-weight: 400;"
+                                            placeholder="Enter PA Proposed..."></textarea>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            <div class="originatorReviewFields">
+                                <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>Comments</label>
+                                        <textarea class="form-control editOriginatorReviewInput" name="comments"
+                                            rows="4" style="font-size: 15px; text-align: left; font-weight: 400;"
+                                            placeholder="Enter comments..."></textarea>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            <div class="qaReviewFields">
+                                <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label>Comments</label>
+                                        <textarea class="form-control editQaReviewInput" name="qaComments" rows="4"
+                                            style="font-size: 15px; text-align: left; font-weight: 400;"
+                                            placeholder="Enter comments..."></textarea>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                            <div class="uploadDocument">
+                                <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <div class="section-header" onclick="toggleStandardSection(this)">
+                                            <h6 class="details-subtitle">Documents</h6>
+                                        </div>
+                                        <div class="tab-content">
+                                            <!-- Documents Tab -->
+                                            <div id="qauHeadDocuments" class="tab-pane active">
+                                                <div class="uploadPanel" style="background-color: white;">
+                                                    <div class="ibox-tools">
+                                                        <button type="button"
+                                                            class="btn btn-white btn-sm labControlBtn uploadDocumentBtn">
+                                                            <i class="fa fa-upload"></i> Upload Document
+                                                        </button>
+                                                    </div>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover table-bordered">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 20%;"></th>
+                                                                    <th>Name</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="allDocumentsTable2"></tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="historyPanel2" style="display: none; background-color:white;margin-top: 15px;">
+    <div class="ibox float-e-margins">
+        <div class="ibox-title">
+
+            <div class="ibox-tools">
+                <h5><span class="number" style="float: none;margin-left: 10px;"></span>&nbsp;<span id="endDateDisplay5"
+                        style="margin-top: 5px;"></span></h5>
+                <button type="button" class="btn btn-white btn-sm"
+                    onclick="document.querySelector('.historyPanel2').style.display='none'; document.querySelector('.allDeviationInvestigationFields').style.display='block'; document.querySelector('#deviationTab').style.display='block';">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Investigation
+                </button>
+            </div>
+            </div>
+            <div class="ibox-content">
+                <div class="history">
+                    <div id="qmsHistory">
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Date</th>
+                                        <th>Performed By</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allHistoryTable2"></tbody>
+                            </table>
+                        </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- editDeviationInvestigationPanel.html       End -->
+
+
+
+
+
+<!-- esignDocument.html     Start -->
+
+<div class="modal inmodal fade" id="esignModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">E-Signature</h4>
+                <small class="font-bold">Approve a request by reviewing all related information.</small>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="eSignReportPasswordFieldRow">
+                    <div class="alert alert-danger" id="pageErrorPanel5" style="display: none;"></div>
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label>Username</label><i style="margin-left:5px;" class="fa-solid fa-user-tie"></i>
+                            <input type="text" class="form-control" id="eSignUserName" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label><i style="margin-left:5px;" class="fa-solid fa-lock"></i>
+                            <input type="password" class="form-control" id="eSignReportPasswordField" />
+                        </div>
+                    </div>
+                    <h5 class="font-bold" style="text-align: center;"> I understand that electronic signatures are the
+                        same as handwritten signatures.</h5>
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="completeVerificationBtn"> Sign In to Approve
+                    Signing</button>
+              
+            </div>
+        </div>
+    </div>
+</div>  
+
+<!-- esignDocument.html     End -->
+
+
+
+<!-- newExtensionRequest.html       Start -->
+
+<style>
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        /* This controls spacing between elements */
+        cursor: pointer;
+        user-select: none;
+        margin-bottom: 10px;
+        margin-top: 10px;
+    }
+
+    .details-subtitle {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+        color: #2563eb;
+        border-left: 3px solid #2563eb;
+        padding-left: 8px;
+    }
+</style>
+
+
+
+<div class="row animated fadeInRight aasaanPanel" id="createExtensionRequestPanel" style="display: none;">
+
+    <div class="col-lg-12">
+
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span class="recordNumber"></span> <small>Extension Request Details</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-white btn-sm newExtensionRequestCancelBtn">
+                        <i class="fa fa-times"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm newExtensionRequestSaveBtn">
+                        <i class="fa fa-check"></i> Save
+                    </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form class="newExtensionRequestForm">
+                    <div class="row">
+                        <!-- <div class="col-sm-6">
+                            <label>Extension Type</label>
+                            <select class="createExtensionRequestPanel form-control select2" name="type" id="extensionType">
+                                <option value="">--none--</option>
+                                <option value="Capa">Capa</option>
+                                <option value="Deviation">Deviation</option>
+                                <option value="QualityEvent">Quality Event</option>
+                                <option value="Investigation">Investigation</option>
+                                <option value="ChangeRequest">Change Request</option>
+                            </select>
+                        </div> -->
+                        <input type="hidden" class="createExtensionRequestPanel" name="type">
+
+                    </div><br>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Current Due Date</label>
+                                <input type="text" class="form-control datepicker createExtensionRequest"
+                                    name="currentDueDate" readonly disabled />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Requested Date</label>
+                                <input type="text" class="form-control datepicker createExtensionRequest"
+                                    name="requestDate"   />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Progress Details</label>
+                                <textarea rows="4" class="form-control createExtensionRequest"
+                                    name="progressDetails"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Justification</label>
+                                <textarea rows="4" class="form-control createExtensionRequest" name="reason"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Risk Assessment</label>
+                                <textarea rows="4" class="form-control createExtensionRequest"
+                                    name="riskAssessment"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Impact Details</label>
+                                <textarea rows="4" class="form-control createExtensionRequest"
+                                    name="impactDetails"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Additional Information</label>
+                                <textarea rows="4" class="form-control createExtensionRequest"
+                                    name="additionalInfo"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label>Interim Mode of Control</label>
+                                <textarea rows="4" class="form-control createExtensionRequest"
+                                    name="interimModeOfControl"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-header" onclick="toggleStandardSection(this)">
+                        <h6 class="details-subtitle">Select Supervisor</h6>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Supervisor</label>
+                                <select class="select2 form-control createExtensionRequest hodDrop" id="editSupervisor"
+                                    name="supervisor.Id">
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <input type="hidden" class="createExtensionRequestId" />
+                </form>
+                <!-- Add this section BEFORE the closing </div></div></div> of createExtensionRequestPanel -->
+<!-- Place it after the supervisor section and before </form> closing tag -->
+
+<!-- <div class="erUploadPanel" style="background-color: white; margin-top: 20px;">
+    <div class="section-header" onclick="toggleStandardSection(this)">
+        <h6 class="details-subtitle">Documents</h6>
+    </div>
+    <div class="ibox-tools">
+        <button type="button" class="btn btn-white btn-sm" id="erUploadDocumentBtn">
+            <i class="fa fa-upload"></i> Upload Document
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody id="erAllDocumentsTable"></tbody>
+        </table>
+    </div>
+</div> -->
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- Add this Upload Panel at the end of the file, after createExtensionRequestPanel -->
+
+<link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
+<div class="row animated fadeInRight aasaanPanel" id="erUploadFilesPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5 id="erUploadFileTitle">Upload Documents</h5>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="erFileObj" action="#" method="post" id="erFileForm" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="fileinput fileinput-new input-group" data-provides="fileinput"
+                                style="margin-top: 24px;">
+                                <div class="form-control" data-trigger="fileinput" id="erFileNameText">
+                                    <i class="glyphicon glyphicon-file fileinput-exists"></i>
+                                    <span class="fileinput-filename"></span>
+                                </div>
+                                <span class="input-group-addon btn btn-default btn-file">
+                                    <span class="fileinput-new">Select File</span>
+                                    <span class="fileinput-exists">Change</span>
+                                    <input type="file" name="File" id="erFileInput" accept="image/*">
+                                </span>
+                                <a href="#" class="input-group-addon btn btn-default fileinput-exists"
+                                    data-dismiss="fileinput">Remove</a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6"></div>
+                        <div class="col-sm-12">
+                            <button type="button" class="btn btn-white btn-sm erUploadCancelBtn">
+                                <i class="fa fa-times"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-success btn-sm" id="erProcessBtn">
+                                <i class="fa fa-upload"></i> Upload
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- newExtensionRequest.html       End -->
+
+
+
+<!-- newInvestigationPanel.html     Start -->
+
+
+<style>
+    .form-control.createInvestigationInput {
+        text-align: left !important;
+    }
+</style>
+
+<div class="row animated fadeInRight aasaanPanel" id="newInvestigationPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span class="editRequestTitle"></span> <Strong>Create</Strong><small> New Investigation</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-white btn-sm close-box newInvestigationCancelBtn"><i
+                            class="fa fa-times"></i> Close </button>
+                    <button type="button" class="btn btn-success btn-sm" id="createNewInvestigationSaveBtn"><i
+                            class="fa fa-check "></i> Save </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="section-card collapsible-section">
+                    <div class="section-body">
+                        <form role="form">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Source</label>
+                                        <select class="form-control newInvestigationInput" name="source"
+                                            id="createSourceSelect" required>
+                                            <option value="">--none--</option>
+                                            <option value="Product">Product</option>
+                                            <option value="Process">Process</option>
+                                            <option value="Deviation">Deviation</option>
+                                            <option value="OOS">OOS</option>
+                                            <option value="OOT">OOT</option>
+                                            <option value="OOC">OOC</option>
+                                            <option value="Internal Audit">Internal Audit</option>
+                                            <option value="External Audit">External Audit</option>
+                                            <option value="Customer Complaint">Customer Complaint</option>
+                                            <option value="Regulatory Inspection">Regulatory Inspection</option>
+                                            <option value="Risk Assessment">Risk Assessment</option>
+                                            <option value="Others">Others</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Product Dropdown - Shows when Source = Product -->
+                                <div class="col-sm-6 create-source-dependent" id="createProductField"
+                                    style="display:none;">
+                                    <div class="form-group">
+                                        <label>Product</label>
+                                        <select class="select2 form-control newInvestigationInput createProductDrop"
+                                            name="product.id">
+                                            <option value="">--none--</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Complaint Dropdown - Shows when Source = Customer Complaint -->
+                                <div class="col-sm-6 create-source-dependent" id="createComplaintField"
+                                    style="display:none;">
+                                    <div class="form-group">
+                                        <label>Complaint</label>
+                                        <select class="select2 form-control newInvestigationInput createComplaintDrop"
+                                            name="complaint.id">
+                                            <option value="">--none--</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Deviation Dropdown - Shows when Source = Deviation -->
+                                <div class="col-sm-6 create-source-dependent" id="createDeviationField"
+                                    style="display:none;">
+                                    <div class="form-group">
+                                        <label>Deviation</label>
+                                        <select class="select2 form-control newInvestigationInput createDeviationDrop"
+                                            name="deviation.id">
+                                            <option value="">--none--</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Quality Event Dropdown - Shows when Source = OOS/OOT/OOC -->
+                                <div class="col-sm-6 create-source-dependent" id="createQualityEventField"
+                                    style="display:none;">
+                                    <div class="form-group">
+                                        <label>Quality Event</label>
+                                        <select class="select2 form-control newInvestigationInput createQualityEventDrop"
+                                            name="qualityEvent.id">
+                                            <option value="">--none--</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Name Field - Shows when Source = Process or Others or Audits/Inspection/Risk Assessment -->
+                                <div class="col-sm-6 create-source-dependent" id="createNameField"
+                                    style="display:none;">
+                                    <div class="form-group">
+                                        <label>Name</label>
+                                        <input type="text" class="form-control newInvestigationInput" name="name">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Due Date</label>
+                                        <input type="text" class="datepicker form-control newInvestigationInput"
+                                            name="dueDate" id="invoiceDate" autocomplete="off">
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label>Department</label>
+                                        <select class="form-control departmentDrop newInvestigationInput select2"
+                                            name="department.id" id="department">
+                                            <option value="">--none--</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label><strong>Description</strong></label>
+                                        <textarea class="form-control newInvestigationInput" name="description" rows="5" style="font-size: 15px; text-align: left; font-weight: 400;" placeholder="Enter Description..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- newInvestigationPanel.html     End -->
+
+
+<!-- uploadInvestigationFile.html       Start -->
+ <link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
+<!--<div class="row animated fadeInRight aasaanPanel" id="vendorUploadFilesPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5 id="uploadFileTitle">#</h5>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="lnItemObj" action="#" method="post" id="fileFormAction" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="fileinput fileinput-new input-group" data-provides="fileinput" style="margin-top: 24px;">
+                                <div class="form-control" data-trigger="fileinput" id="fileNameTextAction">
+                                    <i class="glyphicon glyphicon-file fileinput-exists"></i>
+                                    <span class="fileinput-filename"></span>
+                                </div>
+                                <span class="input-group-addon btn btn-default btn-file">
+                                    <span class="fileinput-new">Select File</span>
+                                    <span class="fileinput-exists">Change</span>
+                                    <input type="file" name="File" id="fileInputAction" accept="image/*">
+                                </span>
+                                <a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput">Remove</a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6"></div>
+                        <div class="col-sm-12">
+                            <button type="button" class="btn btn-white btn-sm close-box showRequestOnCancel" id="vendorUploadClosebtn"><i class="fa fa-times"></i> Cancel </button>
+                            <button type="button" class="btn btn-success btn-sm" id="processBtn"><i class="fa fa-upload"></i> Upload </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!-- uploadInvestigationFile.html       End -->
+
+
+
+
+<script>
+    // allInvestigation.js     Start
+var steps = ["New", "Phase 1A", "Phase 1B", "Phase 2", "Phase 3", "Closure"];
+window.filteredInvestigationList = []
+$(document).ready(function () {
+    $('#allInvestigationPanel').show();
+    $('#allInvestigationTable').empty();
+    // recordList.sort(function(a, b) {
+    //     return b.id - a.id; // desc order
+    // });
+    loadInvestigation();
+    JSUTIL.reinitializeDataTable();
+
+
+
+  var url = new URL(window.location.href);
+var id = url.searchParams.get('id');
+
+if (id) {
+    setTimeout(function () {
+        const table = $('.table').DataTable();
+
+        // Find row index containing the CAPA id
+        let rowIndex = -1;
+
+        table.rows().every(function (idx) {
+            const rowNode = this.node();
+            const btn = $(rowNode).find('.selectDeviationInvestigationBtn');
+
+            if (btn.attr('name') == id) {
+                rowIndex = idx;
+                return false; // break
+            }
+        });
+
+        if (rowIndex !== -1) {
+            const pageSize = table.page.len();
+            const pageNumber = Math.floor(rowIndex / pageSize);
+
+            // Move to correct page
+            table.page(pageNumber).draw(false);
+
+            // Trigger click AFTER page draw
+            setTimeout(() => {
+                $('.selectDeviationInvestigationBtn[name="' + id + '"]').trigger('click');
+            }, 200);
+        } else {
+            console.warn('CAPA id not found in table:', id);
+        }
+    }, 300);
+}
+    // ========== FILTER PANEL INTEGRATION ==========
+
+    // Open filter panel when "Add Filters" button is clicked
+    $('.addFilters').on('click', function () {
+        openFilterPanel();
+    });
+
+    // Close filter panel
+    $('#closePanelBtn').on('click', function () {
+        closeFilterPanel();
+    });
+
+    // Close when clicking overlay
+    $('#filterPanelOverlay').on('click', function (e) {
+        if (e.target === this) {
+            closeFilterPanel();
+        }
+    });
+
+    // Add condition functionality
+    $('#addConditionBtn').on('click', function () {
+        createConditionRow();
+    });
+
+    // Initialize field options
+    JSUTIL.callAJAXPost('/data/Investigation/list', JSON.stringify({ "fields": "" }), function (res) {
+        const keys = Object.keys(res[0]);
+
+        function toCamelCase(str) {
+            return str.charAt(0).toLowerCase() + str.slice(1);
+        }
+
+        const uniqueKeys = [...new Set(keys.map(k => toCamelCase(k)))];
+
+        console.log(uniqueKeys);
+        window.fieldInput = '<select class="form-control select2"><option val="">--none--</option>';
+        var orderfieldinputs = '<option val="">--none--</option>';
+        $.each(uniqueKeys, function (i, val) {
+            window.fieldInput += `<option val="${uniqueKeys[i]}">${uniqueKeys[i]}</option>`;
+            orderfieldinputs += `<option val="${uniqueKeys[i]}">${uniqueKeys[i]}</option>`;
+        });
+        window.fieldInput += '</select>';
+        $('#orderField').empty();
+        $('#orderField').append(orderfieldinputs);
+        createConditionRow();
+    });
+
+    // Save filter
+    $('#saveBtn').on('click', function () {
+        var obj = buildFilterJSON();
+        var id = $(this).data('editId');
+        var arr = [];
+        obj["objectName"] = "Investigation";
+        console.log('final payload', obj);
+        if (id) {
+            obj["id"] = Number(id);
+        }
+        arr.push(obj);
+        console.log('final payload', arr);
+        JSUTIL.callAJAXPost('/data/RecordView/upsert_multiple', JSON.stringify(arr), function (res) {
+            console.log('res', res);
+            JSUTIL.callAJAXPost('/data/RecordView/list', JSON.stringify({
+                "fields": "Name;DataConditions;DataLogic;DataOrder;ObjectName",
+                "conditions": [`ObjectName='Investigation'`],
+                "logic": "{0}"
+            }), function (res) {
+                console.log('resss', res);
+                closeFilterPanel();
+                loadFilters(res);
+            });
+        });
+    });
+
+    // Reset filter
+    $('#resetBtn').on('click', function () {
+        $('#filterName').val('');
+        $('#orderField').val('').trigger('change');
+        $('#orderDirection').val('').trigger('change');
+        $('#conditionsContainer').empty();
+        createConditionRow();
+    });
+
+    // Load existing filters
+    JSUTIL.callAJAXPost('/data/RecordView/list', JSON.stringify({
+        "fields": "Name;DataConditions;DataLogic;DataOrder;ObjectName",
+        "conditions": [`ObjectName='Investigation'`],
+        "logic": "{0}"
+    }), loadFilters);
+
+    // Filter dropdown change
+    $('.filteroptions').on('change', function () {
+        console.log('changed', $(this).val());
+        if ($(this).val()) {
+            $('.editFilters').show();
+            $('.applyFilters').show();
+        } else {
+            $('.editFilters').hide();
+            $('.applyFilters').hide();
+            // Clear filter - show all records
+            renderRecordTable(window.filteredInvestigationList);
+        }
+    });
+
+    // Apply Filter Button
+    $('.applyFilters').on('click', function () {
+        const selectedFilterId = $('.filteroptions').val();
+        if (!selectedFilterId) {
+            JSUTIL.buildErrorModal('Please select a filter first');
+            return;
+        }
+
+        const selectedFilter = window.filters.find(f => f.id == selectedFilterId);
+        if (!selectedFilter) {
+            JSUTIL.buildErrorModal('Filter not found');
+            return;
+        }
+
+        console.log('Applying filter:', selectedFilter);
+
+
+        const filteredRecords = applyFilter(window.filteredInvestigationList, selectedFilter);
+        console.log(filteredRecords);
+        // Re-render the table with filtered records
+        renderRecordTable(filteredRecords);
+    });
+
+    // Edit Filter Button
+    $('.editFilters').on('click', function () {
+        const selectedFilterId = $('.filteroptions').val();
+        if (!selectedFilterId) {
+            JSUTIL.buildErrorModal('Please select a filter first');
+            return;
+        }
+
+        const selectedFilter = window.filters.find(f => f.id == selectedFilterId);
+        if (!selectedFilter) {
+            JSUTIL.buildErrorModal('Filter not found');
+            return;
+        }
+
+        populateFilterPanel(selectedFilter);
+        openFilterPanel();
+    });
+
+    // ========== END FILTER PANEL INTEGRATION ==========
+
+
+
+    $(document).on('click', '.historyBtn', function () {
+        var id = $(this).closest('td').data('id')
+        console.log('ids', id)
+        $('#allInvestigationPanel').hide()
+        $('#filterPanel').hide()
+        $('.historyPanel1').show()
+
+        JSUTIL.callAJAXPost('/data/ProcessActivity/list', JSON.stringify({ "fields": "Name;Notes;PerformedBy.id;StartDate;ParentRecordId", "conditions": [`ParentRecordId=${id}`], "logic": "{0}" }), function (res) {
+            console.log(res, 'history');
+            res = res.sort((a,b)=>a.id-b.id)
+            $('#allHistoryTable1').empty();
+            var innerHtml = '';
+            if (!res || res === 0) {
+                innerHtml = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
+            } else {
+                $.each(res, function (i, val) {
+                    innerHtml += '<tr>' +
+                        '<td>' + (val.name || '') + '</td>' +
+                        '<td>' + (JSUTIL.getDateTime(val.startDate) || '') + '</td>' +
+                        '<td>' + ((val.performedBy && val.performedBy.name) || '') + '</td>' +
+                        '<td>' + ((val.notes ? val.notes.replace(/"/g, '') : '') || '') + '</td>' +
+                        '</tr>';
+
+                });
+            }
+            $('#allHistoryTable1').html(innerHtml);
+        })
+    })
+    $(document).on('click', '.closeHistory1', function () {
+        $('#filterPanel').show()
+        $('#allInvestigationPanel').show()
+        $('.historyPanel1').hide()
+    })
+
+});
+
+var qe = ['OOS', 'OOT', 'OOC']
+
+
+function openFilterPanel() {
+    $('#filterPanelOverlay').addClass('active');
+    setTimeout(function () {
+        $('#filterPanelSlider').addClass('open');
+    }, 10);
+}
+
+function closeFilterPanel() {
+    $('#filterPanelSlider').removeClass('open');
+    setTimeout(function () {
+        $('#filterPanelOverlay').removeClass('active');
+    }, 250);
+
+    // Clear edit mode when closing
+    $('#saveBtn').removeData('editId');
+    $('.editFilters').hide();
+    $('.applyFilters').hide();
+    $('.filteroptions').val('').trigger('change');
+    // Reset the filter form
+    $('#filterName').val('');
+    $('#orderField').val('').trigger('change');
+    $('#orderDirection').val('').trigger('change');
+    $('#conditionsContainer').empty();
+
+    // Reinitialize with one empty condition row
+    createConditionRow();
+}
+
+function populateFilterPanel(filter) {
+    // Reset the panel first
+    $('#filterName').val('');
+    $('#orderField').val('');
+    $('#orderDirection').val('');
+    $('#conditionsContainer').empty();
+
+    // Set filter name
+    $('#filterName').val(filter.name);
+
+    // Set the editId on save button
+    $('#saveBtn').data('editId', filter.id);
+
+    // Parse and populate conditions
+    if (filter.dataConditions) {
+        const conditions = filter.dataConditions.split(';').filter(c => c.trim());
+        const logics = [];
+
+        // Parse logic string to extract operators
+        if (filter.dataLogic) {
+            const logicMatches = filter.dataLogic.match(/AND|OR/g);
+            if (logicMatches) {
+                logics.push(...logicMatches);
+            }
+        }
+
+        conditions.forEach((condStr, index) => {
+            createConditionRow();
+            const row = $('#conditionsContainer .condition-row').last();
+
+            // Parse condition: field operator 'value'
+            const operators = ['==', '!=', '>=', '<=', '>', '<'];
+            let foundOperator = null;
+            let field = '';
+            let value = '';
+
+            for (let op of operators) {
+                if (condStr.includes(op)) {
+                    const parts = condStr.split(op);
+                    if (parts.length === 2) {
+                        foundOperator = op;
+                        field = parts[0].trim();
+                        value = parts[1].trim().replace(/^'|'$/g, '');
+                        break;
+                    }
+                }
+            }
+
+            // Set field
+            row.find('select.select2').val(field).trigger('change');
+
+            // Set operator
+            row.find('.operator-select').val(foundOperator);
+
+            // Set value
+            row.find('.value-input').val(value);
+
+            // Set logic for rows after first
+            if (index > 0 && logics[index - 1]) {
+                row.find('.logic-op').val(logics[index - 1]);
+            }
+        });
+    }
+
+    // Parse and set order
+    if (filter.dataOrder && filter.dataOrder !== 'number DESC') {
+        const parts = filter.dataOrder.split(' ');
+        if (parts.length === 2) {
+            $('#orderField').val(parts[0]);
+            $('#orderDirection').val(parts[1]);
+        }
+    }
+}
+
+function loadFilters(res) {
+    console.log('res', res);
+    window.filters = res;
+    $('.filteroptions').empty();
+    var innerHtml = '<option value="">--none--</option>';
+    $.each(res, function (i, val) {
+        innerHtml += `<option value="${val.id}">${val.name}</option>`;
+    });
+    $('.filteroptions').append(innerHtml);
+}
+
+function applyFilter(records, filter) {
+    // Parse conditions
+    const conditionStrings = filter.dataConditions.split(';').filter(c => c.trim());
+    const logic = filter.dataLogic || '{0}';
+
+    // Filter records based on conditions
+    const filteredRecords = records.filter(record => {
+        // Evaluate each condition
+        const conditionResults = conditionStrings.map(condStr => {
+            return evaluateCondition(record, condStr);
+        });
+
+        // Apply logic (AND/OR)
+        return evaluateLogic(conditionResults, logic);
+    });
+    console.log('filter', filter);
+
+    // Apply sorting if dataOrder exists
+    if (filter.dataOrder && filter.dataOrder !== 'number DESC') {
+        console.log('aa', filter.dataOrder);
+        const [field, direction] = filter.dataOrder.split(' ');
+        return sortRecords(filteredRecords, field, direction);
+    }
+
+    return filteredRecords;
+}
+
+function evaluateCondition(record, conditionStr) {
+    // Parse condition: field operator 'value'
+    const operators = ['==', '!=', '>=', '<=', '>', '<'];
+    let operator = null;
+    let field = null;
+    let value = null;
+
+    for (let op of operators) {
+        if (conditionStr.includes(op)) {
+            const parts = conditionStr.split(op);
+            if (parts.length === 2) {
+                operator = op;
+                field = parts[0].trim();
+                value = parts[1].trim().replace(/^'|'$/g, ''); // Remove quotes
+                break;
+            }
+        }
+    }
+
+    if (!operator || !field) {
+        return true; // Invalid condition, skip
+    }
+
+    // Get record value (handle camelCase and PascalCase)
+    let recordValue = record[field];
+    if (recordValue === undefined) {
+        // Try converting field to different case
+        const fieldLower = field.toLowerCase();
+        const matchingKey = Object.keys(record).find(k => k.toLowerCase() === fieldLower);
+        recordValue = matchingKey ? record[matchingKey] : '';
+    }
+
+    // Handle nested objects (like department.name)
+    if (recordValue && typeof recordValue === 'object' && recordValue.name) {
+        recordValue = recordValue.name;
+    }
+
+    // Convert to string for comparison
+    recordValue = String(recordValue || '').trim();
+    value = String(value).trim();
+
+    // Perform comparison
+    switch (operator) {
+        case '==':
+            return recordValue.toLowerCase() === value.toLowerCase();
+        case '!=':
+            return recordValue.toLowerCase() !== value.toLowerCase();
+        case '>':
+            return parseFloat(recordValue) > parseFloat(value);
+        case '>=':
+            return parseFloat(recordValue) >= parseFloat(value);
+        case '<':
+            return parseFloat(recordValue) < parseFloat(value);
+        case '<=':
+            return parseFloat(recordValue) <= parseFloat(value);
+        default:
+            return true;
+    }
+}
+
+function evaluateLogic(results, logic) {
+    if (results.length === 0) return true;
+    if (results.length === 1) return results[0];
+
+    // Replace {0}, {1}, etc. with actual boolean values
+    let expression = logic;
+    results.forEach((result, index) => {
+        expression = expression.replace(new RegExp(`\\{${index}\\}`, 'g'), result);
+    });
+
+    // Evaluate the expression
+    // Simple evaluation: process AND/OR from left to right
+    const tokens = expression.split(/\s+(AND|OR)\s+/);
+    let result = tokens[0] === 'true';
+
+    for (let i = 1; i < tokens.length; i += 2) {
+        const operator = tokens[i];
+        const nextValue = tokens[i + 1] === 'true';
+
+        if (operator === 'AND') {
+            result = result && nextValue;
+        } else if (operator === 'OR') {
+            result = result || nextValue;
+        }
+    }
+
+    return result;
+}
+
+function sortRecords(records, field, direction) {
+    const sorted = [...records].sort((a, b) => {
+        let aVal = a[field];
+        let bVal = b[field];
+
+        // Handle case-insensitive field names
+        if (aVal === undefined) {
+            const fieldLower = field.toLowerCase();
+            const matchingKey = Object.keys(a).find(k => k.toLowerCase() === fieldLower);
+            aVal = matchingKey ? a[matchingKey] : '';
+        }
+        if (bVal === undefined) {
+            const fieldLower = field.toLowerCase();
+            const matchingKey = Object.keys(b).find(k => k.toLowerCase() === fieldLower);
+            bVal = matchingKey ? b[matchingKey] : '';
+        }
+
+        // Handle nested objects
+        if (aVal && typeof aVal === 'object' && aVal.name) {
+            aVal = aVal.name;
+        }
+        if (bVal && typeof bVal === 'object' && bVal.name) {
+            bVal = bVal.name;
+        }
+
+        // Try numeric comparison first
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+            return direction === 'ASC' ? aNum - bNum : bNum - aNum;
+        }
+
+        // String comparison
+        const aStr = String(aVal || '').toLowerCase();
+        const bStr = String(bVal || '').toLowerCase();
+
+        if (direction === 'ASC') {
+            return aStr.localeCompare(bStr);
+        } else {
+            return bStr.localeCompare(aStr);
+        }
+    });
+
+    return sorted;
+}
+
+function renderRecordTable(records) {
+    // Destroy existing DataTable before updating content
+  const $table = $('.dataTables');
+
+    // ✅ Destroy ONLY via DataTables API
+    // if ($.fn.DataTable.isDataTable($table)) {
+    //     $table.DataTable().clear().destroy(true);
+    // }
+
+    const $tbody = $('#allInvestigationTable');
+    $tbody.empty();
+
+
+    var innerHtml = '';
+    $.each(records, function (i, val) {
+
+        var recordId = val.id != null ? val.id : val.Id;
+        // var linkClass = steps.includes(val.processStatus) ? 'selectInvestigationBtn' : 'selectDeviationInvestigationBtn';
+        var linkClass = qe.includes(val.source) ? 'selectInvestigationBtn' : 'selectDeviationInvestigationBtn'
+        innerHtml += '<tr>' +
+            '<td><a href="javascript:void(0);" class="' + linkClass + '" name="' + recordId + '">' + (val.number || '') + '</a></td>' +
+            '<td>' + (JSUTIL.getDate(val.startDate) || '') + '</td>' +
+            '<td>' + (JSUTIL.getDate(val.dueDate) || '') + '</td>' +
+            '<td>' + (val.source || '') + '</td><td>';
+        innerHtml += '<span class="label" style="margin-left: 10px;">' + val.processStatus + '</span>';
+        innerHtml += '</td><td style="display:flex;gap:10px;" data-id="' + val.id + '">' +
+            // '<button class="btn btn-sm reportBtn"><i class="fa fa-bar-chart-o"></i></button>' +
+            '<button class="btn btn-sm btn-white historyBtn"><i class="fa-solid fa-scroll"></i></button>'
+
+        // if(val.processStatus == 'In-Process' || val.processStatus == 'New'){
+        //     innerHtml += '<span class="label" style="margin-left: 10px;">' + val.processStatus + '</span>';
+        // } 
+        // if(val.processStatus == 'Completed'){
+        //     innerHtml += '<span class="label label-success" style="margin-left: 10px;">' + val.processStatus + '</span>';
+        // }  
+        innerHtml += '</td></tr>';
+    });
+    $('#allInvestigationTable').empty();
+    $('#allInvestigationTable').append(innerHtml);
+
+    // Reinitialize DataTable with sorting disabled to preserve your custom order
+    // JSUTIL.reinitializeDataTable();
+
+
+}
+
+function createConditionRow() {
+    const row = $('<div class="condition-row" style="display:flex;margin-top:5px;"></div>');
+
+    // Logic (AND/OR) – first row shows "IF" instead
+    const logicCell = $('<div style="margin-top:5px;"></div>');
+    if ($('#conditionsContainer').children().length === 0) {
+        logicCell.html('<div class="logic-label"></div>');
+    } else {
+        const select = $('<select class="logic-select logic-op form-control" style="width:30%"></select>');
+        select.append('<option value="AND">AND</option>');
+        select.append('<option value="OR">OR</option>');
+        logicCell.append(select);
+    }
+
+    // Operator
+    const operatorSelect = $('<select class="operator-select form-control" style="margin-right:5px;margin-left:5px;"></select>');
+    const operators = [
+        { value: "==", label: "=" },
+        { value: "!=", label: "!=" },
+        { value: ">", label: ">" },
+        { value: ">=", label: ">=" },
+        { value: "<", label: "<" },
+        { value: "<=", label: "<=" }
+    ];
+    $.each(operators, function (i, op) {
+        operatorSelect.append(`<option value="${op.value}">${op.label}</option>`);
+    });
+
+    // Value
+    const valueInput = $('<input type="text" placeholder="Value" class="value-input form-control">');
+
+    // Remove button
+    const removeBtn = $('<button type="button" class="remove-condition-btn btn btn-sm">&times;</button>');
+    removeBtn.on('click', function () {
+        row.remove();
+        // Update first row to show "IF"
+        const rows = $('#conditionsContainer .condition-row');
+        rows.each(function (idx) {
+            const logicCell = $(this).children().first();
+            logicCell.empty();
+            if (idx === 0) {
+                logicCell.html('<div class="logic-label">IF</div>');
+            } else {
+                const select = $('<select class="logic-select logic-op form-control"></select>');
+                select.append('<option value="AND">AND</option>');
+                select.append('<option value="OR">OR</option>');
+                logicCell.append(select);
+            }
+        });
+    });
+
+    $('#conditionsContainer').append(logicCell);
+    row.append(window.fieldInput);
+    row.append(operatorSelect);
+    row.append(valueInput);
+
+    $('#conditionsContainer').append(row);
+}
+
+function buildFilterJSON() {
+    const name = $('#filterName').val().trim() || "";
+    const rows = $('#conditionsContainer .condition-row');
+    const conditionStrings = [];
+    const logics = [];
+
+    rows.each(function (index) {
+        const field = $(this).find('select.select2').val() || "";
+        const operator = $(this).find('.operator-select').val() || "";
+        const value = $(this).find('.value-input').val().trim() || "";
+        if (field && operator && value) {
+            conditionStrings.push(`${field}${operator}'${value}'`);
+        }
+        if (index > 0) {
+            const logicVal = $(this).find('.logic-op').val() || "AND";
+            logics.push(logicVal);
+        }
+    });
+
+    if (!name) {
+        JSUTIL.buildErrorModal('Please enter filter name');
+        return null;
+    }
+
+    const dataConditions = conditionStrings.join(";");
+
+    let dataLogic = "";
+    if (conditionStrings.length > 0) {
+        dataLogic = `{0}`;
+        for (let i = 1; i < conditionStrings.length; i++) {
+            const op = logics[i - 1] || "AND";
+            dataLogic += ` ${op} {${i}}`;
+        }
+    }
+
+    let orderField = document.getElementById("orderField").value;
+    let direction = document.getElementById("orderDirection").value;
+
+    let dataOrder = orderField && direction ? `${orderField} ${direction}` : "number DESC";
+
+    return { name, dataConditions, dataLogic, dataOrder };
+}
+
+
+
+
+
+function loadInvestigation() {
+    var innerHtml = '';
+    $.each(recordList, function (i, val) {
+        window.filteredInvestigationList.push(val)
+        var recordId = val.id != null ? val.id : val.Id;
+        // var linkClass = steps.includes(val.processStatus) ? 'selectInvestigationBtn' : 'selectDeviationInvestigationBtn';
+        var linkClass = qe.includes(val.source) ? 'selectInvestigationBtn' : 'selectDeviationInvestigationBtn'
+        innerHtml += '<tr>' +
+            '<td><a href="javascript:void(0);" class="' + linkClass + '" name="' + recordId + '">' + (val.number || '') + '</a></td>' +
+            '<td>' + (JSUTIL.getDate(val.startDate) || '') + '</td>' +
+            '<td>' + (JSUTIL.getDate(val.dueDate) || '') + '</td>' +
+            '<td>' + (val.source || '') + '</td><td>';
+        innerHtml += '<span class="label" style="margin-left: 10px;">' + val.processStatus + '</span>';
+        innerHtml += '</td><td style="display:flex;gap:10px;" data-id="' + val.id + '">' +
+            // '<button class="btn btn-sm reportBtn"><i class="fa fa-bar-chart-o"></i></button>' +
+            '<button class="btn btn-sm btn-white historyBtn"><i class="fa-solid fa-scroll"></i></button>'
+
+        // if(val.processStatus == 'In-Process' || val.processStatus == 'New'){
+        //     innerHtml += '<span class="label" style="margin-left: 10px;">' + val.processStatus + '</span>';
+        // } 
+        // if(val.processStatus == 'Completed'){
+        //     innerHtml += '<span class="label label-success" style="margin-left: 10px;">' + val.processStatus + '</span>';
+        // }  
+        innerHtml += '</td></tr>';
+    });
+    $('#allInvestigationTable').empty();
+    $('#allInvestigationTable').append(innerHtml);
+    var url = new URL(window.location.href); var id = url.searchParams.get('id'); if (id) { setTimeout(function () { var btn = $('#allInvestigationTable .selectInvestigationBtn[name="' + id + '"]'); console.log(btn); if (btn.length) { btn.trigger('click'); } else { console.warn("Button with id " + id + " not found."); } }, 200); }
+
+    // JSUTIL.reinitializeDataTable();
+}
+
+
+// allInvestigation.js      End
+
+
+
+// editDeviationInvestigationPanel.js       Start
+
+var investigationId = null;
+var currentRecordEquipId = null;
+var currStatus = null;
+var dataflag = ''
+var workflowSteps2 = [];
+var workflowLoaded2 = false;
+var currentRecord
+$(document).ready(function () {
+    $('.redirectToSource').on('click', function () {
+        console.log($(this).data('link'))
+        JSUTIL.openInNewTab('/app' + $(this).data('link'))
+    })
+    $(".selectDeviationInvestigationBtn").on("click", function () {
+        $("#editDeviationInvestigationPanel").show();
+        $("#allInvestigationPanel").hide();
+        $('.linkrecordbtn,.linkrecord,.relrectype,.deleterecord').prop('disabled', true).prop('readonly', true)
+
+        investigationId = $(this).attr("name");
+        currentRecordEquipId = investigationId;
+
+        // Get the actual process status from the record
+        let actualProcessStatus = "Initiation";
+        $.each(recordList, function (i, val) {
+            if (Number(investigationId) === val.id) {
+                actualProcessStatus = val.processStatus || "Initiation";
+                console.log('val', val)
+                if (val.complaint && val.complaint.id) {
+                    $('#complaintField').show();
+                    $('.editRecordInput[name="Complaint.Id"]').val(val.complaint.id).trigger('change');
+                    $('.editRecordInput[name="Complaint.Id"]').parent().find('.select2-selection__rendered').text(val.complaint.number);
+                    $('.redirectToSource').data('link', '/qac/complaint?id=' + val.complaint.id)
+                } else if (val.deviation && val.deviation.id) {
+                    $('#deviationField').show();
+                    $('.editRecordInput[name="Deviation.Id"]').val(val.deviation.id).trigger('change');
+                    $('.editRecordInput[name="Deviation.Id"]').parent().find('.select2-selection__rendered').text(val.deviation.number);
+                    $('.redirectToSource').data('link', '/qac/deviation?id=' + val.deviation.id)
+                } else if (val.qualityEvent && val.qualityEvent.id) {
+                    $('#qualityEventField').show();
+                    if (val.qualityEvent.type == 'OOS') {
+                        $('.redirectToSource').data('link', '/qac/quality_events?id=' + val.qualityEvent.id)
+                    }
+                    else if (val.qualityEvent.type == 'OOT') {
+                        $('.redirectToSource').data('link', '/qac/quality_events_oot?id=' + val.qualityEvent.id)
+                    }
+                    
+                } 
+                else if (val.incident && val.incident.id) {
+                    $('#incidentField').show();
+                    $('.editRecordInput[name="Incident.Id"]').val(val.incident.id).trigger('change');
+                    $('.editRecordInput[name="Incident.Id"]').parent().find('.select2-selection__rendered').text(val.incident.number);
+                    $('.redirectToSource').data('link', '/qac/incidents?id=' + val.incident.id)
+
+                }
+            }
+        });
+
+        // Generate progress tracker when panel is shown
+        if (workflowLoaded2) {
+            generateProgressTracker2(workflowSteps2, actualProcessStatus);
+        }
+        loadInvestigationDetails2(investigationId);
+
+        // Load documents for this investigation
+        loadDocuments(investigationId);
+    });
+
+    const rootCauseCategoryParameter = { fields: "Name", conditions: [], logic: "" };
+    var rootCauseCategoryUrl = JSUTIL.getUrl("/data/RootCauseCategory/list");
+    JSUTIL.callAJAXPost(rootCauseCategoryUrl, JSON.stringify(rootCauseCategoryParameter), function (res) {
+        rootCauseCategoryDataLoaded = true;
+        callbackAfterGetRootCauseCategory2(res);
+    });
+
+    const typeParameter = { fields: "Name", conditions: [], logic: "" };
+    var typeUrl = JSUTIL.getUrl("/data/Employee/list");
+    JSUTIL.callAJAXPost(typeUrl, JSON.stringify(typeParameter), function (res) {
+        typeDataLoaded = true;
+        callbackAfterGetInvestigator2(res);
+    });
+
+    var postDocUrl3 = JSUTIL.getUrl('/process/steps?dataObjectName=Investigation');
+    JSUTIL.callAJAXGet(postDocUrl3, function (response) {
+        workflowSteps2 = response;
+        console.log('work flow ', workflowSteps2);
+        workflowLoaded2 = true;
+    });
+    $('.editdeviationBtn').on('click', function () {
+        $(this).hide()
+        $('.linkrecordbtn,.linkrecord,.relrectype,.deleterecord').prop('disabled', false).prop('readonly', false)
+        $('.editDeviationInvestigationInput').prop('disabled', false).prop('readonly', false)
+        $('#createNewInvestigationDeviationSaveBtn').show()
+    })
+        $('.extensionDueDateBtn').on('click', function () {
+
+
+        
+        const nextMonthDate = new Date(currentRecord.dueDate);
+        nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
+        console.log('Extension button clicked', currentRecordEquipId, currentRecord.dueDate, nextMonthDate);
+
+        $('#createExtensionRequestPanel').show();
+        $('#editDeviationInvestigationPanel').hide();
+
+        $('.createExtensionRequestPanel[name="type"]')
+            .val('Investigation')
+        $('.recordNumber').empty()
+        $('.recordNumber').append(currentRecord.number)
+        $('.createExtensionRequestId').val(currentRecordEquipId);
+
+        $('.createExtensionRequest[name="currentDueDate"]')
+            .val(JSUTIL.getDate(currentRecord.dueDate));
+        $('.createExtensionRequest[name="requestDate"]')
+            .val(JSUTIL.getDate(nextMonthDate));
+
+        $('.createExtensionRequestPanel[name="type"]').attr('disabled', true);
+    });
+    
+    $('.linkrecord').on('input', function () {
+        // console.log('link')
+        var query = $(this).val()
+        var $input = $(this)
+        if (!$('.relrectype').val()) {
+            JSUTIL.buildErrorModal('Please select Type of record first')
+            return
+        }
+        var type = $('.relrectype').val()
+        if (query.length > 5) {
+            JSUTIL.callAJAXGet('/search/generic?searchParam=' + query + '&dataObject=' + type + '&field=Number', function (res) {
+                console.log('abcddd', res)
+
+                // Remove existing dropdown if any
+                $('.capa-dropdown').remove()
+
+                if (res && res.length > 0) {
+                    // Create dropdown
+                    var $dropdown = $('<ul class="capa-dropdown list-group" style="position: absolute; z-index: 1000; max-height: 200px; overflow-y: auto; width: ' + $input.outerWidth() + 'px;"></ul>')
+
+                    res.forEach(function (item) {
+                        var $item = $('<li class="list-group-item" style="cursor: pointer;" data-capa-id="' + item.id + '">' + item.number + '</li>')
+                        $dropdown.append($item)
+                    })
+
+                    // Position dropdown below input
+                    $input.parent().css('position', 'relative')
+                    $input.after($dropdown)
+
+                    // Handle item selection
+                    $('.capa-dropdown li').on('click', function () {
+                        var selectedText = $(this).text()
+                        var selectedId = $(this).data('capa-id')
+                        $input.val(selectedText)
+                        $input.data('selected-capa-id', selectedId)
+                        $('.capa-dropdown').remove()
+                    })
+                }
+            })
+        } else {
+            // Remove dropdown if input length <= 6
+            $('.capa-dropdown').remove()
+        }
+    })
+    $('.linkrecordbtn').on('click', function () {
+
+        var recordType = $('.relrectype').val();
+        var recordNumber = $('.linkrecord').val();
+        var recordId = $('.linkrecord').data('selected-capa-id');
+
+        if (!recordType) {
+            JSUTIL.buildErrorModal('Please select Record Type');
+            return;
+        }
+
+        if (!recordNumber || !recordId) {
+            JSUTIL.buildErrorModal('Please search and select a valid record');
+            return;
+        }
+
+        // Prevent duplicate entry
+        var isDuplicate = false;
+        $('.recordtablebody tr').each(function () {
+            if ($(this).data('record-id') == recordId &&
+                $(this).data('record-type') == recordType) {
+                isDuplicate = true;
+            }
+        });
+
+        if (isDuplicate) {
+            JSUTIL.buildErrorModal('This record is already linked');
+            return;
+        }
+
+        // Build record link (adjust URL if needed)
+        var recordUrl = '/view/' + recordType + '/' + recordId;
+
+        var row = `
+<tr data-record-id="${recordId}"
+    data-record-type="${recordType}"
+    data-record-number="${recordNumber}">
+    <td class="text-center">
+        <button type="button" class="btn btn-danger btn-xs deleterecord">
+            <i class="fa fa-trash"></i>
+        </button>
+    </td>
+    <td>${recordType}</td>
+    <td>
+        <a href="${recordUrl}" target="_blank">${recordNumber}</a>
+    </td>
+</tr>`;
+
+
+        $('.recordtablebody').append(row);
+
+        // Clear input after linking
+        $('.linkrecord').val('').removeData('selected-capa-id');
+        $('.relrectype').val('').trigger('change.select2')
+    });
+
+    $(document).on('click', '.deleterecord', function () {
+        $(this).closest('tr').remove();
+    });
+
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.linkrecord, .capa-dropdown').length) {
+            $('.capa-dropdown').remove()
+        }
+    })
+    $(document).on('click', '.openrecord', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const url = $(this).data('link') +
+            $(this).closest('tr').data('record-id');
+
+        JSUTIL.openInNewTab(url);
+    });
+});
+
+
+$("#createNewInvestigationDeviationSaveBtn").on("click", function () {
+    var investigationObj = {
+        originator: { id: Number(employeeId) },
+        assignedTo: { id: Number($('.editDeviationInvestigationInput[name="assignedTo.id"]').val()) },
+        description: $('.editDeviationInvestigationInput[name="description"]').val(),
+        investigationReport: $('.editDeviationInvestigationInput[name="investigationReport"]').val(),
+        impactAnalysis: $('.editDeviationInvestigationInput[name="impactAnalysis"]').val(),
+        subject: $('.editDeviationInvestigationInput[name="subject"]').val(),
+        rcaData: $('.editDeviationInvestigationInput[name="rcaData"]').val(),
+        dueDate: toUtcEdit($('.editDeviationInvestigationInput[name="dueDate"]').val())
+    };
+    console.log(investigationObj, 'investigation');
+    var relatedRecords = [];
+
+        $('.recordtablebody tr').each(function () {
+            relatedRecords.push({
+                id: Number($(this).data('record-id')),
+                type: $(this).data('record-type'),
+                number: $(this).data('record-number')
+            });
+        });
+
+        investigationObj.rcaData = JSON.stringify(relatedRecords);
+
+    JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+        console.log(response);
+        var obj = {
+            name: "Investigation Record updated",
+            startDate: new Date(),
+            performedBy: { id: Number(employeeId) },
+            parentRecordId: currentRecordEquipId
+        }
+        JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+            console.log('res', res)
+            location.reload()
+        })
+    });
+
+});
+
+$('.viewHistory2').on('click', function () {
+    console.log('history clicked')
+    $('.historyPanel2').show()
+    $(".allDeviationInvestigationFields").hide();
+
+    // Fetch history data when View History is clicked
+    var obj = {
+        "fields": "ParentRecordId;StartDate;Name;Notes;PerformedBy.Id;PerformedBy.Name;Type;",
+        "conditions": [`ParentRecordId=${currentRecordEquipId}`],
+        "logic": "{0}"
+    };
+    var postHistoryUrl = '/data/ProcessActivity/list';
+    JSUTIL.callAJAXPost(postHistoryUrl, JSON.stringify(obj), callbackAfterGetReportHistory2);
+})
+function toUtcEdit(dateStr) {
+    if (!dateStr || dateStr.trim() === '') {
+        return null;
+    }
+
+    let day, month, year;
+
+    // Handle DD/MM/YYYY
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        year = parseInt(parts[2], 10);
+    }
+    // Handle YYYY-MM-DD
+    else if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        day = parseInt(parts[2], 10);
+    } else {
+        console.error('Invalid date format:', dateStr);
+        return null;
+    }
+
+    if (isNaN(day) || isNaN(month) || isNaN(year)) {
+        console.error('Invalid date components:', { day, month, year });
+        return null;
+    }
+
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+
+    if (isNaN(utcDate.getTime())) {
+        console.error('Invalid date created:', dateStr);
+        return null;
+    }
+
+    const pad = (n) => String(n).padStart(2, '0');
+
+    return (
+        utcDate.getUTCFullYear() +
+        '-' + pad(utcDate.getUTCMonth() + 1) +
+        '-' + pad(utcDate.getUTCDate()) +
+        'T' + pad(utcDate.getUTCHours()) +
+        ':' + pad(utcDate.getUTCMinutes()) +
+        ':' + pad(utcDate.getUTCSeconds()) +
+        'Z'
+    );
+}
+function callbackAfterGetReportHistory2(objList) {
+    console.log(objList, 'history');
+    $('#allHistoryTable2').empty();
+    var innerHtml = '';
+    if (!objList || objList.length === 0) {
+        innerHtml = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
+    } else {
+        objList = objList.sort((a, b) => a.startDate - b.startDate)
+        $.each(objList, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td>' + (val.name || '') + '</td>' +
+                '<td>' + (JSUTIL.getDateTime(val.startDate) || '') + '</td>' +
+                '<td>' + ((val.performedBy && val.performedBy.name) || '') + '</td>' +
+                '<td>' + ((val.notes ? val.notes.replace(/"/g, '') : '') || '') + '</td>' +
+                '</tr>';
+
+            // Check if this history item matches the step status we're looking for
+            if (val.type == 'Originator Review') {
+                $('.editOriginatorReviewInput[name="comments"]').val(val.notes)
+            }
+            else if (val.type == 'QA Review') {
+                $('.editQaReviewInput[name="qaComments"]').val(val.notes)
+            }
+        });
+    }
+    $('#allHistoryTable2').html(innerHtml);
+}
+function populateRelatedRecords(relatedRecordJson) {
+
+    if (!relatedRecordJson) return;
+
+    let records = [];
+
+    try {
+        records = JSON.parse(relatedRecordJson);
+    } catch (e) {
+        console.error('Invalid relatedRecord JSON', e);
+        return;
+    }
+
+    $('.recordtablebody').empty();
+
+    records.forEach(function (rec) {
+        var url
+        if (rec.type == 'Capa') {
+            url = '/app/qac/qmsCapa?id='
+        }
+        else if (rec.type == 'ChangeRequest') {
+            url = '/app/qac/change_request2?id='
+        }
+        else if (rec.type == 'Complaint') {
+            url = '/app/qac/complaint?id='
+        }
+        else if (rec.type == 'Deviation') {
+            url = '/app/qac/deviation?id='
+        }
+        else if (rec.type == 'Investigation') {
+            url = '/app/qac/investigation?id='
+        }
+        else if (rec.type == 'Incident') {
+            url = '/app/qac/incident?id='
+        }
+        else if (rec.type.includes('QualityEvent')) {
+            if (rec.type.includes('OOS')) {
+                url = '/app/qac/quality_events?id='
+            }
+            else if (rec.type.includes('OOT')) {
+                url = '/app/qac/quality_events_oot?id='
+            }
+        }
+
+        var row = `
+        <tr data-record-id="${rec.id}"
+            data-record-type="${rec.type}"
+            data-record-number="${rec.number}">
+            <td class="text-center">
+                <button type="button" class="btn btn-danger btn-xs deleterecord" disabled>
+                    <i class="fa fa-trash"></i>
+                </button>
+            </td>
+            <td>${rec.type}</td>
+            <td>
+                <button data-link="${url}" class="openrecord btn-sm btn">${rec.number}</button>
+            </td>
+        </tr>`;
+
+        $('.recordtablebody').append(row);
+    });
+}
+function loadInvestigationDetails2(investigationId) {
+
+    $.each(recordList, function (i, val) {
+        if (Number(investigationId) === val.id) {
+            currentRecord = val
+            currentProcessStatus = val.processStatus;
+            var obj = {
+                "fields": "ParentRecordId;StartDate;Name;Notes;PerformedBy.Id;PerformedBy.Name;Type;",
+                "conditions": [`ParentRecordId=${investigationId}`],
+                "logic": "{0}"
+            };
+            var postHistoryUrl = '/data/ProcessActivity/list';
+            JSUTIL.callAJAXPost(postHistoryUrl, JSON.stringify(obj), callbackAfterGetReportHistory2);
+
+            $('.editDeviationInvestigationInput2[name="originator.id"]').val(val.originator.name);
+            $(".editDeviationInvestigationInput1[name='startDate']").val(JSUTIL.getDate(val.startDate));
+            $(".editDeviationInvestigationInput[name='dueDate']").val(JSUTIL.getDate(val.dueDate));
+            $('.editDeviationInvestigationInput[name="assignedTo.id"]').val(val.assignedTo?.id).trigger("change.select2");
+            $('.editDeviationInvestigationInput[name="description"]').val(val.description);
+            $('.editDeviationInvestigationInput[name="subject"]').val(val.subject);
+            $('.editDeviationInvestigationInput[name="rcaData"]').val(val.rcaData);
+            $('.editDeviationInvestigationInput[name="investigationReport"]').val(val.investigationReport);
+            $('.editDeviationInvestigationInput[name="impactAnalysis"]').val(val.impactAnalysis);
+            $('.editRootCauseAnalysisInput[name="rootCauseCategory.id"]').val(val.rootCauseCategory?.id).trigger("change.select2");
+            $('.editRootCauseAnalysisInput[name="rootCauseAnalysis"]').val(val.rootCauseAnalysis);
+            $('.editRootCauseAnalysisInput[name="caProposed"]').val(val.caProposed);
+            $('.editRootCauseAnalysisInput[name="paProposed"]').val(val.paProposed);
+            populateRelatedRecords(val.rcaData)
+            if (val.complaint.id) {
+                $('.parentNumber').val(val.complaint.number)
+                $('.parentInfo').val(val.complaint.description)
+                $('.parentType').val('complaint').trigger('change.select2')
+            }
+            else if (val.deviation.id) {
+                $('.parentNumber').val(val.deviation.number)
+                $('.parentInfo').val(val.deviation.description)
+                $('.parentType').val('deviation').trigger('change.select2')
+                $('.rccinv').hide()
+            }
+            else if (val.incident.id) {
+                $('.parentNumber').val(val.incident.number)
+                $('.parentInfo').val(val.incident.description)
+                $('.parentType').val('incident').trigger('change.select2')
+            }
+            else {
+                $('.rccinv').show()
+            }
+
+            const now = new Date();
+            const dueDate = new Date(val.dueDate);
+            const sevenDaysFromNow = new Date();
+            sevenDaysFromNow.setDate(now.getDate() + 7);
+            console.log('dates', now, dueDate)
+            if (now > dueDate) {
+
+                $('.editdeviationBtn').hide()
+                $('#saveOriginatorReviewBtn').hide()
+                $('.editRootCauseAnalysisInput').prop('disabled', true).prop('readonly', true)
+
+                $("#createNewInvestigationDeviationSaveBtn").hide();
+                $('.editDeviationInvestigationInput').prop('disabled', true).prop('readonly', true)
+                $("#rootCauseAnalysisBtn").hide();
+                $('#currInvestigationId2').text(val.number + ' '+ val.processStatus);
+                $("#originatorReviewBtn").hide();
+                $("#qaReviewBtn").hide();
+                $('#qaReviewReturnBtn').hide()
+                $("#approveDeviationInvestigationBtn").hide();
+                $('#returnDeviationInvestigationBtn').hide()
+                $(".uploadDocument").show();
+                if (currentRecord.processStatus == 'New' || currentRecord.processStatus == 'Initiation') {
+                    $(".initiationFields").show();
+                    $(".rootCauseAnalysisFields").hide();
+                    $(".originatorReviewFields").hide();
+                    $(".qaReviewFields").hide();
+                }
+                else if (currentRecord.processStatus == 'Root Cause Analysis') {
+                    $(".initiationFields").hide();
+                    $(".rootCauseAnalysisFields").show();
+                    $(".originatorReviewFields").hide();
+                    $(".qaReviewFields").hide();
+                }
+                else if (currentRecord.processStatus == 'Originator Review') {
+                    $(".initiationFields").hide();
+                    $(".rootCauseAnalysisFields").hide();
+                    $(".originatorReviewFields").show();
+                    $(".qaReviewFields").hide();
+                }
+                else if (currentRecord.processStatus == 'QA Review') {
+                    $(".initiationFields").hide();
+                    $(".rootCauseAnalysisFields").hide();
+                    $(".originatorReviewFields").hide();
+                    $(".qaReviewFields").show();
+                }
+                else {
+                    $(".initiationFields").hide();
+                    $(".rootCauseAnalysisFields").hide();
+                    $(".originatorReviewFields").hide();
+                    $(".qaReviewFields").show();
+                }
+            }
+            else if (sevenDaysFromNow >= dueDate) {
+                loadStatusButtons()
+                if (val.processStatus == 'Initiation' || val.processStatus == 'New') {
+                    $('.extensionDueDateBtn').show()
+                }
+                else if (val.processStatus == 'Root Cause Analysis') {
+                    $('.extensionDueDateBtn').show()
+                }
+                else {
+                    $('.extensionDueDateBtn').hide()
+                }
+            }
+            else {
+                loadStatusButtons()
+            }
+
+            // $('.editDeviationInvestigationInput[name="description"]').val(val.description)
+            // $('.editDeviationInvestigationInput[name="dateOpened"]').val(val.startDate)
+            if (val.deviation) {
+                $('.editDeviationInvestigationInput[name="deviationNumber"]').val(val.deviation.number)
+            }
+            else if (val.complaint) {
+                $('.editDeviationInvestigationInput[name="deviationNumber"]').val(val.complaint.number)
+            }
+            else if (val.incident) {
+                $('.editDeviationInvestigationInput[name="deviationNumber"]').val(val.incident.number)
+            }
+        }
+    });
+
+};
+
+function loadStatusButtons() {
+    if (currentRecord.processStatus == 'Initiation' || currentRecord.processStatus == 'New') {
+        $(".initiationFields").show();
+        $(".rootCauseAnalysisFields").hide();
+        $(".originatorReviewFields").hide();
+        $(".qaReviewFields").hide();
+        $("#createNewInvestigationDeviationSaveBtn").hide();
+        $('.editdeviationBtn').show()
+        $('#saveOriginatorReviewBtn').hide()
+        $('.editDeviationInvestigationInput').prop('disabled', true).prop('readonly', true)
+        $("#rootCauseAnalysisBtn").show();
+        $('#currInvestigationId2').text(currentRecord.number + ' ' + currentRecord.processStatus);
+        $("#originatorReviewBtn").hide();
+        $('.editRootCauseAnalysisInput').prop('disabled', true).prop('readonly', true)
+        $("#qaReviewBtn").hide();
+        $('#qaReviewReturnBtn').hide()
+        $("#approveDeviationInvestigationBtn").hide();
+        $('#returnDeviationInvestigationBtn').hide()
+        $(".uploadDocument").show();
+    }
+    else if (currentRecord.processStatus == 'Root Cause Analysis') {
+        $(".initiationFields").hide();
+        $(".rootCauseAnalysisFields").show();
+        $(".originatorReviewFields").hide();
+        $(".qaReviewFields").hide();
+        $("#createNewInvestigationDeviationSaveBtn").hide();
+        $('.editdeviationBtn').hide()
+        $("#rootCauseAnalysisBtn").hide();
+        $('#currInvestigationId2').text(currentRecord.number + ' ' + currentRecord.processStatus);
+        $("#originatorReviewBtn").show();
+        $('#saveOriginatorReviewBtn').show()
+        $("#qaReviewBtn").hide();
+        $('#qaReviewReturnBtn').hide()
+        $('.editRootCauseAnalysisInput').prop('disabled', false).prop('readonly', false)
+        $('.editDeviationInvestigationInput').prop('disabled', true).prop('readonly', true)
+        $("#approveDeviationInvestigationBtn").hide();
+        $('#returnDeviationInvestigationBtn').hide()
+        $(".uploadDocument").show();
+    }
+    else if (currentRecord.processStatus == 'Originator Review') {
+        $(".initiationFields").hide();
+        $(".rootCauseAnalysisFields").hide();
+        $(".qaReviewFields").hide();
+        $('.editdeviationBtn').hide()
+        $(".originatorReviewFields").show();
+        $("#createNewInvestigationDeviationSaveBtn").hide();
+        $("#rootCauseAnalysisBtn").hide();
+        $('#currInvestigationId2').text(currentRecord.number + ' ' + currentRecord.processStatus);
+        $("#originatorReviewBtn").hide();
+        $('#saveOriginatorReviewBtn').hide()
+        $("#qaReviewBtn").show();
+        $('#qaReviewReturnBtn').show()
+        $('.editRootCauseAnalysisInput').prop('disabled', true).prop('readonly', true)
+        $('.editDeviationInvestigationInput').prop('disabled', true).prop('readonly', true)
+        $("#approveDeviationInvestigationBtn").hide();
+        $('#returnDeviationInvestigationBtn').hide()
+        $(".uploadDocument").show();
+    }
+    else if (currentRecord.processStatus == 'QA Review') {
+        $(".initiationFields").hide();
+        $(".rootCauseAnalysisFields").hide();
+        $(".qaReviewFields").show();
+        $('.editdeviationBtn').hide()
+        $(".originatorReviewFields").hide();
+        $("#createNewInvestigationDeviationSaveBtn").hide();
+        $("#rootCauseAnalysisBtn").hide();
+        $('#saveOriginatorReviewBtn').hide()
+        $('.editRootCauseAnalysisInput').prop('disabled', true).prop('readonly', true)
+        $('.editDeviationInvestigationInput').prop('disabled', true).prop('readonly', true)
+        $('#currInvestigationId2').text(currentRecord.number + ' ' + currentRecord.processStatus);
+        $("#originatorReviewBtn").hide();
+        $("#qaReviewBtn").hide();
+        $('#qaReviewReturnBtn').hide()
+        $("#approveDeviationInvestigationBtn").show();
+        $('#returnDeviationInvestigationBtn').show()
+        $(".uploadDocument").show();
+    }
+    else if (currentRecord.processStatus == 'Closed') {
+        $(".initiationFields").hide();
+        $(".rootCauseAnalysisFields").hide();
+        $(".qaReviewFields").show();
+        $('.editdeviationBtn').hide()
+        $('#saveOriginatorReviewBtn').hide()
+        $('.editRootCauseAnalysisInput').prop('disabled', true).prop('readonly', true)
+        $(".originatorReviewFields").hide();
+        $("#createNewInvestigationDeviationSaveBtn").hide();
+        $('.editDeviationInvestigationInput').prop('disabled', true).prop('readonly', true)
+        $("#rootCauseAnalysisBtn").hide();
+        $('#currInvestigationId2').text(currentRecord.number + ' ' + currentRecord.processStatus);
+        $("#originatorReviewBtn").hide();
+        $("#qaReviewBtn").hide();
+        $('#qaReviewReturnBtn').hide()
+        $("#approveDeviationInvestigationBtn").hide();
+        $('#returnDeviationInvestigationBtn').hide()
+        $(".uploadDocument").show();
+    }
+}
+function callbackAfterGetRootCauseCategory2(response) {
+    console.log(response);
+    var innerHtml2 = "";
+    $("#rootCauseCategory2").empty();
+    innerHtml2 += '<option value = "">--none---</option>';
+    if (response.length > 0) {
+        $.each(response, function (j, val2) {
+            innerHtml2 +=
+                '<option value = "' + val2.id + '">' + val2.name + "</option>";
+        });
+    }
+    $("#rootCauseCategory2").append(innerHtml2);
+}
+
+
+function callbackAfterGetInvestigator2(response) {
+    console.log(response);
+    var innerHtml2 = "";
+    $("#investigator2").empty();
+    innerHtml2 += '<option value = "">--none---</option>';
+    $.each(response, function (j, val2) {
+        innerHtml2 +=
+            '<option value = "' + val2.id + '">' + val2.name + "</option>";
+    });
+    $("#investigator2").append(innerHtml2);
+}
+
+
+
+$("#rootCauseAnalysisBtn").on("click", function () {
+    if (!$('#investigator2').val()) {
+        JSUTIL.buildErrorModal('Please Select Investigator')
+        return
+    }
+    $('#esignModal').modal('show')
+    $('#eSignUserName').val(employeeUsername)
+});
+
+
+
+function newStatus() {
+    var investigationObj = {
+        'processStatus': 'Root Cause Analysis'
+    }
+    
+    JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+        console.log(response);
+
+
+        // $.each(recordList, function (i, val) {
+        //     if (Number(investigationId) === val.id) {
+        //         val.processStatus = 'Root Cause Analysis';
+        //     }
+        // });
+
+        // currStatus = 'Root Cause Analysis';
+        // generateProgressTracker2(workflowSteps2, 'Root Cause Analysis');
+
+        var obj = {
+            name: "Status changed to Root Cause Analysis",
+            performedBy: { id: Number(employeeId) },
+            startDate: new Date(),
+            parentRecordId: Number(response.id)
+        }
+        console.log(obj, 'history payload')
+        JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+            console.log(res, 'after history edited')
+            location.reload();
+        })
+    });
+}
+function rcsinv() {
+    var investigationObj = {
+        processStatus: 'Originator Review',
+
+        rootCauseAnalysis: $('.editRootCauseAnalysisInput[name="rootCauseAnalysis"]').val(),
+        caProposed: $('.editRootCauseAnalysisInput[name="caProposed"]').val(),
+        paProposed: $('.editRootCauseAnalysisInput[name="paProposed"]').val(),
+    }
+
+    if (!currentRecord.deviation.id && $('#rootCauseCategory2').val()) {
+        investigationObj["rootCauseCategory"] = { id: Number($('#rootCauseCategory2').val()) }
+    }
+    JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+        console.log(response);
+
+
+        $.each(recordList, function (i, val) {
+            if (Number(investigationId) === val.id) {
+                val.processStatus = 'Originator Review';
+            }
+        });
+
+        currStatus = 'Originator Review';
+        generateProgressTracker2(workflowSteps2, 'Originator Review');
+
+        var obj = {
+            name: "Status changed to Originator Review",
+            performedBy: { id: Number(employeeId) },
+            startDate: new Date(),
+            parentRecordId: Number(response.id)
+        }
+        console.log(obj, 'history payload')
+        JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+            console.log(res, 'after history edited')
+            location.reload();
+        })
+    });
+}
+function originatorReview() {
+    if (dataflag == 'Approve') {
+        var investigationObj = {
+            'processStatus': 'QA Review'
+        }
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+            console.log(response, 'abcdddd');
+
+
+            $.each(recordList, function (i, val) {
+                if (Number(investigationId) === val.id) {
+                    val.processStatus = 'QA Review';
+                }
+            });
+
+            currStatus = 'QA Review';
+            generateProgressTracker2(workflowSteps2, 'QA Review');
+
+            var obj = {
+                name: "Status changed to QA Review",
+                performedBy: { id: Number(employeeId) },
+                startDate: new Date(),
+                parentRecordId: Number(response.id),
+                notes: $('.editOriginatorReviewInput[name="comments"]').val(),
+                type: currentProcessStatus
+            }
+            console.log(obj, 'history payload')
+            JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+                console.log(res, 'after history edited')
+                location.reload();
+            })
+        });
+    }
+    else if (dataflag == 'Return') {
+        var investigationObj = {
+            'processStatus': 'Root Cause Analysis'
+        }
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+            console.log(response, 'abcdddd');
+
+
+            var obj = {
+                name: "Originator Rejected",
+                performedBy: { id: Number(employeeId) },
+                startDate: new Date(),
+                parentRecordId: Number(response.id),
+                notes: $('.editOriginatorReviewInput[name="comments"]').val(),
+                type: currentProcessStatus
+            }
+            console.log(obj, 'history payload')
+            JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+                console.log(res, 'after history edited')
+                location.reload();
+            })
+        });
+    }
+}
+function qaApprove() {
+    if (dataflag == 'Approve') {
+
+        var investigationObj = {
+            'processStatus': 'Closed'
+        }
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+            console.log(response);
+
+
+            $.each(recordList, function (i, val) {
+                if (Number(investigationId) === val.id) {
+                    val.processStatus = 'Closed';
+                }
+            });
+
+            currStatus = 'Closed';
+            generateProgressTracker2(workflowSteps2, 'Closed');
+
+            var obj = {
+                name: "Status changed to Closed",
+                performedBy: { id: Number(employeeId) },
+                startDate: new Date(),
+                parentRecordId: Number(response.id),
+                notes: $(".editQaReviewInput[name='qaComments']").val(),
+                type: currentProcessStatus
+            }
+            console.log(obj, 'history payload')
+            JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+                console.log(res, 'after history edited')
+                location.reload();
+            })
+        });
+    }
+    else if (dataflag == 'Return') {
+        var investigationObj = {
+            'processStatus': 'QA Review'
+        }
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+            console.log(response);
+
+
+            var obj = {
+                name: "Status changed to QA Review",
+                performedBy: { id: Number(employeeId) },
+                startDate: new Date(),
+                parentRecordId: Number(response.id),
+                notes: $(".editQaReviewInput[name='qaComments']").val(),
+                type: currentProcessStatus
+            }
+            console.log(obj, 'history payload')
+            JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+                console.log(res, 'after history edited')
+                location.reload();
+            })
+        });
+    }
+}
+
+$("#saveOriginatorReviewBtn").on("click", function () {
+    var investigationObj = {
+        // processStatus: 'Originator Review',
+
+        rootCauseAnalysis: $('.editRootCauseAnalysisInput[name="rootCauseAnalysis"]').val(),
+        caProposed: $('.editRootCauseAnalysisInput[name="caProposed"]').val(),
+        paProposed: $('.editRootCauseAnalysisInput[name="paProposed"]').val(),
+    }
+    if (!currentRecord.deviation.id && $('#rootCauseCategory2').val()) {
+        investigationObj["rootCauseCategory"] = { id: Number($('#rootCauseCategory2').val()) }
+    }
+    JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/update/' + investigationId), JSON.stringify(investigationObj), function (response) {
+        console.log(response);
+
+
+        $.each(recordList, function (i, val) {
+            if (Number(investigationId) === val.id) {
+                val.processStatus = 'Originator Review';
+            }
+        });
+
+        currStatus = 'Originator Review';
+        generateProgressTracker2(workflowSteps2, 'Originator Review');
+
+        var obj = {
+            name: "Record updated in originator reivew",
+            performedBy: { id: Number(employeeId) },
+            startDate: new Date(),
+            parentRecordId: Number(response.id)
+        }
+        console.log(obj, 'history payload')
+        JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+            console.log(res, 'after history edited')
+            location.reload();
+        })
+    });
+});
+
+
+$("#originatorReviewBtn").on("click", function () {
+
+    if (!currentRecord.deviation.id) {
+        if (!$('#rootCauseCategory2').val()) {
+            JSUTIL.buildErrorModal('Please Select Root Cause Category')
+            return
+        }
+    }
+    $('#esignModal').modal('show')
+    $('#eSignUserName').val(employeeUsername)
+});
+
+$("#qaReviewBtn").on("click", function () {
+    if (!$('.editOriginatorReviewInput[name="comments"]').val()) {
+        JSUTIL.buildErrorModal('Please Enter Comments')
+        return
+    }
+    $('#esignModal').modal('show')
+    $('#eSignUserName').val(employeeUsername)
+    dataflag = 'Approve'
+});
+$("#qaReviewReturnBtn").on("click", function () {
+    if (!$('.editOriginatorReviewInput[name="comments"]').val()) {
+        JSUTIL.buildErrorModal('Please Enter Comments')
+        return
+    }
+    $('#esignModal').modal('show')
+    $('#eSignUserName').val(employeeUsername)
+    dataflag = 'Return'
+});
+
+$("#approveDeviationInvestigationBtn").on("click", function () {
+    if (!$(".editQaReviewInput[name='qaComments']").val()) {
+        JSUTIL.buildErrorModal('Please Enter Comments')
+        return
+    }
+
+    $('#esignModal').modal('show')
+    $('#eSignUserName').val(employeeUsername)
+    dataflag = 'Approve'
+});
+$("#returnDeviationInvestigationBtn").on("click", function () {
+    if (!$(".editQaReviewInput[name='qaComments']").val()) {
+        JSUTIL.buildErrorModal('Please Enter Comments')
+        return
+    }
+
+    $('#esignModal').modal('show')
+    $('#eSignUserName').val(employeeUsername)
+    dataflag = 'Return'
+});
+
+// Use delegated event binding for dynamically shown buttons
+$(document).on('click', '.uploadDocumentBtn', function () {
+
+    console.log('upload document clicked')
+    $('#foUploadFilesPanel').show();
+    $('#editDeviationInvestigationPanel').hide();
+    $('#allInvestigationPanel').hide();
+    // console.log('company settings ', companySettingMap)
+    var postUrl = JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + companySettingMap.investigation);
+    foUploadFile('Upload Documents - ', postUrl, callbackAfterDocumentUpload);
+});
+
+$('.showRequestOnCancel').on('click', function () {
+    $('#foUploadFilesPanel').hide();
+    $('#editDeviationInvestigationPanel').show();
+});
+
+function callbackAfterDocumentUpload(response) {
+    console.log('after upload', response)
+
+    var filename = $('#fileNameText').text()
+
+    $('#fileNameText').empty();
+    $('#fileInput').val('');
+    $('#foUploadFilesPanel').hide();
+    $('#editDeviationInvestigationPanel').show();
+    var obj = {
+        path: String((JSON.parse(response)).data),
+        url: String(currentRecordEquipId),
+        name: String(filename)
+    }
+    var docUploadUrl = JSUTIL.getUrl('/data/Document/create')
+    console.log(obj)
+    JSUTIL.callAJAXPost(docUploadUrl, JSON.stringify(obj), callbackAfterDocumentCreation);
+}
+function callbackAfterDocumentCreation(response) {
+    console.log('callback after doc creating', response);
+    var varCond = {
+        conditions: [`Url='${currentRecordEquipId}'`],
+        fields: "Path;Url;Name",
+        logic: "{0}"
+    };
+    console.log(varCond)
+    var postDocUrl = JSUTIL.getUrl('/data/Document/list');
+    JSUTIL.callAJAXPost(postDocUrl, JSON.stringify(varCond), callbackAfterGetDocuments);
+}
+
+// Function to load documents for current investigation
+function loadDocuments(recordId) {
+    var varCond = {
+        conditions: [`Url='${recordId}'`],
+        fields: "Path;Url;Name",
+        logic: "{0}"
+    };
+    var postDocUrl = JSUTIL.getUrl('/data/Document/list');
+    JSUTIL.callAJAXPost(postDocUrl, JSON.stringify(varCond), callbackAfterGetDocuments);
+}
+
+var documentId = '';
+var elementToDelete = null;
+function callbackAfterGetDocuments(objList) {
+    console.log('call back after get document ', objList, currentProcessStatus);
+    $('#allDocumentsTable2').empty();
+    var innerHtml = '';
+    if (!objList || objList.length === 0) {
+        innerHtml = '<tr><td colspan="2" class="text-center">No data available</td></tr>';
+    } else {
+        $.each(objList, function (i, val) {
+            innerHtml += '<tr><td style="width: 10%;">';
+            innerHtml += '<button type="button" class="btn btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '" ><i class="fa fa-trash"></i></button>';
+            innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.path + '" name="' + val.contentType + '" style="margin-left: 5px;"><i class="fa fa-eye"></i></button>' +
+                '</td>' +
+                '<td>' + (val.name || 'Name not provided') + '</td>' +
+                '</tr>';
+        });
+    }
+    $('#allDocumentsTable2').append(innerHtml);
+    $('.deleteDocumentBtn').on('click', function () {
+        documentId = $(this).attr('name');
+        console.log(documentId)
+        viewBtnId = $(this)
+            .closest('td')             // move up to the td
+            .find('.viewDocumentBtn')  // find the second button inside the same td
+            .attr('id');               // get its id
+
+        console.log("View button ID:", viewBtnId);
+        elementToDelete = $(this).parent().parent();
+        console.log('element to delete', elementToDelete)
+        MODALUTIL.deleteConfirmModal(deleteDocumentTrCallback);
+    });
+    $('.viewDocumentBtn').on('click', function () {
+        var documentPath = $(this).attr('id');
+        var getUrl = JSUTIL.getUrl('/onedrive/view/' + documentPath);
+        JSUTIL.callAJAXGet(getUrl, getDocumentViewCallback);
+    });
+}
+
+function getDocumentViewCallback(response) {
+    console.log(response);
+    window.open(response.data, '_blank');
+}
+
+function deleteDocumentTrCallback() {
+
+    var oneDriveUrl = JSUTIL.getUrl('/onedrive/delete_file/' + viewBtnId);
+    JSUTIL.callAJAXGet(oneDriveUrl, function (resp) {
+        console.log("OneDrive delete response:", resp);
+    });
+    var postUrl = JSUTIL.getUrl('/data/Document/delete?id=' + documentId);
+    JSUTIL.callAJAXGet(postUrl, afterDeleteTrHandle);
+
+}
+function afterDeleteTrHandle(data) {
+    elementToDelete.remove();
+    //$('#fileNameText').empty();
+    console.log('after delete ', data)
+    $('#fileInput').val('');
+    $('#foUploadFilesPanel').hide();
+    $('#editDeviationInvestigationPanel').show();
+    var varCond = {
+        conditions: [`Url='${currentRecordEquipId}'`],
+        fields: "Path;Url;Name",
+        logic: "{0}"
+    };
+    console.log(varCond)
+    var postDocUrl = JSUTIL.getUrl('/data/Document/list');
+    console.log(postDocUrl);
+    JSUTIL.callAJAXPost(postDocUrl, JSON.stringify(varCond), callbackAfterGetDocuments);
+}
+
+
+function generateProgressTracker2(workflowSteps2, currentStatus) {
+    const stepsContainer = $('#process-steps2');
+    stepsContainer.empty();
+
+    // Define investigation steps
+    var investigationSteps = ["Initiation", "Root Cause Analysis", "Originator Review", "QA Review", "Closed"];
+
+    // Normalize currentStatus
+    let actualCurrentStatus = currentStatus;
+    if (currentStatus == 'Closed') {
+        actualCurrentStatus = 'Closed';
+    }
+    if (currentStatus == 'QAU Approved') {
+        actualCurrentStatus = 'QA Approved';
+    }
+    if (currentStatus == 'New') {
+        actualCurrentStatus = 'Initiation'
+    }
+    // Check if currentStatus belongs to investigationSteps
+    if (!investigationSteps.includes(actualCurrentStatus)) {
+        console.log('Current status not in investigation steps:', actualCurrentStatus);
+        return; // Don't create progress bar if status is not in investigationSteps
+    }
+
+    // Filter workflowSteps2 to only include steps that are in investigationSteps
+    var filteredSteps = workflowSteps2.filter(function (step) {
+        return investigationSteps.includes(step.StepStatus);
+    });
+
+    // If no valid steps found, don't create progress bar
+    if (filteredSteps.length === 0) {
+        console.log('No valid investigation steps found in workflow');
+        return;
+    }
+
+    filteredSteps.sort((a, b) => a.Sequence - b.Sequence);
+    const totalSteps = filteredSteps.length;
+    var steps = [];
+
+    filteredSteps.forEach((step, index) => {
+        const stepElement = $(`
+            <div class="step2">
+                <div class="step-circle2">${index + 1}</div>
+                <div class="step-label2"><a href="javascript:void(0);" class="selectWorkFlowBtn2" name='${step.id}'>${step.StepStatus}</a></div>
+            </div>
+        `);
+        steps.push(step.StepStatus.toLowerCase());
+        stepsContainer.append(stepElement);
+    });
+
+    let stepsToComplete = [];
+    let specialCurrent = null;
+
+    // Check if actualCurrentStatus exists in filtered workflow steps
+    if (steps.includes(actualCurrentStatus.toLowerCase())) {
+        for (let val of filteredSteps) {
+            stepsToComplete.push(val.StepStatus.toLowerCase());
+            if (val.StepStatus == actualCurrentStatus) {
+                specialCurrent = val.StepStatus.toLowerCase();
+                break;
+            }
+        }
+    }
+
+    let lastCompletedIndex = 0;
+    $('.step2').each(function (i) {
+        const stepText = $(this).find('.step-label2').text().toLowerCase();
+        if (stepsToComplete.includes(stepText)) {
+            $(this).addClass('completed');
+            lastCompletedIndex = i + 1;
+        }
+        if (stepText === specialCurrent) {
+            $(this).removeClass('completed').addClass('current');
+            lastCompletedIndex = i + 1;
+        }
+    });
+
+    let progressPercent = 0;
+    if (lastCompletedIndex > 0) {
+        const trackWidthPercent = 100 - (100 / 5); // Same as CSS: 100% - 100%/4
+        progressPercent = ((lastCompletedIndex - 1) / (totalSteps - 1)) * trackWidthPercent;
+    }
+    $('.progress-bar2').css('width', `${progressPercent}%`);
+}
+
+
+var stepStatusForHistory = '';
+$(document).on('click', '.selectWorkFlowBtn2', function (e) {
+    e.preventDefault();
+    const stepStatus = $(this).text().trim();
+    stepStatusForHistory = stepStatus;
+    const clickedStep = $(this).closest('.step2');
+
+    // Check if the step is completed or current (not a future step)
+    if (!clickedStep.hasClass('completed') && !clickedStep.hasClass('current')) {
+        console.log('Cannot access future step:', stepStatus);
+        return;
+    }
+
+    // Fetch history data to populate comments based on the clicked step
+
+    // Get the investigation number from recordList
+    let currNumber = '';
+    $.each(recordList, function (i, val) {
+        if (Number(investigationId) === val.id) {
+            currNumber = val.number;
+        }
+    });
+
+    $(".initiationFields,.rootCauseAnalysisFields,.originatorReviewFields,.qaReviewFields,.uploadDocument").hide();
+
+
+    if (clickedStep.hasClass("completed")) {
+        $(".newInvestigationCancelBtn").show();
+        $("#createNewInvestigationDeviationSaveBtn").hide();
+        $("#rootCauseAnalysisBtn").hide();
+        $("#originatorReviewBtn").hide();
+        $("#qaReviewBtn").hide();
+        $('#qaReviewReturnBtn').hide()
+        $("#approveDeviationInvestigationBtn").hide();
+
+        if (stepStatus === 'Initiation') {
+            $(".initiationFields").show();
+            $(".uploadDocument").show();
+            $(".editDeviationInvestigationInput").prop("disabled", true);
+            $("#currInvestigationId2").text(currNumber);
+        }
+        else if (stepStatus === 'Root Cause Analysis') {
+            $(".rootCauseAnalysisFields").show();
+            $(".uploadDocument").hide();
+            $(".editRootCauseAnalysisInput").prop("disabled", true);
+            $("#currInvestigationId2").text(currNumber + ' Root Cause Analysis');
+        }
+        else if (stepStatus === 'Originator Review') {
+            $(".originatorReviewFields").show();
+            $(".uploadDocument").show();
+            $(".editOriginatorReviewInput").prop("disabled", true);
+            $("#currInvestigationId2").text(currNumber + ' Originator Review');
+        }
+        else if (stepStatus === 'QA Review') {
+            $(".qaReviewFields").show();
+            $(".uploadDocument").show();
+            $(".editQaReviewInput").prop("disabled", true);
+            $("#currInvestigationId2").text(currNumber + ' QA Review');
+        }
+    }
+
+    if (clickedStep.hasClass("current")) {
+        $(".newInvestigationCancelBtn").show();
+
+        if (stepStatus === 'Initiation') {
+            $(".initiationFields").show();
+            $("#rootCauseAnalysisBtn").show();
+            $(".uploadDocument").show();
+            $("#currInvestigationId2").text(currNumber);
+        }
+        else if (stepStatus === 'Root Cause Analysis') {
+            $(".rootCauseAnalysisFields").show();
+            $("#originatorReviewBtn").show();
+            $("#currInvestigationId2").text(currNumber + ' Root Cause Analysis');
+        }
+        else if (stepStatus === 'Originator Review') {
+            $(".originatorReviewFields").show();
+            $("#qaReviewBtn").show();
+            $('#qaReviewReturnBtn').show()
+            $(".uploadDocument").show();
+            $("#currInvestigationId2").text(currNumber + ' Originator Review');
+        }
+        else if (stepStatus === 'QA Review') {
+            $(".qaReviewFields").show();
+            $(".uploadDocument").show();
+            $("#approveDeviationInvestigationBtn").show();
+            $("#currInvestigationId2").text(currNumber + ' QA Review');
+        }
+        else if (stepStatus === 'Closed') {
+            $(".uploadDocument").show();
+            $("#currInvestigationId2").text(currNumber + ' Closed');
+        }
+    }
+});
+
+
+
+// editDeviationInvestigationPanel.js       End
+
+
+
+// esignDocument.js     Start
+
+$(document).ready(function(){
+    $('#completeVerificationBtn').on('click', function () {
+        var password = $('#eSignReportPasswordField').val();
+        JSUTIL.callAJAXGet('/document/verify_user?un=' + employeeUsername + '&pw=' + encodeURIComponent(password), callbackAfterVerification);
+    });
+
+})
+
+
+
+function callbackAfterVerification(response) {
+    console.log(response,'after checking',currentProcessStatus);
+    if (response.result === "FAILURE") {
+        $('#pageErrorPanel5').text('Invalid password, please try again');
+        $('#pageErrorPanel5').show().delay(4000).hide(0);
+        return;
+    } else {
+        if(currentProcessStatus == 'Site Head Approval')
+        {
+            siteHeadApproval()
+        }
+        else if(currentProcessStatus == 'QA Approval')
+        {
+            closure()
+        }
+        else if(currentProcessStatus == 'HOD Review' || currentProcessStatus == 'Site Co-ordinator Review' || currentProcessStatus == 'Awaiting Approval')
+        {
+            hodApprove()
+        }
+        else if(currentProcessStatus == 'QA Review'){
+            qaApprove()
+        }
+        else if(currentProcessStatus=='Final QA Approval'){
+            qauApprove()
+        }
+        else if(currentProcessStatus == 'QAU Head Review'){
+            qauheadApprove()
+        }
+        else if(currentProcessStatus == 'Site Tech Team Approval' || currentProcessStatus == 'CFT Approval'){
+            cftComments()
+        }
+        else if(currentProcessStatus == 'Originator Review'){
+            originatorReview()
+        }
+        else if(currentProcessStatus == 'New' || currentProcessStatus == 'Initiation' || currentProcessStatus == 'Logging'){
+            newStatus()
+        }
+        else if(currentProcessStatus == 'Implementation'){
+            implementation()
+        }
+        else if(currentProcessStatus == 'Investigation'){
+            investigation()
+        }
+        else if(currentProcessStatus == 'Root Cause Summary & CAPA Plan'){
+            rcscapaplan()
+        }
+        else if(currentProcessStatus == 'Plant Head Review' || currentProcessStatus == 'Site Head Review'){
+            plantheadreview()
+        }
+        else if(currentProcessStatus == 'Management Review'){
+            managementreview()
+        }
+        else if(currentProcessStatus == 'Final Review'){
+            finalreview()
+        }
+        else if(currentProcessStatus == 'QA Manager Review' || currentProcessStatus == 'Management Review'){
+            qamana_manage()
+        }
+        else if(currentProcessStatus == 'Root Cause Analysis'){
+            rcsinv()
+        }
+        else if(currentProcessStatus == 'QC Review'){
+            qcReview()
+        }
+        else if(currentProcessStatus == 'Repeat Testing' || currentProcessStatus == 'Repeat Testing QC Returned'){
+            repeatTesting()
+        }
+        else if(currentProcessStatus == 'Repeat Testing QC Review' || (currentProcessStatus == 'QC Head Returned' && currentRecord.repeatTesting=='Yes')){
+            repeatTestingQC()
+        }
+        else if(currentProcessStatus == 'QC Head Review'){
+            qcHeadReview()
+        }
+        else if(currentProcessStatus == 'QA Closure'){
+            qaClosure()
+        }
+    }
+}
+
+// esignDocuments.js      End
+
+
+// newInvestigationpanel.js      Start
+
+$(document).ready(function () {
+
+    $('.createInvestigationBtn').on('click', function () {
+        $('#newInvestigationPanel').show();
+        $('#allInvestigationPanel').hide();
+        $('#editInvestigationPanel').hide();
+        $('#editDeviationInvestigationPanel').hide()
+
+    });
+
+    $(".datepicker").datepicker();
+    $("#invoiceDate").datepicker("setStartDate", new Date());
+
+    // Handle Obvious Error Found field change
+    $('.newPhase1AInput[name="obviousErrorFound"]').on('change', function () {
+        var selectedValue = $(this).val();
+        if (selectedValue === 'Yes' || selectedValue === 'yes') {
+            $('textarea[name="sameSampleRetest"]').closest('.col-sm-6').show();
+            $(".col-sm-12").show();
+        } else {
+            $('textarea[name="sameSampleRetest"]').closest('.col-sm-6').hide();
+            $(".col-sm-12").hide();
+        }
+    });
+
+    // Handle checkbox check icon display
+    $('.newPhase1AInput[name="checksPerformed"]').on('change', function () {
+        if ($(this).is(':checked')) {
+            $(this).parent().find('i.fa-check').show();
+        } else {
+            $(this).parent().find('i.fa-check').hide();
+        }
+    });
+
+    $("#createNewInvestigationSaveBtn").on('click', function () {
+        dataobj2 = {};
+
+        var selectedSource = $('#createSourceSelect').val();
+
+        var departmentId = $('.newInvestigationInput[name="department.id"]').val();
+        dataobj2['department'] = { id: Number(departmentId) };
+        dataobj2['description'] = $('.newInvestigationInput[name="description"]').val();
+        dataobj2['processStatus'] = "New";
+        dataobj2['startDate'] = toUtc(new Date().toLocaleDateString('en-GB'));
+        dataobj2['source'] = selectedSource;
+        dataobj2['dueDate'] = toUtc($('.newInvestigationInput[name="dueDate"]').val());
+
+        switch (selectedSource) {
+            case 'Product':
+                var productId = $('.createProductDrop').val();
+                if (productId) {
+                    dataobj2.product = { id: Number(productId) };
+                }
+                break;
+            case 'Customer Complaint':
+                var complaintId = $('.createComplaintDrop').val();
+                if (complaintId) {
+                    dataobj2.complaint = { id: Number(complaintId) };
+                }
+                break;
+            case 'Deviation':
+                var deviationId = $('.createDeviationDrop').val();
+                if (deviationId) {
+                    dataobj2.deviation = { id: Number(deviationId) };
+                }
+                break;
+            case 'OOS':
+            case 'OOT':
+            case 'OOC':
+                var qualityEventId = $('.createQualityEventDrop').val();
+                if (qualityEventId) {
+                    dataobj2.qualityEvent = { id: Number(qualityEventId) };
+                }
+                break;
+            case 'Process':
+            case 'Internal Audit':
+            case 'External Audit':
+            case 'Regulatory Inspection':
+            case 'Risk Assessment':
+            case 'Others':
+                dataobj2.name = $('.createRecordInput[name="Name"]').val();
+                break;
+        }
+
+        console.log('Investigation Data:', dataobj2);
+
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Investigation/create_with_sequence?field=Number'), JSON.stringify(dataobj2), function (response) {
+            console.log(response);
+            
+            var obj = {
+                name: "record created",
+                performedBy: { id: Number(employeeId) },
+                startDate: new Date(),
+                parentRecordId: Number(response.id)
+            }
+            console.log(obj, 'history payload')
+            JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(obj), function (res) {
+                console.log(res, 'after history edited')
+                location.reload();
+            })
+        });
+
+
+
+        $('#newInvestigationPanel').hide();
+        $('#allInvestigationPanel').show();
+        $('#editInvestigationPanel').hide();
+    });
+
+
+    loadCreateSourceDropdowns();
+
+
+    $('#createSourceSelect').on('change', function () {
+        var selectedSource = $(this).val();
+
+        // Hide all source-dependent fields
+        $('.create-source-dependent').hide();
+        $('.create-source-dependent select, .create-source-dependent input').val('');
+
+        // Show Name field by default if nothing or certain types selected
+        if (!selectedSource || selectedSource === '' ||
+            selectedSource === 'Process' ||
+            selectedSource === 'Internal Audit' ||
+            selectedSource === 'External Audit' ||
+            selectedSource === 'Regulatory Inspection' ||
+            selectedSource === 'Risk Assessment' ||
+            selectedSource === 'Others') {
+            $('#createNameField').show();
+        }
+
+        // Show specific field based on selection
+        switch (selectedSource) {
+            case 'Product':
+                $('#createProductField').show();
+                break;
+            case 'Customer Complaint':
+                $('#createComplaintField').show();
+                break;
+            case 'Deviation':
+                $('#createDeviationField').show();
+                break;
+            case 'OOS':
+            case 'OOT':
+            case 'OOC':
+                $('#createQualityEventField').show();
+                loadCreateQualityEvents(selectedSource);
+                break;
+        }
+    });
+
+    $(".newInvestigationCancelBtn").on('click', function () {
+        $('#newInvestigationPanel').hide();
+        $('#allInvestigationPanel').show();
+        $('#editInvestigationPanel').hide();
+         const cleanUrl = window.location.href.split('?')[0];
+        window.history.pushState({}, '', cleanUrl);
+    });
+
+    const typeParameter = {
+        fields: "Name",
+        conditions: [],
+        logic: ""
+    };
+    var ansUrl = JSUTIL.getUrl('/data/Department/list');
+    JSUTIL.callAJAXPost(ansUrl, JSON.stringify(typeParameter), callbackAfterGetStudy);
+
+});
+
+function loadCreateSourceDropdowns() {
+    // Load Products
+    JSUTIL.callAJAXPost('/data/Product/list', JSON.stringify({
+        "fields": "Id;Name",
+        "conditions": [],
+        "logic": ""
+    }), function (response) {
+        var options = '<option value="">--none--</option>';
+        $.each(response, function (i, val) {
+            options += `<option value="${val.id}">${val.name}</option>`;
+        });
+        $('.createProductDrop').html(options);
+        if ($('.createProductDrop').hasClass('select2-hidden-accessible')) {
+            $('.createProductDrop').select2('destroy');
+        }
+        $('.createProductDrop').select2();
+    });
+
+    // Load Complaints
+    JSUTIL.callAJAXPost('/data/Complaint/list', JSON.stringify({
+        "fields": "Id;Number;Name;",
+        "conditions": [],
+        "logic": ""
+    }), function (response) {
+        var options = '<option value="">--none--</option>';
+        $.each(response, function (i, val) {
+            options += `<option value="${val.id}">${val.number} - ${val.name || ''}</option>`;
+        });
+        $('.createComplaintDrop').html(options);
+        if ($('.createComplaintDrop').hasClass('select2-hidden-accessible')) {
+            $('.createComplaintDrop').select2('destroy');
+        }
+        $('.createComplaintDrop').select2();
+    });
+
+    // Load Deviations
+    JSUTIL.callAJAXPost('/data/Deviation/list', JSON.stringify({
+        "fields": "Id;Number;Description",
+        "conditions": [],
+        "logic": ""
+    }), function (response) {
+        var options = '<option value="">--none--</option>';
+        $.each(response, function (i, val) {
+            options += `<option value="${val.id}">${val.number} - ${val.description || ''}</option>`;
+        });
+        $('.createDeviationDrop').html(options);
+        if ($('.createDeviationDrop').hasClass('select2-hidden-accessible')) {
+            $('.createDeviationDrop').select2('destroy');
+        }
+        $('.createDeviationDrop').select2();
+    });
+}
+
+function loadCreateQualityEvents(type) {
+    JSUTIL.callAJAXPost('/data/QualityEvent/list', JSON.stringify({
+        "fields": "Id;Number;Type;Description",
+        "conditions": [`Type='${type}'`],
+        "logic": "{0}"
+    }), function (response) {
+        var options = '<option value="">--none--</option>';
+        $.each(response, function (i, val) {
+            options += `<option value="${val.id}">${val.number} - ${val.description || ''}</option>`;
+        });
+        $('.createQualityEventDrop').html(options);
+        if ($('.createQualityEventDrop').hasClass('select2-hidden-accessible')) {
+            $('.createQualityEventDrop').select2('destroy');
+        }
+        $('.createQualityEventDrop').select2();
+    });
+}
+
+
+function callbackAfterGetStudy(response) {
+    console.log(response);
+    var innerHtml2 = '';
+    $('#department').empty();
+    innerHtml2 += '<option value = "">--none---</option>';
+    $.each(response, function (j, val2) {
+        innerHtml2 += '<option value = "' + val2.id + '">' + val2.name + '</option>';
+    });
+    $('#department').append(innerHtml2);
+}
+
+
+function toUtc(dateStr) {
+    console.log('Converting date:', dateStr);
+
+    if (!dateStr || dateStr.trim() === '') {
+        return null;
+    }
+
+    let day, month, year;
+
+    // Handle DD/MM/YYYY
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        year = parseInt(parts[2], 10);
+    }
+    // Handle YYYY-MM-DD
+    else if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        day = parseInt(parts[2], 10);
+    }
+    else {
+        console.error('Invalid date format:', dateStr);
+        return null;
+    }
+
+    if (isNaN(day) || isNaN(month) || isNaN(year)) {
+        console.error('Invalid date components:', { day, month, year });
+        return null;
+    }
+
+    // Create a UTC date at midnight
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+
+    if (isNaN(utcDate.getTime())) {
+        console.error('Invalid date created:', dateStr);
+        return null;
+    }
+
+    // Format manually: YYYY-MM-DDTHH:mm:ssZ
+    const pad = (n) => String(n).padStart(2, '0');
+
+    return (
+        utcDate.getUTCFullYear() +
+        '-' + pad(utcDate.getUTCMonth() + 1) +
+        '-' + pad(utcDate.getUTCDate()) +
+        'T' + pad(utcDate.getUTCHours()) +
+        ':' + pad(utcDate.getUTCMinutes()) +
+        ':' + pad(utcDate.getUTCSeconds()) +
+        'Z'
+    );
+}
+
+
+// newInvestigationpanel.js      End
+
+
+
+
+
+// newExtensionRequest.js       Start
+
+
+var currOptionList = []
+$(document).ready(function () {
+    $('.newExtensionRequestBtn').on('click', function () {
+        console.log('new button clicked')
+        $('#createExtensionRequestPanel').show()
+        $('#allExtensionRequestPanel').hide()
+    })
+
+    $('.newExtensionRequestCancelBtn').on('click', function (res) {
+        $('#createExtensionRequestPanel').hide()
+        if($('.createExtensionRequestPanel[name="type"]').val() == 'Capa'){
+            $('#editCapaPanel').show()
+        }
+        else if($('.createExtensionRequestPanel[name="type"]').val() == 'ChangeRequest'){
+            $('#editChangeRequestPanel').show()
+        }
+        else if($('.createExtensionRequestPanel[name="type"]').val() == 'Deviation'){
+            $('#editDeviationPanel').show()
+        }
+        else if($('.createExtensionRequestPanel[name="type"]').val() == 'Investigation'){
+            $('#editDeviationInvestigationPanel').show()
+        }
+        else if($('.createExtensionRequestPanel[name="type"]').val() == 'Incident'){
+            $('#editIncidentsPanel').show()
+        }
+        else if($('.createExtensionRequestPanel[name="type"]').val() == 'QualityEvent'){
+            $('#editQualityEventPanel').show()
+        }
+        else if($('.createExtensionRequestPanel[name="type"]').val() == 'Complaint'){
+            $('#editComplaintPanel').show()
+        }
+        resetForm()
+    })
+
+    // Handle Extension Type change
+    $('#extensionType').on('change', function () {
+        var selectedType = $(this).val()
+        var $recordDropdown = $('#recordDropdown')
+
+        if (!selectedType) {
+            $recordDropdown.prop('disabled', true).html('<option value="">--Select Type First--</option>')
+            $('.createExtensionRequestId').val('')
+            return
+        }
+
+        // Enable dropdown and show loading
+        $recordDropdown.prop('disabled', false).html('<option value="">Loading...</option>')
+
+        // Fetch records based on type
+        var endpoint = '/data/' + selectedType + '/list'
+        var payload = {
+            "fields": "Number;DueDate;"
+        }
+
+        JSUTIL.callAJAXPost(endpoint, JSON.stringify(payload), function (res) {
+            if (res && res.length > 0) {
+                currOptionList = res
+                var options = '<option value="">--Select--</option>'
+                res.forEach(function (record) {
+                    options += '<option value="' + record.id + '">' + record.number + '</option>'
+                })
+                $recordDropdown.html(options)
+            } else {
+                $recordDropdown.html('<option value="">No Records Found</option>')
+            }
+        }, function (error) {
+            console.error('Error fetching records:', error)
+            $recordDropdown.html('<option value="">Error Loading Records</option>')
+        })
+    })
+
+    // Handle Record selection
+    $('#recordDropdown').on('change', function () {
+        var selectedId = $(this).val()
+        $('.createExtensionRequestId').val(selectedId)
+        console.log('Selected Record ID:', selectedId)
+        if (selectedId && currOptionList.length > 0) {
+            const selectedOption = currOptionList.find(v => v.id == selectedId)
+            console.log('Selected Option:', selectedOption)
+
+            if (selectedOption && selectedOption.dueDate) {
+                $('.createExtensionRequest[name="currentDueDate"]').val(JSUTIL.getDate(selectedOption.dueDate))
+                $('.createExtensionRequest[name="currentDueDate"]').prop('readonly', true)
+                $('.datepicker[name="currentDueDate"]').prop('disabled', true)
+            } else {
+                $('.createExtensionRequest[name="currentDueDate"]').val('')
+                $('.createExtensionRequest[name="currentDueDate"]').prop('readonly', false)
+            }
+        } else {
+            $('.createExtensionRequest[name="currentDueDate"]').val('')
+            $('.createExtensionRequest[name="currentDueDate"]').prop('readonly', false)
+        }
+    })
+
+    const typeParameter = { fields: "Name", conditions: [], logic: "" };
+    var supUrl = JSUTIL.getUrl("/data/Employee/list");
+    JSUTIL.callAJAXPost(supUrl, JSON.stringify(typeParameter), function (res) {
+        callbackAfterGetStudy3(res);
+    });
+
+
+
+
+
+
+    // Extension Request Upload Document Button
+    $('#erUploadDocumentBtn').on('click', function () {
+        $('#erUploadFilesPanel').show();
+        $('#createExtensionRequestPanel').hide();
+        $('#allExtensionRequestPanel').hide();
+        var postUrl = JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + companySettingMap.complaint);
+        erFoUploadFile('Upload Documents - Extension Request', postUrl, erCallbackAfterDocumentUpload);
+    });
+
+    // Extension Request Upload Cancel Button
+    $('.erUploadCancelBtn').on('click', function () {
+        $('#erUploadFilesPanel').hide();
+        $('#createExtensionRequestPanel').show();
+        $('#allExtensionRequestPanel').hide();
+    });
+
+    // Extension Request File Input Change
+    $('#erFileInput').on('change', function (e) {
+        if (e.target.files && e.target.files[0]) {
+            $('#erFileNameText').text(e.target.files[0].name);
+            erMultipartFile = e.target.files[0];
+        }
+    });
+
+    // Extension Request Process Upload Button
+    $('#erProcessBtn').on('click', function () {
+        const imageFile = document.getElementById('erFileInput').files[0];
+        if (!imageFile) {
+            alert('Please select a file first');
+            return;
+        }
+        
+        var formData = new FormData();
+        formData.append('file', imageFile);
+
+        JSUTIL.callAJAXFilePost(
+            JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + companySettingMap.complaint), 
+            formData, 
+            function (res) {
+                console.log('ER File uploaded successfully:', res);
+                erCallbackAfterDocumentUpload(res);
+            }
+        );
+    });
+
+    // Update the save button to include documents
+    $('.newExtensionRequestSaveBtn').off('click').on('click', function () {
+        var obj = {}
+        obj["currentDueDate"] = toUtc($('.createExtensionRequest[name="currentDueDate"]').val());
+        obj["requestDate"] = toUtc($('.createExtensionRequest[name="requestDate"]').val())
+        obj["reason"] = $('.createExtensionRequest[name="reason"]').val()
+        obj["requestedBy"] = { id: Number(employeeId) }
+        obj["progressDetails"] = $('.createExtensionRequest[name="progressDetails"]').val()
+        obj["riskAssessment"] = $('.createExtensionRequest[name="riskAssessment"]').val()
+        obj["impactDetails"] = $('.createExtensionRequest[name="impactDetails"]').val()
+        obj["additionalInfo"] = $('.createExtensionRequest[name="additionalInfo"]').val()
+        obj["interimModeOfControl"] = $('.createExtensionRequest[name="interimModeOfControl"]').val()
+        obj["supervisor"] = { id: Number($('.createExtensionRequest[name="supervisor.Id"]').val()) }
+
+        var type = $('.createExtensionRequestPanel[name="type"]').val()
+        var selectedId = Number($('.createExtensionRequestId').val())
+
+        // Add type-specific reference
+        if (type == 'Capa') {
+            obj["capa"] = { "id": selectedId }
+        }
+        else if (type == 'Deviation') {
+            obj["deviation"] = { "id": selectedId }
+        }
+        else if (type == "Investigation") {
+            obj["investigation"] = { "id": selectedId }
+        }
+        else if (type == 'QualityEvent') {
+            obj["qualityEvent"] = { "id": selectedId }
+        }
+        else if (type == 'ChangeRequest') {
+            obj["changeRequest"] = { "id": selectedId }
+        }
+        else if (type == 'Complaint') {
+            obj["complaint"] = { "id": selectedId }
+        }
+        else if(type == 'Incident'){
+            obj['incident'] = {id:selectedId}
+        }
+
+        const numberParameter = {
+            fields: "Number",
+            conditions: [],
+            orderBy: 'Number DESC LIMIT 1',
+            logic: ""
+        };
+        
+        JSUTIL.callAJAXPost('/data/ExtensionRequest/list', JSON.stringify(numberParameter), function (res) {
+            var number
+            if (res[0].number == '') {
+                number = 'ER-0001'
+            }
+            else {
+                let currentNum = parseInt(res[0].number.replace('ER-', ''), 10);
+                let nextNum = currentNum + 1;
+                number = 'ER-' + nextNum.toString().padStart(4, '0');
+            }
+            
+            obj["number"] = number
+            obj["processStatus"] = "New"
+            
+            JSUTIL.callAJAXPost('/data/ExtensionRequest/create', JSON.stringify(obj), function (res) {
+                console.log(res, 'Extension Request created')
+                var erid = res.id
+                
+                // Link documents if any were uploaded
+                if (res && res.id && erTempDocuments.length > 0) {
+                    erLinkDocumentsToRecord(res.id, selectedId);
+                } else {
+                    // Create history without documents
+                    erCreateHistory(erid, selectedId);
+                }
+            })
+        })
+    })
+
+
+})
+
+function callbackAfterGetStudy3(response) {
+    console.log(response);
+    var innerHtml2 = "";
+    $("#editSupervisor").empty();
+    innerHtml2 += '<option value = "">--none---</option>';
+    $.each(response, function (j, val2) {
+        innerHtml2 +=
+            '<option value = "' + val2.id + '">' + val2.name + "</option>";
+    });
+    $("#editSupervisor").append(innerHtml2);
+    // $(".createExtensionRequest[name='supervisor.Id']").val(currentRecord.department.id).trigger('change');
+}
+
+
+// Add these variables at the top with other variables
+var erOnedrivekeys = [] // Store uploaded documents for extension request
+var erTempDocuments = [] // Store document metadata temporarily for extension request
+var erMultipartFile = '';
+
+// Add these functions to your newExtensionRequest.js file
+
+
+// Extension Request Upload File Setup
+function erFoUploadFile(panelTitle, actionUrl, successCallBack) {
+    $('#erUploadFileTitle').text(panelTitle);
+    $('#erFileForm').attr('action', actionUrl);
+    erUserDefineSuccessCallBack = successCallBack;
+}
+
+// Extension Request Callback After Document Upload
+function erCallbackAfterDocumentUpload(response) {
+    console.log('ER after upload', response)
+    erOnedrivekeys.push(response)
+    var filename = $('#erFileNameText').text()
+
+    $('#erFileNameText').empty();
+    $('#erFileInput').val('');
+    $('#erUploadFilesPanel').hide();
+    $('#createExtensionRequestPanel').show();
+
+    // Store document metadata temporarily
+    var docData = {
+        path: String((JSON.parse(response)).data),
+        name: String(filename)
+    }
+
+    erTempDocuments.push(docData);
+    erDisplayTempDocuments();
+}
+
+// Display Extension Request Temp Documents
+function erDisplayTempDocuments() {
+    $('#erAllDocumentsTable').empty();
+    var innerHtml = '';
+
+    if (!erTempDocuments || erTempDocuments.length === 0) {
+        innerHtml = '<tr><td colspan="2" class="text-center">No documents uploaded</td></tr>';
+    } else {
+        $.each(erTempDocuments, function (i, val) {
+            innerHtml += '<tr data-index="' + i + '"><td style="width: 10%;">';
+            innerHtml += '<button type="button" class="btn btn-outline btn-danger erDeleteTempDocBtn" data-index="' + i + '"><i class="fa fa-trash"></i></button>';
+            innerHtml += '<button type="button" class="btn btn-outline btn-success erViewTempDocBtn" data-path="' + val.path + '" style="margin-left: 5px;"><i class="fa fa-eye"></i></button>' +
+                '</td>' +
+                '<td>' + (val.name || 'Name not provided') + '</td>' +
+                '</tr>';
+        });
+    }
+
+    $('#erAllDocumentsTable').append(innerHtml);
+
+    // Attach event handlers
+    $('.erDeleteTempDocBtn').on('click', function () {
+        var index = $(this).data('index');
+        var docPath = erTempDocuments[index].path;
+
+        MODALUTIL.deleteConfirmModal(function () {
+            erDeleteTempDocument(index, docPath);
+        });
+    });
+
+    $('.erViewTempDocBtn').on('click', function () {
+        var documentPath = $(this).data('path');
+        var getUrl = JSUTIL.getUrl('/onedrive/view/' + documentPath);
+        JSUTIL.callAJAXGet(getUrl, erGetDocumentViewCallback);
+    });
+}
+
+// Delete Extension Request Temp Document
+function erDeleteTempDocument(index, docPath) {
+    var oneDriveUrl = JSUTIL.getUrl('/onedrive/delete_file/' + docPath);
+    JSUTIL.callAJAXGet(oneDriveUrl, function (resp) {
+        console.log("ER OneDrive delete response:", resp);
+    });
+
+    erTempDocuments.splice(index, 1);
+    erOnedrivekeys.splice(index, 1);
+    erDisplayTempDocuments();
+}
+
+// View Extension Request Document
+function erGetDocumentViewCallback(response) {
+    console.log(response);
+    window.open(response.data, '_blank');
+}
+
+// Link Extension Request Documents to Record
+function erLinkDocumentsToRecord(recordId, parentRecordId) {
+    var documentsCreated = 0;
+    var totalDocuments = erTempDocuments.length;
+
+    if (totalDocuments === 0) {
+        erCreateHistory(recordId, parentRecordId);
+        return;
+    }
+
+    $.each(erTempDocuments, function (i, docData) {
+        var obj = {
+            path: docData.path,
+            name: docData.name,
+            url: recordId,
+            additionalInfo: "ExtensionRequest"
+        };
+
+        var docUploadUrl = JSUTIL.getUrl('/data/Document/create');
+        JSUTIL.callAJAXPost(docUploadUrl, JSON.stringify(obj), function (response) {
+            console.log('ER Document linked:', response);
+            documentsCreated++;
+
+            if (documentsCreated === totalDocuments) {
+                erTempDocuments = [];
+                erOnedrivekeys = [];
+                erCreateHistory(recordId, parentRecordId);
+            }
+        });
+    });
+}
+
+// Create Extension Request History
+function erCreateHistory(erid, parentRecordId) {
+    var historyObj = {
+        name: "Extension Request Added",
+        performedBy: { id: Number(employeeId) },
+        startDate: new Date(),
+        parentRecordId: Number(parentRecordId)
+    };
+    
+    JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(historyObj), function(res) {
+        console.log('Parent history created', res)
+        historyObj["parentRecordId"] = erid
+        JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(historyObj), function(res) {
+            console.log('ER history created', res)
+            location.reload()
+            
+            $('#createExtensionRequestPanel').hide()
+            $('#allExtensionRequestPanel').show()
+            
+        })
+    })
+}
+
+
+
+
+
+
+function toUtc(dateStr) {
+    if (!dateStr || dateStr.trim() === '') {
+        return null;
+    }
+
+    let day, month, year;
+
+    // Handle DD/MM/YYYY
+    if (dateStr.includes('/')) {
+        const parts = dateStr.split('/');
+        day = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        year = parseInt(parts[2], 10);
+    }
+    // Handle YYYY-MM-DD
+    else if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        year = parseInt(parts[0], 10);
+        month = parseInt(parts[1], 10);
+        day = parseInt(parts[2], 10);
+    } else {
+        console.error('Invalid date format:', dateStr);
+        return null;
+    }
+
+    if (isNaN(day) || isNaN(month) || isNaN(year)) {
+        console.error('Invalid date components:', { day, month, year });
+        return null;
+    }
+
+    // Create a UTC date at midnight (or choose your own time)
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+
+    if (isNaN(utcDate.getTime())) {
+        console.error('Invalid date created:', dateStr);
+        return null;
+    }
+
+    // Format manually: YYYY-MM-DDTHH:mm:ssZ
+    const pad = (n) => String(n).padStart(2, '0');
+
+    return (
+        utcDate.getUTCFullYear() +
+        '-' + pad(utcDate.getUTCMonth() + 1) +
+        '-' + pad(utcDate.getUTCDate()) +
+        'T' + pad(utcDate.getUTCHours()) +
+        ':' + pad(utcDate.getUTCMinutes()) +
+        ':' + pad(utcDate.getUTCSeconds()) +
+        'Z'
+    );
+}
+
+function resetForm() {
+    $('.newExtensionRequestForm')[0].reset()
+    $('#recordDropdown').prop('disabled', true).html('<option value="">--Select Type First--</option>')
+    $('.createExtensionRequestId').val('')
+    if ($('.select2').data('select2')) {
+        $('.select2').val('').trigger('change')
+    }
+}
+
+
+// newExtensionRequest.js       End
+
+
+// uploadInvestigationFile.js       Start
+
+var multipartFile = '';
+var uploadtableId = '';
+var userDefineSuccessCallBack = '';
+function foActionUploadFile(panelTitle, actionUrl, successCallBack) {
+    $('#uploadFileTitle').html(panelTitle);
+    $('#fileFormAction').attr('action', actionUrl);
+    userDefineSuccessCallBack = successCallBack;
+  }
+document.addEventListener("DOMContentLoaded", function() {
+    $('#fileInputAction').on('change', function (e) {
+        $('#fileNameTextAction').text(e.target.files[0].name);
+        multipartFile = e.target.files[0];
+    });
+    $('#processBtnNew').on('click', function () {
+        $('#loadingError').hide();
+        $('#importResults').hide();
+        $('#insertedTable').empty();
+        var formData = new FormData();
+        formData.append('File', multipartFile); 
+        var callback = userDefineSuccessCallBack || defaultSuccessCallback;
+        JSUTIL.callAJAXFilePost($('#fileFormAction').attr('action'), formData, callback, null);
+    });
+});
+function defaultSuccessCallback(response) {
+    console.log(response);
+    location.reload();
+}
+
+
+// uploadInvestigationFile.js       End
+
+</script>

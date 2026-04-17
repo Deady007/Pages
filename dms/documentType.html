@@ -1,0 +1,707 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/choices.min.css" />
+<script src="pages/lib/choices.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #newCategoryPanelTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #newCategoryPanelTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #newCategoryPanelTable .selectRecordBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+
+    /* Ensure the DataTables search input has a visible border */
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+</style>
+<!-- allDocumentType.html start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="DocumentTypePage">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Document Type <small>Documents</small></h5>
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;">
+                        <button type="button" class="btn btn-sm btn-secondary newRecordBtn" id="newDocumentTypeButton">
+                            <i data-lucide="plus"></i> New Document Type
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="table-responsive">
+                        <table id="documentTypeTable" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Revision Period (Months)</th>
+                                    <th>Active</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allPricebookTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- allDocumentType.html end -->
+
+
+
+<!-- allDocumentType.js start -->
+<script>
+    var recordList = [];
+
+    function loadDocumentTypeRecords() {
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-type'), function (response) {
+            recordList = Array.isArray(response) ? response : [];
+            window.recordList = recordList;
+            buildDocumentTypeTable(recordList);
+        }, function () {
+            recordList = [];
+            window.recordList = [];
+            buildDocumentTypeTable([]);
+        });
+    }
+
+    function buildDocumentTypeTable(categories) {
+        if ($.fn.DataTable.isDataTable('#documentTypeTable')) {
+            $('#documentTypeTable').DataTable().destroy();
+        }
+        $('#allPricebookTable').empty();
+
+        if (categories && categories.length > 0) {
+            $.each(categories, function (i, val) {
+                var innerHtml = '<tr>' +
+                    '<td class="itemNum" style="font-weight:600"><a href="javascript:void(0);" class="selectRecordBtn" id="' + (val.id || '') + '"><img src="https://raw.githubusercontent.com/dev22419/image/refs/heads/main/blue-folder.png?raw=true" style="width: auto; height: 30px;margin-bottom:2px"> ' + (val.name || '') + '</a></td>' +
+                    '<td>' + (val.revisionPeriod || '') + '</td>' +
+                    '<td>' + (val.active || '') + '</td>' +
+                    '</tr>';
+                $('#allPricebookTable').append(innerHtml);
+            });
+        }
+        // Never insert a colspan row — leave tbody empty so DataTables
+        // shows its own "No data available" message without crashing
+        $('#documentTypeTable').DataTable({
+            destroy: true,
+            language: { emptyTable: 'No Document Types found.' }
+        });
+    }
+
+    $(document).ready(function () {
+        $('.newRecordBtn').on('click', function () {
+            $('#newRecordPanel').show();
+            $('#DocumentTypePage').hide();
+        });
+        loadDocumentTypeRecords();
+    });
+</script>
+<!-- allDocumentType.js end -->
+
+
+
+<!-- editDocumentType.html start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRecordTitle"></span> <small>Document Type</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-default btn-sm" id="deleteRecipeBtn"><i
+                                data-lucide="trash"></i> Delete </button>
+                        <button type="button" class="btn btn-default btn-sm recordEditBtn"><i data-lucide="pencil"></i>
+                            Edit </button>
+                        <button type="button" class="btn btn-secondary btn-sm pricebookSaveAndUpdateBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="editServiceObj">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control editRecordInput" name="name" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Revision Period (Months)</label>
+                                    <input type="number" class="form-control editRecordInput" name="revisionPeriod"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Active</label>
+                                    <select class="select2 form-control editRecordInput" name="active" disabled>
+                                        <option value="">--none--</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Number Format</label>
+                                    <input type="text" class="form-control editRecordInput" name="code" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Is Revision</label>
+                                    <select class="select2 form-control editRecordInput" name="isRevision" disabled>
+                                        <option value="">--none--</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Filter By</label>
+                                    <select id="editFilterBySelect" class="form-control editFilterByInput" name="filterBy" multiple disabled>
+                                        <option value="Department">Department</option>
+                                        <option value="Year">Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" class="editRecordInput" id="hiddenRecordId" name="id" />
+                        </div>
+                    </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade inmodal" id="uploadModel" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="col-lg-12 uploadDocs">
+                    <div class="ibox float-e-margins">
+                        <div class="ibox-title">
+                            <h5 id="uploadFileTitle">#</h5>
+                        </div>
+                        <div class="ibox-content uploadSection">
+                            <form role="form" name="lnItemObj" action="#" method="post" id="fileFormAction"
+                                enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="fileinput fileinput-new input-group" data-provides="fileinput"
+                                            style="margin-top: 24px;">
+                                            <div class="form-control" data-trigger="fileinput" id="fileNameTextAction">
+                                                <i class="glyphicon glyphicon-file fileinput-exists"></i>
+                                                <span class="fileinput-filename"></span>
+                                            </div>
+                                            <span class="input-group-addon btn btn-default btn-file">
+                                                <span class="fileinput-new">Select File</span>
+                                                <span class="fileinput-exists">Change</span>
+                                                <input type="file" name="File" id="fileInputAction">
+                                            </span>
+                                            <a href="#" class="input-group-addon btn btn-default fileinput-exists"
+                                                data-dismiss="fileinput">Remove</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-12 text-left">
+                                        <button type="button" class="btn btn-success btn-sm" id="processBtn"><i
+                                                class="fa fa-upload"></i> Upload</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="col-sm-12 text-left">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- editDocumentType.js start -->
+<script>
+    var currentRecordId = '';
+    var currentContactId = '';
+    var elementToDelete = '';
+    var fileId;
+    var multipartFile = '';
+    var userDefineSuccessCallBack = '';
+    var currentFolderPath = '';
+    var editFilterByChoices = null;
+
+    function foActionUploadFile(panelTitle, actionUrl, successCallBack) {
+        $('#uploadFileTitle').html(panelTitle);
+        $('#fileFormAction').attr('action', actionUrl);
+        userDefineSuccessCallBack = successCallBack;
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#fileInputAction').on('change', function (e) {
+            $('#fileNameTextAction').text(e.target.files[0].name);
+            multipartFile = e.target.files[0];
+        });
+        $(document).on('click', '#processBtn', function () {
+            $('#loadingError').hide();
+            $('#importResults').hide();
+            $('#insertedTable').empty();
+            var formData = new FormData();
+            formData.append('file', multipartFile);
+            formData.append('folder', currentFolderPath);
+            var callback = userDefineSuccessCallBack || defaultSuccessCallback;
+            JSUTIL.callAJAXFilePost(JSUTIL.getUrl('/api/files/upload'), formData, callback, null);
+        });
+    });
+    function defaultSuccessCallback(response) {
+        console.log(response);
+        var parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+        var uploadedFile = Array.isArray(parsedResponse) ? parsedResponse[0] : parsedResponse;
+        var editDocumentPayload = {};
+        editDocumentPayload.extFileId = uploadedFile.id;
+        var postUrl = ('/data/QualityDocumentTemplate/update/' + fileId);
+        console.log(editDocumentPayload);
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(editDocumentPayload), callbackSuccessAfterUpdate);
+    }
+    function callbackSuccessAfterUpdate(response) {
+        console.log(response);
+        location.reload();
+    }
+    $(document).ready(function () {
+        $('#DocumentTypePage tbody').on('click', '.selectRecordBtn', function () {
+            $('.pricebookSaveAndUpdateBtn').hide();
+            currentRecordId = $(this).attr('id');
+            var pendingFilterVals = [];  // collected inside $.each, used after
+
+            $.each(recordList, function (j, val2) {
+                if (currentRecordId.indexOf(val2.id) >= 0) {
+                    console.log(val2);
+                    currentFolderPath = val2.extFolderId || val2.name || '';
+                    $('.editRecordInput[name="active"]').val(val2.active);
+                    $('.editRecordInput[name="active"]').parent().find('.select2-selection__rendered').text(val2.active);
+                    $('.editRecordInput[name="isRevision"]').val(val2.isRevision || '');
+                    $('.editRecordInput[name="isRevision"]').parent().find('.select2-selection__rendered').text(val2.isRevision || '--none--');
+                    pendingFilterVals = val2.filterBy
+                        ? val2.filterBy.split(';').map(function(s){ return s.trim(); }).filter(Boolean)
+                        : [];
+                }
+            });
+
+            // Initialize Choices.js OUTSIDE $.each so any error here
+            // cannot prevent the panel show and AJAX calls below
+            try {
+                if (editFilterByChoices) { editFilterByChoices.destroy(); editFilterByChoices = null; }
+                editFilterByChoices = new Choices(document.getElementById('editFilterBySelect'), {
+                    removeItemButton: true,
+                    placeholderValue: 'Select...',
+                    searchEnabled: false
+                });
+                editFilterByChoices.disable();
+                if (pendingFilterVals.length) { editFilterByChoices.setChoiceByValue(pendingFilterVals); }
+            } catch(e) {
+                console.warn('Choices.js init failed:', e);
+            }
+
+            $('#createItem').val(currentRecordId);
+            $('#hiddenRecordId').val(currentRecordId);
+            $('#editRecordPanel').show();
+            $('#DocumentTypePage').hide();
+            const criticalParameter = {
+                fields: "Name;Number;Requester.Id;ProcessStatus;ExtFileId;Department;RequestDate;ApprovalDate;Reviewer.Id;Status;IsActive",
+                conditions: [`DocumentType.Id = ${currentRecordId}`],
+                logic: "{0}"
+            };
+            var ansUrl = JSUTIL.getUrl('/data/QualityDocumentTemplate/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(criticalParameter), callbackAfterGetCritical);
+        });
+        $('.pricebookSaveAndUpdateBtn').on('click', function () {
+            let updatePricebook = JSUTIL.buildFormDataJSON('editRecordInput');
+            // filterBy is a multi-select — join selected values with semicolon
+            var filterBySelected = editFilterByChoices ? editFilterByChoices.getValue(true) : [];
+            updatePricebook.filterBy = Array.isArray(filterBySelected) ? filterBySelected.join(';') : (filterBySelected || '');
+            updateNewPricebook(updatePricebook);
+        });
+        $('.recordEditBtn').on('click', function () {
+            $('.pricebookSaveAndUpdateBtn').show();
+            if (editFilterByChoices) { editFilterByChoices.enable(); }
+        });
+        $('#addCriticalBtn').on('click', function () {
+            $('#newContactPanel').show();
+            $('#editRecordPanel').hide();
+            const departmentParameter = {
+                fields: "StartDate;Name",
+                conditions: [],
+                logic: ""
+            };
+            var ansUrl = JSUTIL.getUrl('/data/Department/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(departmentParameter), callbackAfterGetDepartment);
+        });
+        $('.newContactCloseBtn').on('click', function () {
+            $('#newContactPanel').hide();
+            $('#editRecordPanel').show();
+            $('.recordEditBtn').show();
+        });
+        $('.editRecordCancelBtn').on('click', function () {
+            $('.pricebookSaveAndUpdateBtn').hide();
+            $('.recordEditBtn').show();
+            $('.editRecordInput').prop('disabled', true);
+            $('.editRecordInput').prop('readonly', true);
+            if (editFilterByChoices) { editFilterByChoices.disable(); }
+            $('#editRecordPanel').hide();
+            $('#DocumentTypePage').show();
+        });
+        $('#deleteRecipeBtn').on('click', function () {
+            MODALUTIL.deleteConfirmModal(deleteCustomerCallback);
+        });
+        $(document).on('click', '.uploadDocBtn', function () {
+            console.log('hi')
+            fileId = $(this).attr('id');
+            $('#uploadModel').modal('show');
+        });
+        $(document).on('click', '.openDocBtn', function () {
+            templateId = $(this).attr('id');
+            statusOfRecord = $(this).attr('name');
+            window.open(JSUTIL.getUrl('/api/files/download/' + templateId), '_blank');
+        });
+    });
+    function callbackAfterGetDepartment(response) {
+        var innerHtml2 = '';
+        $('#department').empty();
+        innerHtml2 += '<option value = "">--none---</option>';
+        $.each(response, function (j, val2) {
+            innerHtml2 += '<option value = "' + val2.name + '">' + val2.name + '</option>';
+        });
+        $('#department').append(innerHtml2);
+    }
+    function callbackAfterGetCritical(response) {
+        console.log(response);
+        $('#contactTable').empty();
+        var innerHtml = '';
+        $.each(response, function (i, val) {
+            innerHtml += '<tr>' +
+                '<td></button><button type="button" class="btn btn-warning deleteTrSelect editContactSelect" style="margin-left: 5px;" name="' + val.id + '"><i class="fa fa-pencil"></i></button></td>' +
+                '<td>' + val.number + '</td>' +
+                '<td>' + val.name + '</td>' +
+                '<td>' + val.requester.name + '</td>' +
+                '<td>' + val.processStatus + '</td>' +
+                '<td>' + val.isActive + '</td><td>';
+            if (val.processStatus === 'Draft' || val.processStatus === 'Rejected') {
+                innerHtml +=
+                    '<button type="button" class="btn btn-white btn-sm uploadDocBtn" name="' + val.processStatus + '" id="' + val.id + '"><i class="fa fa-upload"></i> Upload Document</button>';
+            }
+            if (val.extFileId) {
+                innerHtml += '<button type="button" class="btn btn-white btn-sm openDocBtn" id="' + val.extFileId + '"><i class="fa fa-file-export"></i> Open Document</button>';
+            }
+            innerHtml += '</td></tr>';
+        });
+        $('#contactTable').append(innerHtml);
+        $('.deleteContactSelect').on('click', function () {
+            elementToDelete = $(this).parent().parent();
+            currentContactId = $(this).attr('name');
+            MODALUTIL.deleteConfirmModal(deleteContactCallback);
+        });
+        $('.editContactSelect').on('click', function () {
+            fileId = $(this).attr('id');
+            currentContactId = $(this).attr('name');
+            $.each(response, function (i, val) {
+                if (Number(currentContactId) === val.id) {
+                    selectedDepartment = val.department;
+                    recordStatus = val.processStatus;
+                    $('.editContactInput[name="name"]').val(val.name);
+                    $('.editContactInput[name="department"]').val(val.department);
+                    $('.editContactInput[name="department"]').parent().find('.select2-selection__rendered').text(val.department);
+                    $('#editContactId').val(val.id);
+                }
+            });
+            if (recordStatus === 'Draft' || recordStatus === 'Rejected') {
+                $('.recordApprovalBtn').show();
+                $('.recordEditBtn').show();
+            } else {
+                $('.recordApprovalBtn').hide();
+                $('.recordEditBtn').hide();
+            }
+            const departmentParameter = {
+                fields: "StartDate;Name",
+                conditions: [],
+                logic: ""
+            };
+            var ansUrl = JSUTIL.getUrl('/data/Department/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(departmentParameter), callbackAfterEditDepartment);
+            $('#editContactPanel').show();
+            $('#editRecordPanel').hide();
+        });
+    }
+    function callbackAfterEditDepartment(response) {
+        console.log(response);
+        var innerHtml2 = '';
+        $('#editDepartment').empty();
+        innerHtml2 += '<option value = "">--none---</option>';
+        $.each(response, function (j, val2) {
+            if (val2.name === selectedDepartment) {
+                innerHtml2 += '<option value = "' + val2.name + '" selected>' + val2.name + '</option>';
+            } else {
+                innerHtml2 += '<option value = "' + val2.name + '">' + val2.name + '</option>';
+            }
+        });
+        $('#editDepartment').append(innerHtml2);
+    }
+    function deleteContactCallback() {
+        var postUrl = JSUTIL.getUrl('/data/QualityDocumentTemplate/delete?id=' + currentContactId);
+        JSUTIL.callAJAXGet(postUrl, deleteContactCompleteCallback);
+    }
+    function deleteContactCompleteCallback() {
+        elementToDelete.remove();
+    }
+    function buildFormDataJSON(className) {
+        let jsonPayload = {};
+        $('.' + className).each(function () {
+            let attrName = $(this).attr('name');
+            let attrValue = $(this).val();
+            console.log(attrValue);
+            if (attrValue) {
+                if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance') || $(this).hasClass('datepickerCompliance2')) {
+                    attrValue = JSUTIL.toDatabaseDate(attrValue);
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).hasClass('datetimepicker')) {
+                    attrValue = JSUTIL.getDatabaseDateTime(attrValue);
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).hasClass('select2')) {
+                    attrValue = $(this).select2('val');
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
+                    attrValue = $(this).prop('checked');
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).attr('type') && $(this).attr('type') === 'number') {
+                    attrValue = Number(attrValue);
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).attr('name') && $(this).attr('name').indexOf('.') >= 0) {
+                    console.log()
+                    let splitArray = $(this).attr('name').split('.');
+                    jsonPayload[splitArray[0]] = {};
+                    jsonPayload[splitArray[0]][splitArray[1]] = Number(attrValue);
+                } else {
+                    console.log(attrName);
+                    if (attrName === 'id') {
+                        attrValue = Number(attrValue);
+                        jsonPayload[attrName] = attrValue;
+                    }
+                    jsonPayload[attrName] = attrValue;
+                }
+            }
+            else if (!attrValue) {
+                if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
+                    attrValue = $(this).prop('checked');
+                    jsonPayload[attrName] = attrValue;
+                }
+            }
+        });
+        console.info(jsonPayload);
+        return jsonPayload;
+    }
+    function updateNewPricebook(updatePricebook) {
+        var postUrl1 = JSUTIL.getUrl('/api/quality-document-type/' + currentRecordId);
+        JSUTIL.callAJAXPut(postUrl1, JSON.stringify(updatePricebook), callbackAfterEditRequest);
+    }
+    function callbackAfterEditRequest(response) {
+        console.log(response);
+        location.reload();
+    }
+    function deleteCustomerCallback() {
+        var postUrl3 = JSUTIL.getUrl('/api/quality-document-type/' + currentRecordId);
+        JSUTIL.callAJAXDelete(postUrl3, callbackAfterDelete);
+    }
+    function callbackAfterDelete() {
+        location.reload();
+    }
+</script>
+<!-- editDocumentType.js end -->
+
+
+
+<!-- newDocumentType.html start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>New <small>Document Type</small></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i
+                                data-lucide="x"></i> Close </button>
+                        <button type="button" class="btn btn-secondary btn-sm newPricebookSaveBtn"><i
+                                data-lucide="check"></i> Save </button>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="newObj" id="newPricebookForm">
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Name</label>
+                                    <input type="text" class="form-control createPriceBookInput" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Revision Period (Months)</label>
+                                    <input type="number" class="form-control createPriceBookInput" name="revisionPeriod"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Active</label>
+                                    <select class="select2 form-control createPriceBookInput" name="active" required>
+                                        <option value="">--none--</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Number Format</label>
+                                    <input type="text" class="form-control createPriceBookInput" name="code" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Is Revision</label>
+                                    <select class="select2 form-control createPriceBookInput" name="isRevision">
+                                        <option value="">--none--</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Filter By</label>
+                                    <select id="newFilterBySelect" class="form-control newFilterByInput" name="filterBy" multiple>
+                                        <option value="Department">Department</option>
+                                        <option value="Year">Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" class="form-control createPriceBookInput" name="extFileId"
+                                id="ExtFileId">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- newDocumentType.js start -->
+<script>
+    var folderName;
+    $(document).ready(function () {
+        $('.newPricebookSaveBtn').on('click', function () {
+            // Read name directly at click time — don't rely on the change event
+            folderName = $('.createPriceBookInput[name="name"]').val();
+            if (!folderName) {
+                alert('Please enter a name before saving.');
+                return;
+            }
+            var parentFolder = (FOX.companySettings && FOX.companySettings.document_type)
+                ? FOX.companySettings.document_type
+                : 'DMS/DocumentType';
+            // Use $.ajax directly — JSUTIL.callAJAXPost fails silently when the
+            // server returns a plain string (folder ID) instead of JSON
+            $.ajax({
+                url: JSUTIL.getUrl('/api/files/create-folder?folder=' + encodeURIComponent(folderName) + '&parentFolder=' + encodeURIComponent(parentFolder)),
+                type: 'POST',
+                success: function (response) {
+                    callbackSuccessFolderCreated(response);
+                },
+                error: function (xhr) {
+                    console.error('Folder creation failed:', xhr.responseText);
+                }
+            });
+        });
+        $('.createPriceBookInput[name="name"]').on('change', function () {
+            var inputValue = $(this).val();
+            folderName = inputValue;
+        });
+        $('.newRecordBtn').on('click', function () {
+            $('#newRecordPanel').show();
+            $('#DocumentTypePage').hide();
+            resetForm();
+            // Initialize Choices.js on new form FilterBy
+            if ($('#newFilterBySelect').data('choices-instance')) {
+                $('#newFilterBySelect').data('choices-instance').destroy();
+            }
+            var newFilterByChoices = new Choices(document.getElementById('newFilterBySelect'), {
+                removeItemButton: true,
+                placeholderValue: 'Select...',
+                searchEnabled: false
+            });
+            $('#newFilterBySelect').data('choices-instance', newFilterByChoices);
+        });
+        $('.newRecordCancelBtn').on('click', function () {
+            $('#newRecordPanel').hide();
+            $('#DocumentTypePage').show();
+        });
+    });
+    function callbackSuccessFolderCreated(response) {
+        console.log(response);
+        let form = $('#newPricebookForm');
+
+        let addPricebook = {
+            revisionPeriod: form.find('.createPriceBookInput[name="revisionPeriod"]').val(),
+            name: form.find('.createPriceBookInput[name="name"]').val(),
+            active: form.find('.createPriceBookInput[name="active"]').val(),
+            code: form.find('.createPriceBookInput[name="code"]').val(),
+            isRevision: form.find('.createPriceBookInput[name="isRevision"]').val(),
+            filterBy: (function(){ var c = $('#newFilterBySelect').data('choices-instance'); return c ? c.getValue(true).join(';') : ''; })(),
+            reportFormatName: form.find('.createPriceBookInput[name="reportFormatName"]').val(),
+            extFolderId: typeof response === 'string' ? response : response.data
+        };
+        console.log(addPricebook)
+        var postUrl = JSUTIL.getUrl('/api/quality-document-type');
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(addPricebook), callbackAfterNewRequest);
+    }
+
+    function callbackAfterNewRequest(response) {
+        console.log(response);
+        location.reload();
+    }
+    function resetForm() {
+        $('#newPricebookForm')[0].reset();
+    }
+</script>
+<!-- newDocumentType.js end -->

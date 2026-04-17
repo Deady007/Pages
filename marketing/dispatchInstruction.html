@@ -989,15 +989,17 @@
 
             response.forEach(function (item, index) {
                 var productName = '';
-                if (item.productLot && item.productLot.product && item.productLot.product.name) {
-                    productName = item.productLot.product.name;
+                if (item.productLot || item.product) {
+                    productName = item?.productLot?.product?.name || item?.product?.name;
                 }
 
                 var batchNumber = '';
                 if (item.productLot && item.productLot.batchNumber) {
                     batchNumber = item.productLot.batchNumber;
                 }
-
+                else{
+                    batchNumber = item.batchNumber
+                }
                 var mfgDate = item.manufacturingDate || item.ManufacturingDate || '';
                 var retestDate = item.retestDate || item.RetestDate || '';
                 var drumNo = item.containerNumber || item.ContainerNumber || '';
@@ -1038,15 +1040,17 @@
             } else {
                 window.currentReleaseItems.forEach(function (item, idx) {
                     var productName = '';
-                    if (item.productLot && item.productLot.product && item.productLot.product.name) {
-                        productName = item.productLot.product.name;
+                    if (item.productLot || item.product) {
+                        productName = item?.productLot?.product?.name || item?.product?.name;
                     }
 
                     var batchNumber = '';
                     if (item.productLot && item.productLot.batchNumber) {
                         batchNumber = item.productLot.batchNumber;
                     }
-
+                    else{
+                        batchNumber = item.batchNumber
+                    }
                     var mfgDate = item.manufacturingDate || item.ManufacturingDate || '';
                     var retestDate = item.retestDate || item.RetestDate || '';
                     var drumNo = item.containerNumber || item.ContainerNumber || '';
@@ -1367,8 +1371,8 @@
             }
 
             response.forEach(function (item, index) {
-                var productName = item.productLot?.product?.name || item.ProductLot?.Product?.Name || '';
-                var batchNumber = item.productLot?.batchNumber || item.ProductLot?.BatchNumber || '';
+                var productName = item.productLot?.product?.name || item.ProductLot?.Product?.Name || item.product?.name ||  '';
+                var batchNumber = item.productLot?.batchNumber || item.ProductLot?.BatchNumber || item.batchNumber || '';
                 var mfgDate = item.manufacturingDate || item.ManufacturingDate || '';
                 var retestDate = item.retestDate || item.RetestDate || '';
                 var drumNo = item.containerNumber || item.ContainerNumber || '';

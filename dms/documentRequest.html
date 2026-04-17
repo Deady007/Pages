@@ -1,0 +1,3250 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<script src="pages/lib/bootstrap3-typeahead.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #documentRequestTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #documentRequestTable .selectRecordBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+</style>
+<!-- editDocumentRequest.html start -->
+<link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
+<style>
+    .progress-container {
+        position: relative;
+        width: 100%;
+        margin: auto;
+        padding: 0 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    /* Full gray track */
+    .progress-track {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        height: 4px;
+        background: #d3d5d8;
+        width: 0;
+        z-index: 1;
+        border-radius: 2px;
+    }
+
+    /* Dynamic yellow progress */
+    .progress-bar {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        height: 4px;
+        background: #fed804;
+        width: 0;
+        z-index: 2;
+        border-radius: 2px;
+        transition: width 0.4s ease, left 0.4s ease;
+    }
+
+    #process-steps {
+        position: relative;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .step {
+        position: relative;
+        z-index: 3;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        width: 120px;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        background: #d3d5d8;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        transition: background 0.3s, transform 0.3s;
+    }
+
+    .step.completed .step-circle {
+        background: #fed804;
+        color: #111;
+    }
+
+    .step.current .step-circle {
+        background: #ff9800;
+        transform: scale(1.1);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .step-label {
+        margin-top: 8px;
+        max-width: 100px;
+        font-weight: 600;
+    }
+
+    .custom-arrow {
+        position: relative;
+        display: inline-block;
+        padding: 7px 18px;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: center;
+        color: white;
+        min-width: 80px;
+        white-space: normal;
+        word-wrap: break-word;
+        background-color: #868e94;
+        clip-path: polygon(12% 0%, 94% 0%, 100% 50%, 94% 100%, 12% 100%, 18% 50%);
+        width: 200px;
+        height: 33px;
+        line-height: 17px;
+        white-space: nowrap;
+        transition: background-color 0.3s ease;
+    }
+
+    .arrow-container {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .custom-arrow {
+        margin-right: 2px;
+        padding: 3px 8px;
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+
+    .custom-arrow:last-child {
+        margin-right: 0;
+    }
+
+    .process-step.completed {
+        background-color: #fed804 !important;
+        color: rgb(28, 25, 25) !important;
+        transition: background-color 0.3s ease;
+    }
+
+    .process-flow {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 10px;
+        gap: 0;
+    }
+
+    .process-step {
+        background: #d3d5d8;
+        color: #111;
+        padding: 8px 16px;
+        border-radius: 20px 0 0 20px;
+        position: relative;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .process-step::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: -15px;
+        width: 0;
+        height: 0;
+        border-top: 20px solid transparent;
+        border-bottom: 20px solid transparent;
+        border-left: 15px solid #d3d5d8;
+        z-index: 1;
+    }
+
+    .process-step:last-child {
+        border-radius: 20px;
+    }
+
+    .process-step:last-child::after {
+        display: none;
+    }
+
+    .process-step.completed {
+        background: #fed804 !important;
+    }
+
+    .process-step.completed::after {
+        border-left-color: #fed804 !important;
+    }
+
+    .ibox {
+        margin-top: 10px;
+    }
+
+    #editableFieldsForm {
+        background-color: #fdfdfd;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin: auto;
+        box-shadow: 0 2px 10px rgba(153, 229, 1, 0.05);
+    }
+
+    .editable-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .editable-field {
+        flex: 1;
+        min-width: 200px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .full-width {
+        flex: 100%;
+    }
+
+    .editable-field label {
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    textarea.form-control {
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        outline: none;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        background-color: #fff;
+    }
+
+    textarea.form-control:focus {
+        box-shadow: 0 0 5px rgba(74, 144, 226, 0.4);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+        line-height: 1.4;
+    }
+</style>
+<div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="progress-container">
+            <div class="progress-track"></div>
+            <div class="progress-bar"></div>
+            <div id="process-steps"></div>
+        </div>
+
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="editRecordTitle"></span> <small>Edit Document</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
+                            data-lucide="x"></i> Close </button>
+                    <!-- <button type="button" class="btn btn-white btn-sm printBtn"><i data-lucide="printer"></i> Print
+                    </button> -->
+                    <!-- <button type="button" class="btn btn-white btn-sm" id="deleteRecipeBtn"><i data-lucide="trash"></i> Cancel </button> -->
+                    <button type="button" class="btn btn-default btn-sm recordEditBtn" style="display: none;"><i
+                            data-lucide="pencil"></i> Edit </button>
+                    <button type="button" class="btn btn-secondary btn-sm documentSaveAndUpdateBtn"
+                        style="display: none;"><i data-lucide="check"></i> Save </button>
+                    <button type="button" class="btn btn-secondary btn-sm recordBtnSendApproval" style="display: none;"><i
+                            data-lucide="check"></i> Submit For Approval</button>
+                    <button type="button" class="btn btn-secondary btn-sm recordApprovalBtn" style="display: none;"><i
+                            data-lucide="check"></i> Submit For Review</button>
+                    <button type="button" class="btn btn-secondary btn-sm recordBtnForApproval" style="display: none;"><i
+                            data-lucide="check"></i> Submit For Signing</button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="uploadDocumentBtn"
+                        style="display: none;"><i data-lucide="upload"></i> Upload Document </button>
+                    <button type="button" class="btn btn-secondary btn-sm openDocumentBtn" style="display: none;"><i
+                            data-lucide="folder-open"></i> Open Document </button>
+                    <button type="button" class="btn btn-danger btn-sm editPrintBtn" style="display: none;"><i
+                            data-lucide="trash"></i> Withdrawal Document </button>
+                    <button type="button" class="btn btn-secondary btn-sm qaSigningBtn" style="display: none;"><i
+                            data-lucide="check"></i> QA Signing </button>
+                    <!-- <button type="button" class="btn btn-secondary btn-sm recordIssuanceBtn" style="display: none;"><i
+                            data-lucide="check"></i> Make Effective</button> -->
+                    <button type="button" class="btn btn-secondary btn-sm recordAcceptBtn" style="display: none;"><i
+                            data-lucide="check"></i> Accept</button>
+                    <!-- <button type="button" class="btn btn-secondary btn-sm generateNumber" style="display: none;"><i 
+                            class="fa-solid fa-arrow-up-right-from-square"></i> Generate Document Number</button>
+                    <button type="button" class="btn btn-secondary btn-sm recordEffectiveBtn" style="display: none;"><i
+                            data-lucide="check"></i> Mark Issuance Complete</button> -->
+                    <button type="button" class="btn btn-warning btn-sm recordCFTBtn" style="display: none;"><i
+                            data-lucide="refresh-cw"></i> Send to CFT</button>
+                    <!-- <button type="button" class="btn btn-success btn-sm recordRejectedBtn" style="display: none;"><i 
+                            class="fa-solid fa-file-export"></i> Open PDF</button> -->
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div class="alert alert-danger" id="pageErrorPanel" style="display: none;"></div>
+                <div class="alert alert-danger" id="pageErrorPanelIssaunce" style="display: none;"></div>
+                <!-- <form id="editableFieldsForm" class="editable-form" style="margin-bottom: 5px;display: none;">
+                    <div class="editable-row">
+                        <div class="editable-field">
+                            <label>Issuance Type</label>
+                            <select class="select2 form-control" name="issuanceType" id="issuanceType">
+                                <option value="">--none--</option>
+                                <option value="Controlled Copy">Controlled Copy</option>
+                                <option value="Uncontrolled Copy">Uncontrolled Copy</option>
+                                <option value="Reference Copy">Reference Copy</option>
+                                <option value="Draft Copy">Draft Copy</option>
+                                <option value="Training Copy">Training Copy</option>
+                            </select>
+                        </div>
+                        <div class="editable-field full-width">
+                            <div class="form-group">
+                                <label>Training Date</label>
+                                <input type="text" class="form-control datepicker datepickerCompliance"
+                                    name="trainingDate" id="TrainingDate">
+                            </div>
+                        </div>
+                        <div class="editable-field full-width">
+                            <div class="form-group">
+                                <label>Training Remarks</label>
+                                <textarea type="text" class="form-control" name="trainingRemarks" id="TrainingRemarks"
+                                    style="padding-top: 0.5rem;border-radius: 5px; transition: border 0.3s ease, box-shadow 0.3s ease;"
+                                    rows="5"></textarea>
+                            </div>
+                        </div>
+                        <div class="editable-field full-width">
+                            <label>Issuance Comments</label>
+                            <textarea class="form-control trainingInput" name="comments"
+                                style="padding-top: 0.5rem;border-radius: 5px; transition: border 0.3s ease, box-shadow 0.3s ease;"
+                                rows="5" id="comments" rows="4">
+                            </textarea>
+                        </div>
+                    </div>
+                </form> -->
+                <form role="form" name="newObj" id="editDocumentForm">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select class="select2 form-control editRecordInput" name="documentType.id"
+                                    id="editType" disabled>
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Purpose</label>
+                                <select class="select2 form-control editRecordInput" name="purpose"
+                                    id="editPurposeValue" disabled>
+                                    <option value="">--none--</option>
+                                    <option value="New">New</option>
+                                    <!-- <option value="Amendment">Amendment</option> -->
+                                    <option value="Revision">Revision</option>
+                                    <!--  -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Document Name</label>
+                                <input type="text" class="form-control editRecordInput" name="documentName" readonly>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Document</label>
+                                <input type="text" placeholder="search.."
+                                    class="typeahead_3 form-control selectSearchInputAutoComplete" readonly />
+                                <input type="hidden" name="document.id"
+                                    class="selectSearchInputAutoCompleteId editRecordInput"
+                                    aria-description="search/quality_document" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Version Number</label>
+                                <input type="text" class="form-control editRecordInput" name="documentVersion" readonly>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="form-group">
+                                <label><strong>Description:</strong></label>
+                                <textarea type="text" class="form-control editRecordInput" name="reason"
+                                    style="padding-top: 0.5rem;border-radius: 5px; transition: border 0.3s ease, box-shadow 0.3s ease;"
+                                    rows="5" readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" class="editRecordInput" name="id" id="hiddenRecordId" />
+                </form>
+                <hr>
+                <div class="tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a data-toggle="tab" href="#review" aria-expanded="false">Reviewers</a>
+                        </li>
+                        <li>
+                            <a data-toggle="tab" id="documentShow" href="#Uploads" aria-expanded="false">Annexures</a>
+                        </li>
+                        <li><a data-toggle="tab" href="#history" aria-expanded="false">History</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="review" class="tab-pane active">
+                            <div class="panel-body">
+                                <div class="ibox-tools">
+                                    <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                        id="addScheduleBtn" style="margin-right: 5px;display: none;" disabled><i
+                                            data-lucide="plus"></i> Add Reviewers </button>
+                                    <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                        id="editScheduleBtn" style="margin-right: 5px;display: none;"><i
+                                            data-lucide="pencil"></i> Edit </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="saveScheduleBtn"
+                                        style="margin-right: 5px;display: none;"><i data-lucide="check"></i> Save
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm labControlBtn"
+                                        id="deleteScheduleBtn" style="display: none;"><i data-lucide="trash"></i> Delete
+                                        Reviewers </button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Reviewer</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="capacityTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="Uploads" class="tab-pane">
+                            <div class="panel-body">
+                                <div class="ibox-tools">
+                                    <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                        id="uploadDocument"><i data-lucide="upload"></i> Upload Annexures</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Name</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="allDocumentsTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="history" class="tab-pane">
+                            <div class="panel-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Date</th>
+                                                <!-- <th>Performed By</th> -->
+                                                <th>Notes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="allHistoryTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal inmodal fade" id="qauapprovalModel" tabindex="-1" role="dialog" aria-hidden="true"
+    style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="font-bold">Do you wish to proceed submitting this request for HOD Review?</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="alert alert-danger" id="pageErrorPanel1" style="display: none;"></div>
+                        <div id="oldRemarks"></div>
+                        <div class="form-group">
+                            <label>Remarks</label>
+                            <textarea rows="3" id="approvalRemarks" class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-secondary" id="approvalModelSaveBtn">Yes, Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal inmodal fade" id="approvalModel" tabindex="-1" role="dialog" aria-hidden="true"
+    style="display: none;">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="font-bold">Do you wish to proceed submitting this request for HOD Approval?</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="alert alert-danger" id="pageErrorPanel6" style="display: none;"></div>
+                        <div class="form-group">
+                            <label>Remarks</label>
+                            <textarea rows="5" id="approvalRemarks6" class="form-control"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-secondary" id="approvalSaveBtn">Yes, Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal inmodal fade" id="uploadFileModel" tabindex="-1" role="dialog" aria-hidden="true"
+    style="display: none;">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="font-bold">Upload File in Folder</h3>
+            </div>
+            <div class="modal-body">
+                <form role="form" name="lnItemObj" action="#" method="post" id="fileForm">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="fileinput fileinput-new input-group" data-provides="fileinput"
+                                style="margin-top: 24px;">
+                                <div class="form-control" data-trigger="fileinput" id="fileNameText">
+                                    <i class="glyphicon glyphicon-file fileinput-exists"></i>
+                                    <span class="fileinput-filename"></span>
+                                </div>
+                                <span class="input-group-addon btn btn-default btn-file">
+                                    <span class="fileinput-new">Select File</span>
+                                    <span class="fileinput-exists">Change</span>
+                                    <input type="file" name="File" id="fileInput"
+                                        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                                </span>
+                                <a href="#" class="input-group-addon btn btn-default fileinput-exists"
+                                    data-dismiss="fileinput">Remove</a>
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <button type="button" class="btn btn-default btn-sm close-box showRequestOnCancel"
+                                data-dismiss="modal" id="uploadFilePanel_cancelBtn"><i data-lucide="x"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="processBtn2"><i
+                                    data-lucide="upload"></i> Upload </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade inmodal" id="uploadModel" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="col-lg-12 uploadDocs">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5 id="uploadFileTitle">#</h5>
+                    </div>
+                    <div class="ibox-content uploadSection">
+                        <form role="form" name="lnItemObj" action="#" method="post" id="fileFormAction"
+                            enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="fileinput fileinput-new input-group" data-provides="fileinput"
+                                        style="margin-top: 24px;">
+                                        <div class="form-control" data-trigger="fileinput" id="fileNameTextAction">
+                                            <i class="glyphicon glyphicon-file fileinput-exists"></i>
+                                            <span class="fileinput-filename"></span>
+                                        </div>
+                                        <span class="input-group-addon btn btn-default btn-file">
+                                            <span class="fileinput-new">Select File</span>
+                                            <span class="fileinput-exists">Change</span>
+                                            <input type="file" name="File" id="fileInputAction">
+                                        </span>
+                                        <a href="#" class="input-group-addon btn btn-default fileinput-exists"
+                                            data-dismiss="fileinput">Remove</a>
+                                    </div>
+                                </div>
+                                <!-- <div class="col-lg-6"></div> -->
+                                <div class="col-sm-12 text-left">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">No, Cancel</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="processBtn1"><i
+                                            data-lucide="upload"></i> Upload</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                <h5>Uploaded Documents</h5>
+                            </div>
+                            <div class="ibox-content">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 15%;"></th>
+                                                <th>Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="allActionDocumentsTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal inmodal fade" id="esignModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">E-Signature</h4>
+                <small class="font-bold">Approve a request by reviewing all related information.</small>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="eSignReportPasswordFieldRow">
+                    <div class="alert alert-danger" id="pageErrorPanel5" style="display: none;"></div>
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label>Username</label><i style="margin-left:5px;" class="fa-solid fa-user-tie"></i>
+                            <input type="text" class="form-control" id="eSignUserName" readonly />
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label><i style="margin-left:5px;" class="fa-solid fa-lock"></i>
+                            <input type="password" class="form-control" id="eSignReportPasswordField"
+                                autocomplete="new-password" />
+                        </div>
+                    </div>
+                    <h5 class="font-bold" style="text-align: center;"> I understand that electronic signatures are the
+                        same as handwritten signatures.</h5>
+                </div>
+                <div class="row" id="addESignatureDetailsRow" style="display: none;">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" class="form-control eSignReportInput" name="location" id="location" />
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label>Reason</label>
+                            <textarea rows="5" class="form-control eSignReportInput" name="reason"
+                                id="reason"></textarea>
+                        </div>
+                    </div>
+                    <input type="hidden" class="form-control eSignReportInput" name="sourceType"
+                        value="document_request">
+                    <input type="hidden" class="form-control eSignReportInput" name="sourceRefNumber">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" id="completeVerificationBtn">Step 2: Complete
+                    Signing</button>
+                <button type="button" class="btn btn-secondary" id="completeSigningBtn"
+                    style="display: none;">Approve</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editDocumentRequest.html end -->
+
+
+
+
+<!-- editDocumentRequest.js start -->
+<script>
+    var currentRecordId = '';
+    var statusOfRecord;
+    var purposeOfRecord;
+    var documentId1;
+    var documentId7;
+    var selectedDepartment;
+    var currentDownloadInfo = {
+        originalFileName: null,
+        downloadedFileName: null,
+        downloadPath: null,
+        downloadType: null,
+        downloadTimestamp: null,
+        downloadVersions: [],
+        documentId: null
+    };
+    var docxName;
+    var typeOfDocument;
+    var objList1;
+    var fileId;
+    let cachedDepartmentList = null;
+    var multipartFile = '';
+    var uploadtableId = '';
+    var userDefineSuccessCallBack = '';
+    var effectiveFile;
+    var trainingStatus;
+    var requesterId;
+    var folderId;
+    var activityId;
+    var documentName;
+    var documentNumber;
+    var documentTypeId;
+    var departmentCode;
+    var documentTypeCode;
+    var documentTemplateId;
+    var templateAvailable;
+    var userGroupId;
+    var currentRecordData;
+    var currentSigningFlowType = '';
+    // Utility: build a readable employee name
+    function getEmployeeDisplayName(emp) {
+        if (!emp) return '';
+        if (emp.name) return emp.name;
+        const first = emp.firstName || '';
+        const last = emp.lastName || '';
+        return `${first} ${last}`.trim();
+    }
+
+    // Initialize typeahead search for employee reviewer inputs
+    function initReviewerSearch($input) {
+        if (!$input || !$input.length) return;
+
+        const typeaheadOpts = {
+            source: [],
+            displayText: function (item) {
+                if (typeof item === 'string') return item;
+                const name = getEmployeeDisplayName(item);
+                const dept = item.department && item.department.name ? ` (${item.department.name})` : '';
+                return `${name}${dept}`;
+            },
+            updater: function (selection) {
+                const name = typeaheadOpts.displayText(selection);
+                const id = selection.id || selection.employeeId || '';
+                $input.closest('tr').find('.reviewerIdInput').val(id);
+                return name;
+            }
+        };
+
+        // Avoid re-binding if already initialized
+        if (!$input.data('typeahead')) {
+            $input.typeahead(typeaheadOpts);
+        }
+
+        $input.off('keyup.reviewer').on('keyup.reviewer', function () {
+            const searchParam = $(this).val();
+            if (searchParam.length < 3) return;
+            const getUrl = JSUTIL.getUrl('/search/employee?searchParam=' + encodeURIComponent(searchParam));
+            JSUTIL.callAJAXGet(getUrl, function (response) {
+                if (!response || !Array.isArray(response) || response.length === 0) return;
+                const inst = $input.data('typeahead');
+                if (inst) {
+                    inst.source = response;
+                    inst.lookup();
+                }
+            });
+        });
+    }
+
+    function foActionUploadFile(panelTitle, actionUrl, successCallBack) {
+        $('#uploadFileTitle').html(panelTitle);
+        $('#fileFormAction').attr('action', actionUrl);
+        userDefineSuccessCallBack = successCallBack;
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#fileInputAction').on('change', function (e) {
+            $('#fileNameTextAction').text(e.target.files[0].name);
+            multipartFile = e.target.files[0];
+        });
+        $(document).on('click', '#processBtn1', function () {
+            $('#loadingError').hide();
+            $('#importResults').hide();
+            $('#insertedTable').empty();
+            var formData = new FormData();
+            formData.append('File', multipartFile);
+            var callback1 = userDefineSuccessCallBack || defaultSuccessCallback;
+            JSUTIL.callAJAXFilePost($('#fileFormAction').attr('action'), formData, callback1, null);
+        });
+    });
+    function defaultSuccessCallback(response) {
+        console.log(response);
+        location.reload();
+    }
+    function foUploadFile(panelTitle, actionUrl, successCallBack) {
+        $('#uploadFileTitle').text(panelTitle);
+        $('#fileForm').attr('action', actionUrl);
+        userDefineSuccessCallBack = successCallBack;
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#fileInput').on('change', function (e) {
+            $('#fileNameText').text(e.target.files[0].name);
+            multipartFile = e.target.files[0];
+        });
+        $('#processBtn2').on('click', function () {
+            $('#loadingError').hide();
+            $('#importResults').hide();
+            $('#insertedTable').empty();
+            var formData = new FormData();
+            formData.append('file', multipartFile);
+            JSUTIL.callAJAXFilePost(JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + folderId), formData, callback, null);
+        });
+    });
+
+
+    function callback(response) {
+        console.log(response);
+        let parsedResponse;
+        try {
+            parsedResponse = JSON.parse(response);
+        } catch (e) {
+            console.error('Error parsing response:', e);
+            return;
+        }
+
+        if (parsedResponse && parsedResponse.data) {
+            fileId = String(parsedResponse.data);
+            console.log(fileId);
+            const effectiveSend = {
+                extFileId: fileId
+            };
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function (response) {
+                console.log(response);
+                location.reload();
+            });
+        } else {
+            console.error('Invalid response data.');
+        }
+    }
+    let workflowSteps = [];
+
+    var postDocUrl3 = JSUTIL.getUrl('/process/steps?dataObjectName=QualityDocumentRequest');
+    JSUTIL.callAJAXGet(postDocUrl3, function (response) {
+        if (response && Array.isArray(response)) {
+            workflowSteps = response;
+        }
+    });
+
+    function generateProgressTracker(workflowSteps, currentStatus) {
+        const stepsContainer = $('#process-steps');
+        stepsContainer.empty();
+
+        const statusMap = {
+            'new': 'initiation'
+        };
+
+        const normalizedStatus = currentStatus.toLowerCase();
+        const mappedStatus = statusMap[normalizedStatus] || normalizedStatus;
+
+        workflowSteps.sort((a, b) => a.Sequence - b.Sequence);
+        const totalSteps = workflowSteps.length;
+        const stepWidth = 100 / totalSteps;
+
+        workflowSteps.forEach((step, index) => {
+            const stepElement = $(`
+            <div class="step" style="width:${stepWidth}%">
+                <div class="step-circle">${index + 1}</div>
+                <div class="step-label">${step.StepStatus}</div>
+            </div>
+        `);
+            stepsContainer.append(stepElement);
+        });
+
+        let stepsToComplete = [];
+        let specialCurrent = null;
+
+        if (mappedStatus.includes('hod') && mappedStatus.includes('authorization') && mappedStatus.includes('rejected')) {
+            stepsToComplete = ['initiation'];
+            specialCurrent = 'initiation';
+        }
+        else if (mappedStatus.includes('hod') && mappedStatus.includes('rejected') && !mappedStatus.includes('authorization')) {
+            stepsToComplete = ['initiation', 'hod approval', 'qa approval', 'tfm approval', 'preparation'];
+            specialCurrent = 'preparation';
+        }
+        else if (mappedStatus.includes('authorization')) {
+            stepsToComplete = ['initiation'];
+            specialCurrent = 'initiation';
+        }
+        else if (mappedStatus.includes('rejected')) {
+            stepsToComplete = ['initiation', 'cft'];
+            specialCurrent = 'cft';
+        }
+        else if (mappedStatus === 'initiation') {
+            stepsToComplete = ['initiation'];
+            specialCurrent = 'initiation';
+        }
+        else {
+            let foundCurrent = false;
+            workflowSteps.forEach(step => {
+                if (!foundCurrent) stepsToComplete.push(step.StepStatus.toLowerCase());
+                if (step.StepStatus.toLowerCase() === mappedStatus) foundCurrent = true;
+            });
+            specialCurrent = mappedStatus;
+        }
+
+        let currentStepIndex = 0;
+        $('.step').each(function (i) {
+            const stepText = $(this).find('.step-label').text().toLowerCase();
+            if (stepsToComplete.includes(stepText)) {
+                $(this).addClass('completed');
+            }
+            if (stepText === specialCurrent) {
+                $(this).removeClass('completed').addClass('current');
+                currentStepIndex = i;
+            }
+        });
+
+        // Calculate progress bar width and position based on actual step positions
+        // Use setTimeout to ensure DOM is fully rendered
+        setTimeout(function () {
+            const $steps = $('.step');
+            if ($steps.length > 1) {
+                const firstStep = $steps.first();
+                const lastStep = $steps.last();
+                const currentStep = $steps.eq(currentStepIndex);
+
+                if (firstStep.length && lastStep.length && currentStep.length) {
+                    const containerLeft = $('.progress-container').offset().left + 20; // 20px padding
+                    const firstStepCenter = firstStep.offset().left + (firstStep.outerWidth() / 2);
+                    const lastStepCenter = lastStep.offset().left + (lastStep.outerWidth() / 2);
+                    const currentStepCenter = currentStep.offset().left + (currentStep.outerWidth() / 2);
+
+                    // Position the gray track from first to last step
+                    const trackLeft = firstStepCenter - containerLeft;
+                    const trackWidth = lastStepCenter - firstStepCenter;
+
+                    $('.progress-track').css({
+                        'left': trackLeft + 'px',
+                        'width': trackWidth + 'px'
+                    });
+
+                    // Position the yellow progress bar from first to current step
+                    const progressLeft = firstStepCenter - containerLeft;
+                    const progressWidth = currentStepCenter - firstStepCenter;
+
+                    $('.progress-bar').css({
+                        'left': progressLeft + 'px',
+                        'width': progressWidth + 'px'
+                    });
+                }
+            }
+        }, 100);
+    }
+
+    $(document).ready(function () {
+        $('#allRecordPanel tbody').on('click', '.selectRecordBtn', function () {
+            $('.recordEffectiveBtn').hide();
+            $('.recordEditBtn').hide();
+            $('.documentSaveAndUpdateBtn').hide();
+            $('.recordApprovalBtn').hide();
+            $('#deleteScheduleBtn').prop('disabled', true);
+            $('#deleteCriticalBtn').prop('disabled', true);
+            $('#deleteDistributionBtn').prop('disabled', true);
+            currentRecordId = $(this).attr('id');
+            $.each(recordList, function (j, val2) {
+                if (currentRecordId.indexOf(val2.id) >= 0) {
+                    currentRecordData = val2;
+                    fileId = val2.extFileId;
+                    documentTypeCode = val2.documentType.code
+                    folderId = val2.extFolderId;
+                    statusOfRecord = val2.processStatus;
+                    purposeOfRecord = val2.purpose;
+                    selectedDepartment = val2.department;
+                    documentId1 = val2.document.id;
+                    typeOfDocument = val2.documentType.name;
+                    if (typeOfDocument === 'Format' && purposeOfRecord === 'New') {
+                        $('.other-doc-search1').show();
+                        $('.editRecordInput[name="parentDocument.id"]').parent().find(".selectSearchInputAutoComplete").val(val2.parentDocument.number + ' - ' + val2.parentDocument.name);
+
+                    } else {
+                        $('.other-doc-search1').hide();
+                    }
+                    trainingStatus = val2.trainingRequired;
+                    requesterId = val2.requester.id;
+                    documentNumber = val2.number;
+                    documentTypeId = val2.documentType.id;
+                    generateProgressTracker(workflowSteps, val2.processStatus);
+                    //updateProcessFlow(val2.processStatus);
+                    if (val2.purpose === 'New') {
+                        $('input[name="documentName"]').closest('.col-sm-6').show();
+                        $('input[name="documentNumber"]').closest('.col-sm-6').show();
+                        $('input[name="document.id"]').closest('.col-sm-6').hide();
+                        $('input[name="DocumentVersion"]').closest('.col-sm-6').show();
+                        $('input[name="pagesAmended"]').closest('.col-sm-6').hide();
+                        $('.editRecordInput[name="documentName"]').val(val2.documentName);
+                        $('.editRecordInput[name="documentNumber"]').val(val2.documentNumber);
+                        effectiveFile = val2.documentName + '_' + val2.documentVersion;
+                    } else if (val2.purpose === 'Withdrawal') {
+                        $('input[name="DocumentName"]').closest('.col-sm-6').hide();
+                        $('input[name="DocumentNumber"]').closest('.col-sm-6').hide();
+                        $('input[name="DocumentVersion"]').closest('.col-sm-6').hide();
+                        $('input[name="Document.Id"]').closest('.col-sm-6').show();
+                        $('input[name="pagesAmended"]').closest('.col-sm-6').hide();
+                        $('.editRecordInput[name="document.id"]').val(val2.document.id);
+                        $('.editRecordInput[name="document.id"]').parent().find(".selectSearchInputAutoComplete").val(val2.document.name);
+                    } else if (val2.purpose === 'Amendment') {
+                        $('input[name="documentName"]').closest('.col-sm-6').hide();
+                        $('input[name="documentNumber"]').closest('.col-sm-6').hide();
+                        $('input[name="document.id"]').closest('.col-sm-6').show();
+                        $('input[name="DocumentVersion"]').closest('.col-sm-6').show();
+                        $('input[name="pagesAmended"]').closest('.col-sm-6').show();
+                        $('.editRecordInput[name="document.id"]').val(val2.document.id);
+                        $('.editRecordInput[name="document.id"]').parent().find(".selectSearchInputAutoComplete").val(val2.document.number + ' - ' + val2.document.name);
+                        effectiveFile = val2.document.name + '_' + val2.documentVersion;
+                    }
+                    else {
+                        $('input[name="documentName"]').closest('.col-sm-6').hide();
+                        $('input[name="documentNumber"]').closest('.col-sm-6').hide();
+                        $('input[name="document.id"]').closest('.col-sm-6').show();
+                        $('input[name="DocumentVersion"]').closest('.col-sm-6').show();
+                        $('input[name="pagesAmended"]').closest('.col-sm-6').hide();
+                        $('.editRecordInput[name="document.id"]').val(val2.document.id);
+                        $('.editRecordInput[name="document.id"]').parent().find(".selectSearchInputAutoComplete").val(val2.document.number + ' - ' + val2.document.name);
+                        effectiveFile = val2.document.name + '_' + val2.documentVersion;
+                    }
+                    if (val2.ccRequired === 'Yes') {
+                        $('input[name="ccNumber"]').closest('.col-sm-6').show();
+                    } else {
+                        $('input[name="ccNumber"]').closest('.col-sm-6').hide();
+                    }
+                    $('.editRecordInput[name="type"]').val(val2.type);
+                    $('.editRecordInput[name="type"]').parent().find('.select2-selection__rendered').text(val2.type);
+                    $('.editRecordInput[name="department"]').val(val2.department);
+                    $('.editRecordInput[name="department"]').parent().find('.select2-selection__rendered').text(val2.department);
+                    $('.editRecordInput[name="purpose"]').val(val2.purpose);
+                    $('.editRecordInput[name="purpose"]').parent().find('.select2-selection__rendered').text(val2.purpose);
+                    $('.editRecordInput[name="ccRequired"]').val(val2.ccRequired);
+                    $('.editRecordInput[name="ccRequired"]').parent().find('.select2-selection__rendered').text(val2.ccRequired);
+                    $('.editRecordInput[name="trainingRequired"]').val(val2.trainingRequired);
+                    $('.editRecordInput[name="trainingRequired"]').parent().find('.select2-selection__rendered').text(val2.trainingRequired);
+                    $('#hiddenRequestId').val(val2.id);
+                    $('#TrainingDate').val(JSUTIL.getDate(val2.trainingDate));
+                    $('#TrainingRemarks').val(val2.trainingRemarks);
+                    if (val2.processStatus === 'Effective') {
+                        // $('#issuanceType').val(val2.issueType);
+                        // $('#issuanceType').parent().find('.select2-selection__rendered').text(val2.issueType);
+                    } else {
+                        // $('#issuanceType').val('');
+                        // $('#issuanceType').parent().find('.select2-selection__rendered').text('--none--');
+                        $('.trainingInput[name="comments"]').val('');
+                    }
+                }
+            });
+            $('#hiddenRecordId').val(currentRecordId);
+            var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+            JSUTIL.callAJAXGet(postDocUrl2, callbackAfterGetData);
+            const departmentParameter = {
+                fields: "StartDate;Name;Code",
+                conditions: [],
+                logic: ""
+            };
+            var ansUrl = JSUTIL.getUrl('/data/Department/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(departmentParameter), callbackAfterEditDepartment);
+            const activityParameter = {
+                fields: "Description;Name;Type",
+                conditions: [],
+                logic: ""
+            };
+            var ansUrl = JSUTIL.getUrl('/data/ActivityFeed/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(activityParameter), callbackAfterGetActivity);
+            var ansUrl = JSUTIL.getUrl('/api/quality-document-type');
+            JSUTIL.callAJAXGet(ansUrl, callbackAfterGetEditType);
+            const criticalParameter = {
+                fields: "Name;Number;Requester.Id;ProcessStatus;ExtFileId;Department;RequestDate;ApprovalDate;Reviewer.Id;IsActive",
+                conditions: [`DocumentType.Id = ${documentTypeId}`, `IsActive='Active'`],
+                logic: "{0} AND {1}"
+            };
+            var ansUrl = JSUTIL.getUrl('/data/QualityDocumentTemplate/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(criticalParameter), callbackAfterGetCritical);
+            const criticalParameter1 = {
+                fields: "DocumentRequest.Id;Name;ExtFileId;CreatedDate;ProcessStatus",
+                conditions: [`DocumentRequest.Id = ${currentRecordId}`],
+                logic: "{0}"
+            };
+            var ansUrl = JSUTIL.getUrl('/data/QualityDocumentAnnexure/list');
+            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(criticalParameter1), callbackAfterGetDocuments);
+
+        });
+        // editDocumentRequest.js
+
+        $('select[name="purpose"]').on('change', function () {
+            var purpose = $('#editPurposeValue').val();
+            toggleEditOtherDocumentField();
+            // --- MODIFICATION END ---
+
+            if (purpose === 'New') {
+                $('input[name="documentName"]').closest('.col-sm-6').show();
+                $('input[name="documentNumber"]').closest('.col-sm-6').show();
+                $('input[name="document.id"]').closest('.col-sm-6').hide();
+                $('input[name="pagesAmended"]').closest('.col-sm-6').hide();
+            } else if (purpose === 'Amendment') {
+                $('input[name="documentName"]').closest('.col-sm-6').hide();
+                $('input[name="documentNumber"]').closest('.col-sm-6').hide();
+                $('input[name="document.id"]').closest('.col-sm-6').show();
+                $('input[name="pagesAmended"]').closest('.col-sm-6').show();
+            }
+            else {
+                $('input[name="documentName"]').closest('.col-sm-6').hide();
+                $('input[name="documentNumber"]').closest('.col-sm-6').hide();
+                $('input[name="document.id"]').closest('.col-sm-6').show();
+                $('input[name="pagesAmended"]').closest('.col-sm-6').hide();
+            }
+        });
+        $(document).on('click', '#uploadDocument', function () {
+            $('#editRecordPanel').hide();
+            $('#vendorUploadFilesPanel').show();
+            var postUrl = JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + companySettingMap.annexures);
+            foVendorUploadFile('Upload Documents', postUrl, callbackAfterDocumentUpload);
+        });
+        // Use event delegation - Cancel button lives in a separately loaded HTML fragment
+        $(document).on('click', '.showRequestOnCancel', function () {
+            $('#vendorUploadFilesPanel').hide();
+            $('#editRecordPanel').show();
+        });
+        $('#editType').on('change', function () {
+            var selectedTypeName = $(this).find('option:selected').text();
+            if (selectedTypeName === 'Format') {
+                $('.other-doc-search1').show();
+            } else {
+                $('.other-doc-search1').hide();
+            }
+        });
+        $('#editScheduleBtn').on('click', function () {
+            $(this).hide();
+            $('#addScheduleBtn').removeAttr('disabled');
+            $('.newItemInput').removeAttr('disabled');
+            $("#saveScheduleBtn").show();
+            // Enable search on existing reviewer inputs when editing
+            $('.reviewerSearchInput').each(function () {
+                initReviewerSearch($(this));
+            });
+        });
+        $('#addScheduleBtn').on('click', function () {
+            var innerHtml = '<tr class="newItemEntry" name="">' +
+                '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" name="" type="checkbox"><label></label></td>' +
+                '<td>' +
+                '<input type="text" class="typeahead_3 form-control newItemInput reviewerSearchInput selectSearchInputAutoComplete" placeholder="search.." aria-description="search/employee" autocomplete="off">' +
+                '<input type="hidden" class="reviewerIdInput newItemInput selectSearchInputAutoCompleteId" name="reviewer.id">' +
+                '</td>' +
+                '</tr>';
+
+            $('#capacityTable').append(innerHtml);
+            initReviewerSearch($('#capacityTable').find('.reviewerSearchInput').last());
+        });
+        $('#saveScheduleBtn').on('click', function () {
+            let items = [];
+            $('#capacityTable tr.newItemEntry').each(function () {
+                const scheduleId = $(this).attr('name');
+                let item = {
+                    request: {
+                        id: currentRecordId
+                    },
+                    reviewer: {
+                        id: Number($(this).find('.reviewerIdInput').val())
+                    }
+                };
+                if (scheduleId) {
+                    item.id = scheduleId;
+                }
+                if (item.reviewer.id) {
+                    items.push(item);
+                }
+            });
+
+            console.log(items);
+
+            const postUrl = '/data/QualityDocumentRequestReviewer/upsert_multiple';
+            JSUTIL.callAJAXPost(postUrl, JSON.stringify(items), callbackAfterEditResponse);
+        });
+        $('#deleteScheduleBtn').on('click', function () {
+            let jsObj = [];
+            let rangeId = '';
+            $('.deleteItemCreatedEntryRow1:checked').each(function () {
+                rangeId = $(this).attr('name');
+                if (rangeId != '') {
+                    jsObj.push(Number(rangeId));
+                } else {
+                    $(this).closest('tr').remove();
+                    return;
+                }
+            });
+            console.log(jsObj);
+            if (jsObj.length > 0) {
+                JSUTIL.callAJAXPost('/data/QualityDocumentRequestReviewer/delete_multiple', JSON.stringify(jsObj), callbackAfterEditResponse);
+            }
+        });
+        $('#capacityTable').on('change', '.deleteItemCreatedEntryRow1', function () {
+            toggleDeleteButton('#capacityTable .deleteItemCreatedEntryRow1', '#deleteScheduleBtn');
+        });
+        $('.documentSaveAndUpdateBtn').on('click', function () {
+            var editDocumentPayload = buildFormDataJSON('editRecordInput');
+            var postUrl = ('/data/QualityDocumentRequest/update/' + currentRecordId);
+            JSUTIL.callAJAXPost(postUrl, JSON.stringify(editDocumentPayload), callbackSuccessDocumentUpdate);
+        });
+        $('.recordEditBtn').on('click', function () {
+            $('.documentSaveAndUpdateBtn').show();
+            $('.recordApprovalBtn').hide();
+            $('.recordEffectiveBtn').hide();
+            $('input[name="documentVersion"]').prop('readonly', true);
+        });
+        $('.editRecordCancelBtn').on('click', function () {
+            $('.editRecordInput').prop('disabled', true);
+            $('.editRecordInput').prop('readonly', true);
+        });
+        $('.showRequestOnCancel').on('click', function () {
+            $('#foUploadFilesPanel').hide();
+            $('#editRecordPanel').show();
+        });
+        $('.recordApprovalBtn').on('click', function () {
+            $('#qauapprovalModel').modal('show');
+        });
+        $('.recordBtnSendApproval').on('click', function () {
+            $('#approvalModel').modal('show');
+        });
+        $('.recordBtnForApproval').on('click', function () {
+            currentSigningFlowType = 'author';
+            $('#eSignReportPasswordField').val('');
+            $('#location').val('');
+            $('#reason').val('');
+            $('#eSignReportPasswordFieldRow').show();
+            $('#completeVerificationBtn').show();
+            $('#addESignatureDetailsRow').hide();
+            $('#completeSigningBtn').hide();
+            $('#esignModal').modal('show');
+            $('#eSignUserName').val(employeeUsername);
+        });
+        $('.qaSigningBtn').on('click', function () {
+            currentSigningFlowType = 'qa';
+            $('#eSignReportPasswordField').val('');
+            $('#location').val('');
+            $('#reason').val('');
+            $('#eSignReportPasswordFieldRow').show();
+            $('#completeVerificationBtn').show();
+            $('#addESignatureDetailsRow').hide();
+            $('#completeSigningBtn').hide();
+            $('#esignModal').modal('show');
+            $('#eSignUserName').val(employeeUsername);
+        });
+        $('#completeVerificationBtn').on('click', function () {
+            var password = $('#eSignReportPasswordField').val();
+            JSUTIL.callAJAXGet('/document/verify_user?un=' + employeeUsername + '&pw=' + password, callbackAfterVerification);
+        });
+        $('#completeSigningBtn').on('click', function () {
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
+            $('#esignModal').modal('hide');
+
+            if (currentSigningFlowType === 'qa' || statusOfRecord === 'QA') {
+                proceedWithQaSigningFlow($('#reason').val(), function () {
+                    location.reload();
+                });
+                return;
+            }
+
+            const preparedPayload = {
+                preparedDate: new Date().toISOString()
+            };
+
+            // Author Signing: do not call /process/approvals/submit_sign
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(preparedPayload), function () {
+                clearReviewerStatusesForCurrentRequest(function () {
+                    proceedWithReviewSigningFlow($('#reason').val(), callbackAfterCompleteSigning);
+                });
+            });
+        });
+        $('#approvalModelSaveBtn').on('click', function () {
+            if ($('#approvalRemarks').val() == null || $('#approvalRemarks').val() == '') {
+                $('#pageErrorPanel1').text('Please give remarks');
+                $('#pageErrorPanel1').show().delay(4000).hide(0);
+                return;
+            }
+            const dataToSend = {
+                remarks: $('#approvalRemarks').val()
+            };
+            var postUrl = JSUTIL.getUrl('/process/approvals/submit?id=' + currentRecordId + '&dataObjectName=QualityDocumentRequest');
+            JSUTIL.callAJAXPost(postUrl, JSON.stringify(dataToSend), completeImcheckCallback);
+        });
+        $('#approvalSaveBtn').on('click', function () {
+            if ($('#approvalRemarks6').val() == null || $('#approvalRemarks6').val() == '') {
+                $('#pageErrorPanel6').text('Please give remarks');
+                $('#pageErrorPanel6').show().delay(4000).hide(0);
+                return;
+            }
+
+            const clearReviewerStatuses = function (next) {
+                const payload = {
+                    fields: "Id;Reviewer.Id;Request.Id;ProcessStatus",
+                    conditions: [`Request.Id = ${currentRecordId}`],
+                    logic: "{0}"
+                };
+                const postUrl = JSUTIL.getUrl('/data/QualityDocumentRequestReviewer/list');
+                JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (reviewerList) {
+                    if (!Array.isArray(reviewerList) || reviewerList.length === 0) {
+                        next();
+                        return;
+                    }
+                    const upsertPayload = reviewerList.map(function (item) {
+                        return {
+                            id: item.id,
+                            processStatus: ""
+                        };
+                    });
+                    const bulkPayload = Array.isArray(upsertPayload) ? upsertPayload : [upsertPayload];
+                    JSUTIL.callAJAXPost('/data/QualityDocumentRequestReviewer/upsert_multiple', JSON.stringify(bulkPayload), function () {
+                        next();
+                    });
+                });
+            };
+
+            const proceedWithApprovalFlow = function () {
+                var postDocUrl = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+                JSUTIL.callAJAXGet(postDocUrl, function (pageDataResponse) {
+                    const history = pageDataResponse.history || [];
+
+                    const maxLocation = history.reduce(function (max, entry) {
+                        const loc = parseInt(entry.location);
+                        return !isNaN(loc) && loc > max ? loc : max;
+                    }, 0);
+
+                    const newLocation = String(maxLocation + 1);
+
+                    const reviewSend = {
+                        processStatus: "Review",
+                        inApprovalWorkflow: true
+                    };
+                    JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(reviewSend), function (response) {
+                        console.log(response);
+                        const issuanceSend = {
+                            parentRecordId: Number(currentRecordId),
+                            name: `Record Status Updated To Review By ${employeeName}`,
+                            performedBy: { id: Number(employeeId) },
+                            notes: $('#approvalRemarks6').val(),
+                            location: newLocation,
+                        };
+                        JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(issuanceSend), callbackAfterUnshareFile);
+                    });
+                });
+            };
+
+            clearReviewerStatuses(proceedWithApprovalFlow);
+        });
+        $('.recordCFTBtn').on('click', function () {
+            const cftSend = {
+                processStatus: "CFT"
+            };
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(cftSend), function (response) {
+                console.log(response);
+
+                // Get CFT departments from the response
+                var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+                JSUTIL.callAJAXGet(postDocUrl2, function (pageDataResponse) {
+                    console.log(pageDataResponse);
+
+                    // Filter departments of type CFT
+                    const cftDepartments = pageDataResponse.departments.filter(dept => dept.type === 'CFT');
+
+                    if (cftDepartments.length > 0) {
+                        // Create activity feed items for each CFT department
+                        const activityItems = cftDepartments.map(dept => ({
+                            name: `${documentNumber} sent to CFT`,
+                            description: '/app/docuSync2/documentRequest?id=' + currentRecordId,
+                            type: 'CFT',
+                            department: { id: dept.department.id }
+                        }));
+
+                        console.log('Activity items to create:', activityItems);
+
+                        // Call create_multiple endpoint
+                        JSUTIL.callAJAXPost('/data/ActivityFeed/create_multiple', JSON.stringify(activityItems), function (response) {
+                            console.log('Activity feeds created:', response);
+                            location.reload();
+                        });
+                    } else {
+                        console.log('No CFT departments found');
+                        location.reload();
+                    }
+                });
+            });
+        });
+        $('.recordIssuanceBtn').on('click', function () {
+            if (trainingStatus === 'Yes') {
+                if ($('#TrainingDate').val() == null || $('#TrainingDate').val() == '') {
+                    $('#pageErrorPanel').text('Please select a training date');
+                    $('#pageErrorPanel').show().delay(5000).hide(0);
+                    return;
+                }
+            }
+            if ($('#TrainingRemarks').val() == null || $('#TrainingRemarks').val() == '') {
+                $('#pageErrorPanel').text('Please select remarks');
+                $('#pageErrorPanel').show().delay(5000).hide(0);
+                return;
+            }
+            let trainingDateString = $('#TrainingDate').val();
+            let trainingDate = new Date(trainingDateString.split('/').reverse().join('-'));
+            const effectiveSend = {
+                trainingDate: trainingDate,
+                trainingRemarks: $('#TrainingRemarks').val(),
+                processStatus: "Effective"
+            };
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), completeDocumentCallback);
+        });
+        $('.recordEffectiveBtn').on('click', function () {
+            // if ($('#issuanceType').val() == null || $('#issuanceType').val() == '') {
+            //     $('#pageErrorPanelIssaunce').text('Please select a Issuance Type');
+            //     $('#pageErrorPanelIssaunce').show().delay(5000).hide(0);
+            //     return;
+            // }
+            if ($('#comments').val() == null || $('#comments').val() == '') {
+                $('#pageErrorPanelIssaunce').text('Please select comments');
+                $('#pageErrorPanelIssaunce').show().delay(5000).hide(0);
+                return;
+            }
+            const issuanceSend = {
+                id: currentRecordId,
+                name: "Record Status Updated To Training",
+                comments: $('#comments').val(),
+            };
+            JSUTIL.callAJAXPost('/dms/request/ext/create_history', JSON.stringify(issuanceSend), callbackSuccessDocumentEffective);
+
+            const issuanceSend1 = {
+                // issueType: $('#issuanceType').val(),
+                issuer: { id: Number(employeeId) },
+                processStatus: "Training"
+            };
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(issuanceSend1), callbackSuccessDocumentEffective1);
+        });
+        $('#addStakeholderBtnChangeReq').on('click', function () {
+            $('#addChangeReqPanelByStack').show();
+            $('#editRecordPanel').hide();
+        });
+        $('.stakeCancelBtn').on('click', function () {
+            $('#addChangeReqPanelByStack').hide();
+            $('#editRecordPanel').show();
+        });
+        $('.openDocumentBtn').on('click', function () {
+            if (requesterId == employeeId) {
+                if (fileId) {
+                    JSUTIL.callAJAXGet('/onedrive/share?fileId=' + fileId + '&userEmail=' + employeeEmail, callbackAfterShareFile);
+                } else if (templateAvailable == false) {
+                    JSUTIL.callAJAXGet('/onedrive/createEmptyFile?folderId=' + folderId + '&fileName=' + encodeURIComponent(effectiveFile) + '.docx', callback2);
+                } else {
+                    JSUTIL.callAJAXGet('/onedrive/download/' + encodeURIComponent(documentTemplateId), callbackAfterGetDownload);
+                }
+
+            } else {
+                JSUTIL.callAJAXGet('/onedrive/review/' + fileId, callbackAfterEditFile);
+            }
+        });
+        $('.CRStackeSaveBtn').on('click', function () {
+            createChangeReqStakeholder();
+        });
+        $('#deleteStackeChangeBtn').prop('disabled', true);
+        $('#allStakeholderChangeReqTable').on('change', '.deleteItemCreatedEntryRow', function () {
+            toggleDeleteButton('#allStakeholderChangeReqTable .deleteItemCreatedEntryRow', '#deleteStackeChangeBtn');
+        });
+        $('#deleteStackeChangeBtn').on('click', function () {
+            let jsObj = [];
+            let productId = '';
+            $('.deleteItemCreatedEntryRow:checked').each(function () {
+                productId = $(this).attr('name');
+                if (productId != '') {
+                    jsObj.push(Number(productId));
+                } else {
+                    $(this).closest('tr').remove();
+                    return;
+                }
+            });
+            console.log(jsObj);
+            if (jsObj.length > 0) {
+                JSUTIL.callAJAXPost('/data/Stakeholder/delete_multiple', JSON.stringify(jsObj), callbackAfterDeleteProductsDetails);
+            }
+        });
+        $('.printBtn').on('click', function () {
+            JSUTIL.openInNewTab('/print/QualityDocumentRequest?id=' + currentRecordId);
+        });
+        $('.editPrintBtn').on('click', function () {
+            JSUTIL.callAJAXGet('/dms/request/withdraw_document?id=' + documentId1, callbackAfterWithdrawal);
+        });
+        $(document).on('click', '#uploadDocumentBtn', function () {
+            $('#uploadFileModel').modal('show');
+        });
+        $(document).on('click', '.uploadDocBtn', function () {
+            itemIdNew = $(this).attr('id');
+            $('#uploadModel').modal('show');
+            var postDocUrl = JSUTIL.getUrl('/data/upload/documents?referenceNumber=' + itemIdNew + '&additionalInfo=');
+            JSUTIL.callAJAXGet(postDocUrl, callbackAfterGetActionDocuments);
+            var postUrl = JSUTIL.getUrl('/data/upload/training_document?referenceNumber=' + itemIdNew + '&additionalInfo=');
+            foActionUploadFile('Upload Documents', postUrl, callbackAfterDocUpload);
+        });
+        $('.generateNumber').on('click', function () {
+            JSUTIL.callAJAXGet('/dms/request/get_document_number_format', callbackAfterGetNumber);
+        });
+    });
+    function callbackAfterDocumentUpload(response) {
+        $('#vendorUploadFilesPanel').hide();
+        console.log(response);
+        var filename = $('#fileNameTextVQ').text()
+        var obj = {
+            extFileId: String((JSON.parse(response)).data),
+            documentRequest: { id: String(currentRecordId) },
+            name: String(filename)
+        }
+        var docUploadUrl = JSUTIL.getUrl('/data/QualityDocumentAnnexure/create')
+        console.log(obj)
+        JSUTIL.callAJAXPost(docUploadUrl, JSON.stringify(obj), callbackAfterDocumentCreation);
+    }
+
+    function callbackAfterDocumentCreation(response) {
+        $('#fileNameTextVQ').empty();
+        const criticalParameter1 = {
+            fields: "DocumentRequest.Id;Name;ExtFileId;CreatedDate",
+            conditions: [`DocumentRequest.Id = ${currentRecordId}`],
+            logic: "{0}"
+        };
+        var ansUrl = JSUTIL.getUrl('/data/QualityDocumentAnnexure/list');
+        JSUTIL.callAJAXPost(ansUrl, JSON.stringify(criticalParameter1), callbackAfterGetDocuments);
+    }
+
+    function callbackAfterGetDocuments(objList) {
+        console.log(objList);
+        $('#editRecordPanel').show();
+        $('#allDocumentsTable').empty();
+        var innerHtml = '';
+        if (!objList || objList.length === 0) {
+            innerHtml = '<tr><td colspan="3" class="text-center">No Data available</td></tr>';
+        } else {
+            $.each(objList, function (i, val) {
+                innerHtml += '<tr><td style="width: 12%;">';
+
+                // --- MODIFIED: Also check isCurrentRecordFinal ---
+                if (val.isLocked) {
+                    innerHtml += '<button type="button" class="btn btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '" disabled><i data-lucide="trash"></i></button>';
+                } else {
+                    innerHtml += '<button type="button" class="btn btn-outline btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '"><i data-lucide="trash"></i></button>';
+                }
+                innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.extFileId + '" style="margin-left: 5px;"><i data-lucide="eye"></i></button>' +
+                    '</td>' +
+                    '<td>' + (val.name || '') + '</td>' +
+                    '<td>' + JSUTIL.getDate(val.createdDate) + '</td>' +
+                    '</tr>';
+            });
+        }
+        $('#allDocumentsTable').append(innerHtml);
+        $('.deleteDocumentBtn').on('click', function () {
+            documentId = $(this).attr('name');
+            console.log(documentId)
+            viewBtnId = $(this)
+                .closest('td')
+                .find('.viewDocumentBtn')
+                .attr('id');
+
+            console.log("View button ID:", viewBtnId);
+            elementToDelete = $(this).parent().parent();
+            console.log('element to delete', elementToDelete)
+            MODALUTIL.deleteConfirmModal(deleteDocumentTrCallback);
+        });
+        $('.viewDocumentBtn').on('click', function () {
+            var documentPath = $(this).attr('id');
+            var getUrl = JSUTIL.getUrl('/onedrive/view/' + documentPath);
+            JSUTIL.callAJAXGet(getUrl, getDocumentViewCallback);
+        });
+    }
+
+    function getDocumentViewCallback(response) {
+        console.log(response);
+        window.open(response.data, '_blank');
+    }
+
+    function deleteDocumentTrCallback() {
+        var oneDriveUrl = JSUTIL.getUrl('/onedrive/delete_file/' + viewBtnId);
+        JSUTIL.callAJAXGet(oneDriveUrl, function (resp) {
+            console.log("OneDrive delete response:", resp);
+        });
+        var postUrl = JSUTIL.getUrl('/data/QualityDocumentAnnexure/delete?id=' + documentId);
+        JSUTIL.callAJAXGet(postUrl, afterDeleteTrHandle);
+    }
+
+    function afterDeleteTrHandle(data) {
+        elementToDelete.remove();
+    }
+    function toggleEditOtherDocumentField() {
+        var purpose = $('#editPurposeValue').val();
+        var selectedType = $('#editType option:selected').text();
+
+        // Check if BOTH conditions are true
+        if (purpose === 'New' && selectedType === 'Format') {
+            $('.other-doc-search1').show();
+        } else {
+            $('.other-doc-search1').hide();
+        }
+    }
+    function callbackAfterGetNumber(response) {
+        console.log(response);
+
+        let format = response.format;
+
+        let searchPattern = format
+            .replace('{dept_code}', departmentCode)
+            .replace('{doc_type}', documentTypeCode)
+            .replace('{00}', '%');
+
+
+        const numberParameter = {
+            fields: "Number",
+            conditions: [`Number LIKE '${searchPattern}'`],
+            orderBy: 'Number DESC LIMIT 1',
+            logic: "{0}"
+        };
+        console.log(numberParameter)
+
+        var ansUrl = JSUTIL.getUrl('/data/QualityDocument/list');
+        JSUTIL.callAJAXPost(ansUrl, JSON.stringify(numberParameter), callbackAfterGetNumber1);
+    }
+
+    function callbackAfterGetNumber1(response) {
+        console.log(response);
+
+        let newNumber;
+
+        if (response && response.length > 0 && response[0].Number) {
+            let lastNumber = response[0].Number;
+
+            let parts = lastNumber.split('/');
+            let numericPart = parts[parts.length - 1];
+            let currentNum = parseInt(numericPart);
+            let nextNum = currentNum + 1;
+
+            let paddedNum = nextNum.toString().padStart(numericPart.length, '0');
+
+            parts[parts.length - 1] = paddedNum;
+            newNumber = parts.join('/');
+
+        } else {
+
+            let format = response.format || `HLS/${departmentCode}/${documentTypeCode}/{00}`;
+
+            let zeroMatch = format.match(/\{(0+)\}/);
+            let zeroCount = zeroMatch ? zeroMatch[1].length : 2;
+
+            let firstNum = '1'.padStart(zeroCount, '0');
+
+            newNumber = format
+                .replace('{dept_code}', departmentCode)
+                .replace('{doc_type}', documentTypeCode)
+                .replace(`{${'0'.repeat(zeroCount)}}`, firstNum);
+        }
+
+        console.log('Generated new number:', newNumber);
+        const effectiveSend = {
+            documentNumber: newNumber
+        };
+        console.log(effectiveSend);
+        JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function (updateResponse) {
+            console.log('Update response:', updateResponse);
+            $('.recordEffectiveBtn').show();
+            $('.generateNumber').hide();
+        });
+    }
+
+
+    function base64ToFile(base64String, filename) {
+        const byteCharacters = atob(base64String);
+        const byteNumbers = new Array(byteCharacters.length);
+
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        return new File([byteArray], filename, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    }
+
+    function callbackAfterGetDownload(response) {
+        console.log(response);
+        const base64Data = response;
+        const filename = effectiveFile + '.docx';
+        effectiveFile1 = base64ToFile(base64Data, filename);
+
+        multipartFile = effectiveFile1;
+        $('#fileNameText').text(filename);
+        var formData = new FormData();
+        formData.append('file', multipartFile);
+
+        JSUTIL.callAJAXFilePost(
+            JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + folderId),
+            formData,
+            callback1,
+            null
+        );
+    }
+
+    function callback1(response) {
+        console.log(response);
+        let parsedResponse;
+        try {
+            parsedResponse = JSON.parse(response);
+        } catch (e) {
+            console.error('Error parsing response:', e);
+            return;
+        }
+
+        if (parsedResponse && parsedResponse.data) {
+            fileId = String(parsedResponse.data);
+            console.log(fileId);
+            const effectiveSend = {
+                extFileId: fileId
+            };
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function (updateResponse) {
+                console.log('Update response:', updateResponse);
+
+                JSUTIL.callAJAXGet('/onedrive/share?fileId=' + fileId + '&userEmail=' + employeeEmail, callbackAfterShareFile);
+            });
+        } else {
+            console.error('Invalid response data.');
+        }
+    }
+    function callback2(response) {
+        console.log(response);
+        fileId = response.data;
+        console.log(fileId);
+        const effectiveSend = {
+            extFileId: fileId
+        };
+        JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function (updateResponse) {
+            console.log('Update response:', updateResponse);
+
+
+            JSUTIL.callAJAXGet('/onedrive/share?fileId=' + fileId + '&userEmail=' + employeeEmail, callbackAfterShareFile);
+        });
+    }
+
+    function callbackAfterGetCritical(response) {
+        console.log(response);
+        if (response && response.length > 0 && response[0].extFileId) {
+            documentTemplateId = response[0].extFileId;
+        } else {
+            templateAvailable = false;
+        }
+    }
+
+    function callbackAfterVerification(response) {
+        console.log(response);
+        if (response.result === "FAILURE") {
+            $('#pageErrorPanel5').text('Invalid password, please try again');
+            $('#pageErrorPanel5').show().delay(4000).hide(0);
+            return;
+        } else {
+            $('#eSignReportPasswordFieldRow').hide();
+            $('#completeVerificationBtn').hide();
+            $('#addESignatureDetailsRow').show();
+            $('#completeSigningBtn').show();
+        }
+    }
+    function callbackAfterCompleteSigning(response) {
+        console.log(response);
+        var obj = {
+            "title": "Request Arrived at HOD Signing",
+            "message": `Request ${documentNumber} arrived at HOD Signing.`,
+            "eventName": "submit_for_signing"
+        }
+        JSUTIL.callAJAXPost('/process/create_notification_async', JSON.stringify(obj), function (response) {
+            console.log(response);
+            location.reload();
+        });
+    }
+    function buildFormDataJSON(className) {
+        let jsonPayload = {};
+        $('.' + className).each(function () {
+            let attrName = $(this).attr('name');
+            let attrValue = $(this).val();
+
+            if (attrName && attrName.indexOf('.') >= 0) {
+                let splitArray = attrName.split('.');
+                let parentKey = splitArray[0];
+                let childKey = splitArray[1];
+
+                if (!jsonPayload[parentKey]) {
+                    jsonPayload[parentKey] = {};
+                }
+
+                if (attrValue) {
+                    if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance') || $(this).hasClass('datepickerCompliance2')) {
+                        attrValue = JSUTIL.toDatabaseDate(attrValue);
+                    } else if ($(this).hasClass('datetimepicker')) {
+                        attrValue = JSUTIL.getDatabaseDateTime(attrValue);
+                    } else if ($(this).hasClass('select2')) {
+                        attrValue = $(this).select2('val');
+                    } else if ($(this).attr('type') === 'checkbox') {
+                        attrValue = $(this).prop('checked');
+                    } else if ($(this).attr('type') === 'number' || childKey === 'id') {
+                        attrValue = Number(attrValue);
+                    }
+                    jsonPayload[parentKey][childKey] = attrValue;
+                } else if ($(this).attr('type') === 'checkbox') {
+                    jsonPayload[parentKey][childKey] = $(this).prop('checked');
+                }
+            }
+            else if (attrValue) {
+                if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance') || $(this).hasClass('datepickerCompliance2')) {
+                    attrValue = JSUTIL.toDatabaseDate(attrValue);
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).hasClass('datetimepicker')) {
+                    attrValue = JSUTIL.getDatabaseDateTime(attrValue);
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).hasClass('select2')) {
+                    attrValue = $(this).select2('val');
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).attr('type') === 'checkbox') {
+                    attrValue = $(this).prop('checked');
+                    jsonPayload[attrName] = attrValue;
+                } else if ($(this).attr('type') === 'number') {
+                    attrValue = Number(attrValue);
+                    jsonPayload[attrName] = attrValue;
+                } else {
+                    if (attrName === 'id') {
+                        attrValue = Number(attrValue);
+                    }
+                    jsonPayload[attrName] = attrValue;
+                }
+            }
+            else if (!attrValue && $(this).attr('type') === 'checkbox') {
+                attrValue = $(this).prop('checked');
+                jsonPayload[attrName] = attrValue;
+            }
+        });
+
+        console.info(jsonPayload);
+        return jsonPayload;
+    }
+    function callbackAfterGetEditType(response) {
+        //console.log(response);
+
+        const selectElement = document.getElementById('editType');
+
+        selectElement.innerHTML = '<option value="">--none--</option>';
+
+        if (Array.isArray(response) && response.length > 0) {
+            response.forEach(function (item) {
+                const option = document.createElement('option');
+
+                option.value = item.Id || item.id;
+
+
+                option.textContent = item.name;
+
+                if (item.name === typeOfDocument) {
+                    option.selected = true;
+                }
+
+                selectElement.appendChild(option);
+            });
+        }
+        if (typeof $('#editType').select2 === 'function') {
+            $('#editType').select2();
+            $('#editType').trigger('change');
+        }
+    }
+    function callbackAfterDocUpload(response) {
+        console.log(response);
+        location.reload();
+    }
+    function callbackAfterGetActionDocuments(objList) {
+        console.log("Received Data:", objList);
+        $('#allActionDocumentsTable').empty();
+        var innerHtml = '';
+        if (!objList || objList.length === 0) {
+            innerHtml = '<tr><td colspan="2" class="text-center">No data available</td></tr>';
+        } else {
+            $.each(objList, function (i, val) {
+                innerHtml += '<tr><td style="width: 10%;">';
+                if (val.isLocked) {
+                    innerHtml += '<button type="button" class="btn btn-danger deleteTrSelect deleteActionDocumentBtn" name="' + val.id + '" disabled><i data-lucide="trash"></i></button>';
+                } else {
+                    innerHtml += '<button type="button" class="btn btn-outline btn-danger deleteTrSelect deleteActionDocumentBtn" name="' + val.id + '"><i data-lucide="trash"></i></button>';
+                }
+                innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewActionDocumentBtn" id="' + val.path + '" name="' + val.contentType + '" style="margin-left: 5px;"><i data-lucide="eye"></i></button>' +
+                    '</td>' +
+                    '<td>' + (val.name || '') + '</td>' +
+                    '</tr>';
+            });
+        }
+
+        if (innerHtml.trim() !== '') {
+            $('#allActionDocumentsTable').html(innerHtml);
+        } else {
+            console.log("No data to append.");
+        }
+
+        // Ensure Delete and View Buttons Work
+    }
+
+
+    function callbackAfterEditResponse(response) {
+        console.log(response);
+        var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+        JSUTIL.callAJAXGet(postDocUrl2, callbackAfterGetData);
+        $('#saveScheduleBtn').hide();
+        $('#saveCriticalBtn').hide();
+        $('#saveDistributionBtn').hide();
+        $('#deleteScheduleBtn').prop('disabled', true);
+        $('#deleteCriticalBtn').prop('disabled', true);
+        $('#deleteDistributionBtn').prop('disabled', true);
+        $('#addScheduleBtn').prop('disabled', true);
+        $('#addCriticalBtn').prop('disabled', true);
+        $('#addDistributionBtn').prop('disabled', true);
+    }
+    function callbackAfterGetData(response) {
+        console.log(response);
+
+        // Always update fileId from the API response to ensure we have the latest value
+        if (response && response.extFileId) {
+            fileId = response.extFileId;
+            console.log('Updated fileId from page_data API:', fileId);
+
+            // Also update in recordList if it exists
+            if (typeof recordList !== 'undefined' && recordList) {
+                $.each(recordList, function (index, record) {
+                    if (record.id === currentRecordId) {
+                        record.extFileId = response.extFileId;
+                        console.log('Updated recordList[' + index + '].extFileId:', record.extFileId);
+                        return false; // break the loop
+                    }
+                });
+            }
+
+            // Update currentRecordData if it exists
+            if (currentRecordData && currentRecordData.id === currentRecordId) {
+                currentRecordData.extFileId = response.extFileId;
+                console.log('Updated currentRecordData.extFileId:', currentRecordData.extFileId);
+            }
+        }
+
+        userGroupId = response.nextApprovalGroupId;
+        const userGroups = Array.isArray(FOX.userGroupNames) ? FOX.userGroupNames : [];
+        const isQaUser = userGroups.some(function (groupName) {
+            return (groupName || '').toLowerCase() === 'qa';
+        });
+        $('a[data-toggle="tab"][href="#distribution"]').parent('li').hide();
+        if (statusOfRecord === 'Effective' || statusOfRecord === 'Training') {
+            let remarks1 = '';
+
+            const targetRecord = response.history.find(record =>
+                record.name === "Record Status Updated To Training"
+            );
+
+            if (targetRecord && targetRecord.notes) {
+                let cleanNotes1 = targetRecord.notes.trim();
+                try {
+                    if (cleanNotes1.startsWith('{') && cleanNotes1.endsWith('}')) {
+                        let notesObj1 = JSON.parse(cleanNotes1);
+                        remarks1 = notesObj1.remarks || notesObj1.requestId || '';
+                    } else {
+                        remarks1 = cleanNotes1.replace(/^"|"$/g, '');
+                    }
+                } catch (e) {
+                    remarks1 = cleanNotes1.replace(/^"|"$/g, '');
+                }
+            }
+
+            $('.trainingInput[name="comments"]').val(remarks1);
+        }
+        if (response.inApprovalWorkflow) {
+            $('.recordEffectiveBtn').hide();
+            $('.recordCFTBtn').hide();
+            $('.recordIssuanceBtn').hide();
+            $('.recordBtnSendApproval').hide();
+            $('.openDocumentBtn').hide();
+            $('.recordRejectedBtn').hide();
+            $('#uploadDocumentBtn').hide();
+            $('#editableFieldsForm').hide();
+            $('.generateNumber').hide();
+            $('.recordBtnForApproval').hide();
+            $('#uploadDocument').hide();
+            $('.recordAcceptBtn').hide();
+            $('#saveCFTBtn').hide();
+            $('.recordEditBtn').hide();
+            $('.recordApprovalBtn').hide();
+            $('.qaSigningBtn').hide();
+            $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').hide();
+            $('input[name="trainingDate"]').closest('.full-width').hide();
+            $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
+        }
+        else {
+            if (statusOfRecord === "New" || statusOfRecord.toLowerCase().includes('rejected')) {
+                $('.recordBtnSendApproval').show();
+                $('.openDocumentBtn').show();
+                $('.recordCFTBtn').hide();
+                $('.recordEffectiveBtn').hide();
+                $('.recordIssuanceBtn').hide();
+                $('#saveCFTBtn').hide();
+                $('.recordAcceptBtn').hide();
+                $('.generateNumber').hide();
+                $('.recordBtnForApproval').hide();
+                $('#uploadDocumentBtn').show();
+                $('#uploadDocument').show();
+                $('#editableFieldsForm').hide();
+                $('.recordEditBtn').show();
+                $('.recordApprovalBtn').hide();
+                $('.qaSigningBtn').hide();
+                $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').show();
+                $('input[name="trainingDate"]').closest('.full-width').hide();
+                $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
+            }
+            else if (statusOfRecord === "Author Signing") {
+                $('.recordRejectedBtn').hide();
+                $('.openDocumentBtn').hide();
+                $('.recordCFTBtn').hide();
+                $('.recordEffectiveBtn').hide();
+                $('.recordBtnSendApproval').hide();
+                $('.recordIssuanceBtn').hide();
+                $('.generateNumber').hide();
+                $('#saveCFTBtn').hide();
+                $('#uploadDocument').hide();
+                $('.recordBtnForApproval').show();
+                $('.recordAcceptBtn').hide();
+                $('#uploadDocumentBtn').hide();
+                $('#editableFieldsForm').hide();
+                $('.recordEditBtn').hide();
+                $('.recordApprovalBtn').hide();
+                $('.qaSigningBtn').hide();
+                $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').hide();
+                $('input[name="trainingDate"]').closest('.full-width').hide();
+                $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
+            }
+            else {
+                $('.recordRejectedBtn').hide();
+                $('.openDocumentBtn').hide();
+                $('#uploadDocumentBtn').hide();
+                $('.recordEditBtn').hide();
+                $('.recordBtnSendApproval').hide();
+                $('.recordAcceptBtn').hide();
+                $('.recordBtnForApproval').hide();
+                $('.recordCFTBtn').hide();
+                $('#uploadDocument').hide();
+                $('#saveCFTBtn').hide();
+                $('.generateNumber').hide();
+                $('#editableFieldsForm').show();
+                $('.recordApprovalBtn').hide();
+                if (statusOfRecord === "QA" && isQaUser) {
+                    $('.qaSigningBtn').show();
+                } else {
+                    $('.qaSigningBtn').hide();
+                }
+                $('a[data-toggle="tab"][href="#distribution"]').parent('li').show();
+                $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').hide();
+                if (purposeOfRecord === 'Withdrawal') {
+                    $('input[name="trainingDate"]').closest('.full-width').hide();
+                    $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
+                    $('.editPrintBtn').show();
+                    $('.recordEffectiveBtn').hide();
+                } else {
+                    if (trainingStatus === 'Yes') {
+                        $('input[name="trainingDate"]').closest('.full-width').show();
+                    } else {
+                        $('input[name="trainingDate"]').closest('.full-width').hide();
+                    }
+
+                    $('textarea[name="trainingRemarks"]').closest('.full-width').show();
+                    $('.editPrintBtn').hide();
+                    $('.recordEffectiveBtn').hide();
+                    $('.recordIssuanceBtn').show();
+                    $('#TrainingDate').prop('disabled', false);
+                    $('#TrainingRemarks').prop('readonly', false);
+                    $('#comments').prop('readonly', true);
+                }
+            }
+
+        }
+        let oldRemarksDiv = $('#oldRemarks');
+        oldRemarksDiv.empty();
+
+        let submittedRemarks = '';
+        let rejectedRemarks = '';
+
+        if (response.history && response.history.length > 0) {
+            response.history.sort((a, b) => new Date(b.CreatedDate) - new Date(a.CreatedDate));
+
+            for (let i = 0; i < response.history.length; i++) {
+                let historyEntry = response.history[i];
+
+                if (historyEntry.name) {
+                    let approvalIndex = historyEntry.name.indexOf("Submitted For Approval");
+                    if (approvalIndex !== -1 && !submittedRemarks) {
+                        submittedRemarks = extractRemarks(historyEntry);
+                    }
+
+                    let rejectionIndex = historyEntry.name.toLowerCase().indexOf("rejected");
+                    if (rejectionIndex !== -1 && !rejectedRemarks) {
+                        rejectedRemarks = extractRemarks(historyEntry);
+                    }
+                }
+
+                if (submittedRemarks && rejectedRemarks) {
+                    break;
+                }
+            }
+        }
+
+        if (submittedRemarks || rejectedRemarks) {
+            if (submittedRemarks) {
+                oldRemarksDiv.append('<label for="submittedRemarks">Submitted Remarks</label>');
+                oldRemarksDiv.append('<textarea id="submittedRemarks" rows="3" readonly style="border: none;" class="form-control"></textarea>');
+                $('#submittedRemarks').val(submittedRemarks);
+            }
+            if (rejectedRemarks) {
+                oldRemarksDiv.append('<label for="rejectedRemarks">Rejected Remarks</label>');
+                oldRemarksDiv.append('<textarea id="rejectedRemarks" rows="3" readonly style="border: none;" class="form-control"></textarea>');
+                $('#rejectedRemarks').val(rejectedRemarks);
+            }
+        }
+        $('#allStakeholderChangeReqTable').empty();
+        $('#allHistoryTable').empty();
+        var innerHtmlStake = '';
+        response.stakeholderList.forEach(val => {
+            innerHtmlStake += `
+                <tr>
+                    <td>
+                        <div class="checkbox" style="margin:0;">
+                            <input class="deleteItemCreatedEntryRow" name="${val.id}" type="checkbox">
+                            <label></label>
+                        </div>
+                    </td>
+                    <td>${val.member.firstName + ' ' + val.member.lastName || ''}</td>
+                    <td>${val.role || ''}</td>
+                </tr>
+            `;
+        });
+        $('#allStakeholderChangeReqTable').html(innerHtmlStake);
+
+        let innerHtmlHistory = '';
+        if (!response || response.history.length === 0) {
+            innerHtmlHistory = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
+        } else {
+            $.each(response.history, function (i, val) {
+                let remarks = '';
+                if (val.notes) {
+                    let cleanNotes = val.notes.trim();
+                    try {
+                        if (cleanNotes.startsWith('{') && cleanNotes.endsWith('}')) {
+                            let notesObj = JSON.parse(cleanNotes);
+                            remarks = notesObj.remarks || notesObj.requestId || '';
+                        } else {
+                            remarks = cleanNotes.replace(/^"|"$/g, '') || remarks;
+                        }
+                    } catch (e) {
+                        remarks = cleanNotes.replace(/^"|"$/g, '') || remarks;
+                    }
+                }
+                innerHtmlHistory += '<tr>' +
+                    '<td>' + (val.name || '') + '</td>' +
+                    '<td>' + (JSUTIL.getDate(val.createdDate) || '') + '</td>' +
+                    //'<td>' + ((val.performedBy && (val.performedBy.FirstName + ' ' + val.performedBy.LastName)) || '') + '</td>' +
+                    '<td>' + remarks + '</td>' +
+                    '</tr>';
+            });
+        }
+        $('#allHistoryTable').html(innerHtmlHistory);
+        $('#capacityTable').empty();
+        $('#distributionTable').empty();
+        $('#trainingTable').empty();
+
+        fetchReviewersForRequest(currentRecordId);
+    }
+    function callbackAfterGetGuideline(response) {
+
+        let speciesOptions = '<option value="">--none--</option>';
+        response.forEach(function (val) {
+            speciesOptions += '<option value="' + val.name + '" data-id="' + val.id + '">' + val.name + '</option>';
+        });
+
+        $('.speciesSelect').each(function () {
+            const $select = $(this);
+            const selectedId = $select.data('selected-id');
+
+            $select.html(speciesOptions);
+
+            $select.find('option').each(function () {
+                if ($(this).data('id') == selectedId) {
+                    $(this).prop('selected', true);
+                    return false;
+                }
+            });
+        });
+    }
+    // Fetch and render reviewers (employees) for the current document request
+    function fetchReviewersForRequest(requestId) {
+        const payload = {
+            fields: "Id;Reviewer.Id;Request.Id;ProcessStatus",
+            conditions: [`Request.Id = ${requestId}`],
+            logic: "{0}"
+        };
+        const postUrl = JSUTIL.getUrl('/data/QualityDocumentRequestReviewer/list');
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), callbackAfterGetReviewers);
+    }
+
+    function callbackAfterGetReviewers(response) {
+        console.log(response);
+        $('#capacityTable').empty();
+
+        let innerHtml = '';
+        $.each(response, function (i, val) {
+            const reviewerId = val.reviewer?.id || '';
+            const reviewerName = getEmployeeDisplayName(val.reviewer);
+
+            innerHtml += '<tr class="newItemEntry" name="' + (val.id || '') + '">' +
+                '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" type="checkbox" name="' + (val.id || '') + '"><label></label></div></td>' +
+                '<td>' +
+                '<input type="text" class="typeahead_3 form-control newItemInput reviewerSearchInput selectSearchInputAutoComplete" aria-description="search/employee" placeholder="search.." value="' + reviewerName + '" disabled>' +
+                '<input type="hidden" class="reviewerIdInput newItemInput selectSearchInputAutoCompleteId" value="' + reviewerId + '">' +
+                '</td>' +
+                '</tr>';
+        });
+
+        $('#capacityTable').append(innerHtml);
+    }
+    function clearReviewerStatusesForCurrentRequest(next) {
+        const payload = {
+            fields: "Id;Reviewer.Id;Request.Id;ProcessStatus",
+            conditions: [`Request.Id = ${currentRecordId}`],
+            logic: "{0}"
+        };
+        const postUrl = JSUTIL.getUrl('/data/QualityDocumentRequestReviewer/list');
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (reviewerList) {
+            if (!Array.isArray(reviewerList) || reviewerList.length === 0) {
+                if (typeof next === 'function') {
+                    next();
+                }
+                return;
+            }
+
+            const bulkPayload = reviewerList.map(function (item) {
+                return {
+                    id: item.id,
+                    processStatus: ""
+                };
+            });
+
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequestReviewer/upsert_multiple', JSON.stringify(bulkPayload), function () {
+                if (typeof next === 'function') {
+                    next();
+                }
+            });
+        });
+    }
+
+    function proceedWithReviewSigningFlow(remarks, next) {
+        var postDocUrl = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+        JSUTIL.callAJAXGet(postDocUrl, function (pageDataResponse) {
+            const history = pageDataResponse.history || [];
+
+            const maxLocation = history.reduce(function (max, entry) {
+                const loc = parseInt(entry.location);
+                return !isNaN(loc) && loc > max ? loc : max;
+            }, 0);
+
+            const newLocation = String(maxLocation + 1);
+            const requestPayload = {
+                processStatus: "Review Signing",
+                inApprovalWorkflow: true
+            };
+
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(requestPayload), function () {
+                const activityPayload = {
+                    parentRecordId: Number(currentRecordId),
+                    name: `Record Status Updated To Review Signing By ${employeeName}`,
+                    performedBy: { id: Number(employeeId) },
+                    notes: remarks || '',
+                    location: newLocation,
+                };
+                JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(activityPayload), function (response) {
+                    if (typeof next === 'function') {
+                        next(response);
+                    }
+                });
+            });
+        });
+    }
+    function proceedWithQaSigningFlow(remarks, next) {
+        var postDocUrl = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+        JSUTIL.callAJAXGet(postDocUrl, function (pageDataResponse) {
+            const history = pageDataResponse.history || [];
+
+            const maxLocation = history.reduce(function (max, entry) {
+                const loc = parseInt(entry.location);
+                return !isNaN(loc) && loc > max ? loc : max;
+            }, 0);
+
+            const newLocation = String(maxLocation + 1);
+            const requestPayload = {
+                processStatus: "Training"
+            };
+
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(requestPayload), function () {
+                const activityPayload = {
+                    parentRecordId: Number(currentRecordId),
+                    name: `Record Status Updated To Training By ${employeeName}`,
+                    performedBy: { id: Number(employeeId) },
+                    notes: remarks || '',
+                    location: newLocation,
+                };
+                JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(activityPayload), function (response) {
+                    if (typeof next === 'function') {
+                        next(response);
+                    }
+                });
+            });
+        });
+    }
+    function populateDropdown(response, $dropdown) {
+        var innerHtml = '<option value="">--none--</option>';
+        $.each(response, function (j, val) {
+            innerHtml += '<option value="' + val.id + '" data-id="' + val.id + '">' + val.name + '</option>';
+        });
+        $dropdown.html(innerHtml);
+    }
+    function callbackAfterPdf(response) {
+        console.log(response);
+        location.reload();
+    }
+    function callbackAfterEditFile(response) {
+        console.log(response);
+        if (response && response.data) {
+            window.open(response.data, '_blank');
+            // Fetch updated record data instead of reloading the page
+            var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+            JSUTIL.callAJAXGet(postDocUrl2, function (updatedResponse) {
+                if (updatedResponse && updatedResponse.extFileId) {
+                    // Update the global fileId with the new extFileId from the response
+                    fileId = updatedResponse.extFileId;
+                    console.log('Updated fileId:', fileId);
+
+                    // Update the recordList item if it exists (so when user closes and reopens, it has the latest fileId)
+                    if (typeof recordList !== 'undefined' && recordList) {
+                        $.each(recordList, function (index, record) {
+                            if (record.id === currentRecordId) {
+                                record.extFileId = updatedResponse.extFileId;
+                                console.log('Updated recordList[' + index + '].extFileId:', record.extFileId);
+                                return false; // break the loop
+                            }
+                        });
+                    }
+
+                    // Update currentRecordData if it exists
+                    if (currentRecordData && currentRecordData.id === currentRecordId) {
+                        currentRecordData.extFileId = updatedResponse.extFileId;
+                        console.log('Updated currentRecordData.extFileId:', currentRecordData.extFileId);
+                    }
+
+                    // Show success message
+                    JSUTIL.showMessage('File updated successfully');
+                }
+            });
+        } else {
+            console.error('Invalid response data.');
+            // Still fetch updated data even on error to ensure consistency
+            var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+            JSUTIL.callAJAXGet(postDocUrl2, function (updatedResponse) {
+                if (updatedResponse && updatedResponse.extFileId) {
+                    fileId = updatedResponse.extFileId;
+                    console.log('Updated fileId on error:', fileId);
+
+                    // Update recordList and currentRecordData on error as well
+                    if (typeof recordList !== 'undefined' && recordList) {
+                        $.each(recordList, function (index, record) {
+                            if (record.id === currentRecordId) {
+                                record.extFileId = updatedResponse.extFileId;
+                                return false;
+                            }
+                        });
+                    }
+                    if (currentRecordData && currentRecordData.id === currentRecordId) {
+                        currentRecordData.extFileId = updatedResponse.extFileId;
+                    }
+                }
+            });
+        }
+    }
+    function callbackAfterShareFile(response) {
+        console.log(response);
+        JSUTIL.callAJAXGet('/onedrive/edit/' + fileId, callbackAfterEditFile);
+    }
+
+    function callbackAfterWithdrawal(response) {
+        console.log(response);
+        const effectiveSend = {
+            processStatus: "Effective"
+        };
+        JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), callbackSuccessWithDrawalEffective);
+    }
+    function callbackSuccessWithDrawalEffective(response) {
+        console.log(response);
+        location.reload();
+    }
+    function callbackAfterEditDepartment(response) {
+        console.log(response);
+        var innerHtml2 = '';
+        $('#editDepartment').empty();
+        innerHtml2 += '<option value = "">--none---</option>';
+        $.each(response, function (j, val2) {
+            if (val2.name === selectedDepartment) {
+                departmentCode = val2.code;
+                innerHtml2 += '<option value = "' + val2.name + '" selected>' + val2.name + '</option>';
+            } else {
+                innerHtml2 += '<option value = "' + val2.name + '">' + val2.name + '</option>';
+            }
+        });
+        $('#editDepartment').append(innerHtml2);
+    }
+    function extractRemarks(historyEntry) {
+        let remarks = '';
+
+        if (historyEntry.notes) {
+            let cleanNotes = historyEntry.notes.trim();
+
+            try {
+                if (cleanNotes.startsWith('{') && cleanNotes.endsWith('}')) {
+                    let notesObj = JSON.parse(cleanNotes);
+                    remarks = notesObj.remarks || notesObj.requestId || remarks;
+                } else {
+                    remarks = cleanNotes.replace(/^"|"$/g, '') || remarks;
+                }
+            } catch (e) {
+                remarks = cleanNotes.replace(/^"|"$/g, '') || remarks;
+            }
+        }
+
+        return remarks;
+    }
+    function callbackSuccessDocumentEffective1(response) {
+        console.log(response);
+        var postUrl = JSUTIL.getUrl('/dms/request/effective2?id=' + currentRecordId + '&fileName=' + effectiveFile);
+        JSUTIL.callAJAXGet(postUrl, completeDocumentCallback);
+    }
+    function callbackSuccessDocumentEffective(response) {
+        console.log(response);
+    }
+    function completeDocumentCallback(response) {
+        console.log(response);
+        location.reload();
+    }
+    function toggleDeleteButton(checkboxSelector, buttonSelector) {
+        const isChecked = $(checkboxSelector).is(':checked');
+        $(buttonSelector).prop('disabled', !isChecked);
+    }
+    function callbackAfterDeleteProductsDetails(response) {
+        console.log(response);
+        location.reload();
+    }
+    function createChangeReqStakeholder() {
+        var stakePayloadNew = JSUTIL.buildFormDataJSON('newStakeInputChangeReq');
+        var postUrlStack = ('/data/Stakeholder/create');
+        JSUTIL.callAJAXPost(postUrlStack, JSON.stringify(stakePayloadNew), callbackSuccessStakeReqCreated)
+    }
+    function callbackSuccessStakeReqCreated(response) {
+        console.log(response);
+        $('#addChangeReqPanelByStack').hide();
+        $('#editRecordPanel').show();
+        var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
+        JSUTIL.callAJAXGet(postDocUrl2, callbackAfterGetData);
+    }
+    function completeImcheckCallback(response) {
+        console.log(response);
+        JSUTIL.callAJAXGet('/onedrive/unshare/' + fileId, callbackAfterUnshareFile);
+    }
+    // Helper function to send notification to specific user
+    function sendNotificationToHOD(title, message, eventName, recordData) {
+        if (recordData && recordData.requester && recordData.requester.dept && recordData.requester.dept.headId) {
+            const headId = recordData.requester.dept.headId;
+            var empParameter = {
+                fields: "Name;User.Id",
+                conditions: [`Id = ${headId}`],
+                logic: "{0}"
+            }
+            // Fetch employee details to get user.id
+            const employeeUrl = JSUTIL.getUrl('/data/Employee/list');
+            JSUTIL.callAJAXPost(employeeUrl, JSON.stringify(empParameter), function (empResponse) {
+                console.log('Employee response:', empResponse);
+
+                if (empResponse[0] && empResponse[0].user && empResponse[0].user.id) {
+                    const userId = empResponse[0].user.id;
+
+                    // Calculate expiry date (today + 7 days)
+                    const today = new Date();
+                    const expiryDate = new Date(today);
+                    expiryDate.setDate(today.getDate() + 7);
+
+                    // Format as ISO string (YYYY-MM-DDTHH:mm:ss.sssZ)
+                    const expiryDateISO = expiryDate.toISOString();
+
+                    var obj = {
+                        "title": title,
+                        "message": message,
+                        "user": { id: userId },
+                        "expiryDate": expiryDateISO
+                    };
+
+                    console.log('Notification object:', obj);
+
+                    JSUTIL.callAJAXPost('/data/UserNotification/create', JSON.stringify(obj), function (response) {
+                        console.log(response);
+                        location.reload();
+                    });
+                } else {
+                    console.error('User ID not found in employee response');
+                    location.reload();
+                }
+            });
+        } else {
+            console.error('Department head ID not found in record data');
+            location.reload();
+        }
+    }
+
+    function callbackAfterUnshareFile(response) {
+        console.log(response);
+        location.reload();
+
+        // var postUrl = JSUTIL.getUrl('/dms/request/convert_to_pdf_review?id=' + currentRecordId);
+        // JSUTIL.callAJAXGet(postUrl, callbackAfterPdf);
+    }
+    function callbackAfterGetActivity(response) {
+        console.log(response);
+        const activities = Array.isArray(response) ? response : [response];
+
+        for (let activity of activities) {
+            if (activity.description) {
+                const match = activity.description.match(/id=(\d+)/);
+                if (match) {
+                    const extractedId = match[1];
+                    const extractedIdNum = parseInt(extractedId);
+                    const currentRecordIdNum = parseInt(currentRecordId);
+
+                    if (extractedId == currentRecordId || extractedIdNum === currentRecordIdNum) {
+                        activityId = activity.id;
+                        console.log('Found activity ID:', activityId);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!activityId) {
+            console.log('No matching activity found for currentRecordId:', currentRecordId);
+        }
+    }
+    function callbackSuccessDocumentUpdate(response) {
+        console.log(response);
+        var obj = {
+            id: currentRecordId,
+            name: `Document Request Updated by ${employeeName}`,
+            type: "QualityDocumentRequest"
+        };
+
+        var postUrl = '/process/create_activity';
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(obj), function () {
+            location.reload();
+        })
+    }
+</script>
+<!-- editDocumentRequest.js end -->
+
+
+
+
+<!-- onedriveUpload.html start -->
+<link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
+<div class="row animated fadeInRight aasaanPanel" id="vendorUploadFilesPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5 id="uploadFileTitle">#</h5>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="lnItemObj" action="#" method="post" id="fileFormVQ"
+                    enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="fileinput fileinput-new input-group" data-provides="fileinput"
+                                style="margin-top: 24px;">
+                                <div class="form-control" data-trigger="fileinput" id="fileNameTextVQ">
+                                    <i class="glyphicon glyphicon-file fileinput-exists"></i>
+                                    <span class="fileinput-filename"></span>
+                                </div>
+                                <span class="input-group-addon btn btn-default btn-file">
+                                    <span class="fileinput-new">Select File</span>
+                                    <span class="fileinput-exists">Change</span>
+                                    <input type="file" name="File" id="fileInputVQ">
+                                </span>
+                                <a href="#" class="input-group-addon btn btn-default fileinput-exists"
+                                    data-dismiss="fileinput">Remove</a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6"></div>
+                        <div class="col-sm-12">
+                            <button type="button" class="btn btn-default btn-sm close-box showRequestOnCancel"
+                                id="vendorUploadClosebtn"><i data-lucide="x"></i> Cancel </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="processBtn"><i
+                                    data-lucide="upload"></i> Upload </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- onedriveUpload.html end -->
+
+
+
+
+<!-- onedriveUpload.js start -->
+<script>
+    function foVendorUploadFile(panelTitle, actionUrl, successCallBack) {
+        $('#uploadFileTitle').html(panelTitle);
+        $('#fileFormVQ').attr('action', actionUrl);
+        userDefineSuccessCallBack = successCallBack;
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+        $('#fileInputVQ').on('change', function (e) {
+            $('#fileNameTextVQ').text(e.target.files[0].name);
+            multipartFile = e.target.files[0];
+        });
+        $('#processBtn').on('click', function () {
+            $('#loadingError').hide();
+            $('#importResults').hide();
+            $('#insertedTable').empty();
+            var formData = new FormData();
+            formData.append('file', multipartFile);
+            var callback = userDefineSuccessCallBack || defaultSuccessCallback;
+            JSUTIL.callAJAXFilePost($('#fileFormVQ').attr('action'), formData, callback, null);
+        });
+    });
+    function defaultSuccessCallback(response) {
+        console.log(response);
+        location.reload();
+    }
+</script>
+<!-- onedriveUpload.js end -->
+
+
+
+
+<!-- newDocumentRequest.html start  -->
+<div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Document Request<small> New</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i
+                            data-lucide="x"></i> Close </button>
+                    <button type="button" class="btn btn-secondary btn-sm newDocumentSaveBtn"><i data-lucide="check"></i>
+                        Save </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="newObj" id="newDocumentForm" action="/dms/request/create_request" method="post">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Type</label>
+                                <select class="select2 form-control newRecordInput" name="DocumentType.Id" id="type"
+                                    required>
+                                    <option value="">--none--</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Purpose</label>
+                                <select class="select2 form-control newRecordInput" name="Purpose" id="purposeValue"
+                                    required>
+                                    <option value="">--none--</option>
+                                    <option value="New">New</option>
+                                    <!-- <option value="Amendment">Amendment</option> -->
+                                    <option value="Revision">Revision</option>
+                                    <!-- 
+                                    <option value="Access">Access</option> -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Document Name</label>
+                                <input type="text" class="form-control newRecordInput" name="DocumentName">
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Document</label>
+                                <input type="text" placeholder="search.."
+                                    class="typeahead_3 form-control serviceSelectInput" />
+                                <input type="hidden" name="Document.Id"
+                                    class="selectSearchInputAutoCompleteId1 newRecordInput" />
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label>Version Number</label>
+                                <input type="text" class="form-control newRecordInput" id="versionNumber"
+                                    name="DocumentVersion" readonly>
+                            </div>
+                        </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="form-group">
+                                <label><strong>Description:</strong></label>
+                                <textarea type="text" class="form-control newRecordInput" name="Reason"
+                                    style="padding-top: 0.5rem;border-radius: 5px; transition: border 0.3s ease, box-shadow 0.3s ease;"
+                                    rows="5"></textarea>
+                                <input type="hidden" class="form-control newRecordInput" name="ExtFolderId"
+                                    id="ExtFolderId">
+                                <input type="hidden" class="form-control newRecordInput" name="ExtFileId"
+                                    id="ExtFileId">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- newDocumentRequest.html end  -->
+
+
+
+<!-- newDocumentRequest.js start  -->
+<script>
+    var folderName;
+    var numberValue;
+    var nameValue;
+
+    let selectedDocumentForDuplication = null;
+
+    $(document).ready(function () {
+
+        $('.newRecordCancelBtn').on('click', function () {
+            $('#newRecordPanel').hide();
+            $('#allRecordPanel').show();
+        });
+
+        $('select[name="Purpose"]').on('change', function () {
+            var purpose = $('#purposeValue').val();
+            selectedDocumentForDuplication = null;
+            $('.serviceSelectInput').val('');
+            $('#versionNumber').val('');
+
+            toggleOtherDocumentField();
+
+            if (purpose === 'New') {
+                $('input[name="DocumentName"]').closest('.col-sm-6').show();
+                $('input[name="DocumentNumber"]').closest('.col-sm-6').show();
+                $('input[name="Document.Id"]').closest('.col-sm-6').hide();
+                $('input[name="DocumentVersion"]').closest('.col-sm-6').show();
+                $('input[name="PagesAmended"]').closest('.col-sm-6').hide();
+                document.getElementById('versionNumber').value = '01';
+            } else { // Covers 'Revision' and any other non-'New' types
+                $('input[name="DocumentName"]').closest('.col-sm-6').hide();
+                $('input[name="DocumentNumber"]').closest('.col-sm-6').hide();
+                $('input[name="Document.Id"]').closest('.col-sm-6').show();
+                $('input[name="DocumentVersion"]').closest('.col-sm-6').show();
+                $('input[name="PagesAmended"]').closest('.col-sm-6').hide();
+                document.getElementById('versionNumber').value = '';
+            }
+        });
+
+        $('#type').on('change', function () {
+            toggleOtherDocumentField();
+        });
+
+        $('select[name="CcRequired"]').on('change', function () {
+            var ccRequired = $(this).val();
+            if (ccRequired === 'Yes') {
+                $('input[name="CcNumber"]').closest('.col-sm-6').show();
+            } else {
+                $('input[name="CcNumber"]').closest('.col-sm-6').hide();
+            }
+        });
+
+        $('.serviceSelectInput').on('keyup', function () {
+            var searchParam = $('.serviceSelectInput').val();
+            if (searchParam.length > 2) {
+                var getUrl = JSUTIL.getUrl('/search/quality_document?searchParam=' + searchParam);
+                JSUTIL.callAJAXGet(getUrl, afterDocumentSearchHandle);
+            }
+        });
+
+        $('.serviceSelectInput').typeahead({
+            source: [],
+            displayText: function (item) {
+                if (typeof item === 'string') {
+                    return item;
+                }
+                const number = item.number || '';
+                const name = item.name || '';
+                return number + ' - ' + name;
+            },
+            updater: function (selection) {
+                console.info("Document selected:", selection);
+
+                // Store the entire object globally
+                selectedDocumentForDuplication = selection;
+
+                const id = selection.id;
+                const number = selection.number;
+                const name = selection.name;
+                const version = selection.currentVersion || '01'; // Get currentVersion from API response
+
+                if (id) {
+                    $('.selectSearchInputAutoCompleteId1').val(id);
+                    // Pass the version from search response
+                    setNextDocumentVersion(id, name, number, version);
+                }
+
+                return number + ' - ' + name;
+            }
+        });
+
+        $('.otherServiceSelectInput').on('keyup', function () {
+            var searchParam = $('.otherServiceSelectInput').val();
+            if (searchParam.length > 2) {
+                var getUrl = JSUTIL.getUrl('/search/quality_document?searchParam=' + searchParam);
+                JSUTIL.callAJAXGet(getUrl, afterOtherDocumentSearchHandle);
+            }
+        });
+
+        function afterOtherDocumentSearchHandle(response) {
+            if (!response || !Array.isArray(response) || response.length === 0) {
+                return;
+            }
+            var typeaheadInstance = $('.otherServiceSelectInput').data('typeahead');
+            if (typeaheadInstance) {
+                typeaheadInstance.source = response;
+                var currentVal = $('.otherServiceSelectInput').val();
+                if (currentVal.length > 0) {
+                    $('.otherServiceSelectInput').typeahead('lookup');
+                }
+            }
+        }
+
+        function toggleOtherDocumentField() {
+            var purpose = $('#purposeValue').val();
+            var selectedType = $('#type option:selected').text();
+
+            // Check if BOTH conditions are true
+            if (purpose === 'New' && selectedType === 'Format') {
+                $('.other-doc-search').show();
+            } else {
+                $('.other-doc-search').hide();
+            }
+        }
+
+        $('.otherServiceSelectInput').typeahead({
+            source: [],
+            displayText: function (item) {
+                if (typeof item === 'string') {
+                    return item;
+                }
+                const number = item.number || '';
+                const name = item.name || '';
+                return number + ' - ' + name;
+            },
+            updater: function (selection) {
+                $('.selectSearchInputAutoCompleteId2').val(selection.id);
+                return selection.number + ' - ' + selection.name;
+            }
+        });
+
+        $('.newDocumentSaveBtn').on('click', function () {
+            var purpose = $('#purposeValue').val();
+
+            // If the purpose is Amendment or Revision, and a document with an external file ID has been selected.
+            if ((purpose === 'Amendment' || purpose === 'Revision') && selectedDocumentForDuplication && selectedDocumentForDuplication.extDocFileId) {
+                // Start the duplication process by first creating a new folder.
+                // The callback `handleDocumentDuplication` will handle the download/upload process.
+                JSUTIL.callAJAXGet('/onedrive/create_folder?folderName=' + encodeURIComponent(folderName) + '&parentFolderId=' + companySettingMap['document_request'], handleDocumentDuplication);
+            } else {
+                // Standard process for 'New' requests or any case where duplication is not needed.
+                JSUTIL.callAJAXGet('/onedrive/create_folder?folderName=' + encodeURIComponent(folderName) + '&parentFolderId=' + companySettingMap['document_request'], callbackSuccessFileCreated);
+            }
+        });
+
+        $(document).off('click', '#newDocumentRequestButton, .newRecordBtn').on('click', '#newDocumentRequestButton', function (e) {
+            e.stopImmediatePropagation();
+            if (typeof recordList !== 'undefined' && recordList.length > 0 && recordList[0].number) {
+                const nextFolder = recordList[0].number;
+                const match = nextFolder.match(/^([A-Za-z0-9_-]*?)(\d+)$/);
+                if (match) {
+                    const prefix = match[1];
+                    const numberPart = match[2];
+                    const width = numberPart.length;
+                    const incremented = String(Number(numberPart) + 1).padStart(width, '0');
+                    folderName = `${prefix}${incremented}`;
+                } else {
+                    folderName = "DR-0001"; // Fallback
+                }
+            } else {
+                folderName = "DR-0001";
+            }
+            $('#editRecordPanel').hide();
+            $('#allRecordPanel').hide();
+            $('#newRecordPanel').show();
+            resetForm();
+            $('input[name="DocumentName"]').closest('.col-sm-6').hide();
+            $('input[name="DocumentNumber"]').closest('.col-sm-6').hide();
+            $('input[name="CcNumber"]').closest('.col-sm-6').hide();
+            $('input[name="Document.Id"]').closest('.col-sm-6').hide();
+            $('input[name="PagesAmended"]').closest('.col-sm-6').hide();
+
+            const departmentParameter = { fields: "StartDate;Name", conditions: [], logic: "" };
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Department/list'), JSON.stringify(departmentParameter), callbackAfterGetDepartment);
+
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-type'), callbackAfterGetType);
+        });
+    });
+
+
+    function handleDocumentDuplication(response) {
+        console.log("Step 1: Folder created.", response);
+        const newFolderId = response.data;
+        $('#ExtFolderId').val(newFolderId); // Set the new folder ID on the form.
+
+        const originalFileId = selectedDocumentForDuplication.extDocFileId;
+        const originalFileName = selectedDocumentForDuplication.name;
+
+        console.log(`Step 2: Downloading original file with ID: ${originalFileId}`);
+        // Pass new folder ID and original file name to the next callback.
+        JSUTIL.callAJAXGet('/onedrive/download/' + encodeURIComponent(originalFileId), (downloadResponse) => onDocumentDownloaded(downloadResponse, newFolderId, originalFileName));
+    }
+
+    function onDocumentDownloaded(response, newFolderId, originalFileName) {
+        console.log("Step 3: File downloaded. Preparing for upload.", response);
+        const base64Data = response;
+        // Use the original name or derive a new one. Here we use number + name.
+        const filename = `${selectedDocumentForDuplication.number} - ${originalFileName}.docx`;
+        const fileToUpload = base64ToFile(base64Data, filename);
+
+        var formData = new FormData();
+        formData.append('file', fileToUpload);
+
+        console.log(`Step 4: Uploading file to new folder ID: ${newFolderId}`);
+        JSUTIL.callAJAXFilePost(
+            JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + newFolderId),
+            formData,
+            onDocumentUploaded, // Next function in the chain
+            null
+        );
+    }
+
+    function onDocumentUploaded(response) {
+        console.log("Step 5: File uploaded successfully.", response);
+        let parsedResponse;
+        try {
+            parsedResponse = JSON.parse(response);
+        } catch (e) {
+            console.error('Error parsing upload response:', e);
+            return;
+        }
+
+        if (parsedResponse && parsedResponse.data) {
+            const newFileId = String(parsedResponse.data);
+            $('#ExtFileId').val(newFileId); // Set the new file ID on the form.
+            console.log(`Step 6: New File ID (${newFileId}) stored. Submitting form.`);
+
+            submitNewDocumentForm();
+        } else {
+            console.error('Invalid response data from file upload.');
+        }
+    }
+
+    function base64ToFile(base64, filename) {
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        return new File([blob], filename, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    }
+
+
+    function callbackAfterGetType(response) {
+        const selectElement = document.getElementById('type');
+        selectElement.innerHTML = '<option value="">--none--</option>';
+        if (Array.isArray(response) && response.length > 0) {
+            response.forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item.Id || item.id;
+                option.textContent = item.name;
+                selectElement.appendChild(option);
+            });
+        }
+        if (typeof $('#type').select2 === 'function') {
+            $('#type').select2();
+        }
+    }
+
+    function afterDocumentSearchHandle(response) {
+        if (!response || !Array.isArray(response) || response.length === 0) {
+            return;
+        }
+
+        // Log to verify version data is coming from search endpoint
+        console.log("Search results with versions:", response);
+
+        var typeaheadInstance = $('.serviceSelectInput').data('typeahead');
+        if (typeaheadInstance) {
+            typeaheadInstance.source = response;
+            var currentVal = $('.serviceSelectInput').val();
+            if (currentVal.length > 0) {
+                $('.serviceSelectInput').typeahead('lookup');
+            }
+        }
+    }
+
+    function setNextDocumentVersion(docId, docName, docNumber, currentVersionFromSearch) {
+        // Use the version from search endpoint if available, otherwise default to '01'
+        var currentVersion = currentVersionFromSearch || "01";
+
+        // Ensure version is 2 digits
+        if (currentVersion.length !== 2) {
+            currentVersion = currentVersion.padStart(2, '0').slice(-2);
+        }
+
+        var purpose = $('#purposeValue').val();
+        var finalVersion;
+
+        if (purpose === 'Amendment') {
+            // For amendments, keep the same version
+            finalVersion = currentVersion;
+        } else {
+            // For revisions, increment the version
+            var nextVersionNum = parseInt(currentVersion, 10) + 1;
+            finalVersion = nextVersionNum.toString().padStart(2, '0');
+        }
+
+        // Set the version in the form
+        if (document.getElementById('versionNumber')) {
+            document.getElementById('versionNumber').value = finalVersion;
+        } else {
+            $('input[name="DocumentVersion"]').val(finalVersion);
+        }
+    }
+
+    function submitNewDocumentForm() {
+        // Find all input, select, and textarea elements within the form that are empty.
+        const $emptyInputs = $('#newDocumentForm').find('input, select, textarea').filter(function () {
+            // This targets fields with an empty string value.
+            return $(this).val() === '';
+        });
+
+        // Disable the empty fields. Disabled fields are not sent with the form data.
+        $emptyInputs.prop('disabled', true);
+
+        // Submit the form using the existing utility.
+        // We use a custom callback to re-enable the fields before calling the original success function.
+        JSUTIL.callAJAXFormPost('newDocumentForm', function (response) {
+            // ALWAYS re-enable the fields, ensuring the form is usable again.
+            $emptyInputs.prop('disabled', false);
+
+            // Now, proceed with the original success logic.
+            callbackSuccessDocumentCreated(response);
+        });
+    }
+
+    function callbackSuccessFileCreated(response) {
+        $('#ExtFolderId').val(response.data);
+        submitNewDocumentForm();
+    }
+
+    function callbackSuccessDocumentCreated(response) {
+        console.log(response);
+        location.reload();
+    }
+
+    function resetForm() {
+        $('#newDocumentForm')[0].reset();
+        selectedDocumentForDuplication = null; // Clear the global variable
+    }
+
+    function callbackAfterGetDepartment(response) {
+        var innerHtml2 = '';
+        $('#department').empty();
+        innerHtml2 += '<option value = "">--none---</option>';
+        $.each(response, function (j, val2) {
+            innerHtml2 += '<option value = "' + val2.name + '">' + val2.name + '</option>';
+        });
+        $('#department').append(innerHtml2);
+    }
+</script>
+<!-- newDocumentRequest.js end  -->
+
+
+
+<!-- allDocumentRequest.html start -->
+<div class="qa-white-panel">
+    <div class="row animated fadeInRight aasaanPanel" id="allRecordPanel">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5>Document Request <small>Documents Request</small></h5>
+                    <div class="ibox-tools" style="margin-left: auto; text-align: right;">
+                        <button type="button" class="btn btn-sm btn-secondary newRecordBtn"
+                            id="newDocumentRequestButton">
+                            <i data-lucide="plus"></i> New Request
+                        </button>
+                    </div>
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="table-responsive">
+                        <table id="documentRequestTable" class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Request Number</th>
+                                    <th>Document Name</th>
+                                    <th>Type</th>
+                                    <th>Purpose</th>
+                                    <th>Document Version</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allDcoumentTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- allDocumentRequest.html end -->
+
+
+
+<!-- allDocumentRequest.js start -->
+<script>
+    // recordList is injected by the server (Thymeleaf).
+    // Guard so the ready block doesn't crash if it arrives late.
+    if (typeof recordList === 'undefined') { var recordList = []; }
+    window.recordList = recordList;
+
+    function buildDocumentRequestTable(list) {
+        if ($.fn.DataTable.isDataTable('#documentRequestTable')) {
+            $('#documentRequestTable').DataTable().destroy();
+        }
+        $('#allDcoumentTable').empty();
+
+        if (list && list.length > 0) {
+            var innerHtml = '';
+            $.each(list, function (i, val) {
+                var docName = (val.purpose === 'New')
+                    ? (val.documentName || '')
+                    : (val.document ? val.document.name : '');
+                var status = val.processStatus || '';
+                var statusLabel = '';
+                if (status === 'New' || status.toLowerCase().includes('review') || status.toLowerCase().includes('approval') || status.toLowerCase().includes('signing')) {
+                    statusLabel = '<span class="label" style="margin-left:10px;">' + status + '</span>';
+                } else if (status === 'Training' || status === 'Effective' || status === 'Issuance' || status === 'CFT' || status === 'Preparation') {
+                    statusLabel = '<span class="label label-success" style="margin-left:10px;">' + status + '</span>';
+                } else if (status.toLowerCase().includes('rejected')) {
+                    statusLabel = '<span class="label label-danger" style="margin-left:10px;">' + status + '</span>';
+                }
+                innerHtml +=
+                    '<tr>' +
+                        '<td class="itemNum"><a href="javascript:void(0);" class="selectRecordBtn" id="' + val.id + '">' + (val.number || '') + '</a></td>' +
+                        '<td>' + docName + '</td>' +
+                        '<td>' + (val.documentType ? val.documentType.name : '') + '</td>' +
+                        '<td>' + (val.purpose || '') + '</td>' +
+                        '<td>' + (val.documentVersion || '') + '</td>' +
+                        '<td>' + statusLabel + '</td>' +
+                    '</tr>';
+            });
+            $('#allDcoumentTable').append(innerHtml);
+        }
+        // Empty tbody — DataTables shows its own "No data available" message.
+        // Never insert a colspan row: a single <td> in a 6-column table is what
+        // triggers "Requested unknown parameter '1' for row 0, column 1".
+        $('#documentRequestTable').DataTable({
+            destroy: true,
+            language: { emptyTable: 'No Document Requests found.' }
+        });
+    }
+
+    $(document).ready(function () {
+        var url = new URL(window.location.href);
+        var type = url.searchParams.get('view');
+        var id = url.searchParams.get('id');
+
+        buildDocumentRequestTable(recordList);
+
+        if (type) {
+            setTimeout(function () {
+                var btn = $('#newDocumentRequestButton');
+                if (btn.length) btn.trigger('click');
+                else console.warn("Button 'newDocumentRequestButton' not found.");
+            }, 400);
+        }
+        if (id) {
+            setTimeout(function () {
+                var btn = $('#allDcoumentTable .selectRecordBtn[id="' + id + '"]');
+                if (btn.length) btn.trigger('click');
+                else console.warn("Button with id " + id + " not found.");
+            }, 400);
+        }
+    });
+</script>
+<!-- allDocumentRequest.js end -->

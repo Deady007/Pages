@@ -1721,22 +1721,39 @@ function selectServiceCallback(parameterList) {
     console.info("Parameters: ", parameterList);
     $("#allParametersTableBody").empty();
     let innerHtml = "";
-    $.each(parameterList, function(i, val) {
-        innerHtml += `<tr>
-            <td>${val.name}</td>
-            <td>${val.specification}</td>
-            <td>`;
-        if (val.numberOfReadings > 1) {
-            for (let k = 0; k < val.numberOfReadings; k++) {
-                innerHtml += `<input type="text" value="" class="form-control sampleTestResultMultiple" name="requestLnItem_${val.id}_Reading_${k}" aria-details="${val.id}" aria-description="${k}" readonly>`;
+    if (!parameterList || parameterList.length === 0) {
+            // ── No parameters: render a single row using the test itself ──
+            var serviceName = (fullItem && fullItem.service && fullItem.service.name) || '';
+            var serviceSpec = (fullItem && fullItem.service && fullItem.service.description) || '';
+            var overallVal = '';
+            if (savedValues && savedValues['svc_' + serviceId] !== undefined) {
+                overallVal = savedValues['svc_' + serviceId];
+            } else if (fullItem && fullItem.testResult2) {
+                overallVal = fullItem.testResult2;
             }
+            innerHtml += '<tr><td>' + serviceName + '</td><td>' + serviceSpec + '</td>' +
+                '<td><input type="text" value="' + overallVal + '" class="form-control" readonly disabled></td>' +
+                '<td></td></tr>';
         } else {
-            innerHtml += `<input type="text" value="${val.defaultValues || ''}" class="form-control sampleTestResult" name="requestLnItem_${val.id}_TestResult" aria-details="${val.id}" aria-description="0" readonly>`;
+            $.each(parameterList, function (i, val) {
+                innerHtml += '<tr><td>' + val.name + (val.number ? ' (' + val.number + ')' : '') + '</td>' +
+                    '<td>' + val.specification + '</td><td>';
+                if (val.numberOfReadings > 1) {
+                    for (var k = 0; k < val.numberOfReadings; k++) {
+                        var savedVal = '';
+                        if (savedValues && savedValues[val.id]) {
+                            var parts = savedValues[val.id].split(';');
+                            savedVal = parts[k] || '';
+                        }
+                        innerHtml += '<input type="text" value="' + savedVal + '" class="form-control" readonly disabled>';
+                    }
+                } else {
+                    var savedVal = (savedValues && savedValues[val.id] !== undefined) ? savedValues[val.id] : '';
+                    innerHtml += '<input type="text" value="' + savedVal + '" class="form-control" readonly disabled>';
+                }
+                innerHtml += '</td><td>' + (val.unit || '') + '</td></tr>';
+            });
         }
-        innerHtml += `</td>
-            <td>${val.unit}</td>
-            </tr>`;
-    });
     $("#allParametersTableBody").append(innerHtml);
     $("#allParametersTable").show();
 

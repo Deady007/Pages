@@ -6,6 +6,71 @@
 
 <!-- editTemplateReviewPanel.html start -->
 <style>
+  /* Multi-select dropdown (read-only display) */
+    .ms-field { position: relative; }
+    .ms-control {
+        width: 100%;
+        min-height: 34px;
+        padding: 6px 28px 6px 12px;
+        border: 1px solid #e5e6e7;
+        border-radius: 3px;
+        background: #fff;
+        cursor: pointer;
+        text-align: left;
+        font-size: 14px;
+        color: #676a6c;
+        line-height: 1.42857;
+        position: relative;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .ms-control:hover { border-color: #bcc4cc; }
+    .ms-control.ms-open { border-color: #4d6dff; }
+    .ms-control::after {
+        content: '';
+        position: absolute;
+        right: 12px; top: 50%;
+        width: 0; height: 0;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-top: 5px solid #888;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+    .ms-control.ms-placeholder-text { color: #999; }
+    .ms-panel {
+        position: absolute;
+        top: calc(100% + 2px);
+        left: 0; right: 0;
+        background: #fff;
+        border: 1px solid #d0d7de;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        z-index: 1000;
+        max-height: 240px;
+        overflow-y: auto;
+        display: none;
+        padding: 4px 0;
+    }
+    .ms-panel.ms-open { display: block; }
+    .ms-option {
+        padding: 6px 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: #333;
+        user-select: none;
+        margin: 0;
+    }
+    .ms-option:hover { background: #f1f5ff; }
+    .ms-option input[type="checkbox"] { margin: 0; cursor: pointer; }
+    .ms-option.ms-disabled { opacity: 0.55; cursor: not-allowed; }
+    .ms-control.ms-disabled { background: #f3f4f6; cursor: not-allowed; color: #999; }
+    .ms-empty { padding: 10px 14px; color: #999; text-align: center; font-size: 13px; }
     .btn .lucide { width: 17px; height: 17px; stroke-width: 4; vertical-align: middle; margin-right: 5px; padding: 2px; }
     .selectTemplateReviewRecord { color: #337AB7 !important; text-decoration: none; }
     .selectTemplateRecord { color: #337AB7 !important; text-decoration: none; }
@@ -204,9 +269,10 @@
                 <div class="ibox-tools">
                     <button type="button" class="btn btn-default btn-sm editTemplateCloseBtn"><i data-lucide="x"></i> Close </button>
                     <button type="button" class="btn btn-default btn-sm" id="editTemplateReviewPreviewBtn" onclick="openTemplatePreview('editTemplatePanel');"><i data-lucide="eye"></i> Preview </button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="editTemplateApproveBtn"><i data-lucide="check"></i> Approve </button>
-                    <button type="button" class="btn btn-warning btn-sm" id="editTemplateReturnBtn"><i data-lucide="undo-2"></i> Return </button>
                     <button type="button" class="btn btn-danger btn-sm" id="editTemplateRejectBtn"><i data-lucide="x"></i> Reject </button>
+                    <button type="button" class="btn btn-warning btn-sm" id="editTemplateReturnBtn"><i data-lucide="undo-2"></i> Return </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="editTemplateApproveBtn"><i data-lucide="check"></i> Approve </button>
+                    
                 </div>
             </div>
             <div class="ibox-content">
@@ -1376,24 +1442,96 @@ function bindEditTemplateEvents() {
     btn.addEventListener('click', closeEditTemplatePanel);
   });
 
-  $('#editTemplateApproveBtn').on('click', function () {
-    updateEditTemplate('Approved', { keepOpen: true });
+$('#editTemplateApproveBtn').on('click', function () {
+    openReviewEsignModal('Approve', function () {
+      updateEditTemplate('Approved', { keepOpen: true });
+    });
   });
 
   $('#editTemplateRejectBtn').on('click', function () {
-    updateEditTemplate('Rejected', { keepOpen: true });
+    openReviewEsignModal('Reject', function () {
+      updateEditTemplate('Rejected', { keepOpen: true });
+    });
   });
 
   $('#editTemplateReturnBtn').on('click', function () {
-    updateEditTemplate('New', {
-      bumpRevision: false,
-      keepOpen: true,
-      activityStatus: 'Returned',
-      successMessage: 'Template returned to New successfully.'
+    openReviewEsignModal('Return', function () {
+      updateEditTemplate('New', {
+        bumpRevision: false,
+        keepOpen: true,
+        activityStatus: 'Returned',
+        successMessage: 'Template returned to New successfully.'
+      });
     });
   });
 }
+var _reviewEsignOnSuccess = null;
 
+function openReviewEsignModal(actionLabel, onSuccess) {
+    _reviewEsignOnSuccess = onSuccess;
+
+    $('#esignModalTitle').text('Verify to ' + actionLabel);
+    $('#eSignUserName').val(FOX.employeeUsername);
+    $('#eSignReportPasswordField').val('');
+    $('#pageErrorPanel5').hide();
+    $('#completeVerificationBtn').prop('disabled', false).text('Confirm');
+
+    var esignModalEl = document.getElementById('esignModal');
+    if (esignModalEl && window.bootstrap && window.bootstrap.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(esignModalEl).show();
+    } else {
+        console.error('Bootstrap Modal not available');
+    }
+}
+
+$(document).on('click', '#completeVerificationBtn', function () {
+    var password = ($('#eSignReportPasswordField').val() || '').trim();
+    var $confirm = $('#completeVerificationBtn');
+    var $error = $('#pageErrorPanel5');
+
+    $error.hide().text('');
+
+    if (!password) {
+        $error.text('Enter your password to continue.').show();
+        return;
+    }
+
+    $confirm.prop('disabled', true).text('Verifying...');
+
+    JSUTIL.callAJAXPost('/api/auth/validate', JSON.stringify({
+        'username': FOX.employeeUsername,
+        'password': password
+    }), function (response) {
+        console.log('[AuthValidate] response:', response);
+
+        var isFailure = !response
+            || response.result === 'FAILURE'
+            || response.success === false
+            || response.valid === false;
+
+        if (isFailure) {
+            $error.text('Invalid password, please try again.').show();
+            $confirm.prop('disabled', false).text('Confirm');
+            return;
+        }
+
+        var esignModalEl = document.getElementById('esignModal');
+        if (esignModalEl && window.bootstrap && window.bootstrap.Modal) {
+            var instance = window.bootstrap.Modal.getInstance(esignModalEl) || window.bootstrap.Modal.getOrCreateInstance(esignModalEl);
+            instance.hide();
+        }
+        $confirm.prop('disabled', false).text('Confirm');
+
+        if (typeof _reviewEsignOnSuccess === 'function') {
+            var cb = _reviewEsignOnSuccess;
+            _reviewEsignOnSuccess = null;
+            cb();
+        }
+    }, function () {
+        $error.text('Could not verify user. Please try again.').show();
+        $confirm.prop('disabled', false).text('Confirm');
+    });
+});
 window.editTemplateAddField = editTemplateAddField;
 window.editTemplateRemoveField = editTemplateRemoveField;
 window.editTemplateToggleOptions = editTemplateToggleOptions;
@@ -1986,7 +2124,9 @@ if (document.readyState === 'loading') {
 <script>
     // Review page: list only templates pending approval and open read-only editor with approve/return/reject actions.
 
+// var allTemplateReviewRowsCache = [];
 var allTemplateReviewRowsCache = [];
+var currentReviewerDepartmentId = null;
 
 function safeReinitializeTemplateTable(tableEl) {
   try {
@@ -2041,7 +2181,23 @@ function normalizeTemplateReviewDepartmentId(value) {
   return Number.isFinite(num) ? String(num) : raw;
 }
 
+// function getCurrentTemplateReviewEmployeeDepartmentId() {
+//   if (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartmentId) {
+//     return normalizeTemplateReviewDepartmentId(FOX.employeeDepartmentId);
+//   }
+//   if (typeof window !== 'undefined' && window.FOX && window.FOX.employeeDepartmentId) {
+//     return normalizeTemplateReviewDepartmentId(window.FOX.employeeDepartmentId);
+//   }
+//   if (typeof employeeDepartmentId !== 'undefined' && employeeDepartmentId) {
+//     return normalizeTemplateReviewDepartmentId(employeeDepartmentId);
+//   }
+//   return '';
+// }
+
 function getCurrentTemplateReviewEmployeeDepartmentId() {
+  if (currentReviewerDepartmentId) {
+    return normalizeTemplateReviewDepartmentId(currentReviewerDepartmentId);
+  }
   if (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartmentId) {
     return normalizeTemplateReviewDepartmentId(FOX.employeeDepartmentId);
   }
@@ -2199,7 +2355,11 @@ function renderAllTemplateReviewTable() {
   tableBody.empty();
   var innerHtml = '';
   var rows = getTemplateReviewRows();
-
+rows.sort(function (a, b) {
+    var aId = (a.number || a.Number || '').toString();
+    var bId = (b.number || b.Number || '').toString();
+    return aId.localeCompare(bId, undefined, { numeric: true, sensitivity: 'base' });
+  });
   $.each(rows, function (_, val) {
     var recordId = getTemplateReviewRecordId(val);
     var templateId = val.number || val.Number || '';
@@ -2236,6 +2396,68 @@ function renderAllTemplateReviewTable() {
   if (window.lucide) lucide.createIcons();
 }
 
+// $(document).ready(function () {
+//   if (window.lucide) lucide.createIcons();
+//   $('#templateStatusStepsWrap').hide();
+//   $('#allTemplateReviewListWrap').show();
+
+//   var tableEl = $('#allTemplateReviewPanel table.dataTables');
+//   if (tableEl.length) {
+//     tableEl.off('error.dt.templateReview').on('error.dt.templateReview', function (e, settings, techNote, message) {
+//       var errorText = message || ('Data table error (tech note ' + techNote + ').');
+//       showTemplateReviewPanelError(errorText);
+//     });
+//   }
+
+//   refreshTemplateReviewList(function () {
+//     renderAllTemplateReviewTable();
+//     $('#allTemplateReviewPanel').show();
+//     if (window.lucide) lucide.createIcons();
+//   });
+function resolveCurrentReviewerDepartmentId(callback) {
+  if (typeof callback !== 'function') callback = function () {};
+
+  if (currentReviewerDepartmentId) { callback(); return; }
+
+  // If FOX already has the numeric ID, use it directly
+  if (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartmentId) {
+    currentReviewerDepartmentId = String(FOX.employeeDepartmentId);
+    callback();
+    return;
+  }
+
+  // Look up dept ID by name from /api/departments
+  var deptName = (typeof FOX !== 'undefined' && FOX && FOX.employeeDepartment)
+    ? String(FOX.employeeDepartment).trim().toLowerCase()
+    : '';
+
+  if (!deptName || typeof JSUTIL === 'undefined' || typeof JSUTIL.callAJAXGet !== 'function') {
+    console.warn('[TemplateReview] Cannot resolve reviewer department.');
+    callback();
+    return;
+  }
+
+  JSUTIL.callAJAXGet('/api/departments', function (list) {
+    var depts = Array.isArray(list) ? list : [];
+    var match = null;
+    for (var i = 0; i < depts.length; i++) {
+      var d = depts[i];
+      var n = String(d.name || d.Name || '').trim().toLowerCase();
+      if (n === deptName) { match = d; break; }
+    }
+    if (match) {
+      currentReviewerDepartmentId = String(match.id || match.Id);
+      console.log('[TemplateReview] Resolved dept "' + deptName + '" to ID:', currentReviewerDepartmentId);
+    } else {
+      console.warn('[TemplateReview] No dept found matching name:', deptName);
+    }
+    callback();
+  }, function () {
+    console.warn('[TemplateReview] Failed to fetch /api/departments');
+    callback();
+  });
+}
+
 $(document).ready(function () {
   if (window.lucide) lucide.createIcons();
   $('#templateStatusStepsWrap').hide();
@@ -2249,12 +2471,14 @@ $(document).ready(function () {
     });
   }
 
-  refreshTemplateReviewList(function () {
-    renderAllTemplateReviewTable();
-    $('#allTemplateReviewPanel').show();
-    if (window.lucide) lucide.createIcons();
+  // Resolve the reviewer's dept ID first, then load the list
+  resolveCurrentReviewerDepartmentId(function () {
+    refreshTemplateReviewList(function () {
+      renderAllTemplateReviewTable();
+      $('#allTemplateReviewPanel').show();
+      if (window.lucide) lucide.createIcons();
+    });
   });
-
   // No creation from review page
   $('.newCreateTemplateBtn').hide().off('click');
 });
@@ -2264,5 +2488,175 @@ window.renderAllTemplateReviewTable = renderAllTemplateReviewTable;
 window.refreshTemplateReviewList = refreshTemplateReviewList;
 window.openTemplateReviewEditorById = openTemplateReviewEditorById;
 </script>
+<!-- E-Signature Modal for Review actions (Approve / Reject / Return) -->
+<div class="modal inmodal fade" id="esignModal" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="esignModalTitle">Verify</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row" id="eSignReportPasswordFieldRow">
+                    <div class="alert alert-danger" id="pageErrorPanel5" style="display: none;"></div>
+                    <div class="col-sm-12">
+                        <div class="form-group mb-3">
+                            <label>Username</label><i style="margin-left:5px;" data-lucide="user"></i>
+                            <input type="text" class="form-control" id="eSignUserName" readonly />
+                        </div>
+                        <div class="form-group mb-3">
+                            <label>Password</label><i style="margin-left:5px;" data-lucide="lock"></i>
+                            <input type="password" class="form-control" id="eSignReportPasswordField" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" id="completeVerificationBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 <!-- allTemplateReviewPanel.html end -->
+ <script>
+// Multi-select rendered as a Bootstrap-style compact dropdown (review page - read-only)
+(function () {
+  'use strict';
+
+  function ensureWidget(selectEl) {
+    if (!selectEl || selectEl.dataset.msBound === 'true') return;
+    selectEl.dataset.msBound = 'true';
+
+    selectEl.style.display = 'none';
+
+    var placeholder = selectEl.getAttribute('data-placeholder') || 'Select...';
+
+    var wrap = document.createElement('div');
+    wrap.className = 'ms-field';
+    selectEl.parentNode.insertBefore(wrap, selectEl);
+    wrap.appendChild(selectEl);
+
+    var control = document.createElement('div');
+    control.className = 'ms-control';
+    wrap.appendChild(control);
+
+    var panel = document.createElement('div');
+    panel.className = 'ms-panel';
+    wrap.appendChild(panel);
+
+    function isDisabled() { return selectEl.disabled; }
+
+    function render() {
+      var labels = [];
+      for (var i = 0; i < selectEl.options.length; i++) {
+        var opt = selectEl.options[i];
+        if (opt.selected && opt.value) labels.push(opt.textContent);
+      }
+      if (!labels.length) {
+        control.textContent = placeholder;
+        control.classList.add('ms-placeholder-text');
+      } else {
+        control.textContent = labels.join(', ');
+        control.classList.remove('ms-placeholder-text');
+      }
+      control.classList.toggle('ms-disabled', isDisabled());
+    }
+
+    function renderPanel() {
+      panel.innerHTML = '';
+      var hasAny = false;
+      for (var i = 0; i < selectEl.options.length; i++) {
+        (function (opt) {
+          if (!opt.value) return;
+          hasAny = true;
+          var row = document.createElement('label');
+          row.className = 'ms-option';
+          if (isDisabled()) row.classList.add('ms-disabled');
+          var cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = opt.selected;
+          cb.disabled = isDisabled();
+          cb.addEventListener('change', function () {
+            opt.selected = cb.checked;
+            triggerChange();
+            render();
+          });
+          row.appendChild(cb);
+          var lbl = document.createElement('span');
+          lbl.textContent = opt.textContent;
+          row.appendChild(lbl);
+          panel.appendChild(row);
+        }(selectEl.options[i]));
+      }
+      if (!hasAny) {
+        var empty = document.createElement('div');
+        empty.className = 'ms-empty';
+        empty.textContent = 'No options available';
+        panel.appendChild(empty);
+      }
+    }
+
+    function triggerChange() {
+      var evt;
+      try { evt = new Event('change', { bubbles: true }); }
+      catch (e) { evt = document.createEvent('Event'); evt.initEvent('change', true, true); }
+      selectEl.dispatchEvent(evt);
+    }
+
+    function openPanel() {
+      if (isDisabled()) return;
+      document.querySelectorAll('.ms-panel.ms-open').forEach(function (p) {
+        if (p !== panel) {
+          p.classList.remove('ms-open');
+          var sibling = p.previousElementSibling;
+          if (sibling) sibling.classList.remove('ms-open');
+        }
+      });
+      renderPanel();
+      panel.classList.add('ms-open');
+      control.classList.add('ms-open');
+    }
+
+    function closePanel() {
+      panel.classList.remove('ms-open');
+      control.classList.remove('ms-open');
+    }
+
+    control.addEventListener('click', function () {
+      if (panel.classList.contains('ms-open')) closePanel();
+      else openPanel();
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!wrap.contains(e.target)) closePanel();
+    });
+
+    var observer = new MutationObserver(function () {
+      render();
+      if (panel.classList.contains('ms-open')) renderPanel();
+    });
+    observer.observe(selectEl, { childList: true, attributes: true, attributeFilter: ['disabled'] });
+
+    if (window.$) {
+      $(selectEl).on('change.msw', function () { render(); });
+    }
+
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll('select.departmentDropDown').forEach(ensureWidget);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
+
+  setInterval(initAll, 1000);
+
+  window.initDepartmentMultiSelects = initAll;
+}());
+</script>

@@ -1,0 +1,420 @@
+<!-- viewFile.html start -->
+<style>
+    #pdfViewer {
+        width: 100%;
+        height: 90vh;
+        background-color: #f4f4f4;
+        margin-top: 10px;
+        overflow: auto;
+    }
+
+    #pdfViewer canvas {
+        width: 100% !important;
+        height: auto !important;
+        margin-bottom: 10px;
+    }
+
+    @media print {
+        body {
+            display: none;
+        }
+    }
+</style>
+<div class="row animated fadeInRight aasaanPanel" id="viewRecordPanel" style="display:none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><small>View Document</small></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-white btn-sm close-box viewRecordCancelBtn"><i
+                            class="fa fa-times"></i> Close </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <div id="pdfViewer">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+<!-- viewFile.html end -->
+
+
+
+<!-- viewFile.js start -->
+<script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js";
+    $(document).ready(function () {
+        $('.viewRecordCancelBtn').on('click', function () {
+            $('#viewRecordPanel').hide();
+            $('#editDocumentsPanel').show();
+        });
+        $('.editDocumentsDownloadBtn').on('click', function () {
+            var postDocUrl = JSUTIL.getUrl('/onedrive/download/' + encodeURIComponent(documentId));
+            JSUTIL.callAJAXGet(postDocUrl, callbackAfterGetDocuments);
+            $('#viewRecordPanel').show();
+            $('#editDocumentsPanel').hide();
+        });
+    });
+    function callbackAfterGetDocuments(response) {
+        var pdfData = atob(response);
+        var binaryData = new Uint8Array(pdfData.length);
+        for (var i = 0; i < pdfData.length; i++) {
+            binaryData[i] = pdfData.charCodeAt(i);
+        }
+        var blob = new Blob([binaryData], { type: 'application/pdf' });
+        var url = URL.createObjectURL(blob);
+        document.getElementById('pdfViewer').style.display = 'block';
+        renderPdf(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function renderPdf(pdfUrl) {
+        var viewer = document.getElementById('pdfViewer');
+        viewer.innerHTML = '';
+        pdfjsLib.getDocument(pdfUrl).promise.then(function (pdfDoc_) {
+            var totalPages = pdfDoc_.numPages;
+
+            for (var pageNum = 1; pageNum <= totalPages; pageNum++) {
+                pdfDoc_.getPage(pageNum).then(function (page) {
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+
+                    var scale = 4.0;
+                    var viewport = page.getViewport({ scale: scale });
+
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    page.render({
+                        canvasContext: ctx,
+                        viewport: viewport
+                    });
+
+                    viewer.appendChild(canvas);
+                });
+            }
+        }).catch(function (error) {
+            console.error('Error loading PDF:', error);
+        });
+    }
+</script>
+<!-- viewFile.js end -->
+
+
+
+<!-- allDocuments.html start -->
+<div class="row animated fadeInRight aasaanPanel" id="allDocumentsPanel">
+    <div class="col-lg-3">
+        <div class="form-group">
+            <label>Type</label>
+            <select class="select2 form-control" id="typeFilter">
+                <option value="">All</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="form-group">
+            <label>Department</label>
+            <select class="select2 form-control" id="sampleTypeFilter">
+                <option value="">All</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <div class="table-responsive">
+                    <table class="table table-hover dataTables">
+                        <thead>
+                            <tr>
+                                <th>Document Number</th>
+                                <th>Document Name</th>
+                                <th>Current Version</th>
+                                <th>Type</th>
+                                <th>Department</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allDocumentsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- allDocuments.html end -->
+
+
+
+<!-- allDocuments.js start -->
+<script>
+    const typeParameter = {
+        fields: "ExtFolderId;Name",
+        conditions: [],
+        logic: ""
+    };
+    var ansUrl = JSUTIL.getUrl('/data/QualityDocumentType/list');
+    JSUTIL.callAJAXPost(ansUrl, JSON.stringify(typeParameter), callbackAfterGetType);
+    const departmentParameter = {
+        fields: "StartDate;Name",
+        conditions: [],
+        logic: ""
+    };
+    var ansUrlDept = JSUTIL.getUrl('/data/Department/list');
+    JSUTIL.callAJAXPost(ansUrlDept, JSON.stringify(departmentParameter), callbackAfterGetDepartment);
+
+    let innerHtml = '';
+    $.each(recordList, function (i, u) {
+        innerHtml +=
+            '<tr>' +
+            '<td class="itemNum"><a href="javascript:void(0);" class="selectDocumentsBtn" name="' + u.id + '">' + u.documentVersion.document.number + '</a></td>' +
+            '<td>' + u.documentVersion.document.name + '</td>' +
+            '<td>' + u.documentVersion.currentVersion + '</td>' +
+            '<td>' + u.documentVersion.document.documentType.name + '</td>' +
+            '<td>' + u.documentVersion.document.department + '</td>' +
+            '</tr>';
+    });
+    $('#allDocumentsTable').append(innerHtml);
+    JSUTIL.reinitializeDataTable();
+    $(document).ready(function () {
+        $('#allDocumentsPanel').show();
+        $('#newDocumentsPanel').hide();
+        $('#editDocumentsPanel').hide();
+
+        $('#typeFilter, #sampleTypeFilter').on('change', function () {
+            $('.dataTables').DataTable().draw();
+        });
+
+    });
+    function callbackAfterGetType(response) {
+        console.log(response);
+        $('#typeFilter').empty();
+        var innerHtml = '<option value="">All</option>';
+        $.each(response, function (i, val) {
+            innerHtml += '<option value="' + val.name + '">' + val.name + '</option>';
+        });
+        $('#typeFilter').append(innerHtml);
+    }
+    function callbackAfterGetDepartment(response) {
+        $('#sampleTypeFilter').empty();
+        var innerHtml = '<option value="">All</option>';
+        $.each(response, function (i, val) {
+            innerHtml += '<option value="' + val.name + '">' + val.name + '</option>';
+        });
+        $('#sampleTypeFilter').append(innerHtml);
+    }
+    $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            var typeFilter = $('#typeFilter').val();
+            var typeColVal = data[3];
+            if ((typeColVal == '') || (typeColVal.indexOf(typeFilter) >= 0)) {
+                return true;
+            }
+            return false;
+        }
+    );
+    $.fn.dataTable.ext.search.push(
+        function (settings, data, dataIndex) {
+            var typeFilter = $('#sampleTypeFilter').val();
+            var typeColVal = data[4];
+            if (typeFilter === "" || typeColVal.indexOf(typeFilter) >= 0) {
+                return true;
+            }
+            return false;
+        }
+    );   
+</script>
+<!-- allDocuments.js end -->
+
+
+
+<!-- editDocuments.html start -->
+<div class="row animated fadeInRight aasaanPanel editPagePanel" id="editDocumentsPanel" style="display: none;">
+    <div class="col-lg-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><span id="editRecordTitle"></span></h5>
+                <div class="ibox-tools">
+                    <button type="button" class="btn btn-white btn-sm close-box editDocumentsCancelBtn">
+                        <i class="fa fa-times"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-white btn-sm editDocumentsDownloadBtn">
+                        <i class="fa fa-eye"></i> View Document
+                    </button>
+                </div>
+            </div>
+            <div class="ibox-content">
+                <form role="form" name="editDocumentsObj" action="quality/update_manual" method="post"
+                    id="editDocumentsForm">
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="documentNumber">Document Number</label>
+                                <input type="text" class="form-control editDocumentsInput" id="documentNumber"
+                                    name="Number" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="versionNumber">Version Number</label>
+                                <input type="number" class="form-control editDocumentsInput" id="versionNumber"
+                                    name="CurrentVersion" readonly>
+                            </div>
+                            <!-- <div class="form-group">
+                                <label for="preparedBy">Prepared By</label>
+                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
+                                <input type="hidden" id="preparedById" name="PreparedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
+                            </div>
+                            <div class="form-group">
+                                <label for="approvedBy">Approved By</label>
+                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
+                                <input type="hidden" id="approvedById" name="ApprovedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
+                            </div>
+                            <div class="form-group">
+                                <label for="issuedBy">Issued By</label>
+                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
+                                <input type="hidden" id="issuedById" name="IssuedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
+                            </div> -->
+                        </div>
+                        <!-- Right Column -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label for="documentName">Document Name</label>
+                                <input type="text" class="form-control editDocumentsInput" id="documentName" name="Name"
+                                    readonly>
+                            </div>
+                            <!-- <div class="form-group">
+                                <label for="preparedDate">Prepared Date</label>
+                                <input type="text" class="form-control datepicker editDocumentsInput" id="preparedDate" name="PreparedDate" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="approvedDate">Approved Date</label>
+                                <input type="text" class="form-control datepicker editDocumentsInput" id="approvedDate" name="ApprovedDate" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="issueDate">Issue Date</label>
+                                <input type="text" class="form-control datepicker editDocumentsInput" id="issueDate" name="IssueDate" disabled>
+                            </div> -->
+                            <input type="hidden" id="editDocumentsId" name="Id" />
+                        </div>
+                    </div>
+                </form>
+                <!-- <div class="tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a data-toggle="tab" id="documentShow" href="#Uploads" aria-expanded="false">Supporting Documents</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="Uploads" class="tab-pane active">
+                            <div class="panel-body" id="documentHide">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="editAllDocumentsTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- editDocuments.html end -->
+
+
+
+<!-- editDocuments.js start -->
+<script>
+    var documentId;
+    $(document).ready(function () {
+        $('.editDocumentsCancelBtn').on('click', function () {
+            $('#allDocumentsPanel').show();
+            $('#editDocumentsPanel').hide();
+        });
+        $('#allDocumentsTable').on('click', '.selectDocumentsBtn', function () {
+            const currentId = $(this).attr('name');
+            currentRecordEquipId = currentId;
+            $.each(recordList, function (i, val) {
+                if (currentRecordEquipId == val.id) {
+                    $('.editDocumentsInput[name="Name"]').val(val.documentVersion.document.name);
+                    $('.editDocumentsInput[name="Number"]').val(val.documentVersion.document.number);
+                    $('.editDocumentsInput[name="CurrentVersion"]').val(val.documentVersion.currentVersion);
+                    $('#editDocumentsId').val(val.id);
+                    $('#editRecordTitle').text(val.documentVersion.document.number + '-' + val.documentVersion.document.name);
+                    documentId = val.documentVersion.extFileId;
+                }
+            });
+            $('#allDocumentsPanel').hide();
+            $('#editDocumentsPanel').show();
+        });
+        $('.recordSaveAndUpdateBtn').on('click', function () {
+            JSUTIL.callAJAXFormPost('editDocumentsForm', callbackAfterEditDocumentsInput);
+            location.reload();
+        });
+
+        function callbackAfterEditDocumentsInput(res) {
+            console.log(res);
+            $('#editDocumentsPanel').hide();
+            $('#allDocumentsPanel').show();
+            $('#newDocumentsPanel').hide();
+        }
+        $('#deleteDocumentsBtn').on('click', function () {
+            MODALUTIL.deleteConfirmModal(deleteSampleRequestCallback);
+        });
+    });
+
+
+    function deleteSampleRequestCallback() {
+        var postUrl = JSUTIL.getUrl('/qms/documents/delete?id=' + currentRecordEquipId);
+        JSUTIL.callAJAXGet(postUrl, deleteRequestDocuments);
+    }
+    function deleteRequestDocuments(response) {
+        console.log(response);
+        location.reload();
+    }
+
+
+    // // Populate the document versions table (example data)
+    // const docVersions = [
+    //     { version: '1.0', type: 'Major', date: '01/01/2021', preparedBy: 'John Doe' },
+    //     { version: '1.1', type: 'Minor', date: '15/01/2021', preparedBy: 'Jane Smith' },
+    // ];
+
+    // const tableBody = $('#allDocVersionsTable');
+    // docVersions.forEach((version) => {
+    //     const row = `
+    //         <tr>
+    //             <td>${version.version}</td>
+    //             <td>${version.type}</td>
+    //             <td>${version.date}</td>
+    //             <td>${version.preparedBy}</td>
+    //         </tr>
+    //     `;
+    //     tableBody.append(row);
+    // });
+    // function getManualVersionsCallback(response) {
+    //     console.info(response);
+    //     let manualVersionList = JSON.parse(response);
+    //     $('#allDocVersionsTable').empty();
+    //     var innerHtml = '';
+    //     $.each(manualVersionList, function(i, val) {
+    //         innerHtml += '<tr>' +
+    //             '<th scope="row" class="itemNum">' + val.currentVersion + '</a></th>' +
+    //             '<td>' + val.versionType + '</td>' +
+    //             '<td>' + val.preparedDate + '</td>' +
+    //             '<td>' + val.preparedByName + '</td>' +
+    //             '</tr>';
+    //     });
+    //     $('#allDocVersionsTable').append(innerHtml);
+    // } 
+</script>
+<!-- editDocuments.js end -->
