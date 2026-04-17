@@ -920,7 +920,7 @@
                         <tr>
                             <th></th>
                             <th>Material</th>
-                            <th>Challan Quantity</th>
+                            <th>Quantity Received</th>
                             <th>Unit Price</th>
                             <th>UOM</th>
                             <th>Batch Number</th>
@@ -1600,7 +1600,6 @@
 
 
 <script>
-    console.log(23)
     //  allInwardPanel.js   Start
     lucide.createIcons();
 
@@ -1872,7 +1871,9 @@
     }
 
     $(document).ready(function () {
+        // Initial call for tax columns
         updateTaxColumns();
+        // On change
         $('#taxTypeSelect').on('change', updateTaxColumns);
     });
     var products = []
@@ -1898,39 +1899,12 @@
     var pendingGateEntryItems = null
     var recordList = []
 
-    // Compute material value for a given row based on unit price and batch qty
+    // Compute material value for a given row based on unit price and actual qty
     function updateRowMaterialValue($row) {
         var price = parseFloat($row.find('.unitPriceCell').data('price')) || 0;
-        var qty = parseFloat($row.find('.batchQtyInput').val()) || 0;
+        var qty = parseFloat($row.find('.receivedQtyInput').val()) || 0;
         var val = price * qty;
         $row.find('.materialValue').val(val ? val.toFixed(2) : '');
-    }
-
-    // Update remaining quantity for all rows of the same product
-    function updateRemainingQtyForProduct(productId) {
-        if (!productId) return;
-        
-        var rows = $('#receiptTable tbody tr').filter(function() {
-            return $(this).find('.productId').val() == productId;
-        });
-        
-        if (rows.length === 0) return;
-        
-        // Get the initial ordered quantity from the first row for this product
-        var firstRow = rows.eq(0);
-        var initialOrderedQty = parseFloat(firstRow.find('.initialRemainingQty').val()) || 0;
-        
-        // Calculate and display remaining qty in descending order
-        var cumulativeUsed = 0;
-        rows.each(function(index) {
-            // Display remaining qty for current row (before adding its batch qty to cumulative)
-            var remainingQty = initialOrderedQty - cumulativeUsed;
-            $(this).find('.remainingQtyDisplay').text(remainingQty >= 0 ? remainingQty : 0);
-            
-            // Add this row's batch qty to cumulative for next rows
-            var batchQty = parseFloat($(this).find('.batchQtyInput').val()) || 0;
-            cumulativeUsed += batchQty;
-        });
     }
 
     // Resolve account name (vendor/manufacturer) using available data
@@ -2217,16 +2191,63 @@
         return { valid: true };
     }
 
-    // Initialize flatpickr on all .drpDate text inputs (challanDate, lrDate, invoiceDate, edit equivalents)
+    // Initialize daterangepicker on all .drpDate text inputs (challanDate, lrDate, invoiceDate, edit equivalents)
     function initDrpDatePickers(scope) {
+        if (!$.fn || !$.fn.daterangepicker) return;
         var $scope = scope ? $(scope) : $(document);
-        var $inputs = $scope.find('.drpDate').filter(function () { return !$(this).prop('readonly'); });
-        if ($inputs.length) JSUTIL.initDatePicker($inputs);
+        $scope.find('.drpDate').each(function () {
+            var $input = $(this);
+            if ($input.prop('readonly')) return; // skip readonly fields
+            var existingVal = $input.val();
+            if ($input.data('daterangepicker')) {
+                $input.data('daterangepicker').remove();
+            }
+            var pickerOpts = {
+                singleDatePicker: true,
+                showDropdowns: true,
+                autoUpdateInput: false,
+                autoApply: true,
+                minYear: 1901,
+                maxYear: parseInt(moment().format('YYYY'), 10) + 10,
+                locale: { format: 'DD/MM/YYYY', cancelLabel: 'Clear' }
+            };
+            if (existingVal && DATE_FORMAT_REGEX.test(existingVal)) {
+                pickerOpts.startDate = moment(existingVal, 'DD/MM/YYYY');
+            }
+            $input.daterangepicker(pickerOpts);
+            $input.off('apply.daterangepicker').on('apply.daterangepicker', function (ev, picker) {
+                $(this).val(picker.startDate.format('DD/MM/YYYY'));
+            });
+            $input.off('cancel.daterangepicker').on('cancel.daterangepicker', function () {
+                $(this).val('');
+            });
+        });
     }
     function initInwardDatePickers(scope) {
+        if (!$.fn || !$.fn.daterangepicker) return;
         var $scope = scope ? $(scope) : $(document);
-        var $inputs = $scope.find('.mfgDateInput, .expDateInput, .retestDateInput, .mfg-date-input, .exp-date-input, .retest-date-input').filter(function () { return !$(this).prop('readonly'); });
-        if ($inputs.length) JSUTIL.initDatePicker($inputs);
+        $scope.find('.mfgDateInput, .expDateInput, .retestDateInput').each(function () {
+            var $input = $(this);
+            // destroy existing instance if any
+            if ($input.data('daterangepicker')) {
+                $input.data('daterangepicker').remove();
+            }
+            $input.daterangepicker({
+                singleDatePicker: true,
+                showDropdowns: true,
+                autoUpdateInput: false,
+                autoApply: true,
+                minYear: 1901,
+                maxYear: parseInt(moment().format('YYYY'), 10) + 10,
+                locale: { format: 'DD/MM/YYYY', cancelLabel: 'Clear' }
+            });
+            $input.off('apply.daterangepicker').on('apply.daterangepicker', function (ev, picker) {
+                $(this).val(picker.startDate.format('DD/MM/YYYY'));
+            });
+            $input.off('cancel.daterangepicker').on('cancel.daterangepicker', function () {
+                $(this).val('');
+            });
+        });
     }
     // Create a ProductLot for a given row and return a promise that resolves with the lot id
     // If productReceiptItemId is provided, the lot will link back to that receipt item (1:1)
@@ -2234,7 +2255,7 @@
         return new Promise(function (resolve, reject) {
             var productId = row.find('input[name="Product.Id"]').val();
             var batchNumber = row.find('.batchNumberInput').val().trim();
-            var receivedQty = parseFloat(row.find('.batchQtyInput').val()) || 0;
+            var receivedQty = parseFloat(row.find('.receivedQtyInput').val()) || 0;
             var numberOfContainers = parseInt(row.find('.containersInput').val()) || 0;
             var mfgDate = row.find('.mfgDateInput').val();
             var expDate = row.find('.expDateInput').val();
@@ -2963,9 +2984,6 @@
         // Clear the table first
         $('#receiptTable tbody').empty();
 
-        // Track cumulative quantities per product for decreasing display
-        var productCumulativeQty = {};
-
         // Iterate over the products
         gateEntryItems.forEach(item => {
             // Find the product name from products array
@@ -3012,23 +3030,14 @@
             var unitPriceVal = productData.unitPrice || item.unitPrice || 0;
             var materialVal = unitPriceVal * (item.quantityReceived || 0);
 
-            // Calculate decreasing remaining quantity
-            var productId = item.product.id;
-            if (!productCumulativeQty[productId]) {
-                productCumulativeQty[productId] = 0;
-            }
-            var displayRemainingQty = productData.remainingQty - productCumulativeQty[productId];
-            productCumulativeQty[productId] += (item.quantityReceived || 0);
-
             $('#receiptTable tbody').append(`
             <tr>
                 <td><button class="btn btn-sm deleteNewProduct form-control"><i class="ti ti-trash"></i></button></td>
                 <td>${displayName}
                     <input type="hidden" name="Product.Id" value="${item.product.id}">
-                    <input type="hidden" class="productId" value="${item.product.id}">
-                    <input type="hidden" class="initialRemainingQty" value="${productData.remainingQty}">
+                    <input type="hidden" class="remainingQty" value="${productData.remainingQty}">
                 </td>
-                <td><span class="remainingQtyDisplay">${displayRemainingQty || 0}</span></td>
+                <td>${item.quantityOrdered || 0}</td>
                 <td class="unitPriceCell" data-price="${unitPriceVal}">${unitPriceVal}</td>
                 <td>${uomVal}</td>
                 <td>
@@ -3048,7 +3057,7 @@
     <input type="text" placeholder="dd/mm/yyyy" class="form-control retestDateInput" value="${formatDateForInput(item.retestDate) || ''}"/>
 </td>
                 <td>
-                    <input type="number" class="form-control batchQtyInput" min="0" value="${item.quantityReceived || 0}" required>
+                    <input type="number" class="form-control receivedQtyInput" min="0" value="${item.quantityReceived || 0}" required>
                 </td>
                 <td>
                     <input type="number" class="form-control containersInput" min="0" value="${item.numberOfContainers || 0}">
@@ -3096,11 +3105,6 @@
             </tr>
         `);
             updateRowMaterialValue($('#receiptTable tbody tr').last());
-            
-            // Attach event handler to batch quantity input for this row
-            $('#receiptTable tbody tr').last().find('.batchQtyInput').on('change', function() {
-                updateRemainingQtyForProduct($(this).closest('tr').find('.productId').val());
-            });
         });
 
         initInwardDatePickers('#receiptTable');
@@ -3294,16 +3298,10 @@
             manufacturers = res || [];
         })
         $(document).on('click', '.deleteNewProduct', function () {
-            var $row = $(this).closest('tr');
-            var productId = $row.find('.productId').val();
-            $row.remove();
-            // Recalculate remaining quantities for this product after deletion
-            if (productId) {
-                updateRemainingQtyForProduct(productId);
-            }
+            $(this).closest('tr').remove();
         });
-        // Keep material value in sync; batch quantity can be partial or more
-        $(document).on('input change', '.batchQtyInput', function () {
+        // Keep material value in sync; received quantity can be partial or more
+        $(document).on('input change', '.receivedQtyInput', function () {
             clearTableError();
             var $row = $(this).closest('tr');
             var currentVal = parseFloat($(this).val()) || 0;
@@ -3314,12 +3312,6 @@
 
             // auto compute material value
             updateRowMaterialValue($row);
-            
-            // Update remaining quantities in descending order for this product
-            var productId = $row.find('.productId').val();
-            if (productId) {
-                updateRemainingQtyForProduct(productId);
-            }
             clearTableError();
         });
         // handleAddProduct is defined as a top-level function below the ready blocks
@@ -3398,7 +3390,7 @@
         });
 
         // Validate received quantity input
-        $(document).on("input", ".batchQtyInput", function () {
+        $(document).on("input", ".receivedQtyInput", function () {
             const enteredQty = parseFloat($(this).val()) || 0;
 
             if (enteredQty < 0) {
@@ -3475,7 +3467,7 @@
             receiptDate: new Date().toISOString().split("T")[0],
             remarks: $('#receiptNotes').val(),
             processStatus: "New",
-            createdBy: { id: FOX.employeeId },
+            initiator: { id: FOX.employeeId },
             // New Fields from GateEntry
             challanNumber: $('#challanNumber').val(),
             challanDate: toIsoDateOrEmpty($('#challanDate').val()) || null,
@@ -3556,7 +3548,7 @@
                 rowsForLots.push(row);
 
                 var productid = row.find('input[name="Product.Id"]').val();
-                var receivedQty = parseFloat(row.find('.batchQtyInput').val()) || 0;
+                var receivedQty = parseFloat(row.find('.receivedQtyInput').val()) || 0;
                 var batchNumber = row.find('.batchNumberInput').val().trim();
                 var numberOfContainers = parseInt(row.find('.containersInput').val()) || 0;
                 var manufacturerId = row.find('.manufacturerId').val();
@@ -3679,7 +3671,7 @@
                             }
                         });
 
-                        var receivedQty = parseFloat(row.find('.batchQtyInput').val()) || 0;
+                        var receivedQty = parseFloat(row.find('.receivedQtyInput').val()) || 0;
                         var batchNumber = row.find('.batchNumberInput').val().trim();
                         var numberOfContainers = parseInt(row.find('.containersInput').val()) || 0;
                         var manufacturerId = row.find('.manufacturerId').val();
@@ -3867,7 +3859,7 @@
                     // Checked By: latest activity with name "Sent to GIM Review"
                     var checkedByName = '';
                     for (var i = sortedAsc.length - 1; i >= 0; i--) {
-                        if (sortedAsc[i] && sortedAsc[i].name === 'Sent to GIM Review') {
+                        if (sortedAsc[i] && (sortedAsc[i].name === 'Approved in GIM Review' || sortedAsc[i].name === 'Rejected in GIM Review')) {
                             checkedByName = formatPersonName(sortedAsc[i].performedBy);
                             break;
                         }
@@ -4189,7 +4181,7 @@
                         <div>PLOT NO. 4/22,4/23,4/18,4/32. G.I.D.C. ESTATE, - ANKLESHWAR</div>
                     </div>
                     <div class="report-title">
-                        <div>GOODS INWARD MEMO</div>
+                        <div>GOODS INWARD MEMO ${currentReceiptData.processStatus == 'GIM Rejected' ? currentReceiptData.processStatus : ''}</div>
                         <div>${pageNumber}</div>
                     </div>
                 </div>
@@ -4486,7 +4478,6 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            $('#printReportBtn').show();
         } else if (currentReceipt.processStatus.includes('Inspection Complete')) {
             $('#submitReceiptToQcBtn').hide();
             $('#editBtn').hide();
@@ -4501,7 +4492,6 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            $('#printReportBtn').show();
             loadStagingLocations();
         } else if (currentReceipt.processStatus == 'Closed' || currentReceipt.processStatus == 'GIM Review') {
             $('#submitReceiptToQcBtn').hide();
@@ -4517,17 +4507,10 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            if(currentReceipt.processStatus == "Closed")
-            {
-                $('#printReportBtn').hide();
-            }
-            else{
-                $('#printReportBtn').show();
-            }
             // Load staging locations for these statuses
             loadStagingLocations();
         } else if (currentReceipt.processStatus == 'GIM Approved') {
-            $('#submitReceiptToQcBtn').show();
+            
             $('#editBtn').hide(); // Allow editing for location assignment
             $('#deleteProductBtn').hide();
             $('#saveBtn').hide();
@@ -4540,13 +4523,26 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').show();
             $('#closeBtn').hide();
-            $('#printReportBtn').show();
+                        if(currentReceipt.initiator && FOX.employeeId == currentReceipt?.initiator?.id){
+                                $('#submitReceiptToQcBtn').show();
+                        }
+                        else{
+                            $('#submitReceiptToQcBtn').hide();
+                        }
             // Load staging locations for these statuses
             loadStagingLocations();
-        } else if (currentReceipt.processStatus == 'New' || currentReceipt.processStatus == 'GIM Rejected' ) {
+        } else if (currentReceipt.processStatus == 'Initiation' || currentReceipt.processStatus == 'GIM Rejected') {
             $('#submitReceiptToQcBtn').hide();
-            $('#editBtn').show();
+            if(currentReceipt.initiator && FOX.employeeId == currentReceipt?.initiator?.id){
+                      $('#editBtn').show();
             $('#deleteProductBtn').show();
+                            $('#sendToGrnBtn').show();
+            }
+            else{
+                      $('#editBtn').hide();
+            $('#deleteProductBtn').hide();
+                            $('#sendToGrnBtn').hide();
+            }
             $('#saveBtn').hide();
             $('#addProductSection').hide();
             $('.headReprintComments').hide();
@@ -4578,22 +4574,19 @@
                 $('#reprintRequestBtn').hide();
                 $('#labelApproveBtn').hide();
                 $('#labelRejectBtn').hide();
-                $('#sendToGrnBtn').show();
+
+
             }
-            $('#printReportBtn').hide();
+            $('#printReportBtn').show();
             $('#uploadFileBtn').show();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
             // ADD THIS LINE to load staging locations for New status
             loadStagingLocations();
         }
-        else if(currentReceipt.processStatus == 'Cancelled')
-        {
-            $('#printReportBtn').hide();
-        }
 
         // Ensure print report is available for all statuses
-        // $('#printReportBtn').show();
+        $('#printReportBtn').show();
 
         currentReceiptData = currentReceipt;
         console.log('current receipt data', currentReceiptData);
@@ -5202,24 +5195,19 @@
                         poItems.forEach(function (po) {
                             priceMap[po.id] = parseFloat(po.itemPrice || po.ItemPrice || 0) || 0;
                         });
-                        console.log(11)
                         renderReceiptItems(response, priceMap);
                     }
                 );
             } else {
-                console.log(22)
                 renderReceiptItems(response, {});
             }
         } else {
-            console.log(33)
             renderReceiptItems(response, {});
         }
     }
 
     // Render receipt items into the table, using PO price map when available
     function renderReceiptItems(response, poPriceMap) {
-        response = response.sort((a,b)=>a.id-b.id)
-        console.log('response for lineitems',response)
         var innerHtml = '';
 
         // Build simplified header
@@ -5341,23 +5329,20 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="detail-label">Mfg. Date</label>
-                                <input type="text" class="form-control form-control-sm mfg-date-input"
-                                    placeholder="DD/MM/YYYY" autocomplete="off"
-                                    value="${formatDateForInput(val.manufacturingDate) || ''}"
+                                <input type="date" class="form-control form-control-sm mfg-date-input"
+                                    value="${val.manufacturingDate ? val.manufacturingDate.slice(0, 10) : ''}"
                                     data-original="${val.manufacturingDate || ''}" readonly>
                             </div>
                             <div class="col-md-2">
                                 <label class="detail-label">Expiry Date</label>
-                                <input type="text" class="form-control form-control-sm exp-date-input"
-                                    placeholder="DD/MM/YYYY" autocomplete="off"
-                                    value="${formatDateForInput(val.expiryDate) || ''}"
+                                <input type="date" class="form-control form-control-sm exp-date-input"
+                                    value="${val.expiryDate ? val.expiryDate.slice(0, 10) : ''}"
                                     data-original="${val.expiryDate || ''}" readonly>
                             </div>
                             <div class="col-md-2">
                                 <label class="detail-label">Retest Date</label>
-                                <input type="text" class="form-control form-control-sm retest-date-input"
-                                    placeholder="DD/MM/YYYY" autocomplete="off"
-                                    value="${formatDateForInput(val.retestDate) || ''}"
+                                <input type="date" class="form-control form-control-sm retest-date-input"
+                                    value="${val.retestDate ? val.retestDate.slice(0, 10) : ''}"
                                     data-original="${val.retestDate || ''}" readonly>
                             </div>
                             <div class="col-md-1">
@@ -5432,7 +5417,6 @@
         addExpandCollapseHandlers();
         updateUIState();
         applyDatePlaceholders();
-        initInwardDatePickers('#editInwardTable');
         lucide.createIcons();
 
 
@@ -5523,17 +5507,17 @@
                             </td>
                             <td><strong>Manufacturing Date:</strong></td>
                             <td>
-                                <input type="text" class="form-control mfg-date-input" placeholder="DD/MM/YYYY" autocomplete="off" required>
+                                <input type="date" class="form-control mfg-date-input" required>
                             </td>
                         </tr>
                         <tr>
                             <td><strong>Expiry Date:</strong></td>
                             <td>
-                                <input type="text" class="form-control exp-date-input" placeholder="DD/MM/YYYY" autocomplete="off" required>
+                                <input type="date" class="form-control exp-date-input" required>
                             </td>
                             <td><strong>Retest Date:</strong></td>
                             <td>
-                                <input type="text" class="form-control retest-date-input" placeholder="DD/MM/YYYY" autocomplete="off">
+                                <input type="date" class="form-control retest-date-input">
                             </td>
                         </tr>
                         <tr>
@@ -5581,7 +5565,6 @@
 
         // Re-attach expand/collapse handlers
         addExpandCollapseHandlers();
-        initInwardDatePickers($('#editInwardTable tr:last'));
     }
     function validateData() {
         var isValid = true;
@@ -5654,13 +5637,9 @@
                     isValid = false;
                 }
 
-                if (mfgDate && expDate) {
-                    var mfgMoment = moment(mfgDate, 'DD/MM/YYYY');
-                    var expMoment = moment(expDate, 'DD/MM/YYYY');
-                    if (mfgMoment.isValid() && expMoment.isValid() && !expMoment.isAfter(mfgMoment)) {
-                        errors.push(productName + ': Expiry date must be after Mfg date');
-                        isValid = false;
-                    }
+                if (mfgDate && expDate && new Date(expDate) <= new Date(mfgDate)) {
+                    errors.push(productName + ': Expiry date must be after Mfg date');
+                    isValid = false;
                 }
             }
         });
@@ -6133,13 +6112,9 @@
         var mfgDate = row.find('.mfg-date-input').val();
         var expDate = row.find('.exp-date-input').val();
 
-        if (mfgDate && expDate) {
-            var mfgM = moment(mfgDate, 'DD/MM/YYYY');
-            var expM = moment(expDate, 'DD/MM/YYYY');
-            if (mfgM.isValid() && expM.isValid() && !expM.isAfter(mfgM)) {
-                alert('Expiry date must be greater than manufacturing date');
-                $(this).val('');
-            }
+        if (mfgDate && expDate && new Date(expDate) <= new Date(mfgDate)) {
+            alert('Expiry date must be greater than manufacturing date');
+            $(this).val('');
         }
     });
     // Show/hide "specify other" input when container type changes (new receipt table)
@@ -6541,18 +6516,17 @@
                 var retestDate = ($detailRow.find('.retest-date-input').val() || '').trim();
 
                 const numberOfContainers = $detailRow.find('.containers-input').val()
-                var mfgDateIso = toIsoDateOrEmpty(mfgDate);
-                var expDateIso = toIsoDateOrEmpty(expDate);
-                var retestDateIso = toIsoDateOrEmpty(retestDate);
                 itemData.quantityReceived = receivedQty;
                 itemData.batchNumber = batchNumber;
-                itemData.manufacturingDate = mfgDateIso;
-                itemData.expiryDate = expDateIso;
+                itemData.manufacturingDate = mfgDate;
+                itemData.expiryDate = expDate;
                 itemData.quantityExpected = parseFloat(row.find('.qty-ordered').text()) || 0;
                 itemData.numberOfContainers = numberOfContainers;
                 itemData.manufacturer = manufacturerId ? { id: Number(manufacturerId) } : null;
-                itemData.retestDate = retestDateIso;
+                itemData.retestDate = retestDate;
                 itemData.containerType = containerType;
+                itemData.manufacturingDate = mfgDate
+                itemData.expiryDate = expDate
                 console.log('item', itemId)
                 if (itemId && itemId.toString().startsWith('new_')) {
                     var poLineItemId = row.find('.po-line-item-id').val();
@@ -6821,10 +6795,7 @@
     //     submitToQC();
     // });
     $('#submitReceiptToQcBtn').on('click', function () {
-        // autoSaveContainersIfAny(submitToQC);
-        JSUTIL.buildAuthenticationModal(function(){
-            autoSaveContainersIfAny(submitToQC)
-        })
+        autoSaveContainersIfAny(submitToQC);
     });
     function autoSaveContainersIfAny(next) {
 
@@ -7389,7 +7360,6 @@
                         description: 'Warehouse',
                         manufacturingDate: item.manufacturingDate || null,
                         expiryDate: item.expiryDate || null,
-                        retestDate:item.retestDate || null,
                         receivedDate: currentReceiptData.receiptDate || new Date().toISOString(),
                         requestStatus: 'New',
                         sampleCondition: product.name || '',
@@ -8330,30 +8300,6 @@
 
     //  editInwardPanel2.js   End
 
-    // Calculate remaining quantity for a product, considering batches already in table
-    function calculateRemainingQtyForProduct(productId, originalRemainingQty) {
-        var totalBatchQtyUsed = 0;
-        $('#receiptTable tbody tr').each(function () {
-            var rowProductId = $(this).find('.productId').val();
-            if (rowProductId == productId) {
-                var batchQty = parseFloat($(this).find('.batchQtyInput').val()) || 0;
-                totalBatchQtyUsed += batchQty;
-            }
-        });
-        return Math.max(0, originalRemainingQty - totalBatchQtyUsed);
-    }
-
-    // Update remaining quantity display for all rows of a product
-    function updateRemainingQtyDisplayForProduct(productId, originalRemainingQty) {
-        var remaining = calculateRemainingQtyForProduct(productId, originalRemainingQty);
-        $('#receiptTable tbody tr').each(function () {
-            var rowProductId = $(this).find('.productId').val();
-            if (rowProductId == productId) {
-                $(this).find('.remainingQtyDisplay').text(remaining);
-            }
-        });
-    }
-
     function handleAddProduct() {
         var selectedId = $('#productSelect').val();
         $('#purchaseOrderSelect').prop('disabled', true);
@@ -8372,17 +8318,13 @@
             return;
         }
 
-        // Calculate the decreasing remaining quantity for this new row
-        var displayRemainingQty = calculateRemainingQtyForProduct(productData.id, productData.remainingQty);
-
         $('#receiptTable tbody').append(
             '<tr>' +
             '<td><button class="btn btn-sm deleteNewProduct form-control"><i class="ti ti-trash"></i></button></td>' +
             '<td>' + displayName +
             '<input type="hidden" name="Product.Id" value="' + productData.id + '">' +
-            '<input type="hidden" class="productId" value="' + productData.id + '">' +
-            '<input type="hidden" class="initialRemainingQty" value="' + productData.remainingQty + '"></td>' +
-            '<td><span class="remainingQtyDisplay">' + displayRemainingQty + '</span></td>' +
+            '<input type="hidden" class="remainingQty" value="' + productData.remainingQty + '"></td>' +
+            '<td>' + (productData.quantityReceived || 0) + '</td>' +
             '<td class="unitPriceCell" data-price="' + (productData.unitPrice || 0) + '">' + (productData.unitPrice || 0) + '</td>' +
             '<td>' + (productData.uom || '') + '</td>' +
             '<td><input type="text" class="form-control batchNumberInput" required/></td>' +
@@ -8394,7 +8336,7 @@
             '<td><input type="text" placeholder="dd/mm/yyyy" class="form-control mfgDateInput" required/></td>' +
             '<td><input type="text" placeholder="dd/mm/yyyy" class="form-control expDateInput"/></td>' +
             '<td><input type="text" placeholder="dd/mm/yyyy" class="form-control retestDateInput"/></td>' +
-            '<td><input type="number" class="form-control batchQtyInput" min="0" value="0" required></td>' +
+            '<td><input type="number" class="form-control receivedQtyInput" min="0" value="0" required></td>' +
             '<td><input type="number" class="form-control containersInput" min="0" value="0"></td>' +
             '<td><input type="number" class="form-control materialValue" min="0" value=""></td>' +
             '<td class="taxable-col"><input type="number" class="form-control taxableValue" min="0" value=""></td>' +
@@ -8425,11 +8367,6 @@
         toggleTaxableForEntry(entryType);
         toggleApproxWeightForEntry(entryType);
         initInwardDatePickers('#receiptTable');
-        
-        // Attach event handler to batch quantity input for this row
-        $('#receiptTable tbody tr').last().find('.batchQtyInput').on('change', function() {
-            updateRemainingQtyForProduct($(this).closest('tr').find('.productId').val());
-        });
     }
 
     // function handleSaveProductReceipt() {
@@ -8503,7 +8440,7 @@
         var validationMessage = '';
         $('#receiptTable tbody tr').each(function () {
             clearTableError();
-            var qty = parseFloat($(this).find('.batchQtyInput').val()) || 0;
+            var qty = parseFloat($(this).find('.receivedQtyInput').val()) || 0;
             var batchNumber = $(this).find('.batchNumberInput').val().trim();
             var manufacturerId = $(this).find('.manufacturerId').val();
             var containerType = $(this).find('.containerTypeInput').val();
@@ -8520,7 +8457,7 @@
         var allowedByProduct = {};
         $('#receiptTable tbody tr').each(function () {
             var pid = $(this).find('input[name="Product.Id"]').val();
-            var qty = parseFloat($(this).find('.batchQtyInput').val()) || 0;
+            var qty = parseFloat($(this).find('.receivedQtyInput').val()) || 0;
             totalByProduct[pid] = (totalByProduct[pid] || 0) + qty;
         });
         currentProducts.forEach(function (p) { allowedByProduct[p.id] = p.remainingQty || 0; });
@@ -8629,8 +8566,8 @@
 
         function getRowQtyReceived($row) {
             return safeNum(
-                $row.find('.batchQtyInput').val() ||
                 $row.find('.actualQtyInput').val() ||
+                $row.find('.receivedQtyInput').val() ||
                 0
             );
         }
@@ -8698,66 +8635,49 @@
                 const receiptTotals = buildReceiptTotalsFromTable();
                 const validationErrors = [];
 
-                // Check for missing products and quantity tolerance
-                // First, check all products are added
-                const missingProducts = [];
+                // Check for missing products and one-to-one
                 gateEntryItems.forEach(function (item) {
                     const productId = String(item?.product?.id || '');
                     const manufacturerId = String(item?.manufacturer?.id || '');
                     const key = productId + '__' + manufacturerId;
 
+                    const alreadyReceived = safeNum(item.gimReceived);      // old saved GIM received
+                    const currentReceiptQty = safeNum(receiptTotals[key]);  // qty entered in this new receipt
+                    const gateQtyReceived = safeNum(item.quantityReceived); // gate entry qty
+
+                    // Check if already has receipt (one-to-one)
+                    if (alreadyReceived > 0) {
+                        validationErrors.push(
+                            (item.productName || item.product?.name || ('Product ID ' + productId)) +
+                            ' already has a receipt. One gate entry can only have one product receipt.'
+                        );
+                    }
+
                     // Check if product is missing in receipt
                     if (typeof receiptTotals[key] === 'undefined') {
-                        missingProducts.push(item.productName || item.product?.name || ('Product ID ' + productId));
+                        validationErrors.push(
+                            (item.productName || item.product?.name || ('Product ID ' + productId)) +
+                            ' is missing from the receipt. All products from gate entry must be included.'
+                        );
                     }
+
+                    const maxAllowed = gateQtyReceived * 1.05;
+                    const minAllowed = gateQtyReceived * 0.95;
+                    const totalAfterThisReceipt = alreadyReceived + currentReceiptQty;
+                    console.log('total received', totalAfterThisReceipt, alreadyReceived, currentReceiptQty)
+                    if (totalAfterThisReceipt < minAllowed || totalAfterThisReceipt > maxAllowed) {
+                        validationErrors.push(
+                            (item.productName || item.product?.name || ('Product ID ' + productId)) +
+                            ' quantity not within 5% tolerance. ' +
+                            'Gate Qty: ' + gateQtyReceived +
+                            ', Current: ' + currentReceiptQty +
+                            ', Allowed: ' + minAllowed.toFixed(2) + ' - ' + maxAllowed.toFixed(2)
+                        );
+                    }
+
+                    // update gimReceived
+                    item.gimReceived = totalAfterThisReceipt;
                 });
-
-                // If any products are missing, show error and stop
-                if (missingProducts.length > 0) {
-                    validationErrors.push(
-                        'Missing Products:\n' + missingProducts.join('\n') + 
-                        '\n\nAll products from gate entry must be added to the receipt before saving.'
-                    );
-                }
-
-                // If products are missing, don't check quantities
-                if (validationErrors.length === 0) {
-                    gateEntryItems.forEach(function (item) {
-                        const productId = String(item?.product?.id || '');
-                        const manufacturerId = String(item?.manufacturer?.id || '');
-                        const key = productId + '__' + manufacturerId;
-
-                        const alreadyReceived = safeNum(item.gimReceived);      // old saved GIM received
-                        const currentReceiptQty = safeNum(receiptTotals[key]);  // qty entered in this new receipt
-                        const gateQtyReceived = safeNum(item.quantityReceived); // gate entry qty
-
-                        // Check if already has receipt (one-to-one)
-                        if (alreadyReceived > 0) {
-                            validationErrors.push(
-                                (item.productName || item.product?.name || ('Product ID ' + productId)) +
-                                ' already has a receipt. One gate entry can only have one product receipt.'
-                            );
-                        }
-
-                        // Check if current receipt quantity is within 5% tolerance of gate entry quantity
-                        const maxAllowed = gateQtyReceived * 1.05;
-                        const minAllowed = gateQtyReceived * 0.95;
-                        console.log('Validating quantity for', item.productName, 'Gate Qty:', gateQtyReceived, 'Receipt Qty:', currentReceiptQty, 'Allowed:', minAllowed, '-', maxAllowed);
-                        
-                        if (currentReceiptQty < minAllowed || currentReceiptQty > maxAllowed) {
-                            validationErrors.push(
-                                (item.productName || item.product?.name || ('Product ID ' + productId)) +
-                                ' quantity is not within 5% tolerance of gate entry quantity.\n' +
-                                'Gate Entry Qty: ' + gateQtyReceived.toFixed(2) + '\n' +
-                                'Your Qty: ' + currentReceiptQty.toFixed(2) + '\n' +
-                                'Allowed Range: ' + minAllowed.toFixed(2) + ' - ' + maxAllowed.toFixed(2)
-                            );
-                        }
-
-                        // update gimReceived for next time
-                        item.gimReceived = alreadyReceived + currentReceiptQty;
-                    });
-                }
 
                 if (validationErrors.length > 0) {
                     JSUTIL.buildErrorModal(validationErrors.join('<br><br>'));
@@ -8806,9 +8726,7 @@
 
         function buildEditedTotalsFromTable() {
             const totals = {};
-            const rowsData = [];
 
-            // Collect all rows with their data
             $('#editInwardTable tr.main-row').each(function () {
                 const $mainRow = $(this);
                 const itemId = $mainRow.data('item-id');
@@ -8820,26 +8738,8 @@
 
                 if (!productId) return;
 
-                rowsData.push({
-                    itemId: itemId,
-                    productId: productId,
-                    manufacturerId: manufacturerId,
-                    qty: qty,
-                    order: rowsData.length
-                });
-            });
-
-            // Sort by itemId (lowest first) to ensure consistent ordering
-            rowsData.sort((a, b) => {
-                const aNum = parseInt(a.itemId) || 0;
-                const bNum = parseInt(b.itemId) || 0;
-                return aNum - bNum;
-            });
-
-            // Calculate totals from sorted data
-            rowsData.forEach(row => {
-                const key = row.productId + '__' + row.manufacturerId;
-                totals[key] = (totals[key] || 0) + row.qty;
+                const key = productId + '__' + manufacturerId;
+                totals[key] = (totals[key] || 0) + qty;
             });
 
             return totals;
@@ -8878,60 +8778,33 @@
                     const oldSavedTotals = buildOldSavedTotalsFromReceiptItems(currentReceiptItems);
 
                     const validationErrors = [];
-                    
-                    // First, check if all products from gate entry are added
-                    const missingProducts = [];
+
                     gateEntryItems.forEach(function (item) {
                         const productId = String(item?.product?.id || '');
                         const manufacturerId = String(item?.manufacturer?.id || '');
                         const key = productId + '__' + manufacturerId;
 
-                        if (typeof editedTotals[key] === 'undefined') {
-                            missingProducts.push(item.productName || item.product?.name || ('Product ID ' + productId));
+                        const gateQtyReceived = safeNum(item.quantityReceived);
+                        const existingGateGimReceived = safeNum(item.gimReceived);
+                        const oldThisReceiptQty = safeNum(oldSavedTotals[key]);
+                        const newEditedQty = safeNum(editedTotals[key]);
+
+                        const maxAllowed = gateQtyReceived * 1.05;
+                        const minAllowed = gateQtyReceived * 0.95;
+
+                        const finalQty = existingGateGimReceived - oldThisReceiptQty + newEditedQty;
+
+                        if (finalQty > maxAllowed) {
+                            const allowedNow = Math.max(0, maxAllowed - (existingGateGimReceived - oldThisReceiptQty));
+                            validationErrors.push(
+                                (item.product?.name || ('Product ID ' + productId)) +
+                                ': only ' + allowedNow.toFixed(2) + ' more quantity is allowed.'
+                            );
                         }
+
+                        item._finalGimReceived = finalQty;
+                        item._withinTolerance = finalQty >= minAllowed && finalQty <= maxAllowed;
                     });
-
-                    // If any products are missing, show error and stop
-                    if (missingProducts.length > 0) {
-                        validationErrors.push(
-                            'Missing Products:\n' + missingProducts.join('\n') + 
-                            '\n\nAll products from gate entry must be added to the receipt before saving.'
-                        );
-                    }
-
-                    // If products are missing, don't check quantities
-                    if (validationErrors.length === 0) {
-                        gateEntryItems.forEach(function (item) {
-                            const productId = String(item?.product?.id || '');
-                            const manufacturerId = String(item?.manufacturer?.id || '');
-                            const key = productId + '__' + manufacturerId;
-
-                            const gateQtyReceived = safeNum(item.quantityReceived);
-                            const existingGateGimReceived = safeNum(item.gimReceived);
-                            const oldThisReceiptQty = safeNum(oldSavedTotals[key]);
-                            const newEditedQty = safeNum(editedTotals[key]);
-
-                            const maxAllowed = gateQtyReceived * 1.05;
-                            const minAllowed = gateQtyReceived * 0.95;
-
-                            const finalQty = existingGateGimReceived - oldThisReceiptQty + newEditedQty;
-
-                            console.log('Validating edit for', item.productName, 'Gate Qty:', gateQtyReceived, 'Final Qty:', finalQty, 'Allowed:', minAllowed, '-', maxAllowed);
-
-                            if (finalQty < minAllowed || finalQty > maxAllowed) {
-                                validationErrors.push(
-                                    (item.product?.name || item.productName || ('Product ID ' + productId)) +
-                                    ' quantity is not within 5% tolerance of gate entry quantity.\n' +
-                                    'Gate Entry Qty: ' + gateQtyReceived.toFixed(2) + '\n' +
-                                    'Your Total Qty: ' + finalQty.toFixed(2) + '\n' +
-                                    'Allowed Range: ' + minAllowed.toFixed(2) + ' - ' + maxAllowed.toFixed(2)
-                                );
-                            }
-
-                            item._finalGimReceived = finalQty;
-                            item._withinTolerance = finalQty >= minAllowed && finalQty <= maxAllowed;
-                        });
-                    }
 
                     if (validationErrors.length > 0) {
                         JSUTIL.buildErrorModal(validationErrors.join('<br><br>'));

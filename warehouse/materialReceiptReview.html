@@ -725,7 +725,7 @@
                 <div class="col-md-3">
                     <div class="form-group mb-3">
                         <label>Challan Date</label>
-                        <input type="text" id="challanDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" />
+                        <input type="date" id="challanDate" class="form-control" />
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -737,7 +737,7 @@
                 <div class="col-md-3">
                     <div class="form-group mb-3">
                         <label>LR Date</label>
-                        <input type="text" id="lrDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" />
+                        <input type="date" id="lrDate" class="form-control" />
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -758,7 +758,7 @@
                 <div class="col-md-3">
                     <div class="form-group mb-3">
                         <label>Invoice Date</label>
-                        <input type="text" id="invoiceDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" />
+                        <input type="date" id="invoiceDate" class="form-control" />
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -997,13 +997,13 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Challan Date</label>
-                                <input type="text" id="editChallanDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" readonly />
+                                <input type="date" id="editChallanDate" class="form-control" readonly />
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Receipt Date</label>
-                                <input type="text" id="editReceiptDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" readonly />
+                                <input type="date" id="editReceiptDate" class="form-control" readonly />
                             </div>
                         </div>
                     </div>
@@ -1018,7 +1018,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>Invoice Date</label>
-                                <input type="text" id="editInvoiceDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" readonly />
+                                <input type="date" id="editInvoiceDate" class="form-control" readonly />
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -1033,7 +1033,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label>LR Date</label>
-                                <input type="text" id="editLrDate" class="form-control" placeholder="DD/MM/YYYY" autocomplete="off" readonly />
+                                <input type="date" id="editLrDate" class="form-control" readonly />
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -1231,9 +1231,7 @@
 
 
 <script>
-    var productlots = []
-    
-var dataflag = ''
+    var dataflag = ''
     // ── Dark mode helper for JS-built dropdowns ──
     function isDarkMode() {
         return document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
@@ -1449,22 +1447,10 @@ var dataflag = ''
     }
 
     $(document).ready(function () {
-        JSUTIL.callAJAXGet('/api/product-lots',function(res){
-            console.log('total lots',res)
-            productlots = res
-        })
         // Initial call for tax columns
         updateTaxColumns();
         // On change
         $('#taxTypeSelect').on('change', updateTaxColumns);
-        // Initialize flatpickr DD/MM/YYYY date pickers
-        JSUTIL.initDatePicker('#challanDate');
-        JSUTIL.initDatePicker('#lrDate');
-        JSUTIL.initDatePicker('#invoiceDate');
-        JSUTIL.initDatePicker('#editChallanDate');
-        JSUTIL.initDatePicker('#editReceiptDate');
-        JSUTIL.initDatePicker('#editInvoiceDate');
-        JSUTIL.initDatePicker('#editLrDate');
     });
     var products = []
     var manufacturers = []
@@ -2214,19 +2200,19 @@ var dataflag = ''
                 // New fields from GateEntry
                 $('#challanNumber').val(gateEntry.challanNumber || '');
                 if (gateEntry.challanDate) {
-                    $('#challanDate').val(moment(gateEntry.challanDate).format('DD/MM/YYYY'));
+                    $('#challanDate').val(new Date(gateEntry.challanDate).toISOString().split('T')[0]);
                 }
 
                 $('#lrNumber').val(gateEntry.lrNumber || '');
                 if (gateEntry.lrDate) {
-                    $('#lrDate').val(moment(gateEntry.lrDate).format('DD/MM/YYYY'));
+                    $('#lrDate').val(new Date(gateEntry.lrDate).toISOString().split('T')[0]);
                 }
 
                 $('#awbNumber').val(gateEntry.awbNumber || '');
                 $('#invoiceNumber').val(gateEntry.invoiceNumber || '');
 
                 if (gateEntry.invoiceDate) {
-                    $('#invoiceDate').val(moment(gateEntry.invoiceDate).format('DD/MM/YYYY'));
+                    $('#invoiceDate').val(new Date(gateEntry.invoiceDate).toISOString().split('T')[0]);
                 }
 
                 $('#invoiceAmount').val(gateEntry.invoiceAmount || '');
@@ -2277,16 +2263,16 @@ var dataflag = ''
                         // Override with product receipt values if they exist
                         if (receipt.challanNumber) $('#challanNumber').val(receipt.challanNumber);
                         if (receipt.challanDate) {
-                            $('#challanDate').val(moment(receipt.challanDate).format('DD/MM/YYYY'));
+                            $('#challanDate').val(new Date(receipt.challanDate).toISOString().split('T')[0]);
                         }
                         if (receipt.lrNumber) $('#lrNumber').val(receipt.lrNumber);
                         if (receipt.lrDate) {
-                            $('#lrDate').val(moment(receipt.lrDate).format('DD/MM/YYYY'));
+                            $('#lrDate').val(new Date(receipt.lrDate).toISOString().split('T')[0]);
                         }
                         if (receipt.awbNumber) $('#awbNumber').val(receipt.awbNumber);
                         if (receipt.invoiceNumber) $('#invoiceNumber').val(receipt.invoiceNumber);
                         if (receipt.invoiceDate) {
-                            $('#invoiceDate').val(moment(receipt.invoiceDate).format('DD/MM/YYYY'));
+                            $('#invoiceDate').val(new Date(receipt.invoiceDate).toISOString().split('T')[0]);
                         }
                         if (receipt.invoiceAmount) $('#invoiceAmount').val(receipt.invoiceAmount);
                         if (receipt.deliveryVehicle) $('#deliveryVehicle').val(receipt.deliveryVehicle);
@@ -2502,7 +2488,7 @@ var dataflag = ''
         // Filter: GRN Review status only, exclude BM- numbers, sort latest first
         var filtered = (res || []).filter(function (r) {
             var num = r.number || '';
-            return !num.startsWith('BM-') && r.processStatus === 'GIM Review';
+            return !num.startsWith('BM-') && (r.processStatus === 'GIM Review' || r.processStatus == 'In Review');
         }).sort(function (a, b) {
             return (b.id || 0) - (a.id || 0);
         });
@@ -2907,13 +2893,13 @@ var dataflag = ''
                         <input type="hidden" class="manufacturerId" value="${(selectedPoManufacturer && (selectedPoManufacturer.id || selectedPoManufacturer.Id)) || productData.manufacturerId || ''}" />
                     </td>
                     <td>
-                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control mfgDateInput datepicker" required/>
+                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class=" form-control mfgDateInput datepicker" required/>
                     </td>
                     <td>
                         <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control expDateInput datepicker"/>
                     </td>
                     <td>
-                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class="form-control retestDateInput datepicker"/>
+                        <input type="text" inputmode="numeric" pattern="\\d{2}/\\d{2}/\\d{4}" placeholder="dd/mm/yyyy" class=" form-control retestDateInput datepicker"/>
                     </td>
                     <td>
                         <input type="number" class="form-control receivedQtyInput" min="0" max="${productData.remainingQty}" value="0" required>
@@ -3320,12 +3306,12 @@ var dataflag = ''
 
             // New Fields from GateEntry
             challanNumber: $('#challanNumber').val(),
-            challanDate: $('#challanDate').val() ? moment($('#challanDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+            challanDate: $('#challanDate').val(),
             lrNumber: $('#lrNumber').val(),
-            lrDate: $('#lrDate').val() ? moment($('#lrDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+            lrDate: $('#lrDate').val(),
             awbNumber: $('#awbNumber').val(),
             invoiceNumber: $('#invoiceNumber').val(),
-            invoiceDate: $('#invoiceDate').val() ? moment($('#invoiceDate').val(), 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+            invoiceDate: $('#invoiceDate').val(),
             invoiceAmount: $('#invoiceAmount').val() || 0,
             exchangeRate: $('#exchangeRate').val() || 0,
             deliveryVehicle: $('#deliveryVehicle').val(),
@@ -3627,7 +3613,7 @@ var dataflag = ''
         }
 
         // Show/hide buttons based on status
-        if (currentReceipt.processStatus !== 'GIM Review') {
+        if ((currentReceipt.initiator &&  FOX.employeeId == currentReceipt?.initiator?.id)) {
             $('#acceptBtn').hide();
             $('#rejectBtn').hide();
         } else {
@@ -3643,21 +3629,21 @@ var dataflag = ''
         // Populate logistics fields
         $('#editChallanNumber').val(currentReceipt.challanNumber || '');
         if (currentReceipt.challanDate) {
-            $('#editChallanDate').val(moment(currentReceipt.challanDate).format('DD/MM/YYYY'));
+            $('#editChallanDate').val(new Date(currentReceipt.challanDate).toISOString().split('T')[0]);
         }
 
         $('#editLrNumber').val(currentReceipt.lrNumber || '');
         if (currentReceipt.lrDate) {
-            $('#editLrDate').val(moment(currentReceipt.lrDate).format('DD/MM/YYYY'));
+            $('#editLrDate').val(new Date(currentReceipt.lrDate).toISOString().split('T')[0]);
         }
 
         $('#editInvoiceNumber').val(currentReceipt.invoiceNumber || '');
         if (currentReceipt.invoiceDate) {
-            $('#editInvoiceDate').val(moment(currentReceipt.invoiceDate).format('DD/MM/YYYY'));
+            $('#editInvoiceDate').val(new Date(currentReceipt.invoiceDate).toISOString().split('T')[0]);
         }
 
         if (currentReceipt.receiptDate) {
-            $('#editReceiptDate').val(moment(currentReceipt.receiptDate).format('DD/MM/YYYY'));
+            $('#editReceiptDate').val(new Date(currentReceipt.receiptDate).toISOString().split('T')[0]);
         }
 
         $('#editDeliveryVehicle').val(currentReceipt.deliveryVehicle || '');
@@ -3729,11 +3715,6 @@ var dataflag = ''
 
     function getDetailsCallback(response) {
         console.log("ProductReceiptItem", response);
-        $.each(response,function(i,val){
-            var currentLot = productlots.find(v=>v.receiptItem.id == val.id)
-            response[i]['productLot'] = {id:currentLot.id}
-        })
-        console.log('after adding product lot',response)
         var innerHtml = '';
 
         currentProductsDetails = response;
@@ -3918,22 +3899,6 @@ var dataflag = ''
         updateNext();
     }
 
-    // Create process activity for approval/rejection
-    function createProcessActivity(activityName, notes, callback) {
-        var activityData = {
-            name: activityName,
-            parentId: currentRecordId,
-            performedBy: { id: FOX.employeeId },
-            startDate: new Date().toISOString(),
-            notes: notes || ''
-        };
-        
-        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(activityData), function (res) {
-            console.log('Process activity created:', res);
-            if (typeof callback === 'function') callback();
-        });
-    }
-
     function hodApprove() {
         if (dataflag == true) {
             // Check if all items are general materials
@@ -3945,70 +3910,40 @@ var dataflag = ''
 
             var receiptUpdateData = {
                 processStatus: newStatus,
-                modifiedBy: { id: FOX.employeeId }
+                reviewer: { id: FOX.employeeId }
             };
             JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
                 console.log('Receipt status updated to ' + newStatus + ':', receiptRes);
-                
-                // Create process activity for approval
-                createProcessActivity('GIM Approval', 'Approved by HOD - Status: ' + newStatus, function () {
-                    // Mark general material items as approved
-                    var itemsToUpdate = currentProductsDetails.filter(function (item) {
-                        return item.product && (item.product.type != 'Raw Material' && item.product.type != 'Packaging Material');
-                    });
 
-                    if (itemsToUpdate.length > 0) {
-                        updateInspectionResultForItems(itemsToUpdate, function () {
-                            // Step 1: Update ProductLot ARN field and status for general materials
-                            updateProductLotArnFromReceiptItems(currentProductsDetails, function () {
-                                console.log('[Accept] ARN fields updated. Proceeding to create transactions...');
+                // Mark general material items as approved
+                var itemsToUpdate = currentProductsDetails.filter(function (item) {
+                    return item.product && (item.product.type != 'Raw Material' && item.product.type != 'Packaging Material');
+                });
 
-                                // Step 2: Build approved items list (no conditions/filtering)
-                                var approvedItems = currentProductsDetails;
-
-                                if (approvedItems.length === 0) {
-                                    JSUTIL.buildSuccessModal('GIM has been approved successfully!', function () { location.reload(); });
-                                    return;
-                                }
-
-                                // Step 3: Fetch PO line item prices if applicable
-                                var itemsWithPO = approvedItems.filter(function (item) {
-                                    return item.purchaseOrderItem && item.purchaseOrderItem.id;
-                                });
-
-                                if (itemsWithPO.length > 0) {
-                                    var poItemIds = itemsWithPO.map(function (item) { return item.purchaseOrderItem.id; });
-                                    var poItemQuery = {
-                                        fields: "Id;ItemPrice;Product.Id;",
-                                        conditions: poItemIds.map(function (id) { return "Id = '" + id + "'"; }),
-                                        logic: poItemIds.map(function (_, index) { return "{" + index + "}"; }).join(' OR ')
-                                    };
-
-                                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/purchase/orders/' + (currentReceiptData.purchaseOrder ? currentReceiptData.purchaseOrder.id : 0) + '/items'), function (allPoItems) {
-                                        var poItems = (allPoItems || []).filter(function (i) { return poItemIds.indexOf(i.id) !== -1; });
-                                        var poItemPriceMap = {};
-                                        poItems.forEach(function (poItem) {
-                                            poItemPriceMap[poItem.id] = parseFloat(poItem.itemPrice) || 0;
-                                        });
-                                        createProductTransactions(approvedItems, poItemPriceMap);
-                                    });
-                                } else {
-                                    createProductTransactions(approvedItems, {});
-                                }
-                            });
-                        });
-                    } else {
-                        // No general materials, proceed as before
+                if (itemsToUpdate.length > 0) {
+                    updateInspectionResultForItems(itemsToUpdate, function () {
+                        // Step 1: Update ProductLot ARN field and status for general materials
                         updateProductLotArnFromReceiptItems(currentProductsDetails, function () {
                             console.log('[Accept] ARN fields updated. Proceeding to create transactions...');
 
+                            // Step 2: Build approved items list (no conditions/filtering)
                             var approvedItems = currentProductsDetails;
 
                             if (approvedItems.length === 0) {
-                                JSUTIL.buildSuccessModal('GIM has been approved successfully!', function () { location.reload(); });
+                                // Create process activity for approval
+                                var approvalActivity = {
+                                    name: 'Approved in GIM Review',
+                                    startDate: new Date(),
+                                    performedBy: { id: Number(FOX.employeeId) },
+                                    parentRecordId: currentRecordId
+                                };
+                                JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(approvalActivity), function () {
+                                    JSUTIL.buildSuccessModal('GIM has been approved successfully!', function () { location.reload(); });
+                                });
                                 return;
                             }
 
+                            // Step 3: Fetch PO line item prices if applicable
                             var itemsWithPO = approvedItems.filter(function (item) {
                                 return item.purchaseOrderItem && item.purchaseOrderItem.id;
                             });
@@ -4027,26 +3962,77 @@ var dataflag = ''
                                     poItems.forEach(function (poItem) {
                                         poItemPriceMap[poItem.id] = parseFloat(poItem.itemPrice) || 0;
                                     });
-                                    createProductTransactions(approvedItems, poItemPriceMap);
+                                    createProductTransactionsWithActivity(approvedItems, poItemPriceMap, true);
                                 });
                             } else {
-                                createProductTransactions(approvedItems, {});
+                                createProductTransactionsWithActivity(approvedItems, {}, true);
                             }
                         });
-                    }
-                });
+                    });
+                } else {
+                    // No general materials, proceed as before
+                    updateProductLotArnFromReceiptItems(currentProductsDetails, function () {
+                        console.log('[Accept] ARN fields updated. Proceeding to create transactions...');
+
+                        var approvedItems = currentProductsDetails;
+
+                        if (approvedItems.length === 0) {
+                            // Create process activity for approval
+                            var approvalActivity = {
+                                name: 'Approved in GIM Review',
+                                startDate: new Date(),
+                                performedBy: { id: Number(FOX.employeeId) },
+                                parentRecordId: currentRecordId
+                            };
+                            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(approvalActivity), function () {
+                                JSUTIL.buildSuccessModal('GIM has been approved successfully!', function () { location.reload(); });
+                            });
+                            return;
+                        }
+
+                        var itemsWithPO = approvedItems.filter(function (item) {
+                            return item.purchaseOrderItem && item.purchaseOrderItem.id;
+                        });
+
+                        if (itemsWithPO.length > 0) {
+                            var poItemIds = itemsWithPO.map(function (item) { return item.purchaseOrderItem.id; });
+                            var poItemQuery = {
+                                fields: "Id;ItemPrice;Product.Id;",
+                                conditions: poItemIds.map(function (id) { return "Id = '" + id + "'"; }),
+                                logic: poItemIds.map(function (_, index) { return "{" + index + "}"; }).join(' OR ')
+                            };
+
+                            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/purchase/orders/' + (currentReceiptData.purchaseOrder ? currentReceiptData.purchaseOrder.id : 0) + '/items'), function (allPoItems) {
+                                var poItems = (allPoItems || []).filter(function (i) { return poItemIds.indexOf(i.id) !== -1; });
+                                var poItemPriceMap = {};
+                                poItems.forEach(function (poItem) {
+                                    poItemPriceMap[poItem.id] = parseFloat(poItem.itemPrice) || 0;
+                                });
+                                createProductTransactionsWithActivity(approvedItems, poItemPriceMap, true);
+                            });
+                        } else {
+                            createProductTransactionsWithActivity(approvedItems, {}, true);
+                        }
+                    });
+                }
             });
 
         }
         else if (dataflag == false) {
             var receiptUpdateData = {
-                processStatus: 'GIM Rejected'
+                processStatus: 'GIM Rejected',
+                reviewer:{id:FOX.employeeId}
             };
             JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
                 console.log('Receipt rejected:', receiptRes);
-                
                 // Create process activity for rejection
-                createProcessActivity('GIM Rejection', 'Rejected by HOD', function () {
+                var rejectionActivity = {
+                    name: 'Rejected in GIM Review',
+                    startDate: new Date(),
+                    performedBy: { id: Number(FOX.employeeId) },
+                    parentRecordId: currentRecordId
+                };
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(rejectionActivity), function () {
                     location.reload();
                 });
             });
@@ -4161,6 +4147,117 @@ var dataflag = ''
         $('#eSignUserName').val(FOX.employeeUsername);
     });
 
+    function createProductTransactionsWithActivity(approvedItems, poItemPriceMap, isApproval) {
+        var productTransactionsToCreate = [];
+        var transactionDate = new Date().toISOString();
+
+        approvedItems.forEach(function (item) {
+            if (item.product && item.product.id) {
+                var qtyApproved = parseFloat(item.quantityReceived) || 0;
+
+                var transactionAmount = 0;
+                if (item.purchaseOrderItem && item.purchaseOrderItem.id) {
+                    transactionAmount = (parseFloat(poItemPriceMap[item.purchaseOrderItem.id]) || 0) * qtyApproved;
+                } else {
+                    transactionAmount = 0;
+                }
+
+                var transactionObj = {
+                    product: { id: item.product.id },
+                    quantity: qtyApproved,
+                    transactionType: 'GRN',
+                    transactionDate: transactionDate,
+                    amount: transactionAmount,
+                    productReceipt: { id: currentRecordId }
+                };
+                productTransactionsToCreate.push(transactionObj);
+            }
+        });
+
+        console.log('[createProductTransactionsWithActivity] Transactions to create:', productTransactionsToCreate);
+
+        var _txIdx = 0;
+        function _saveTx() {
+            if (_txIdx >= productTransactionsToCreate.length) { 
+                updateProductInventoryWithActivity(approvedItems, isApproval);
+                return; 
+            }
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-transactions'), JSON.stringify(productTransactionsToCreate[_txIdx]), function () { _txIdx++; _saveTx(); });
+        }
+        _saveTx();
+    }
+
+    function updateProductInventoryWithActivity(approvedItems, isApproval) {
+        var productQuantities = {};
+        var productDataMap = {};
+        var productUnderInspectionReductions = {};
+        var oldReservedQty = {};
+
+        approvedItems.forEach(function (item) {
+            if (item.product && item.product.id) {
+                var pid = item.product.id;
+                var qtyApproved = parseFloat(item.quantityReceived) || 0;
+                productQuantities[pid] = (productQuantities[pid] || 0) + qtyApproved;
+                productDataMap[pid] = item.product;
+                productUnderInspectionReductions[pid] = qtyApproved;
+                if (item.quantityOnHand !== undefined) oldReservedQty[pid] = item.quantityOnHand;
+            }
+        });
+
+        console.log('[updateProductInventoryWithActivity] Product quantities to add:', productQuantities);
+
+        var productsToUpdate = [];
+        var productIds = Object.keys(productQuantities);
+
+        if (productIds.length === 0) {
+            createApprovalActivity();
+            return;
+        }
+
+        productIds.forEach(function (productId) {
+            var currentProduct = productDataMap[productId];
+            var qtyToAdd = productQuantities[productId];
+            var qtyUnderInspectionReduction = productUnderInspectionReductions[productId];
+
+            var updatePayload = {
+                id: Number(productId),
+                quantityOnHand: ((parseFloat(currentProduct.quantityOnHand) || 0) + qtyToAdd),
+                quantityUnderInspection: Math.max(0, (parseFloat(currentProduct.quantityUnderInspection) || 0) - qtyUnderInspectionReduction)
+            };
+
+            productsToUpdate.push(updatePayload);
+        });
+
+        console.log('[updateProductInventoryWithActivity] Products to update:', productsToUpdate);
+
+        var _pIdx = 0;
+        function _saveProduct() {
+            if (_pIdx >= productsToUpdate.length) {
+                createApprovalActivity();
+                return;
+            }
+            var product = productsToUpdate[_pIdx];
+            JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/products/' + product.id), JSON.stringify(product), function () {
+                _pIdx++;
+                _saveProduct();
+            });
+        }
+        _saveProduct();
+    }
+
+    function createApprovalActivity() {
+        // Create process activity for approval
+        var approvalActivity = {
+            name: 'Approved in GIM Review',
+            startDate: new Date(),
+            performedBy: { id: Number(FOX.employeeId) },
+            parentRecordId: currentRecordId
+        };
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(approvalActivity), function () {
+            JSUTIL.buildSuccessModal('GIM has been approved successfully!', function () { location.reload(); });
+        });
+    }
+
     function createProductTransactions(approvedItems, poItemPriceMap) {
         var productTransactionsToCreate = [];
         var transactionDate = new Date().toISOString();
@@ -4188,8 +4285,7 @@ var dataflag = ''
                     batchNumber: item.batchNumber || '',
                     transactionAmount: transactionAmount,
                     arn: item.number || '',          // ← directly from ProductReceiptItem.number
-                    docNumber: currentReceiptData.number || '',
-                    productLot:{id:item.productLot.id}
+                    docNumber: currentReceiptData.number || ''
                 };
 
                 if (item.product.category === 'General Material') {
