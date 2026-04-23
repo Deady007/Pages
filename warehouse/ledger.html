@@ -405,6 +405,36 @@ $(document).ready(function () {
                transaction.Product?.name || transaction.Product?.Name || '';
     }
 
+    function getBalanceKey(transaction) {
+        // Priority: productreceiptitem.id > productreceiptitem > productlot.id > batchnumber
+        var productLot = transaction.productLot || transaction.ProductLot;
+        
+        if (productLot) {
+            // Priority 1: productlot.productreceiptitem.id
+            if (productLot.productreceiptitem?.id) {
+                return 'PRI_' + productLot.productreceiptitem.id;
+            }
+            // Priority 2: productreceiptitem
+            if (productLot.productreceiptitem) {
+                return 'PRI_' + JSON.stringify(productLot.productreceiptitem);
+            }
+            // Priority 3: productlot.id
+            if (productLot.id || productLot.Id) {
+                return 'LOT_' + (productLot.id || productLot.Id);
+            }
+        }
+        
+        // Priority 4: batchnumber
+        var batchNumber = transaction.BatchNumber || transaction.batchNumber || transaction?.productLot?.batchNumber || '';
+        if (batchNumber) {
+            return 'BATCH_' + batchNumber;
+        }
+        
+        // Fallback to arn if nothing else available
+        var arn = (transaction.Arn || transaction.arn || transaction?.productLot?.arn || '').toString();
+        return 'ARN_' + arn;
+    }
+
     function displayTransactions(transactions) {
         var tableBody = $('#transactionTableBody');
         tableBody.empty();
@@ -433,8 +463,7 @@ $(document).ready(function () {
             var transactionAmount = parseFloat(transaction.TransactionAmount || transaction.transactionAmount || 0);
             var batchStatus = transaction?.productLot?.processStatus || transaction?.ProductLot?.processStatus || transaction?.ProductLot?.ProcessStatus || '';
 
-            var productId = transaction.Product?.Id || transaction.Product?.id || transaction.product?.Id || transaction.product?.id || '';
-            var balanceKey = String(productId) + '_' + arn;
+            var balanceKey = getBalanceKey(transaction);
             if (!balanceMap[balanceKey]) balanceMap[balanceKey] = 0;
             balanceMap[balanceKey] += qtyReceipt - qtyIssue;
 
@@ -546,8 +575,7 @@ $(document).ready(function () {
             var qtyIssue = parseFloat(transaction.QuantityIssued || transaction.quantityIssued || 0);
             var transactionAmount = parseFloat(transaction.TransactionAmount || transaction.transactionAmount || 0);
 
-            var productId = transaction.Product?.Id || transaction.Product?.id || transaction.product?.Id || transaction.product?.id || '';
-            var balanceKey = String(productId) + '_' + arn;
+            var balanceKey = getBalanceKey(transaction);
             if (!balanceMap[balanceKey]) balanceMap[balanceKey] = 0;
             balanceMap[balanceKey] += qtyReceipt - qtyIssue;
 
@@ -572,9 +600,23 @@ $(document).ready(function () {
         printContent += '</tr>';
 
         Object.keys(balanceMap).forEach(function (key) {
-            var arn = key.split('_').slice(1).join('_');
+            var keyLabel = '';
+            
+            // Parse the balance key label for display
+            if (key.startsWith('PRI_')) {
+                keyLabel = 'Receipt Item ID: ' + key.substring(4);
+            } else if (key.startsWith('LOT_')) {
+                keyLabel = 'Product Lot ID: ' + key.substring(4);
+            } else if (key.startsWith('BATCH_')) {
+                keyLabel = key.substring(6);
+            } else if (key.startsWith('ARN_')) {
+                keyLabel = 'ARN: ' + key.substring(4);
+            } else {
+                keyLabel = key;
+            }
+            
             printContent += '<tr class="total-row">';
-            printContent += '<td colspan="4" class="text-right"><strong>Closing Balance (' + arn + '):</strong></td>';
+            printContent += '<td colspan="4" class="text-right"><strong>Closing Balance (' + keyLabel + '):</strong></td>';
             printContent += '<td></td>';
             printContent += '<td colspan="2" class="text-right"><strong>' + balanceMap[key].toFixed(3) + '</strong></td>';
             printContent += '<td colspan="2" class="text-right"><strong>' + totalStockValue.toFixed(2) + '</strong></td>';

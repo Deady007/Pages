@@ -920,6 +920,7 @@
                         <tr>
                             <th></th>
                             <th>Material</th>
+                            <th>Material Code</th>
                             <th>Challan Quantity</th>
                             <th>Unit Price</th>
                             <th>UOM</th>
@@ -1604,6 +1605,21 @@
     //  allInwardPanel.js   Start
     lucide.createIcons();
 
+    var urlId = null;
+
+    $(function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        urlId = urlParams.get('id');
+        
+        // If no 'id' parameter, check if search string is just a number (e.g., ?3985)
+        if (!urlId && window.location.search) {
+            var searchStr = window.location.search.substring(1); // Remove leading '?'
+            if (/^\d+$/.test(searchStr)) {
+                urlId = searchStr;
+            }
+        }
+    });
+
     // Polyfill: Add callAJAXDelete to JSUTIL if not present
     if (typeof JSUTIL !== 'undefined' && !JSUTIL.callAJAXDelete) {
         JSUTIL.callAJAXDelete = function (url, successCallback, errorCallback) {
@@ -1872,6 +1888,14 @@
     }
 
     $(document).ready(function () {
+
+        $(document).on('input', '.batchNumberInput', function () {
+    this.value = this.value.replace(/\s/g, '');
+});
+
+
+
+
         updateTaxColumns();
         $('#taxTypeSelect').on('change', updateTaxColumns);
     });
@@ -2507,7 +2531,11 @@
         loadStagingLocations();
         loadGateEntriesDropdown();
         $('#addProductBtn').on('click', handleAddProduct);
-        $('#productReceiptSaveBtn').on('click', handleSaveProductReceipt);
+        $('#productReceiptSaveBtn').on('click', function(){
+            $(this).prop('disabled',true).prop('readonly',true)
+            handleSaveProductReceipt()
+
+        });
     });
 
     // Listen for gate entry selection
@@ -2938,6 +2966,14 @@
         });
 
         initAllInwardDataTable();
+        var urlParams = new URLSearchParams(window.location.search);
+        urlId = urlParams.get('id');
+        console.log('url',urlId)
+        if (urlId) {
+            // $('#InwardPanel tbody').find('.selectReceiptBtn[id="' + urlId + '"]').trigger('click');
+            openReceipt(urlId)
+            urlId = null;
+        }
     }
 
     function destroyAllInwardDataTable() {
@@ -3023,16 +3059,21 @@
             $('#receiptTable tbody').append(`
             <tr>
                 <td><button class="btn btn-sm deleteNewProduct form-control"><i class="ti ti-trash"></i></button></td>
-                <td>${displayName}
+                <td>${productName}
                     <input type="hidden" name="Product.Id" value="${item.product.id}">
                     <input type="hidden" class="productId" value="${item.product.id}">
                     <input type="hidden" class="initialRemainingQty" value="${productData.remainingQty}">
-                </td>
+                </td><td>${productCode}</td>
                 <td><span class="remainingQtyDisplay">${displayRemainingQty || 0}</span></td>
                 <td class="unitPriceCell" data-price="${unitPriceVal}">${unitPriceVal}</td>
                 <td>${uomVal}</td>
                 <td>
-                    <input type="text" class="form-control batchNumberInput" value="${item.batchNumber || ''}" required/>
+                    <input type="text"
+       class="form-control batchNumberInput"
+       value="${item.batchNumber || ''}"
+       required
+       pattern="^\S+$"
+       title="Spaces are not allowed" />
                 </td>
                 <td style="position: relative;">
                     <input type="text" class="form-control manufacturerSearchInput" placeholder="Search..." value="${manufacturerName}" required disabled/>
@@ -3475,7 +3516,7 @@
             receiptDate: new Date().toISOString().split("T")[0],
             remarks: $('#receiptNotes').val(),
             processStatus: "New",
-            createdBy: { id: FOX.employeeId },
+            initiator: { id: FOX.employeeId },
             // New Fields from GateEntry
             challanNumber: $('#challanNumber').val(),
             challanDate: toIsoDateOrEmpty($('#challanDate').val()) || null,
@@ -3519,7 +3560,7 @@
             name: 'GIM Created',
             performedBy: { id: Number(FOX.employeeId) },
             parentRecordId: receiptId,
-            startDate: new Date().toISOString().slice(0, 19)
+            startDate: new Date()
         };
 
         JSUTIL.callAJAXPost(
@@ -3716,7 +3757,7 @@
                             productReceipt: { id: prId },
                             // purchaseOrderItem: { id: Number(poitemid) },
                             product: { id: Number(productid) },
-                            quantityExpected: row.find('td:eq(2)').text() || 0,
+                            quantityExpected: row.find('td:eq(3)').text() || 0,
                             quantityReceived: receivedQty,
                             remarks: '',
                             stagingLocation: '',
@@ -3859,7 +3900,7 @@
                     var sortedAsc = acts.slice().sort(function (a, b) { return a.id - b.id; });
 
                     // Prepared By: receipt creator from full receipt; fallback to earliest activity performer
-                    var preparedByName = formatPersonName(fullReceipt && (fullReceipt.createdBy || fullReceipt.CreatedBy));
+                    var preparedByName = formatPersonName(fullReceipt && (fullReceipt.createdBy || fullReceipt.CreatedBy)) || (currentReceiptData.initiator?.firstName +' '+currentReceiptData.initiator?.lastName );
                     if (!preparedByName && sortedAsc.length > 0) {
                         preparedByName = formatPersonName(sortedAsc[0].performedBy);
                     }
@@ -3875,7 +3916,7 @@
 
                     console.log('[Print] preparedByName:', preparedByName, 'checkedByName:', checkedByName);
                     currentReceiptData._preparedByName = preparedByName;
-                    currentReceiptData._checkedByName = checkedByName;
+                    currentReceiptData._checkedByName = checkedByName || (currentReceiptData.reviewer?.firstName + ' ' +  currentReceiptData.reviewer?.lastName);
 
                     renderReportIframe(containersByItemId);
                 }, function () {
@@ -4189,7 +4230,7 @@
                         <div>PLOT NO. 4/22,4/23,4/18,4/32. G.I.D.C. ESTATE, - ANKLESHWAR</div>
                     </div>
                     <div class="report-title">
-                        <div>GOODS INWARD MEMO</div>
+                        <div>GOODS INWARD MEMO ${currentReceiptData.processStatus == 'GIM Rejected' ? 'GIM Rejected' : ''}</div>
                         <div>${pageNumber}</div>
                     </div>
                 </div>
@@ -4443,33 +4484,33 @@
         loadTransportCompanies();
     });
 
-    // Open edit panel
-    $('#InwardPanel tbody').on('click', '.selectReceiptBtn', function () {
+    function openReceipt(id) {
+        console.log('idddd',id)
         $('.newInwardBtn').hide();
         $('.newReceiptBtn').hide();
         $('.editInwardClose').show();
         $('#editInwardPanel').show();
         $('#InwardPanel').hide();
 
-        pochange = 0
-        currentRecordId = Number($(this).attr('id').trim());
+        pochange = 0;
+        currentRecordId = Number(id);
         isEditMode = false;
 
         var currentReceipt = recordList.find(r => r.id === currentRecordId);
-        currentReceiptData = currentReceipt;
-        $('#receiptName').text('Receipt: ' + currentReceipt.number + ` (${currentReceipt.processStatus})`);
-        $('#editReceiptNotes').val(currentReceipt.remarks || '');
-
-        // ADDED: Hide PO select if contract manufacturing
-        if (currentReceipt.gateEntry && currentReceipt.gateEntry.entryType === 'contractmanufacturing') {
-            $('#editPurchaseOrderSelect').closest('.form-group').hide();
-        } else {
-            $('#editPurchaseOrderSelect').closest('.form-group').show();
-        }
         if (!currentReceipt) {
             console.error('Could not find receipt in recordList with ID:', currentRecordId);
             closeEditPanel();
             return;
+        }
+
+        currentReceiptData = currentReceipt;
+        $('#receiptName').text('Receipt: ' + currentReceipt.number + ` (${currentReceipt.processStatus})`);
+        $('#editReceiptNotes').val(currentReceipt.remarks || '');
+
+        if (currentReceipt.gateEntry && currentReceipt.gateEntry.entryType === 'contractmanufacturing') {
+            $('#editPurchaseOrderSelect').closest('.form-group').hide();
+        } else {
+            $('#editPurchaseOrderSelect').closest('.form-group').show();
         }
 
         if (currentReceipt.processStatus == 'Quality Inspection' || currentReceipt.processStatus == 'Under Testing') {
@@ -4502,10 +4543,9 @@
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
             $('#printReportBtn').show();
-            loadStagingLocations();
         } else if (currentReceipt.processStatus == 'Closed' || currentReceipt.processStatus == 'GIM Review') {
             $('#submitReceiptToQcBtn').hide();
-            $('#editBtn').hide(); // Allow editing for location assignment
+            $('#editBtn').hide();
             $('#deleteProductBtn').hide();
             $('#saveBtn').hide();
             $('#addProductSection').hide();
@@ -4517,18 +4557,14 @@
             $('#sendToGrnBtn').hide();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            if(currentReceipt.processStatus == "Closed")
-            {
+            if (currentReceipt.processStatus == 'Closed') {
                 $('#printReportBtn').hide();
-            }
-            else{
+            } else {
                 $('#printReportBtn').show();
             }
-            // Load staging locations for these statuses
-            loadStagingLocations();
         } else if (currentReceipt.processStatus == 'GIM Approved') {
             $('#submitReceiptToQcBtn').show();
-            $('#editBtn').hide(); // Allow editing for location assignment
+            $('#editBtn').hide();
             $('#deleteProductBtn').hide();
             $('#saveBtn').hide();
             $('#addProductSection').hide();
@@ -4541,23 +4577,21 @@
             $('#printGrnBtn').show();
             $('#closeBtn').hide();
             $('#printReportBtn').show();
-            // Load staging locations for these statuses
-            loadStagingLocations();
-        } else if (currentReceipt.processStatus == 'New' || currentReceipt.processStatus == 'GIM Rejected' ) {
+        } else if (currentReceipt.processStatus == 'New' || currentReceipt.processStatus == 'GIM Rejected') {
             $('#submitReceiptToQcBtn').hide();
             $('#editBtn').show();
             $('#deleteProductBtn').show();
             $('#saveBtn').hide();
             $('#addProductSection').hide();
             $('.headReprintComments').hide();
+
             if (currentReceiptData.reprintStatus == 'Quarantine Label' || currentReceiptData.reprintStatus == 'Quarantine Label Rejected') {
                 $('#printQuarantineBtn').hide();
                 $('#reprintRequestBtn').show();
                 $('#labelApproveBtn').hide();
                 $('#labelRejectBtn').hide();
                 $('#sendToGrnBtn').hide();
-            }
-            else if (currentReceiptData.reprintStatus == 'Quarantine Label Reprint') {
+            } else if (currentReceiptData.reprintStatus == 'Quarantine Label Reprint') {
                 $('#printQuarantineBtn').hide();
                 $('#reprintRequestBtn').hide();
                 if (FOX.userGroupNames.includes('warehouse_head')) {
@@ -4572,31 +4606,37 @@
                     $('.reprintComments').prop('disabled', true);
                 }
                 $('#sendToGrnBtn').hide();
-            }
-            else {
+            } else {
                 $('#printQuarantineBtn').hide();
                 $('#reprintRequestBtn').hide();
                 $('#labelApproveBtn').hide();
                 $('#labelRejectBtn').hide();
                 $('#sendToGrnBtn').show();
             }
-            $('#printReportBtn').hide();
+            $('#printReportBtn').show();
             $('#uploadFileBtn').show();
             $('#printGrnBtn').hide();
             $('#closeBtn').hide();
-            // ADD THIS LINE to load staging locations for New status
-            loadStagingLocations();
-        }
-        else if(currentReceipt.processStatus == 'Cancelled')
-        {
+        } else if (currentReceipt.processStatus == 'Cancelled') {
             $('#printReportBtn').hide();
+            $('#printQuarantineBtn').hide();
+           $('#submitReceiptToQcBtn').hide();
+            $('#editBtn').hide();
+            $('#deleteProductBtn').hide();
+            $('#saveBtn').hide();
+            $('#addProductSection').hide();
+            $('#printQuarantineBtn').hide();
+            $('#reprintRequestBtn').hide();
+            $('#labelApproveBtn').hide();
+            $('#labelRejectBtn').hide();
+            $('#uploadFileBtn').hide();
+            $('#sendToGrnBtn').hide();
+            $('#printGrnBtn').hide();
+            $('#closeBtn').hide();
         }
 
-        // Ensure print report is available for all statuses
-        // $('#printReportBtn').show();
-
-        currentReceiptData = currentReceipt;
-        console.log('current receipt data', currentReceiptData);
+        $('#receiptName').text('Receipt: ' + currentReceipt.number + ` (${currentReceipt.processStatus})`);
+        $('#editReceiptNotes').val(currentReceipt.remarks || '');
 
         loadReprintHistory(currentReceiptData.id);
         loadHistory(currentReceiptData.id);
@@ -4613,23 +4653,17 @@
         var editEntryType = currentReceiptData.gateEntry ? (currentReceiptData.gateEntry.entryType || '') : '';
         $('.editGateEntry').val(editEntryType);
 
-        // Show/hide address rows based on entry type (same logic as new panel)
         if (editEntryType === 'localMaterial' || editEntryType === 'contractmanufacturing') {
             $('.editimport').hide();
         } else {
             $('.editimport').show();
         }
 
-        // Ensure ALL fields start as readonly/disabled (edit mode off by default)
         $('#editReceiptNotes').prop('readonly', true);
         $('#editChallanNumber, #editLrNumber, #editInvoiceNumber, #editDeliveryVehicle').prop('readonly', true);
         $('#editChallanDate, #editLrDate, #editInvoiceDate, #editReceiptDate').prop('readonly', true);
         $('#editTransportCompany, #editPurchaseOrderSelect, .editGateEntry').prop('disabled', true);
 
-        $('#receiptName').text('Receipt: ' + currentReceipt.number + ` (${currentReceipt.processStatus})`);
-        $('#editReceiptNotes').val(currentReceipt.remarks || '');
-
-        // --- POPULATE NEW LOGISTICS FIELDS ---
         $('#editChallanNumber').val(currentReceipt.challanNumber || '');
         if (currentReceipt.challanDate) {
             $('#editChallanDate').val(formatDateForInput(currentReceipt.challanDate));
@@ -4652,13 +4686,10 @@
         $('#editDeliveryVehicle').val(currentReceipt.deliveryVehicle || '');
         setTransportCompanyValue(currentReceipt.transportCompany || '');
         $('#editTransportCompany').prop('disabled', true);
-        // re-init pickers now that values are set
         initDrpDatePickers('#editInwardPanel');
-        // ---------------------------------
 
         originalReceiptStatus = currentReceipt.processStatus;
 
-        // Load Purchase Orders list
         var poObj = {
             fields: "Vendor;TotalAmount;Id;Number;",
             conditions: [`OrderStatus = 'Approved'`],
@@ -4686,7 +4717,6 @@
             }
         });
 
-        // Load Product Receipt Items (table details)
         var itemObj = {
             fields: "Id;Number;QuantityExpected;QuantityReceived;QuantityRejected;Product.Id;Remarks;InspectionResult;ManufacturingDate;ExpiryDate;QuantityApproved;BatchNumber;NumberOfContainers;StagingLocation;RetestDate;ContainerType;Manufacturer.Id;Manufacturer.Name;TaxAmount1;TaxAmount2;TaxPercent1;TaxPercent2;WeightVerification;MaterialValue;TaxableValue;PurchaseOrderItem.Id;PurchaseOrderItem.ItemPrice;",
             conditions: [`ProductReceipt.Id = '${currentRecordId}'`],
@@ -4700,6 +4730,11 @@
             getDetailsCallback(filteredItems);
         });
         loadReceiptDocuments(currentRecordId);
+        loadStagingLocations();
+    }
+
+    $(document).on('click', '.selectReceiptBtn', function () {
+        openReceipt($(this).attr('id').trim());
     });
 
     // Function to load staging locations
@@ -4911,6 +4946,7 @@
         currentProductsDetails = [];
         stagingLocations = []; // Reset staging locations
         resetEditForm();
+        window.location.href = window.location.pathname;
     }
 
     function resetEditForm() {
@@ -6631,10 +6667,10 @@
             // For brand-new receipts, make sure lots exist in Quarantined status
             if (originalReceiptStatus === 'New') {
                 ensureQuarantineLotsForReceipt(function () {
-                    location.reload();
+                    window.location.href = window.location.pathname + '?id=' + currentRecordId;
                 });
             } else {
-                location.reload();
+                window.location.href = window.location.pathname + '?id=' + currentRecordId;
             }
         });
     }
@@ -6719,7 +6755,7 @@
             var deleteUrl = JSUTIL.getUrl('/api/product-receipts/' + currentRecordId);
             JSUTIL.callAJAXPut(deleteUrl, JSON.stringify(obj), function (response) {
                 console.log('Receipt cancelled:', response);
-                location.reload();
+                window.location.href = window.location.pathname;
             }, function (err) {
                 console.error('Failed to cancel receipt', err);
                 JSUTIL.buildErrorModal('Failed to cancel Product Receipt.');
@@ -6917,7 +6953,7 @@
     function newStatus() {
         var receiptUpdateData = {
             processStatus: 'GIM Review',
-            createdBy: { id: FOX.employeeId }
+            initiator: { id: FOX.employeeId }
         }
         var revurl = JSUTIL.getUrl('/api/product-receipts/' + currentRecordId)
         JSUTIL.callAJAXPut(revurl, JSON.stringify(receiptUpdateData), function (receiptRes) {
@@ -6929,7 +6965,7 @@
                 startDate: new Date().toISOString().slice(0, 19)
             };
             JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(historyObj), function () {
-                location.reload();
+                window.location.href = window.location.pathname + '?id=' + currentRecordId;
             });
         });
     }
@@ -7280,7 +7316,7 @@
             JSUTIL.callAJAXPut(receiptUrl, JSON.stringify(receiptUpdateData), function (receiptRes) {
 
                 console.log('Receipt closed:', receiptRes);
-                location.reload();
+                window.location.href = window.location.pathname;
 
             });
         }
@@ -7548,7 +7584,7 @@
 
                 // JSUTIL.callAJAXPost('/process/create_notification_async', JSON.stringify(obj), function (response) {
                 //     console.log(response);
-                location.reload();
+                window.location.href = window.location.pathname + '?id=' + currentRecordId;
             });
 
             // });
@@ -7589,7 +7625,7 @@
                 new Date(item.manufacturingDate).toLocaleDateString('en-GB') : 'N/A';
             var expDate = item.expiryDate ?
                 new Date(item.expiryDate).toLocaleDateString('en-GB') : 'N/A';
-
+            var retestDate = item.retestDate ? new Date(item.retestDate).toLocaleDateString('en-GB') : 'N/A'
             // Calculate pack details and generate per-container labels
             var itemContainers = (containersByItemId && containersByItemId[item.id]) || [];
 
@@ -7691,10 +7727,13 @@
                             <td class="value-cell">${expDate}</td>
                         </tr>
                         <tr>
+                            <td class="label-cell">Retest Date</td><td>${retestDate}</td>
+                            </tr>
+                        <tr>
                             <td class="label-cell">User Id:</td>
-                            <td class="value-cell">${(typeof employeeId !== 'undefined' ? employeeId : null) || 'N/A'}</td>
+                            <td class="value-cell">${(typeof employeeId !== 'undefined' ? employeeId : FOX.employeeId) || 'N/A'}</td>
                             <td class="label-cell">User Name:</td>
-                            <td class="value-cell">${(typeof employeeName !== 'undefined' ? employeeName : null) || 'System User'}</td>
+                            <td class="value-cell">${(typeof employeeName !== 'undefined' ? employeeName : FOX.employeeName) || 'System User'}</td>
                         </tr>
                     </table>
                 </div>
@@ -8378,14 +8417,15 @@
         $('#receiptTable tbody').append(
             '<tr>' +
             '<td><button class="btn btn-sm deleteNewProduct form-control"><i class="ti ti-trash"></i></button></td>' +
-            '<td>' + displayName +
+            '<td>' + productData.name +
             '<input type="hidden" name="Product.Id" value="' + productData.id + '">' +
             '<input type="hidden" class="productId" value="' + productData.id + '">' +
             '<input type="hidden" class="initialRemainingQty" value="' + productData.remainingQty + '"></td>' +
+            `<td>${productCode}</td>`+
             '<td><span class="remainingQtyDisplay">' + displayRemainingQty + '</span></td>' +
             '<td class="unitPriceCell" data-price="' + (productData.unitPrice || 0) + '">' + (productData.unitPrice || 0) + '</td>' +
             '<td>' + (productData.uom || '') + '</td>' +
-            '<td><input type="text" class="form-control batchNumberInput" required/></td>' +
+            '<td><input type="text" class="form-control batchNumberInput" required pattern="^\\S+$" title="Spaces are not allowed" /></td>' +
             '<td style="position: relative;">' +
             '<input type="text" class="form-control manufacturerSearchInput" placeholder="Search..."' +
             ' value="' + ((selectedPoManufacturer && (selectedPoManufacturer.name || selectedPoManufacturer.Name)) || productData.manufacturerName || '') + '" required readonly disabled/>' +
@@ -8394,8 +8434,8 @@
             '<td><input type="text" placeholder="dd/mm/yyyy" class="form-control mfgDateInput" required/></td>' +
             '<td><input type="text" placeholder="dd/mm/yyyy" class="form-control expDateInput"/></td>' +
             '<td><input type="text" placeholder="dd/mm/yyyy" class="form-control retestDateInput"/></td>' +
-            '<td><input type="number" class="form-control batchQtyInput" min="0" value="0" required></td>' +
-            '<td><input type="number" class="form-control containersInput" min="0" value="0"></td>' +
+            '<td><input type="number" class="form-control batchQtyInput" min="0"  required></td>' +
+            '<td><input type="number" class="form-control containersInput" min="0"></td>' +
             '<td><input type="number" class="form-control materialValue" min="0" value=""></td>' +
             '<td class="taxable-col"><input type="number" class="form-control taxableValue" min="0" value=""></td>' +
             '<td class="igst-col"><input type="number" class="form-control igstPer" min="0" value=""></td>' +
@@ -8495,6 +8535,7 @@
     // }
 
     function handleSaveProductReceipt() {
+        
         if ($('#receiptTable tbody tr').length === 0) {
             JSUTIL.buildErrorModal('Please add at least one product to receive!');
             return;
@@ -8601,17 +8642,17 @@
                     };
 
                     JSUTIL.callAJAXPut('/api/gate-entry/' + gateEntryId, JSON.stringify(payload), function () {
-                        location.reload();
+                        window.location.href = window.location.pathname + '?id=' + currentRecordId;
                     }, function (err) {
                         console.error('Failed to update gate entry', err);
                         JSUTIL.buildErrorModal('Failed to update Gate Entry.');
-                        location.reload(); // Still reload even if update fails?
+                        window.location.href = window.location.pathname + '?id=' + currentRecordId; // Still reload even if update fails?
                     });
                 });
             } catch (e) {
                 console.error('Failed to update gate entry', e);
                 JSUTIL.buildErrorModal('Failed to update Gate Entry.');
-                location.reload();
+                window.location.href = window.location.pathname + '?id=' + currentRecordId;
             }
         });
     }

@@ -663,9 +663,9 @@
             });
             $('.qa-checklist-submit-btn').on('click', function () { handleChecklistSubmit(); });
             $('.qa-checklist-approve-btn').on('click', function () { 
-                JSUTIL.builAuthenticationModal(function(){
-                    handleChecklistApprove()
-                })
+                JSUTIL.buildAuthenticationModal(function(){
+                    handleChecklistApprove();
+                });
              });
             $('.qa-checklist-reject-btn').on('click', function () {
                 if (!qaChecklistPermissions.canApprove) {
@@ -677,7 +677,7 @@
                 var rejectModal = new bootstrap.Modal($('#qaChecklistRejectModal')[0]); rejectModal.show();
             });
             $('#qaRejectConfirmBtn').on('click', function () { 
-                JSUTIL.builAuthenticationModal(function(){
+                JSUTIL.buildAuthenticationModal(function(){
                     handleChecklistReject()
                 })
              });
@@ -711,11 +711,10 @@
         }
 
         function buildIssueReportHtml() {
-            var companyName = 'Ipca Laboratories Limited, Ankleshwar';
+            var companyName = 'Suleshvari Pharma, Ankleshwar';
             var reportTitle = 'TRANSFER NOTE PRODUCTION SLIP';
             var srNo = currentQaChecklist ? (currentQaChecklist.number || '') : '';
             var date = new Date().toLocaleDateString();
-            // Use actual product name from batch details instead of hardcoded value
             var product = '';
             if (qaCurrentOrderDetails) {
                 var prod = qaCurrentOrderDetails.productRecipe?.product || qaCurrentOrderDetails.product || qaFinalProductMeta?.product || {};
@@ -729,7 +728,21 @@
             var formatNo = 'PRD/STP/01-01';
             var totalGross = 0, totalTare = 0, totalNet = 0;
 
-            // Use only current batch's packing list details
+            function fullName(p) {
+                if (!p) return '';
+                var fn = p.firstName || p.FirstName || '';
+                var ln = p.lastName || p.LastName || '';
+                return (fn + ' ' + ln).trim();
+            }
+
+            var orderOwner = qaCurrentOrderDetails ? (qaCurrentOrderDetails.orderOwner || qaCurrentOrderDetails.OrderOwner) : null;
+            var qaChecker = qaCurrentOrderDetails ? (qaCurrentOrderDetails.qaChecker || qaCurrentOrderDetails.QaChecker) : null;
+            var finalStockReceiver = qaCurrentOrderDetails ? (qaCurrentOrderDetails.finalStockReceiver || qaCurrentOrderDetails.FinalStockReceiver) : null;
+
+            var preparedByName = fullName(orderOwner);
+            var checkedByName = fullName(qaChecker);
+            var receivedByName = fullName(finalStockReceiver);
+
             var currentPackingList = packingListDetails || [];
             currentPackingList.forEach(function(row) {
                 totalGross += parseFloat(row.grossWeight) || 0;
@@ -767,7 +780,11 @@
                 '<table class="main-table"><tr><th>Drum No.</th><th>Gross</th><th>Tare</th><th>Net</th><th>Seal No.</th></tr>' + rowsHtml +
                 '<tr><th>Total</th><th style="text-align:right;">' + totalGross.toFixed(3) + '</th><th style="text-align:right;">' + totalTare.toFixed(3) + '</th><th style="text-align:right;">' + totalNet.toFixed(3) + '</th><th></th></tr></table>' +
                 '<div class="remarks"><b>Remarks:</b></div>' +
-                '<table class="sign-table"><tr><td>Prepared By<br><br>_________________<br>Production Incharge</td><td>Checked By<br><br>_________________<br>Q.A.D.</td><td>Received By<br><br>_________________<br></td></tr></table>' +
+                '<table class="sign-table"><tr>' +
+                '<td>Prepared By<br><br>' + (preparedByName || '&nbsp;') + '<br>_________________<br>Production Incharge</td>' +
+                '<td>Checked By<br><br>' + (checkedByName || '&nbsp;') + '<br>_________________<br>Q.A.D.</td>' +
+                '<td>Received By<br><br>' + (receivedByName || '&nbsp;') + '<br>_________________<br></td>' +
+                '</tr></table>' +
                 '<div class="format-no"><b>Format No.:</b> ' + formatNo + '</div></body></html>';
         }
 
@@ -968,11 +985,12 @@
         }
 
         function handleChecklistApprove() {
+            console.info('handleChecklistApprove')
             if (!qaChecklistPermissions.canApprove) { qaNotify('warning', 'You do not have permission to approve.'); return; }
             if (!currentQaChecklist || !currentQaChecklist.id) { qaNotify('warning', 'Checklist is not loaded.'); return; }
             var status = getChecklistStatus();
             if (status === 'approved') { qaNotify('info', 'Checklist is already approved.'); return; }
-            var batchApprovalFlag = getBatchApprovalFlagValue();
+            var batchApprovalFlag = 'approved'; //getBatchApprovalFlagValue();
             if (!batchApprovalFlag) { qaNotify('warning', 'Select a batch approval flag before submitting.'); return; }
             var remark = ($('#qaChecklistRemarks').val() || '').trim();
             var previousStatus = getChecklistStatus();
@@ -1246,14 +1264,15 @@
             var stageCode = productStage.code || productStage.Code || '';
             var stageDisplay = [stageName, stageCode].filter(Boolean).join(' ');
             var type = order.productRecipe?.type || '';
-            var owner = order.orderOwner?.name || order.OrderOwner?.Name || '';
+            var owner = order.orderOwner ? (order.orderOwner.firstName + ' ' + order.orderOwner.lastName) : '';
             var status = order.orderStatus || order.OrderStatus || '';
+            console.info(order);
 
             $body.html(
                 '<tr><th style="width:22%;">Batch Number</th><td style="width:28%;">' + formatDisplayValue(batchNumber || batchName) + '</td><th style="width:22%;">Batch Name</th><td style="width:28%;">' + formatDisplayValue(batchName || batchNumber) + '</td></tr>' +
                 '<tr><th>Product</th><td>' + formatDisplayValue(productDisplay) + '</td><th>Stage</th><td>' + formatDisplayValue(stageDisplay) + '</td></tr>' +
                 '<tr><th>Type</th><td>' + formatDisplayValue(type) + '</td><th>Status</th><td>' + formatDisplayValue(status) + '</td></tr>' +
-                '<tr><th>Owner</th><td>' + formatDisplayValue(owner) + '</td><th>Quantity</th><td>-</td></tr>'
+                '<tr><th>Owner</th><td>' + formatDisplayValue(owner) + '</td><th>Quantity</th><td>' + formatDisplayValue(order.productRecipe.productQuantity + ' ± ' + order.productRecipe.quantityVariation + ' ' + order.productStage.product.uom) + '</td></tr>'
             );
         }
 
@@ -1399,12 +1418,23 @@
             var batchNumber = ($('#qaBatchNumber').val() || '').trim();
             var targetStatus = (nextOrderStatus || '').trim() || 'QA Approved';
 
+            var qaCheckerId = (typeof FOX !== 'undefined' && FOX) ? FOX.employeeId : null;
+            if (!qaCheckerId) {
+                qaNotify('error', 'QA Checker could not be set: employee ID is missing. Please log in again.');
+                return;
+            }
+
             var applyStatusUpdate = function (orderId) {
-                var payload = { orderStatus: targetStatus };
+                var payload = {
+                    orderStatus: targetStatus,
+                    qaChecker: { id: qaCheckerId }
+                };
                 JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/production-orders/' + orderId), JSON.stringify(payload), function () {
                     if (qaCurrentOrderDetails) {
                         qaCurrentOrderDetails.orderStatus = targetStatus;
                         qaCurrentOrderDetails.OrderStatus = targetStatus;
+                        qaCurrentOrderDetails.qaChecker = Object.assign({}, qaCurrentOrderDetails.qaChecker || {}, { id: qaCheckerId });
+                        qaCurrentOrderDetails.QaChecker = qaCurrentOrderDetails.qaChecker;
                         renderBatchDetailsTable(qaCurrentOrderDetails);
                     }
                     qaNotify('success', 'Batch status updated to ' + targetStatus + '.');
@@ -1586,6 +1616,7 @@
         }
 
         function getBatchApprovalFlagValue() {
+            console.info(qaChecklistQuestions);
             if (!Array.isArray(qaChecklistQuestions) || !qaChecklistQuestions.length) return '';
             for (var i = 0; i < qaChecklistQuestions.length; i++) {
                 if ((qaChecklistQuestions[i].body || '').toLowerCase() === 'batch approval flag') {

@@ -1048,13 +1048,14 @@
                   <th style="width: 150px;">Status</th>
                   <th>Name</th>
                   <th>Initiator Name</th>
+                  <th>Reviewer Name</th>
                   <th style="width: 200px;">Created Date</th>
                   <th style="width: 200px;">Approved Date</th>
                 </tr>
                 </thead>
                 <tbody id="bomVersionHistoryBody">
                 <tr class="text-muted">
-                  <td colspan="5">No versions found.</td>
+                  <td colspan="7">No versions found.</td>
                 </tr>
                 </tbody>
               </table>
@@ -2302,6 +2303,10 @@
               if (String(nextStatus || '').toLowerCase() === 'approved') {
                 postData.approvedDate = new Date().toISOString();
               }
+
+              if (String(nextStatus || '').toLowerCase() === 'approved') {
+                postData.reviewer = { id: FOX.employeeId };
+              }
               return fetch('/api/product-recipes/' + currentBOMRecordId, {
                 method:  'PUT',
                 headers: headers,
@@ -2341,6 +2346,7 @@
     // };
     // JSUTIL.callAJAXPost('/api/product-recipes/list', JSON.stringify(payload_unused_post), ...)
     JSUTIL.callAJAXGet('/api/product-recipes', function (res) {
+      // console.log('Fetched BOM versions:', res);
       // Filter client-side: only show records with the same masterBatchRecord (case-insensitive)
       var mbrLower = masterBatchRecord.trim().toLowerCase();
       var filtered = (res || []).filter(function (item) {
@@ -2389,6 +2395,7 @@
               '<td>' + sanitizeInputValue(status) + '</td>' +
               '<td>' + sanitizeInputValue(name) + '</td>' +
               `<td>${((currentEmployee?.firstName || ' ') + ' ' + (currentEmployee?.lastName||'')) || ' '}</td>`+
+              `<td>${((item?.reviewer?.firstName || ' ') + ' ' + (item?.reviewer?.lastName||'')) || ' '}</td>`+
               '<td>' + sanitizeInputValue(createdDisplay) + '</td>' +
               '<td>' + sanitizeInputValue(approvedDisplay) + '</td>' +
               '</tr>';

@@ -209,7 +209,7 @@
                 <div class="ibox-title">
                     <h5>New Production Request</h5>
                     <div class="ibox-tools">
-                        <button type="button" class="btn btn-white btn-sm closeNewPTPanel"><i class="fa fa-times "></i>
+                        <button type="button" class="btn btn-default btn-sm closeNewPTPanel"><i class="fa fa-times "></i>
                             Close</button>
                         <button type="button" class="btn btn-sm btn-secondary saveNewPTPanel"><i
                                 class="ti ti-check me-1"></i>Save</button>
@@ -234,9 +234,8 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label for="newNumber">Order Id</label>
-                                        <input type="text" class="form-control" name="number" id="newNumber" readonly
-                                            placeholder="Auto-generated on Save">
+                                        <label for="">EPO Date</label>
+                                        <input type="text" class="datepicker form-control newProductTransactionInput" name="epoDate" placeholder="dd-mm-yyyy">
                                     </div>
                                 </div>
                             </div>
@@ -313,7 +312,18 @@
                                     </div>
                                 </div>
                             </div>
-
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="">Type of Production Request<span class="text-danger">*</span></label>
+                                        <select name="type" class="form-control newProductTransactionInput">
+                                            <option value="">--none--</option>
+                                            <option value="International">International</option>
+                                            <option value="National">National</option>
+                                        </option></select>
+                                    </div>
+                                </div>
+                            </div>
                             <!-- 8. COUNTRY OF DESTINATION & 9. TERMS OF PAYMENT -->
                             <div class="row">
                                 <div class="col-sm-6">
@@ -516,6 +526,7 @@
                         <button type="button" class="btn btn-sm btn-default closeEditPTPanel">
                             <i class="ti ti-x me-1"></i> Close
                         </button>
+                        <button type="button" class="btn btn-sm btn-default viewHistory"><i data-lucide="clock"></i>History</button>
                         <button type="button" class="btn btn-sm btn-default btn-sm deletePT">
                             <i class="ti ti-trash me-1"></i> Cancel
                         </button>
@@ -532,6 +543,8 @@
                             style="background-color: #1c8de3; border-color: #1c8de3;">
                             <i class="ti ti-send me-1"></i> Send to Production
                         </button>
+                        <button type="button" class="btn btn-default btn-sm" id="printProductionReqst" style="display: none;"><i
+                                data-lucide="printer"></i> Print</button>
                     </div>
 
                 </div>
@@ -554,9 +567,9 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label for="editNumber">Order Id</label>
-                                        <input type="text" class="form-control editProductTransactionInput"
-                                            name="number" id="editNumber" readonly>
+                                        <label for="">EPO Date</label>
+                                        <input type="text" class="form-control editProductTransactionInput datepicker"
+                                            name="epoDate" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -633,6 +646,18 @@
                                         <label for="editDestinationPort">PORT</label>
                                         <input type="text" class="form-control editProductTransactionInput"
                                             name="destinationPort" id="editDestinationPort">
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group">
+                                        <label for="">Type of Production Request</label>
+                                        <select name="type" class="form-control editProductTransactionInput" disabled>
+                                            <option value="">--none--</option>
+                                            <option value="International">International</option>
+                                            <option value="National">National</option>
+                                        </option></select>
                                     </div>
                                 </div>
                             </div>
@@ -839,7 +864,6 @@
     var recordList = [];
     var employeeId = null;
     var allProducts = [];
-    var uomList = [];
 
     // Load production requests on page load
     // ── Safe DataTable destroy/init ──
@@ -877,8 +901,8 @@
             var innerhtml2 = `<tr><td><a href="javascript:void(0)" class="editProductTransactionLink" data-id="${val.id}">${val.number}</a></td>
         <td>${val.product ? val.product.name + ' - ' + val.product.number : ''}</td>
         <td>${val.customer ? val.customer.name : ''}</td>
-        <td>${val.consignee ? val.consignee.name : ''}</td>
-        <td>${val.requester ? val.requester.name : ''}</td>
+        <td>${val.consignee ? val.consignee.name: ''}</td>
+        <td>${val.requester ? val.requester.firstName + ' ' + val.requester.lastName : ''}</td>
         <td>`;
             var statusBadge = '';
             if (val.processStatus) {
@@ -900,21 +924,12 @@
 
     // Load UOM list
     function loadUomList() {
-        $.ajax({
-            url: '/api/uom',
-            type: 'GET',
-            success: function (data) {
-                uomList = data || [];
-                var innerhtml1 = '<option value="">--none--</option>';
+            var innerhtml1 = '<option value="">--none--</option>';
                 $.each(uomList, function (i, val) {
                     innerhtml1 += '<option value="' + val.name + '">' + val.name + '</option>';
                 });
                 $('.uomDrop').append(innerhtml1);
-            },
-            error: function (err) {
-                console.error('Error loading UOM:', err);
-            }
-        });
+           
     }
 
     // Load products
@@ -933,10 +948,20 @@
 
     $(document).ready(function () {
         // Load data
+
+
+
+
+        $(document).on('click','.viewHistory',function(){
+            JSUTIL.showProcessActivityPanel(currentEditRecord.id,'#editProductTransaction','History of '+currentEditRecord.number)
+        })
         loadProductionRequests();
         loadProducts();
         loadUomList();
-
+          flatpickr(".datepicker", {
+            dateFormat: "d-m-y",
+            allowInput: true
+        });
         // Set employee ID (get from session or default)
         employeeId = FOX.employeeId;
         $('.newProductTransactionInput[name="requester.id"]').val(employeeId);
@@ -1072,12 +1097,12 @@
 
             // Date fields (stored as dd/mm/yyyy, sent as ISO)
             obj["requestDate"]      = toISOZ($('.newProductTransactionInput1[name="requestDate"]').val());
-            obj["epoDate"]          = toISOZ($('.newProductTransactionInput1[name="epoDate"]').val());
+            obj["epoDate"]          = toISOZ($('.newProductTransactionInput[name="epoDate"]').val());
             obj["plannedStartTime"] = toISOZ($('.newProductTransactionInput1[name="plannedStartDate"]').val());
             obj["plannedEndTime"]   = toISOZ($('.newProductTransactionInput1[name="plannedEndDate"]').val());
             obj["actualStartTime"]  = toISOZ($('.newProductTransactionInput1[name="actualStartDate"]').val());
             obj["actualEndTime"]    = toISOZ($('.newProductTransactionInput1[name="actualEndDate"]').val());
-
+            obj['type'] = $('.newProductTransactionInput[name="type"]').val()
             // Product — always build from the hidden field (name="product.Id" has capital I, handled explicitly)
             var productId = parseInt($('#selectedProductId').val(), 10);
             if (!isNaN(productId) && productId > 0) {
@@ -1128,7 +1153,16 @@
                     if (res && res.number) {
                         console.log('Production Request saved successfully! Order ID: ' + res.number);
                     }
-                    location.reload();
+                    // location.reload();
+                    var historyObj ={
+                        name:"Production Request is created",
+                        performedBy:{id:employeeId},
+                        startDate: new Date(),
+                        parentRecordId : recordId
+                    }
+                    JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(res){
+                        location.reload()
+                    })
                 },
                 error: function (err) {
                     console.error('Error:', err);
@@ -1724,7 +1758,8 @@
             // NOTE: Using local collector instead of JSUTIL.buildFormDataJSON
             // because JSUTIL internally calls .select2() which is not loaded here
             console.log('Before buildFormDataJSON');
-            var obj = {};
+          JSUTIL.buildAuthenticationModal(function(){
+              var obj = {};
             $('.editProductTransactionInput').each(function () {
                 var name = $(this).attr('name');
                 var val = $(this).val();
@@ -1742,14 +1777,14 @@
                 }
             });
             console.log('After buildFormDataJSON', obj);
-
+            obj['type'] = $('.editProductTransactionInput[name="type"]').val()
             // Convert date fields to ISO format
             obj["actualEndTime"] = toISOZ($('.editProductTransactionInput1[name="actualEndDate"]').val());
             obj["actualStartTime"] = toISOZ($('.editProductTransactionInput1[name="actualStartDate"]').val());
             obj["plannedStartTime"] = toISOZ($('.editProductTransactionInput1[name="plannedStartDate"]').val());
             obj["plannedEndTime"] = toISOZ($('.editProductTransactionInput1[name="plannedEndDate"]').val());
             obj["requestDate"] = toISOZ($('.editProductTransactionInput1[name="requestDate"]').val());
-            obj["epoDate"] = toISOZ($('.editProductTransactionInput1[name="epoDate"]').val());
+            obj["epoDate"] = toISOZ($('.editProductTransactionInput[name="epoDate"]').val());
 
             // Set product object
             // Set product object
@@ -1800,7 +1835,16 @@
                 function (res) {
                     console.log('update res', res);
                     // alert('Production Request updated successfully!');
-                    location.reload();
+                    // location.reload();
+                    var historyObj ={
+                        name:"Production Request is updated",
+                        performedBy:{id:employeeId},
+                        startDate: new Date(),
+                        parentRecordId : recordId
+                    }
+                    JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(res){
+                        location.reload()
+                    })
                 },
                 function (error) {
                     console.error('Error updating record:', error);
@@ -1809,23 +1853,286 @@
                     saveBtn.prop('disabled', false).html('<i class="fa fa-check"></i> Save');
                 }
             );
+          })
         });
         $('.editEditPTPanel').on('click', function () {
             enableEditForm();
         });
         $('.deletePT').on('click', function () {
-            JSUTIL.callAJAXPost('/api/production-requests/' + currentEditRecord.id, JSON.stringify({ processStatus: "Cancelled" }), function (res) {
+            JSUTIL.buildAuthenticationModal(function(){
+                JSUTIL.callAJAXPost('/api/production-requests/' + currentEditRecord.id, JSON.stringify({ processStatus: "Cancelled" }), function (res) {
                 console.log('res', res)
-                location.reload()
+                // location.reload()
+                var historyObj ={
+                        name:"Production Request is Cancelled",
+                        performedBy:{id:employeeId},
+                        startDate: new Date(),
+                        parentRecordId : recordId
+                    }
+                    JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(res){
+                        location.reload()
+                    })
+            })
             })
         })
         $('.sendToProduction').on('click', function () {
-            JSUTIL.callAJAXPut('/api/production-requests/' + currentEditRecord.id, JSON.stringify({ processStatus: "In Production" }), function (res) {
+            JSUTIL.buildAuthenticationModal(function(){
+                JSUTIL.callAJAXPut('/api/production-requests/' + currentEditRecord.id, JSON.stringify({ processStatus: "In Production" }), function (res) {
                 console.log('res', res)
-                location.reload()
+                // location.reload()
+                var historyObj ={
+                        name:"Production Request is sent to Production",
+                        performedBy:{id:employeeId},
+                        startDate: new Date(),
+                        parentRecordId : recordId
+                    }
+                    JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(res){
+                        location.reload()
+                    })
+            })
             })
         })
+        $("#printProductionReqst").on('click', function () {
+            handleProductionRequestPrintReport();
+        });
     });
+
+    function handleProductionRequestPrintReport() {
+        if (!currentEditRecord) {
+            return;
+        }
+
+        var html = buildProductionRequestPrintHtml(currentEditRecord);
+        openProductionRequestPrintWindow(html, currentEditRecord);
+    }
+
+    function buildProductionRequestPrintHtml(record) {
+        var topRows = [
+            { label: 'EPO No.', value: record.epoNumber || '' },
+            { label: 'Order Id', value: record.number || '' },
+            { label: 'To', value: (record.customer && record.customer.name) ? record.customer.name : '' }
+        ];
+
+        var detailRows = [
+            { label: 'PRODUCT', value: record.product ? ((record.product.number ? record.product.number + ' | ' : '') + (record.product.name || '')) : '' },
+            { label: 'QUANTITY', value: record.quantity || '' },
+            { label: 'PRICE', value: record.totalCost || ''}, 
+            { label: 'BUYER', value: record.customer ? (record.customer.name || '') : '' },
+            { label: 'PORT', value: record.destinationPort || '' },
+            { label: 'COUNTRY OF DESTINATION', value: record.destinationCountry || '' },
+            { label: 'TERMS OF PAYMENT', value: record.paymentTerms || '' },
+            { label: 'PARTIAL SHIPMENT', value: record.partialShipment || '' },
+            { label: 'APPLICATION SCHEME', value: record.applicationScheme || '' },
+            { isHeading: true, label: 'PACKING DETAILS' },
+            { label: 'PACK SIZE', value: record.packSize || '' },
+            { label: 'BATCH SIZE', value: record.batchSize || '' },
+            { label: 'SPECIAL INSTRUCTIONS', value: record.specialInstructions || '' },
+            { isHeading: true, label: 'SHIPPING DETAILS' },
+            { label: 'LABELLING INSTRUCTIONS', value: record.labelInstructions || '' },
+            { label: 'SHIPPING MARKS', value: record.shippingMarks || '' },
+            { label: 'CONSIGNEE', value: record.consignee ? (record.consignee.name || '') : '' },
+            { label: 'SHIPMENT DETAILS', value: record.shippingDetails || '' },
+            { label: 'MODE OF TRANSPORT', value: record.modeOfTransport || '' },
+            { label: 'SHIPPING DEPARTMENT', value: record.shippingInstructions || '' }
+        ];
+
+        var topRowsHtml = topRows.map(function (row) {
+            return '<tr><th class="top-row-label">' + escapePrintValue(row.label) + '</th><td style="padding-right: 30px">:</td><td>' + escapePrintValue(row.value) + '</td></tr>';
+        }).join('');
+
+        var detailRowsHtml = detailRows.map(function (row) {
+            if (row.isHeading) {
+                return '<tr class="heading-row"><th colspan="3">' + escapePrintValue(row.label) + '</th></tr>';
+            }
+            return '<tr><th>' + escapePrintValue(row.label) + '</th><td>:</td><td>' + escapePrintValue(row.value) + '</td></tr>';
+        }).join('');
+
+        var note = (record.requester && record.requester.name)
+            ? record.requester.name
+            : 'SL';
+
+        return `
+            <div class="report-page">
+                <div class="report-shell">
+                    <div class="report-body">
+                        <table class="report-table top-table">
+                            <tbody>${topRowsHtml}</tbody>
+                        </table>
+
+                        <table class="report-table detail-table">
+                            <tbody>${detailRowsHtml}</tbody>
+                        </table>
+                    </div>
+
+                    <div class="report-footer">
+                        <div><strong>MKTG NOTE :</strong> ${escapePrintValue(note)}</div>
+                        <div class="signature-space"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function openProductionRequestPrintWindow(contentHtml, record) {
+        var printWindow = window.open('', '_blank');
+
+        if (!printWindow) {
+            var message = 'Unable to open print window. Please allow pop-ups and try again.';
+            if (typeof JSUTIL !== 'undefined' && typeof JSUTIL.buildErrorModal === 'function') {
+                JSUTIL.buildErrorModal(message);
+            }
+            return;
+        }
+
+        var documentTitle = 'Production Request ' + escapePrintValue(record.number || '') + ' - Report';
+        var html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8" />
+            <title>${documentTitle}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 8mm;
+                }
+                body {
+                    font-family: Arial, Helvetica, sans-serif;
+                    margin: 0;
+                    color: #111;
+                    background: #fff;
+                }
+                .report-page {
+                    width: 100%;
+                    min-height: 100vh;
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                }
+                .report-shell {
+                    width: 175mm;
+                    border: 1px solid #222;
+                    padding: 12mm 7mm 8mm;
+                    min-height: 270mm;
+                    box-sizing: border-box;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .report-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    table-layout: fixed;
+                }
+                .report-table tr {
+                    page-break-inside: avoid;
+                }
+                .report-table th,
+                .report-table td {
+                    padding: 3px 2px;
+                    vertical-align: top;
+                    font-size: 13.5px;
+                    line-height: 1.5;
+                    word-wrap: break-word;
+                }
+                .report-table th {
+                    text-align: left;
+                    width: 46%;
+                    font-weight: 700;
+                    letter-spacing: 0.2px;
+                }
+                .report-table td:nth-child(2) {
+                    width: 4%;
+                    text-align: center;
+                    font-weight: 700;
+                }
+                .report-table td:nth-child(3) {
+                    width: 50%;
+                    text-align: left;
+                    white-space: pre-wrap;
+                }
+                .top-table {
+                    margin-bottom: 6px;
+                    border-top: 1px solid #222;
+                    border-bottom: 1px solid #222;
+                    padding-top: 2px;
+                    padding-bottom: 2px;
+                    margin-left: -7mm;
+                    margin-right: -7mm;
+                    width: calc(100% + 14mm);
+                    padding-left: 7mm;
+                    padding-right: 7mm;
+                }
+                .top-table .top-row-label {
+                    padding-left: 30px;
+                }
+                .heading-row th {
+                    text-decoration: underline;
+                    padding-top: 10px;
+                    padding-bottom: 3px;
+                    font-size: 13.5px;
+                }
+                .report-footer {
+                    border-top: 1px solid #222;
+                    margin-top: 14mm;
+                    padding-top: 4px;
+                    font-size: 13.5px;
+                    margin-left: -7mm;
+                    margin-right: -7mm;
+                    width: calc(100% + 14mm);
+                    padding-left: 7mm;
+                    padding-right: 7mm;
+                }
+                .signature-space {
+                    margin-top: 12mm;
+                    height: 20mm;
+                    width: 42mm;
+                    border-bottom: 1px solid #222;
+                }
+                @media print {
+                    body {
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .report-page {
+                        min-height: auto;
+                    }
+                    .report-shell {
+                        margin: 0 auto;
+                        min-height: auto;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            ${contentHtml}
+
+            <script>
+                window.onload = function () {
+                    window.focus();
+                    window.print();
+                };
+            <\/script>
+        </body>
+        </html>
+        `;
+
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+    }
+
+    function escapePrintValue(value) {
+        if (value === undefined || value === null) {
+            return '';
+        }
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // Initialize edit product search with typeahead
     function loadProductsForSearch(callback) {
         $.ajax({
@@ -2003,6 +2310,8 @@
 
     // Function to populate edit form with record data
     function populateEditForm(record) {
+        console.log("abcd", record)
+
         // Store record ID
         $('#editProductTransactionId').val(record.id);
 
@@ -2012,7 +2321,8 @@
         $('#editEpoNumber').val(record.epoNumber || '');
         $('#editDestinationPort').val(record.destinationPort || '');
         $('#editDestinationCountry').val(record.destinationCountry || '');
-
+        $('.editProductTransactionInput[name="type"]').val(record?.type).trigger('change')
+        $('.editProductTransactionInput[name="epoDate"]').val(JSUTIL.getDate(record?.epoDate))
         // Customer
         if (record.customer) {
             $('#editCustomerName').val(record.customer.name || '');
@@ -2101,11 +2411,20 @@
             $('.deletePT').show()
             $('.sendToProduction').show()
         }
+        else if(record.processStatus == "In Production")
+        {
+            $('.saveEditPTPanel').hide();
+            $('.editEditPTPanel').hide();
+            $('.deletePT').hide()
+            $('.sendToProduction').hide()
+            $("#printProductionReqst").show();
+        }
         else {
             $('.saveEditPTPanel').hide();
             $('.editEditPTPanel').hide();
             $('.deletePT').hide()
             $('.sendToProduction').hide()
+            $("#printProductionReqst").hide()
         }
     }
     function populateProductGradeForEdit(productId) {
@@ -2175,23 +2494,46 @@
         }
     }
 
-    // Helper function to convert dd/mm/yyyy to ISO format
-    function toISOZ(dateStr) {
-        if (!dateStr) return null;
+function toISOZ(dateStr) {
+    if (!dateStr) return null;
 
-        try {
-            const [day, month, year] = dateStr.split('/');
-            const date = new Date(Date.UTC(year, month - 1, day));
-            return date.toISOString().replace('.000', '');
-        } catch (e) {
-            console.error('Error converting date:', e);
-            return null;
+    try {
+        let day, month, year;
+
+        if (dateStr.includes('/')) {
+            // dd/mm/yyyy
+            [day, month, year] = dateStr.split('/');
+        } else if (dateStr.includes('-')) {
+            let parts = dateStr.split('-');
+
+            if (parts[0].length === 2 && parts[2].length === 2) {
+                // dd-mm-yy ✅ YOUR CASE
+                day = parts[0];
+                month = parts[1];
+                year = '20' + parts[2];
+            } else if (parts[0].length === 4) {
+                // yyyy-mm-dd
+                [year, month, day] = parts;
+            }
         }
+
+        const date = new Date(Date.UTC(year, month - 1, day));
+
+        if (isNaN(date)) throw new Error('Invalid Date');
+
+        return date.toISOString().replace('.000', '');
+
+    } catch (e) {
+        console.error('Error converting date:', e);
+        return null;
     }
-    function disableEditForm() {
+}   
+
+function disableEditForm() {
         $('#editProductionRequestForm')
             .find('input, textarea, select')
-            .prop('disabled', true);
+            .prop('disabled', true)
+            .prop('readonly',true)
 
         // Keep number always disabled
         $('#editNumber').prop('disabled', true);
@@ -2202,7 +2544,8 @@
     function enableEditForm() {
         $('#editProductionRequestForm')
             .find('input, textarea, select')
-            .prop('disabled', false);
+            .prop('disabled', false)
+            .prop('readonly',false)
 
         // Still keep number + UOM protected
         $('#editNumber').prop('disabled', true);

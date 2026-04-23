@@ -241,6 +241,7 @@
                                 data-lucide="x"></i> Close</button>
                         <button type="button" class="btn btn-sm btn-default CloseBtnEdit" style="display: none;"><i
                                 data-lucide="x"></i> Close</button>
+                                 <button type="button" class="btn btn-sm btn-default viewHistory"> <i data-lucide="scroll"></i> View History</button>
                         <button type="button" class="btn btn-sm btn-secondary approveRejectBtn" style="display: none;"><i
                                 data-lucide="check-square"></i> Approve / Reject</button>
                         <!-- <button type="button" class="btn btn-sm btn-default printPoBtn" style="display: none;"><i
@@ -511,6 +512,9 @@
     // allPoPanel.js    Start
     $(document).ready(function () {
         handlePanelVisibility();
+        $('.viewHistory').on('click',function(){
+            JSUTIL.showProcessActivityPanel(currentRecordId,'#EditPO','History of '+orderObj.number)
+        })
     });
 
 
@@ -1211,8 +1215,16 @@
             body: 'Rejected'
         })
         .then(function (res) {
-            if (!res.ok) throw new Error('Status update failed: ' + res.status);
-            location.reload();
+            // location.reload();
+            var historyObj = {
+                name:'Purchase Order is Rejected',
+                startDate:new Date(),
+                performedBy:{id:FOX.employeeId},
+                parentRecordId:currentRecordId
+            }
+            JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                location.reload()
+            })
         })
         .catch(function (err) {
             console.error('Reject PATCH failed:', err);
@@ -1278,7 +1290,7 @@
         // OLD: $('#custAddress').text(orderObj.vendor.name);
         $('#custAddress').text(orderObj.vendor ? orderObj.vendor.name : '');
         $('#manuAddress').text(orderObj.manufacturer ? orderObj.manufacturer.name : '');
-        $('#purchaseNumber').text(orderObj.number);
+        $('#purchaseNumber').text(orderObj.number + ' :- ' + orderObj?.employee?.dept?.name);
         $('#orderDate').val(JSUTIL.getDate(orderObj.orderDate));
         $('#editDeliveryDate').val(orderObj.deliveryDate ? JSUTIL.getDate(orderObj.deliveryDate) : '');
         $('#editQuotationNumber').val(orderObj.quoteNumber || '');
@@ -1423,7 +1435,16 @@
         JSUTIL.callAJAXPost(cancelUrl, JSON.stringify({}), function (response) {
             console.log(response);
             JSUTIL.stopSpinner();
-            location.reload();
+            // location.reload();
+            var historyObj = {
+                name:'Purchase Order is cancelled',
+                startDate:new Date(),
+                parentRecordId:currentRecordId,
+                performedBy:{id:FOX.employeeId}
+            }
+            JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                location.reload()
+            })
         });
     });
     function callbackAfterEditRequest(response) {
@@ -1432,7 +1453,16 @@
     }
     function submitForApprovalCallback(response) {
         console.log(response);
-        location.reload();
+        // location.reload();
+        var historyObj = {
+            name:'Purchase Order sent to Business Head Review',
+            parentRecordId:currentRecordId,
+            startDate:new Date(),
+            performedBy:{id:FOX.employeeId}
+        }
+        JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+            location.reload()
+        })
     }
     function renderAppliedTax() {
         var appliedTaxArray = [];

@@ -5,6 +5,8 @@
 <script src="pages/lib/dataTables.js"></script>
 <script src="pages/lib/lucide.min.js"></script>
 <script src="pages/lib/bootstrap3-typeahead.min.js"></script>
+<link rel="stylesheet" href="pages/lib/choices.min.css" />
+<script src="pages/lib/choices.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
 <style>
     .btn .lucide {
@@ -30,9 +32,27 @@
         margin-top: 2px !important;
         box-sizing: border-box;
     }
+
+    /* Tab pane visibility */
+    .tab-pane { display: none; }
+    /* Fix typeahead dropdown inside table */
+    #capacityTable td { position: relative; overflow: visible; }
+    #capacityTable .dropdown-menu { position: absolute; top: 100%; left: 0; z-index: 9999; min-width: 250px; }
+    .tab-pane.active { display: block; }
+    .nav-tabs > li > a { cursor: pointer; color: #333; padding: 8px 18px; }
+    .nav-tabs > li > a:hover { color: #333; background: #f5f5f5; }
+    .nav-tabs > li.active > a,
+    .nav-tabs > li.active > a:hover,
+    .nav-tabs > li.active > a:focus {
+        color: #333;
+        background: #fff;
+        border: 1px solid #e7eaec;
+        border-bottom-color: #fff;
+        font-weight: 600;
+    }
+    .tab-pane .ibox-tools { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 </style>
 <!-- editDocumentRequest.html start -->
-<link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
 <style>
     .progress-container {
         position: relative;
@@ -265,6 +285,7 @@
         line-height: 1.4;
     }
 </style>
+<div class="qa-white-panel">
 <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display:none;">
     <div class="col-lg-12">
         <div class="progress-container">
@@ -287,11 +308,9 @@
                     <button type="button" class="btn btn-secondary btn-sm documentSaveAndUpdateBtn"
                         style="display: none;"><i data-lucide="check"></i> Save </button>
                     <button type="button" class="btn btn-secondary btn-sm recordBtnSendApproval" style="display: none;"><i
-                            data-lucide="check"></i> Submit For Approval</button>
+                            data-lucide="check"></i> Sign &amp; Send For Review</button>
                     <button type="button" class="btn btn-secondary btn-sm recordApprovalBtn" style="display: none;"><i
                             data-lucide="check"></i> Submit For Review</button>
-                    <button type="button" class="btn btn-secondary btn-sm recordBtnForApproval" style="display: none;"><i
-                            data-lucide="check"></i> Submit For Signing</button>
                     <button type="button" class="btn btn-secondary btn-sm" id="uploadDocumentBtn"
                         style="display: none;"><i data-lucide="upload"></i> Upload Document </button>
                     <button type="button" class="btn btn-secondary btn-sm openDocumentBtn" style="display: none;"><i
@@ -302,6 +321,8 @@
                             data-lucide="check"></i> QA Signing </button>
                     <!-- <button type="button" class="btn btn-secondary btn-sm recordIssuanceBtn" style="display: none;"><i
                             data-lucide="check"></i> Make Effective</button> -->
+                    <button type="button" class="btn btn-secondary btn-sm recordIssuanceBtn" style="display: none;"><i
+                            data-lucide="check"></i> Effective</button>
                     <button type="button" class="btn btn-secondary btn-sm recordAcceptBtn" style="display: none;"><i
                             data-lucide="check"></i> Accept</button>
                     <!-- <button type="button" class="btn btn-secondary btn-sm generateNumber" style="display: none;"><i 
@@ -317,6 +338,22 @@
             <div class="ibox-content">
                 <div class="alert alert-danger" id="pageErrorPanel" style="display: none;"></div>
                 <div class="alert alert-danger" id="pageErrorPanelIssaunce" style="display: none;"></div>
+                <!-- Full-page spinner overlay -->
+                <div id="drSpinnerOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.75);z-index:99999;align-items:center;justify-content:center;flex-direction:column;">
+                    <div style="border:5px solid #f0f0f0;border-top:5px solid #337ab7;border-radius:50%;width:52px;height:52px;animation:drSpin 0.9s linear infinite;"></div>
+                    <p style="margin-top:14px;font-weight:600;color:#337ab7;font-size:14px;">Processing, please wait...</p>
+                </div>
+                <style>@keyframes drSpin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>
+                <div id="effectiveDatePanel" style="display:none; margin-bottom:15px;">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label><strong>Effective Date &amp; Time</strong></label>
+                                <input type="datetime-local" class="form-control" id="effectiveDateInput">
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- <form id="editableFieldsForm" class="editable-form" style="margin-bottom: 5px;display: none;">
                     <div class="editable-row">
                         <div class="editable-field">
@@ -360,7 +397,7 @@
                             <div class="form-group">
                                 <label>Type</label>
                                 <select class="select2 form-control editRecordInput" name="documentType.id"
-                                    id="editType" disabled>
+                                    id="editType">
                                     <option value="">--none--</option>
                                 </select>
                             </div>
@@ -413,80 +450,75 @@
                 </form>
                 <hr>
                 <div class="tabs-container">
-                    <ul class="nav nav-tabs">
+                    <ul class="nav nav-tabs" id="editDocTabs">
                         <li class="active">
-                            <a data-toggle="tab" href="#review" aria-expanded="false">Reviewers</a>
+                            <a href="#review" class="doc-tab-link" data-tab="review">Reviewers</a>
                         </li>
                         <li>
-                            <a data-toggle="tab" id="documentShow" href="#Uploads" aria-expanded="false">Annexures</a>
+                            <a href="#Uploads" class="doc-tab-link" id="documentShow" data-tab="Uploads">Annexures</a>
                         </li>
-                        <li><a data-toggle="tab" href="#history" aria-expanded="false">History</a></li>
+                        <li>
+                            <a href="#history" class="doc-tab-link" data-tab="history">History</a>
+                        </li>
                     </ul>
-                    <div class="tab-content">
-                        <div id="review" class="tab-pane active">
-                            <div class="panel-body">
-                                <div class="ibox-tools">
-                                    <button type="button" class="btn btn-default btn-sm labControlBtn"
-                                        id="addScheduleBtn" style="margin-right: 5px;display: none;" disabled><i
-                                            data-lucide="plus"></i> Add Reviewers </button>
-                                    <button type="button" class="btn btn-default btn-sm labControlBtn"
-                                        id="editScheduleBtn" style="margin-right: 5px;display: none;"><i
-                                            data-lucide="pencil"></i> Edit </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" id="saveScheduleBtn"
-                                        style="margin-right: 5px;display: none;"><i data-lucide="check"></i> Save
-                                    </button>
-                                    <button type="button" class="btn btn-danger btn-sm labControlBtn"
-                                        id="deleteScheduleBtn" style="display: none;"><i data-lucide="trash"></i> Delete
-                                        Reviewers </button>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th></th>
-                                                <th>Reviewer</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="capacityTable"></tbody>
-                                    </table>
-                                </div>
+                    <div class="tab-content" style="border:1px solid #e7eaec; border-top:none; background:#fff;">
+                        <div id="review" class="tab-pane active" style="padding:20px;">
+                            <div class="ibox-tools" style="margin-bottom:10px;">
+                                <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                    id="addScheduleBtn" style="margin-right: 5px;display: none;" disabled><i
+                                        data-lucide="plus"></i> Add Reviewers </button>
+                                <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                    id="editScheduleBtn" style="margin-right: 5px;display: none;"><i
+                                        data-lucide="pencil"></i> Edit </button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="saveScheduleBtn"
+                                    style="margin-right: 5px;display: none;"><i data-lucide="check"></i> Save
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm labControlBtn"
+                                    id="deleteScheduleBtn" style="display: none;"><i data-lucide="trash"></i> Delete
+                                    Reviewers </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Reviewer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="capacityTable"></tbody>
+                                </table>
                             </div>
                         </div>
-                        <div id="Uploads" class="tab-pane">
-                            <div class="panel-body">
-                                <div class="ibox-tools">
-                                    <button type="button" class="btn btn-default btn-sm labControlBtn"
-                                        id="uploadDocument"><i data-lucide="upload"></i> Upload Annexures</button>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th></th>
-                                                <th>Name</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="allDocumentsTable"></tbody>
-                                    </table>
-                                </div>
+                        <div id="Uploads" class="tab-pane" style="padding:20px;">
+                            <div class="ibox-tools" style="margin-bottom:10px;">
+                                <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                    id="uploadDocument"><i data-lucide="upload"></i> Upload Annexures</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th>Name</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="allDocumentsTable"></tbody>
+                                </table>
                             </div>
                         </div>
-                        <div id="history" class="tab-pane">
-                            <div class="panel-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Date</th>
-                                                <!-- <th>Performed By</th> -->
-                                                <th>Notes</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="allHistoryTable"></tbody>
-                                    </table>
-                                </div>
+                        <div id="history" class="tab-pane" style="padding:20px;">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Date</th>
+                                            <th>Notes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="allHistoryTable"></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -515,7 +547,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">No, Cancel</button>
                 <button type="button" class="btn btn-secondary" id="approvalModelSaveBtn">Yes, Submit</button>
             </div>
         </div>
@@ -540,48 +572,32 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">No, Cancel</button>
                 <button type="button" class="btn btn-secondary" id="approvalSaveBtn">Yes, Submit</button>
             </div>
         </div>
     </div>
 </div>
-<div class="modal inmodal fade" id="uploadFileModel" tabindex="-1" role="dialog" aria-hidden="true"
-    style="display: none;">
+<div class="modal inmodal fade" id="uploadFileModel" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-md">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="font-bold">Upload File in Folder</h3>
+                <h4 class="modal-title">Upload Document</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form role="form" name="lnItemObj" action="#" method="post" id="fileForm">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="fileinput fileinput-new input-group" data-provides="fileinput"
-                                style="margin-top: 24px;">
-                                <div class="form-control" data-trigger="fileinput" id="fileNameText">
-                                    <i class="glyphicon glyphicon-file fileinput-exists"></i>
-                                    <span class="fileinput-filename"></span>
-                                </div>
-                                <span class="input-group-addon btn btn-default btn-file">
-                                    <span class="fileinput-new">Select File</span>
-                                    <span class="fileinput-exists">Change</span>
-                                    <input type="file" name="File" id="fileInput"
-                                        accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-                                </span>
-                                <a href="#" class="input-group-addon btn btn-default fileinput-exists"
-                                    data-dismiss="fileinput">Remove</a>
-                            </div>
-                        </div>
-                        <div class="col-sm-12">
-                            <button type="button" class="btn btn-default btn-sm close-box showRequestOnCancel"
-                                data-dismiss="modal" id="uploadFilePanel_cancelBtn"><i data-lucide="x"></i> Cancel
-                            </button>
-                            <button type="button" class="btn btn-secondary btn-sm" id="processBtn2"><i
-                                    data-lucide="upload"></i> Upload </button>
-                        </div>
-                    </div>
-                </form>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Select File</label>
+                    <input type="file" class="form-control" id="mainDocFileInput"
+                        accept=".doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx">
+                    <div id="mainDocFileName" class="form-text text-muted mt-1"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="processBtn2">
+                    <i data-lucide="upload"></i> Upload
+                </button>
             </div>
         </div>
     </div>
@@ -589,66 +605,33 @@
 <div class="modal fade inmodal" id="uploadModel" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-md">
         <div class="modal-content">
-            <div class="col-lg-12 uploadDocs">
-                <div class="ibox float-e-margins">
-                    <div class="ibox-title">
-                        <h5 id="uploadFileTitle">#</h5>
-                    </div>
-                    <div class="ibox-content uploadSection">
-                        <form role="form" name="lnItemObj" action="#" method="post" id="fileFormAction"
-                            enctype="multipart/form-data">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="fileinput fileinput-new input-group" data-provides="fileinput"
-                                        style="margin-top: 24px;">
-                                        <div class="form-control" data-trigger="fileinput" id="fileNameTextAction">
-                                            <i class="glyphicon glyphicon-file fileinput-exists"></i>
-                                            <span class="fileinput-filename"></span>
-                                        </div>
-                                        <span class="input-group-addon btn btn-default btn-file">
-                                            <span class="fileinput-new">Select File</span>
-                                            <span class="fileinput-exists">Change</span>
-                                            <input type="file" name="File" id="fileInputAction">
-                                        </span>
-                                        <a href="#" class="input-group-addon btn btn-default fileinput-exists"
-                                            data-dismiss="fileinput">Remove</a>
-                                    </div>
-                                </div>
-                                <!-- <div class="col-lg-6"></div> -->
-                                <div class="col-sm-12 text-left">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">No, Cancel</button>
-                                    <button type="button" class="btn btn-secondary btn-sm" id="processBtn1"><i
-                                            data-lucide="upload"></i> Upload</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+            <div class="modal-header">
+                <h4 class="modal-title" id="uploadFileTitle">Upload File</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Select File</label>
+                    <input type="file" class="form-control" id="fileInputAction">
+                    <div id="fileNameTextAction" class="form-text text-muted mt-1"></div>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th style="width:15%;"></th>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allActionDocumentsTable"></tbody>
+                    </table>
                 </div>
             </div>
-
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="ibox">
-                            <div class="ibox-title">
-                                <h5>Uploaded Documents</h5>
-                            </div>
-                            <div class="ibox-content">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 15%;"></th>
-                                                <th>Name</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="allActionDocumentsTable"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="processBtn1">
+                    <i data-lucide="upload"></i> Upload
+                </button>
             </div>
         </div>
     </div>
@@ -670,23 +653,19 @@
                         </div>
                         <div class="form-group">
                             <label>Password</label><i style="margin-left:5px;" class="fa-solid fa-lock"></i>
+                            <input type="password" style="display:none;" aria-hidden="true">
                             <input type="password" class="form-control" id="eSignReportPasswordField"
-                                autocomplete="new-password" />
+                                autocomplete="off" readonly
+                                onfocus="this.removeAttribute('readonly')" />
                         </div>
                     </div>
                     <h5 class="font-bold" style="text-align: center;"> I understand that electronic signatures are the
                         same as handwritten signatures.</h5>
                 </div>
                 <div class="row" id="addESignatureDetailsRow" style="display: none;">
-                    <div class="col-sm-6">
-                        <div class="form-group">
-                            <label>Location</label>
-                            <input type="text" class="form-control eSignReportInput" name="location" id="location" />
-                        </div>
-                    </div>
                     <div class="col-sm-12">
                         <div class="form-group">
-                            <label>Reason</label>
+                            <label>Remarks</label>
                             <textarea rows="5" class="form-control eSignReportInput" name="reason"
                                 id="reason"></textarea>
                         </div>
@@ -697,14 +676,14 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-secondary" id="completeVerificationBtn">Step 2: Complete
-                    Signing</button>
-                <button type="button" class="btn btn-secondary" id="completeSigningBtn"
-                    style="display: none;">Approve</button>
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" id="completeVerificationBtn">Verify Password</button>
+                <button type="button" class="btn btn-danger" id="qaRejectBtn" style="display:none;">Reject</button>
+                <button type="button" class="btn btn-secondary" id="completeSigningBtn" style="display:none;">Send For Approval</button>
             </div>
         </div>
     </div>
+</div>
 </div>
 <!-- editDocumentRequest.html end -->
 
@@ -764,119 +743,52 @@
     function initReviewerSearch($input) {
         if (!$input || !$input.length) return;
 
-        const typeaheadOpts = {
-            source: [],
-            displayText: function (item) {
-                if (typeof item === 'string') return item;
-                const name = getEmployeeDisplayName(item);
-                const dept = item.department && item.department.name ? ` (${item.department.name})` : '';
-                return `${name}${dept}`;
-            },
-            updater: function (selection) {
-                const name = typeaheadOpts.displayText(selection);
-                const id = selection.id || selection.employeeId || '';
-                $input.closest('tr').find('.reviewerIdInput').val(id);
-                return name;
-            }
-        };
-
-        // Avoid re-binding if already initialized
-        if (!$input.data('typeahead')) {
-            $input.typeahead(typeaheadOpts);
+        if (typeof $input.typeahead === 'function') {
+            $input.typeahead('destroy');
         }
 
-        $input.off('keyup.reviewer').on('keyup.reviewer', function () {
-            const searchParam = $(this).val();
-            if (searchParam.length < 3) return;
-            const getUrl = JSUTIL.getUrl('/search/employee?searchParam=' + encodeURIComponent(searchParam));
-            JSUTIL.callAJAXGet(getUrl, function (response) {
-                if (!response || !Array.isArray(response) || response.length === 0) return;
-                const inst = $input.data('typeahead');
-                if (inst) {
-                    inst.source = response;
-                    inst.lookup();
+        $input.typeahead({
+            source: function (query, process) {
+                var trimmedQuery = (query || '').trim();
+                if (trimmedQuery.length < 3) {
+                    $input.data('mappedList', []);
+                    process([]);
+                    return;
                 }
-            });
+                $.ajax({
+                    url: JSUTIL.getUrl('/api/employees/search?name=' + encodeURIComponent(trimmedQuery)),
+                    type: 'GET',
+                    success: function (response) {
+                        var mapped = (Array.isArray(response) ? response : []).map(function (emp) {
+                            var id = emp.id || emp.id || emp.employeeId || '';
+                            var name = getEmployeeDisplayName(emp);
+                            var dept = emp.department && emp.department.name ? ' (' + emp.department.name + ')' : '';
+                            return { id: id, text: name + dept, raw: emp };
+                        });
+                        $input.data('mappedList', mapped);
+                        process(mapped.map(function (item) { return item.text; }));
+                    }
+                });
+            },
+            afterSelect: function (selectedText) {
+                var mapped = $input.data('mappedList') || [];
+                var chosen = mapped.find(function (item) { return item.text === selectedText; });
+                if (chosen) {
+                    $input.closest('tr').find('.reviewerIdInput').val(chosen.id);
+                }
+            }
         });
     }
 
-    function foActionUploadFile(panelTitle, actionUrl, successCallBack) {
-        $('#uploadFileTitle').html(panelTitle);
-        $('#fileFormAction').attr('action', actionUrl);
-        userDefineSuccessCallBack = successCallBack;
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-        $('#fileInputAction').on('change', function (e) {
-            $('#fileNameTextAction').text(e.target.files[0].name);
-            multipartFile = e.target.files[0];
-        });
-        $(document).on('click', '#processBtn1', function () {
-            $('#loadingError').hide();
-            $('#importResults').hide();
-            $('#insertedTable').empty();
-            var formData = new FormData();
-            formData.append('File', multipartFile);
-            var callback1 = userDefineSuccessCallBack || defaultSuccessCallback;
-            JSUTIL.callAJAXFilePost($('#fileFormAction').attr('action'), formData, callback1, null);
-        });
-    });
-    function defaultSuccessCallback(response) {
-        console.log(response);
-        location.reload();
-    }
-    function foUploadFile(panelTitle, actionUrl, successCallBack) {
-        $('#uploadFileTitle').text(panelTitle);
-        $('#fileForm').attr('action', actionUrl);
-        userDefineSuccessCallBack = successCallBack;
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-        $('#fileInput').on('change', function (e) {
-            $('#fileNameText').text(e.target.files[0].name);
-            multipartFile = e.target.files[0];
-        });
-        $('#processBtn2').on('click', function () {
-            $('#loadingError').hide();
-            $('#importResults').hide();
-            $('#insertedTable').empty();
-            var formData = new FormData();
-            formData.append('file', multipartFile);
-            JSUTIL.callAJAXFilePost(JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + folderId), formData, callback, null);
-        });
-    });
 
-
-    function callback(response) {
-        console.log(response);
-        let parsedResponse;
-        try {
-            parsedResponse = JSON.parse(response);
-        } catch (e) {
-            console.error('Error parsing response:', e);
-            return;
-        }
-
-        if (parsedResponse && parsedResponse.data) {
-            fileId = String(parsedResponse.data);
-            console.log(fileId);
-            const effectiveSend = {
-                extFileId: fileId
-            };
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function (response) {
-                console.log(response);
-                location.reload();
-            });
-        } else {
-            console.error('Invalid response data.');
-        }
-    }
-    let workflowSteps = [];
-
-    var postDocUrl3 = JSUTIL.getUrl('/process/steps?dataObjectName=QualityDocumentRequest');
-    JSUTIL.callAJAXGet(postDocUrl3, function (response) {
-        if (response && Array.isArray(response)) {
-            workflowSteps = response;
-        }
-    });
+    let workflowSteps = [
+        { Sequence: 1, StepStatus: 'Initiation' },
+        { Sequence: 2, StepStatus: 'Review' },
+        { Sequence: 3, StepStatus: 'QA' },
+        { Sequence: 4, StepStatus: 'Training' },
+        { Sequence: 5, StepStatus: 'Training Complete' },
+        { Sequence: 6, StepStatus: 'Effective' }
+    ];
 
     function generateProgressTracker(workflowSteps, currentStatus) {
         const stepsContainer = $('#process-steps');
@@ -984,8 +896,7 @@
         }, 100);
     }
 
-    $(document).ready(function () {
-        $('#allRecordPanel tbody').on('click', '.selectRecordBtn', function () {
+    $(document).on('click', '#allRecordPanel tbody .selectRecordBtn', function () {
             $('.recordEffectiveBtn').hide();
             $('.recordEditBtn').hide();
             $('.documentSaveAndUpdateBtn').hide();
@@ -993,29 +904,39 @@
             $('#deleteScheduleBtn').prop('disabled', true);
             $('#deleteCriticalBtn').prop('disabled', true);
             $('#deleteDistributionBtn').prop('disabled', true);
+            $('#allRecordPanel').hide();
+            $('#editRecordPanel').show();
+            $('#editType').prop('disabled', true);
+            // Reset to first tab
+            $('#editDocTabs li').removeClass('active');
+            $('#editDocTabs li:first').addClass('active');
+            $('.tab-content .tab-pane').removeClass('active in');
+            $('#review').addClass('active in');
             currentRecordId = $(this).attr('id');
             $.each(recordList, function (j, val2) {
                 if (currentRecordId.indexOf(val2.id) >= 0) {
                     currentRecordData = val2;
                     fileId = val2.extFileId;
-                    documentTypeCode = val2.documentType.code
+                    documentTypeCode = val2.documentType ? val2.documentType.code : '';
                     folderId = val2.extFolderId;
                     statusOfRecord = val2.processStatus;
                     purposeOfRecord = val2.purpose;
                     selectedDepartment = val2.department;
-                    documentId1 = val2.document.id;
-                    typeOfDocument = val2.documentType.name;
+                    documentId1 = val2.document ? val2.document.id : '';
+                    typeOfDocument = val2.documentType ? val2.documentType.name : '';
                     if (typeOfDocument === 'Format' && purposeOfRecord === 'New') {
                         $('.other-doc-search1').show();
-                        $('.editRecordInput[name="parentDocument.id"]').parent().find(".selectSearchInputAutoComplete").val(val2.parentDocument.number + ' - ' + val2.parentDocument.name);
-
+                        if (val2.parentDocument) {
+                            $('.editRecordInput[name="parentDocument.id"]').parent().find(".selectSearchInputAutoComplete").val(val2.parentDocument.number + ' - ' + val2.parentDocument.name);
+                        }
                     } else {
                         $('.other-doc-search1').hide();
                     }
                     trainingStatus = val2.trainingRequired;
-                    requesterId = val2.requester.id;
+                    requesterId = val2.requester ? val2.requester.id : '';
                     documentNumber = val2.number;
-                    documentTypeId = val2.documentType.id;
+                    $('#editRecordTitle').text(val2.number || '');
+                    documentTypeId = val2.documentType ? val2.documentType.id : '';
                     generateProgressTracker(workflowSteps, val2.processStatus);
                     //updateProcessFlow(val2.processStatus);
                     if (val2.purpose === 'New') {
@@ -1071,6 +992,8 @@
                     $('.editRecordInput[name="trainingRequired"]').val(val2.trainingRequired);
                     $('.editRecordInput[name="trainingRequired"]').parent().find('.select2-selection__rendered').text(val2.trainingRequired);
                     $('#hiddenRequestId').val(val2.id);
+                    $('.editRecordInput[name="documentVersion"]').val(val2.documentVersion || '');
+                    $('.editRecordInput[name="reason"]').val(val2.reason || '');
                     $('#TrainingDate').val(JSUTIL.getDate(val2.trainingDate));
                     $('#TrainingRemarks').val(val2.trainingRemarks);
                     if (val2.processStatus === 'Effective') {
@@ -1084,38 +1007,14 @@
                 }
             });
             $('#hiddenRecordId').val(currentRecordId);
-            var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-            JSUTIL.callAJAXGet(postDocUrl2, callbackAfterGetData);
-            const departmentParameter = {
-                fields: "StartDate;Name;Code",
-                conditions: [],
-                logic: ""
-            };
-            var ansUrl = JSUTIL.getUrl('/data/Department/list');
-            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(departmentParameter), callbackAfterEditDepartment);
-            const activityParameter = {
-                fields: "Description;Name;Type",
-                conditions: [],
-                logic: ""
-            };
-            var ansUrl = JSUTIL.getUrl('/data/ActivityFeed/list');
-            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(activityParameter), callbackAfterGetActivity);
-            var ansUrl = JSUTIL.getUrl('/api/quality-document-type');
-            JSUTIL.callAJAXGet(ansUrl, callbackAfterGetEditType);
-            const criticalParameter = {
-                fields: "Name;Number;Requester.Id;ProcessStatus;ExtFileId;Department;RequestDate;ApprovalDate;Reviewer.Id;IsActive",
-                conditions: [`DocumentType.Id = ${documentTypeId}`, `IsActive='Active'`],
-                logic: "{0} AND {1}"
-            };
-            var ansUrl = JSUTIL.getUrl('/data/QualityDocumentTemplate/list');
-            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(criticalParameter), callbackAfterGetCritical);
-            const criticalParameter1 = {
-                fields: "DocumentRequest.Id;Name;ExtFileId;CreatedDate;ProcessStatus",
-                conditions: [`DocumentRequest.Id = ${currentRecordId}`],
-                logic: "{0}"
-            };
-            var ansUrl = JSUTIL.getUrl('/data/QualityDocumentAnnexure/list');
-            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(criticalParameter1), callbackAfterGetDocuments);
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), callbackAfterGetData);
+            JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-type'), callbackAfterGetEditType);
+            JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentAnnexure/list'), JSON.stringify({}), function (allAnnexures) {
+                var filtered = (allAnnexures || []).filter(function (a) {
+                    return String(a.documentRequest && a.documentRequest.id) === String(currentRecordId);
+                });
+                callbackAfterGetDocuments(filtered);
+            });
 
         });
         // editDocumentRequest.js
@@ -1143,12 +1042,6 @@
                 $('input[name="pagesAmended"]').closest('.col-sm-6').hide();
             }
         });
-        $(document).on('click', '#uploadDocument', function () {
-            $('#editRecordPanel').hide();
-            $('#vendorUploadFilesPanel').show();
-            var postUrl = JSUTIL.getUrl('/onedrive/upload_file_in_folder?folderId=' + companySettingMap.annexures);
-            foVendorUploadFile('Upload Documents', postUrl, callbackAfterDocumentUpload);
-        });
         // Use event delegation - Cancel button lives in a separately loaded HTML fragment
         $(document).on('click', '.showRequestOnCancel', function () {
             $('#vendorUploadFilesPanel').hide();
@@ -1161,6 +1054,7 @@
             } else {
                 $('.other-doc-search1').hide();
             }
+            updateEditPurposeOptions($('#editType').data('typeList') || []);
         });
         $('#editScheduleBtn').on('click', function () {
             $(this).hide();
@@ -1175,7 +1069,7 @@
         $('#addScheduleBtn').on('click', function () {
             var innerHtml = '<tr class="newItemEntry" name="">' +
                 '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" name="" type="checkbox"><label></label></td>' +
-                '<td>' +
+                '<td style="position:relative;overflow:visible;">' +
                 '<input type="text" class="typeahead_3 form-control newItemInput reviewerSearchInput selectSearchInputAutoComplete" placeholder="search.." aria-description="search/employee" autocomplete="off">' +
                 '<input type="hidden" class="reviewerIdInput newItemInput selectSearchInputAutoCompleteId" name="reviewer.id">' +
                 '</td>' +
@@ -1206,8 +1100,23 @@
 
             console.log(items);
 
-            const postUrl = '/data/QualityDocumentRequestReviewer/upsert_multiple';
-            JSUTIL.callAJAXPost(postUrl, JSON.stringify(items), callbackAfterEditResponse);
+            var pending = items.length;
+            if (pending === 0) { callbackAfterEditResponse(null); return; }
+            items.forEach(function (item) {
+                if (item.id) {
+                    JSUTIL.callAJAXPost(
+                        JSUTIL.getUrl('/api/quality-document-request-reviewers/update/' + item.id),
+                        JSON.stringify(item),
+                        function () { pending--; if (pending <= 0) callbackAfterEditResponse(null); }
+                    );
+                } else {
+                    JSUTIL.callAJAXPost(
+                        JSUTIL.getUrl('/api/quality-document-request-reviewers/create'),
+                        JSON.stringify(item),
+                        function () { pending--; if (pending <= 0) callbackAfterEditResponse(null); }
+                    );
+                }
+            });
         });
         $('#deleteScheduleBtn').on('click', function () {
             let jsObj = [];
@@ -1223,70 +1132,121 @@
             });
             console.log(jsObj);
             if (jsObj.length > 0) {
-                JSUTIL.callAJAXPost('/data/QualityDocumentRequestReviewer/delete_multiple', JSON.stringify(jsObj), callbackAfterEditResponse);
+                var pending = jsObj.length;
+                jsObj.forEach(function (id) {
+                    JSUTIL.callAJAXPost(
+                        JSUTIL.getUrl('/api/quality-document-request-reviewers/delete'),
+                        JSON.stringify({ id: id }),
+                        function () { pending--; if (pending <= 0) callbackAfterEditResponse(null); }
+                    );
+                });
             }
         });
         $('#capacityTable').on('change', '.deleteItemCreatedEntryRow1', function () {
             toggleDeleteButton('#capacityTable .deleteItemCreatedEntryRow1', '#deleteScheduleBtn');
         });
         $('.documentSaveAndUpdateBtn').on('click', function () {
-            var editDocumentPayload = buildFormDataJSON('editRecordInput');
-            var postUrl = ('/data/QualityDocumentRequest/update/' + currentRecordId);
-            JSUTIL.callAJAXPost(postUrl, JSON.stringify(editDocumentPayload), callbackSuccessDocumentUpdate);
+            var payload = {};
+
+            // documentType.id
+            var typeId = $('#editType').val();
+            if (typeId) payload.documentType = { id: Number(typeId) };
+
+            // document.id
+            var docId = $('.editRecordInput[name="document.id"]').val();
+            if (docId) payload.document = { id: Number(docId) };
+
+            // purpose
+            var purpose = $('.editRecordInput[name="purpose"]').val();
+            if (purpose) payload.purpose = purpose;
+
+            // documentName
+            var documentName = $('.editRecordInput[name="documentName"]').val();
+            if (documentName) payload.documentName = documentName;
+
+            // documentVersion — always read but never editable
+            var documentVersion = $('.editRecordInput[name="documentVersion"]').val();
+            if (documentVersion) payload.documentVersion = documentVersion;
+
+            // reason
+            var reason = $('.editRecordInput[name="reason"]').val();
+            if (reason) payload.reason = reason;
+
+            // id
+            var recId = $('#hiddenRecordId').val();
+            if (recId) payload.id = Number(recId);
+
+            var postUrl = '/data/QualityDocumentRequest/update/' + currentRecordId;
+            JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), callbackSuccessDocumentUpdate);
         });
         $('.recordEditBtn').on('click', function () {
             $('.documentSaveAndUpdateBtn').show();
             $('.recordApprovalBtn').hide();
             $('.recordEffectiveBtn').hide();
+            // Enable all editRecordInputs except documentVersion which stays readonly always
+            $('.editRecordInput').prop('disabled', false).prop('readonly', false);
             $('input[name="documentVersion"]').prop('readonly', true);
         });
         $('.editRecordCancelBtn').on('click', function () {
-            $('.editRecordInput').prop('disabled', true);
-            $('.editRecordInput').prop('readonly', true);
+            $('.editRecordInput').prop('disabled', true).prop('readonly', true);
+            $('#editType').prop('disabled', true);
+            $('.documentSaveAndUpdateBtn').hide();
+            $('#editRecordPanel').hide();
+            $('#allRecordPanel').show();
+        });
+        // Manual tab switching for edit panel tabs
+        $(document).on('click', '#editDocTabs .doc-tab-link', function (e) {
+            e.preventDefault();
+            var tabId = $(this).data('tab');
+            $('#editDocTabs li').removeClass('active');
+            $(this).closest('li').addClass('active');
+            $('.tab-content .tab-pane').removeClass('active in');
+            $('#' + tabId).addClass('active in');
         });
         $('.showRequestOnCancel').on('click', function () {
             $('#foUploadFilesPanel').hide();
             $('#editRecordPanel').show();
         });
         $('.recordApprovalBtn').on('click', function () {
-            $('#qauapprovalModel').modal('show');
+            new bootstrap.Modal(document.getElementById('qauapprovalModel')).show();
         });
         $('.recordBtnSendApproval').on('click', function () {
-            $('#approvalModel').modal('show');
-        });
-        $('.recordBtnForApproval').on('click', function () {
+            // Author signs directly — open esign modal
             currentSigningFlowType = 'author';
             $('#eSignReportPasswordField').val('');
-            $('#location').val('');
             $('#reason').val('');
             $('#eSignReportPasswordFieldRow').show();
             $('#completeVerificationBtn').show();
             $('#addESignatureDetailsRow').hide();
             $('#completeSigningBtn').hide();
-            $('#esignModal').modal('show');
-            $('#eSignUserName').val(employeeUsername);
+            $('#qaRejectBtn').hide();
+            new bootstrap.Modal(document.getElementById('esignModal')).show();
+            $('#eSignUserName').val(FOX.employeeUsername);
         });
         $('.qaSigningBtn').on('click', function () {
             currentSigningFlowType = 'qa';
             $('#eSignReportPasswordField').val('');
-            $('#location').val('');
             $('#reason').val('');
             $('#eSignReportPasswordFieldRow').show();
             $('#completeVerificationBtn').show();
             $('#addESignatureDetailsRow').hide();
             $('#completeSigningBtn').hide();
-            $('#esignModal').modal('show');
-            $('#eSignUserName').val(employeeUsername);
+            $('#qaRejectBtn').hide();
+            new bootstrap.Modal(document.getElementById('esignModal')).show();
+            $('#eSignUserName').val(FOX.employeeUsername);
         });
         $('#completeVerificationBtn').on('click', function () {
             var password = $('#eSignReportPasswordField').val();
-            JSUTIL.callAJAXGet('/document/verify_user?un=' + employeeUsername + '&pw=' + password, callbackAfterVerification);
+            JSUTIL.callAJAXPost('/api/auth/validate', JSON.stringify({
+                'username': FOX.employeeUsername,
+                'password': password
+            }), callbackAfterVerification);
         });
         $('#completeSigningBtn').on('click', function () {
             if (document.activeElement && typeof document.activeElement.blur === 'function') {
                 document.activeElement.blur();
             }
-            $('#esignModal').modal('hide');
+            bootstrap.Modal.getInstance(document.getElementById('esignModal'))?.hide();
 
             if (currentSigningFlowType === 'qa' || statusOfRecord === 'QA') {
                 proceedWithQaSigningFlow($('#reason').val(), function () {
@@ -1295,14 +1255,28 @@
                 return;
             }
 
-            const preparedPayload = {
-                preparedDate: new Date().toISOString()
+            // Author flow: save preparedDate + set Review + inApprovalWorkflow:true
+            var authorPayload = {
+                preparedDate: new Date().toISOString(),
+                processStatus: 'Review',
+                inApprovalWorkflow: true
             };
-
-            // Author Signing: do not call /process/approvals/submit_sign
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(preparedPayload), function () {
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(authorPayload), function () {
                 clearReviewerStatusesForCurrentRequest(function () {
-                    proceedWithReviewSigningFlow($('#reason').val(), callbackAfterCompleteSigning);
+                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), function (activities) {
+                        var maxLocation = (Array.isArray(activities) ? activities : []).reduce(function (max, e) {
+                            var loc = parseInt(e.location); return !isNaN(loc) && loc > max ? loc : max;
+                        }, 0);
+                        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify({
+                            parentRecordId: Number(currentRecordId),
+                            name: 'Submitted For Review By ' + FOX.employeeName,
+                            performedBy: { id: Number(FOX.employeeId) },
+                            notes: $('#reason').val() || '',
+                            location: String(maxLocation + 1)
+                        }), function () {
+                            location.reload();
+                        });
+                    });
                 });
             });
         });
@@ -1326,40 +1300,27 @@
             }
 
             const clearReviewerStatuses = function (next) {
-                const payload = {
-                    fields: "Id;Reviewer.Id;Request.Id;ProcessStatus",
-                    conditions: [`Request.Id = ${currentRecordId}`],
-                    logic: "{0}"
-                };
-                const postUrl = JSUTIL.getUrl('/data/QualityDocumentRequestReviewer/list');
-                JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (reviewerList) {
-                    if (!Array.isArray(reviewerList) || reviewerList.length === 0) {
-                        next();
-                        return;
-                    }
-                    const upsertPayload = reviewerList.map(function (item) {
-                        return {
-                            id: item.id,
-                            processStatus: ""
-                        };
-                    });
-                    const bulkPayload = Array.isArray(upsertPayload) ? upsertPayload : [upsertPayload];
-                    JSUTIL.callAJAXPost('/data/QualityDocumentRequestReviewer/upsert_multiple', JSON.stringify(bulkPayload), function () {
-                        next();
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-request-reviewers/request/' + currentRecordId), function (reviewerList) {
+                    var filtered = Array.isArray(reviewerList) ? reviewerList : [];
+                    if (filtered.length === 0) { next(); return; }
+                    var pending = filtered.length;
+                    filtered.forEach(function (item) {
+                        JSUTIL.callAJAXPost(
+                            JSUTIL.getUrl('/api/quality-document-request-reviewers/update/' + item.id),
+                            JSON.stringify({ id: item.id, processStatus: '' }),
+                            function () { pending--; if (pending <= 0) next(); }
+                        );
                     });
                 });
             };
 
             const proceedWithApprovalFlow = function () {
-                var postDocUrl = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-                JSUTIL.callAJAXGet(postDocUrl, function (pageDataResponse) {
-                    const history = pageDataResponse.history || [];
-
+                JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), function (activities) {
+                    const history = Array.isArray(activities) ? activities : [];
                     const maxLocation = history.reduce(function (max, entry) {
                         const loc = parseInt(entry.location);
                         return !isNaN(loc) && loc > max ? loc : max;
                     }, 0);
-
                     const newLocation = String(maxLocation + 1);
 
                     const reviewSend = {
@@ -1370,77 +1331,88 @@
                         console.log(response);
                         const issuanceSend = {
                             parentRecordId: Number(currentRecordId),
-                            name: `Record Status Updated To Review By ${employeeName}`,
-                            performedBy: { id: Number(employeeId) },
+                            name: `Record Status Updated To Review By ${FOX.employeeName}`,
+                            performedBy: { id: Number(FOX.employeeId) },
                             notes: $('#approvalRemarks6').val(),
                             location: newLocation,
                         };
-                        JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(issuanceSend), callbackAfterUnshareFile);
+                        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify(issuanceSend), callbackAfterUnshareFile);
                     });
                 });
             };
 
             clearReviewerStatuses(proceedWithApprovalFlow);
         });
-        $('.recordCFTBtn').on('click', function () {
-            const cftSend = {
-                processStatus: "CFT"
-            };
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(cftSend), function (response) {
-                console.log(response);
 
-                // Get CFT departments from the response
-                var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-                JSUTIL.callAJAXGet(postDocUrl2, function (pageDataResponse) {
-                    console.log(pageDataResponse);
-
-                    // Filter departments of type CFT
-                    const cftDepartments = pageDataResponse.departments.filter(dept => dept.type === 'CFT');
-
-                    if (cftDepartments.length > 0) {
-                        // Create activity feed items for each CFT department
-                        const activityItems = cftDepartments.map(dept => ({
-                            name: `${documentNumber} sent to CFT`,
-                            description: '/app/docuSync2/documentRequest?id=' + currentRecordId,
-                            type: 'CFT',
-                            department: { id: dept.department.id }
-                        }));
-
-                        console.log('Activity items to create:', activityItems);
-
-                        // Call create_multiple endpoint
-                        JSUTIL.callAJAXPost('/data/ActivityFeed/create_multiple', JSON.stringify(activityItems), function (response) {
-                            console.log('Activity feeds created:', response);
+        // QA Reject — sends back to author (New)
+        $('#qaRejectBtn').on('click', function () {
+            var comments = $('#reason').val() || '';
+            bootstrap.Modal.getInstance(document.getElementById('esignModal'))?.hide();
+            JSUTIL.callAJAXPost(
+                '/data/QualityDocumentRequest/update/' + currentRecordId,
+                JSON.stringify({ processStatus: 'New', inApprovalWorkflow: false }),
+                function () {
+                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), function (activities) {
+                        var maxLocation = (Array.isArray(activities) ? activities : []).reduce(function (max, e) {
+                            var loc = parseInt(e.location); return !isNaN(loc) && loc > max ? loc : max;
+                        }, 0);
+                        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify({
+                            parentRecordId: Number(currentRecordId),
+                            name: 'Rejected By QA ' + FOX.employeeName + ' - Sent Back To Author',
+                            performedBy: { id: Number(FOX.employeeId) },
+                            notes: comments,
+                            location: String(maxLocation + 1)
+                        }), function () {
                             location.reload();
                         });
-                    } else {
-                        console.log('No CFT departments found');
-                        location.reload();
-                    }
-                });
+                    });
+                }
+            );
+        });
+
+        $('.recordCFTBtn').on('click', function () {
+            const cftSend = { processStatus: "CFT" };
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(cftSend), function (response) {
+                console.log(response);
+                location.reload();
             });
         });
         $('.recordIssuanceBtn').on('click', function () {
-            if (trainingStatus === 'Yes') {
-                if ($('#TrainingDate').val() == null || $('#TrainingDate').val() == '') {
-                    $('#pageErrorPanel').text('Please select a training date');
-                    $('#pageErrorPanel').show().delay(5000).hide(0);
-                    return;
-                }
-            }
-            if ($('#TrainingRemarks').val() == null || $('#TrainingRemarks').val() == '') {
-                $('#pageErrorPanel').text('Please select remarks');
+            var effectiveDateVal = $('#effectiveDateInput').val();
+            if (!effectiveDateVal) {
+                $('#pageErrorPanel').text('Please select an effective date and time');
                 $('#pageErrorPanel').show().delay(5000).hide(0);
                 return;
             }
-            let trainingDateString = $('#TrainingDate').val();
-            let trainingDate = new Date(trainingDateString.split('/').reverse().join('-'));
-            const effectiveSend = {
-                trainingDate: trainingDate,
-                trainingRemarks: $('#TrainingRemarks').val(),
-                processStatus: "Effective"
-            };
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), completeDocumentCallback);
+            var effectiveDateISO = new Date(effectiveDateVal).toISOString();
+
+            // Show spinner and block interaction
+            $('#drSpinnerOverlay').css('display', 'flex');
+
+            // Step 1: Save effectiveDate
+            JSUTIL.callAJAXPost(
+                '/data/QualityDocumentRequest/update/' + currentRecordId,
+                JSON.stringify({ effectiveDate: effectiveDateISO, processStatus: 'Effective' }),
+                function () {
+                    // Step 2: Fetch reviewers then generate HTML and call generateEffective
+                    JSUTIL.callAJAXGet(
+                        JSUTIL.getUrl('/api/quality-document-request-reviewers/request/' + currentRecordId),
+                        function (reviewers) {
+                            var revList = Array.isArray(reviewers) ? reviewers : [];
+                            var htmlContent = buildCoverPageHTML(currentRecordData, revList);
+                            // Step 3: POST HTML to generateEffective
+                            JSUTIL.callAJAXPost(
+                                '/data/QualityDocumentRequest/generateEffective/' + currentRecordId,
+                                JSON.stringify({ HtmlContent: htmlContent }),
+                                function () {
+                                    $('#drSpinnerOverlay').hide();
+                                    location.reload();
+                                }
+                            );
+                        }
+                    );
+                }
+            );
         });
         $('.recordEffectiveBtn').on('click', function () {
             // if ($('#issuanceType').val() == null || $('#issuanceType').val() == '') {
@@ -1462,7 +1434,7 @@
 
             const issuanceSend1 = {
                 // issueType: $('#issuanceType').val(),
-                issuer: { id: Number(employeeId) },
+                issuer: { id: Number(FOX.employeeId) },
                 processStatus: "Training"
             };
             JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(issuanceSend1), callbackSuccessDocumentEffective1);
@@ -1476,17 +1448,8 @@
             $('#editRecordPanel').show();
         });
         $('.openDocumentBtn').on('click', function () {
-            if (requesterId == employeeId) {
-                if (fileId) {
-                    JSUTIL.callAJAXGet('/onedrive/share?fileId=' + fileId + '&userEmail=' + employeeEmail, callbackAfterShareFile);
-                } else if (templateAvailable == false) {
-                    JSUTIL.callAJAXGet('/onedrive/createEmptyFile?folderId=' + folderId + '&fileName=' + encodeURIComponent(effectiveFile) + '.docx', callback2);
-                } else {
-                    JSUTIL.callAJAXGet('/onedrive/download/' + encodeURIComponent(documentTemplateId), callbackAfterGetDownload);
-                }
-
-            } else {
-                JSUTIL.callAJAXGet('/onedrive/review/' + fileId, callbackAfterEditFile);
+            if (fileId) {
+                downloadFileById(fileId);
             }
         });
         $('.CRStackeSaveBtn').on('click', function () {
@@ -1520,11 +1483,11 @@
             JSUTIL.callAJAXGet('/dms/request/withdraw_document?id=' + documentId1, callbackAfterWithdrawal);
         });
         $(document).on('click', '#uploadDocumentBtn', function () {
-            $('#uploadFileModel').modal('show');
+            new bootstrap.Modal(document.getElementById('uploadFileModel')).show();
         });
         $(document).on('click', '.uploadDocBtn', function () {
             itemIdNew = $(this).attr('id');
-            $('#uploadModel').modal('show');
+            new bootstrap.Modal(document.getElementById('uploadModel')).show();
             var postDocUrl = JSUTIL.getUrl('/data/upload/documents?referenceNumber=' + itemIdNew + '&additionalInfo=');
             JSUTIL.callAJAXGet(postDocUrl, callbackAfterGetActionDocuments);
             var postUrl = JSUTIL.getUrl('/data/upload/training_document?referenceNumber=' + itemIdNew + '&additionalInfo=');
@@ -1533,7 +1496,6 @@
         $('.generateNumber').on('click', function () {
             JSUTIL.callAJAXGet('/dms/request/get_document_number_format', callbackAfterGetNumber);
         });
-    });
     function callbackAfterDocumentUpload(response) {
         $('#vendorUploadFilesPanel').hide();
         console.log(response);
@@ -1550,13 +1512,12 @@
 
     function callbackAfterDocumentCreation(response) {
         $('#fileNameTextVQ').empty();
-        const criticalParameter1 = {
-            fields: "DocumentRequest.Id;Name;ExtFileId;CreatedDate",
-            conditions: [`DocumentRequest.Id = ${currentRecordId}`],
-            logic: "{0}"
-        };
-        var ansUrl = JSUTIL.getUrl('/data/QualityDocumentAnnexure/list');
-        JSUTIL.callAJAXPost(ansUrl, JSON.stringify(criticalParameter1), callbackAfterGetDocuments);
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentAnnexure/list'), JSON.stringify({}), function (allAnnexures) {
+            var filtered = (allAnnexures || []).filter(function (a) {
+                return String(a.documentRequest && a.documentRequest.id) === String(currentRecordId);
+            });
+            callbackAfterGetDocuments(filtered);
+        });
     }
 
     function callbackAfterGetDocuments(objList) {
@@ -1572,11 +1533,17 @@
 
                 // --- MODIFIED: Also check isCurrentRecordFinal ---
                 if (val.isLocked) {
-                    innerHtml += '<button type="button" class="btn btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '" disabled><i data-lucide="trash"></i></button>';
+                    innerHtml += '<button type="button" class="btn btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '" disabled>' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
+                        '</button>';
                 } else {
-                    innerHtml += '<button type="button" class="btn btn-outline btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '"><i data-lucide="trash"></i></button>';
+                    innerHtml += '<button type="button" class="btn btn-outline btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
+                        '</button>';
                 }
-                innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.extFileId + '" style="margin-left: 5px;"><i data-lucide="eye"></i></button>' +
+                innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.extFileId + '" style="margin-left: 5px;">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+                    '</button>' +
                     '</td>' +
                     '<td>' + (val.name || '') + '</td>' +
                     '<td>' + JSUTIL.getDate(val.createdDate) + '</td>' +
@@ -1584,38 +1551,32 @@
             });
         }
         $('#allDocumentsTable').append(innerHtml);
-        $('.deleteDocumentBtn').on('click', function () {
-            documentId = $(this).attr('name');
-            console.log(documentId)
-            viewBtnId = $(this)
-                .closest('td')
-                .find('.viewDocumentBtn')
-                .attr('id');
-
-            console.log("View button ID:", viewBtnId);
-            elementToDelete = $(this).parent().parent();
-            console.log('element to delete', elementToDelete)
-            MODALUTIL.deleteConfirmModal(deleteDocumentTrCallback);
-        });
-        $('.viewDocumentBtn').on('click', function () {
-            var documentPath = $(this).attr('id');
-            var getUrl = JSUTIL.getUrl('/onedrive/view/' + documentPath);
-            JSUTIL.callAJAXGet(getUrl, getDocumentViewCallback);
-        });
     }
 
-    function getDocumentViewCallback(response) {
-        console.log(response);
-        window.open(response.data, '_blank');
-    }
+    $(document).on('click', '.deleteDocumentBtn', function () {
+        documentId = $(this).attr('name');
+        viewBtnId = $(this).closest('td').find('.viewDocumentBtn').attr('id');
+        deleteDocumentTrCallback();
+    });
+
+    $(document).on('click', '.viewDocumentBtn', function () {
+        var fileExtId = $(this).attr('id');
+        if (fileExtId) downloadFileById(fileExtId);
+    });
 
     function deleteDocumentTrCallback() {
-        var oneDriveUrl = JSUTIL.getUrl('/onedrive/delete_file/' + viewBtnId);
-        JSUTIL.callAJAXGet(oneDriveUrl, function (resp) {
-            console.log("OneDrive delete response:", resp);
+        if (viewBtnId) {
+            JSUTIL.callAJAXDelete(JSUTIL.getUrl('/api/files/' + viewBtnId), null);
+        }
+        $.ajax({
+            url: JSUTIL.getUrl('/data/QualityDocumentAnnexure/delete?id=' + documentId),
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({}),
+            complete: function () {
+                location.reload();
+            }
         });
-        var postUrl = JSUTIL.getUrl('/data/QualityDocumentAnnexure/delete?id=' + documentId);
-        JSUTIL.callAJAXGet(postUrl, afterDeleteTrHandle);
     }
 
     function afterDeleteTrHandle(data) {
@@ -1744,14 +1705,9 @@
 
         if (parsedResponse && parsedResponse.data) {
             fileId = String(parsedResponse.data);
-            console.log(fileId);
-            const effectiveSend = {
-                extFileId: fileId
-            };
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function (updateResponse) {
-                console.log('Update response:', updateResponse);
-
-                JSUTIL.callAJAXGet('/onedrive/share?fileId=' + fileId + '&userEmail=' + employeeEmail, callbackAfterShareFile);
+            const effectiveSend = { extFileId: fileId };
+            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function () {
+                downloadFileById(fileId);
             });
         } else {
             console.error('Invalid response data.');
@@ -1760,15 +1716,9 @@
     function callback2(response) {
         console.log(response);
         fileId = response.data;
-        console.log(fileId);
-        const effectiveSend = {
-            extFileId: fileId
-        };
-        JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function (updateResponse) {
-            console.log('Update response:', updateResponse);
-
-
-            JSUTIL.callAJAXGet('/onedrive/share?fileId=' + fileId + '&userEmail=' + employeeEmail, callbackAfterShareFile);
+        const effectiveSend = { extFileId: fileId };
+        JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(effectiveSend), function () {
+            downloadFileById(fileId);
         });
     }
 
@@ -1783,7 +1733,7 @@
 
     function callbackAfterVerification(response) {
         console.log(response);
-        if (response.result === "FAILURE") {
+        if (response.result === 'FAILURE' || response.valid === false || response.success === false) {
             $('#pageErrorPanel5').text('Invalid password, please try again');
             $('#pageErrorPanel5').show().delay(4000).hide(0);
             return;
@@ -1792,19 +1742,14 @@
             $('#completeVerificationBtn').hide();
             $('#addESignatureDetailsRow').show();
             $('#completeSigningBtn').show();
+            if (currentSigningFlowType === 'qa') {
+                $('#qaRejectBtn').show();
+            }
         }
     }
     function callbackAfterCompleteSigning(response) {
         console.log(response);
-        var obj = {
-            "title": "Request Arrived at HOD Signing",
-            "message": `Request ${documentNumber} arrived at HOD Signing.`,
-            "eventName": "submit_for_signing"
-        }
-        JSUTIL.callAJAXPost('/process/create_notification_async', JSON.stringify(obj), function (response) {
-            console.log(response);
-            location.reload();
-        });
+        location.reload();
     }
     function buildFormDataJSON(className) {
         let jsonPayload = {};
@@ -1871,31 +1816,47 @@
         return jsonPayload;
     }
     function callbackAfterGetEditType(response) {
-        //console.log(response);
-
+        var editTypeList = Array.isArray(response) ? response : [];
         const selectElement = document.getElementById('editType');
-
         selectElement.innerHTML = '<option value="">--none--</option>';
 
-        if (Array.isArray(response) && response.length > 0) {
-            response.forEach(function (item) {
-                const option = document.createElement('option');
+        editTypeList.forEach(function (item) {
+            const option = document.createElement('option');
+            option.value = item.Id || item.id;
+            option.textContent = item.name;
+            if (item.name === typeOfDocument) {
+                option.selected = true;
+            }
+            selectElement.appendChild(option);
+        });
 
-                option.value = item.Id || item.id;
+        // Store list on element for use in change handler
+        $('#editType').data('typeList', editTypeList);
 
+        // Set Purpose options based on currently selected type
+        updateEditPurposeOptions(editTypeList);
 
-                option.textContent = item.name;
-
-                if (item.name === typeOfDocument) {
-                    option.selected = true;
-                }
-
-                selectElement.appendChild(option);
-            });
-        }
         if (typeof $('#editType').select2 === 'function') {
             $('#editType').select2();
-            $('#editType').trigger('change');
+        }
+    }
+
+    function updateEditPurposeOptions(editTypeList) {
+        var selectedTypeId = $('#editType').val();
+        var $purpose = $('#editPurposeValue');
+        var currentPurpose = $purpose.val();
+
+        $purpose.html('<option value="">--none--</option><option value="New">New</option>');
+
+        var selectedType = (editTypeList || []).find(function (t) {
+            return String(t.id || t.Id) === String(selectedTypeId);
+        });
+        if (selectedType && selectedType.isRevision === 'Yes') {
+            $purpose.append('<option value="Revision">Revision</option>');
+        }
+        // Restore current purpose if still valid
+        if (currentPurpose) {
+            $purpose.val(currentPurpose);
         }
     }
     function callbackAfterDocUpload(response) {
@@ -1935,8 +1896,7 @@
 
     function callbackAfterEditResponse(response) {
         console.log(response);
-        var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-        JSUTIL.callAJAXGet(postDocUrl2, callbackAfterGetData);
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), callbackAfterGetData);
         $('#saveScheduleBtn').hide();
         $('#saveCriticalBtn').hide();
         $('#saveDistributionBtn').hide();
@@ -1947,45 +1907,27 @@
         $('#addCriticalBtn').prop('disabled', true);
         $('#addDistributionBtn').prop('disabled', true);
     }
-    function callbackAfterGetData(response) {
-        console.log(response);
+    function callbackAfterGetData(activities) {
+        console.log(activities);
+        var response = currentRecordData || {};
+        var history = Array.isArray(activities) ? activities : [];
 
-        // Always update fileId from the API response to ensure we have the latest value
-        if (response && response.extFileId) {
+        // Update fileId from currentRecordData
+        if (response.extFileId) {
             fileId = response.extFileId;
-            console.log('Updated fileId from page_data API:', fileId);
-
-            // Also update in recordList if it exists
-            if (typeof recordList !== 'undefined' && recordList) {
-                $.each(recordList, function (index, record) {
-                    if (record.id === currentRecordId) {
-                        record.extFileId = response.extFileId;
-                        console.log('Updated recordList[' + index + '].extFileId:', record.extFileId);
-                        return false; // break the loop
-                    }
-                });
-            }
-
-            // Update currentRecordData if it exists
-            if (currentRecordData && currentRecordData.id === currentRecordId) {
-                currentRecordData.extFileId = response.extFileId;
-                console.log('Updated currentRecordData.extFileId:', currentRecordData.extFileId);
-            }
         }
 
         userGroupId = response.nextApprovalGroupId;
         const userGroups = Array.isArray(FOX.userGroupNames) ? FOX.userGroupNames : [];
         const isQaUser = userGroups.some(function (groupName) {
-            return (groupName || '').toLowerCase() === 'qa';
+            return (groupName || '').toLowerCase() === 'qa_head';
         });
         $('a[data-toggle="tab"][href="#distribution"]').parent('li').hide();
         if (statusOfRecord === 'Effective' || statusOfRecord === 'Training') {
             let remarks1 = '';
-
-            const targetRecord = response.history.find(record =>
-                record.name === "Record Status Updated To Training"
-            );
-
+            const targetRecord = history.find(function(record) {
+                return record.name === "Record Status Updated To Training";
+            });
             if (targetRecord && targetRecord.notes) {
                 let cleanNotes1 = targetRecord.notes.trim();
                 try {
@@ -1999,13 +1941,12 @@
                     remarks1 = cleanNotes1.replace(/^"|"$/g, '');
                 }
             }
-
             $('.trainingInput[name="comments"]').val(remarks1);
         }
         if (response.inApprovalWorkflow) {
             $('.recordEffectiveBtn').hide();
             $('.recordCFTBtn').hide();
-            $('.recordIssuanceBtn').hide();
+            $('.recordIssuanceBtn').hide(); $('#effectiveDatePanel').hide();
             $('.recordBtnSendApproval').hide();
             $('.openDocumentBtn').hide();
             $('.recordRejectedBtn').hide();
@@ -2022,14 +1963,13 @@
             $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').hide();
             $('input[name="trainingDate"]').closest('.full-width').hide();
             $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
-        }
-        else {
+        } else {
             if (statusOfRecord === "New" || statusOfRecord.toLowerCase().includes('rejected')) {
                 $('.recordBtnSendApproval').show();
-                $('.openDocumentBtn').show();
+                if (fileId) { $('.openDocumentBtn').show(); } else { $('.openDocumentBtn').hide(); }
                 $('.recordCFTBtn').hide();
                 $('.recordEffectiveBtn').hide();
-                $('.recordIssuanceBtn').hide();
+                $('.recordIssuanceBtn').hide(); $('#effectiveDatePanel').hide();
                 $('#saveCFTBtn').hide();
                 $('.recordAcceptBtn').hide();
                 $('.generateNumber').hide();
@@ -2043,29 +1983,7 @@
                 $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').show();
                 $('input[name="trainingDate"]').closest('.full-width').hide();
                 $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
-            }
-            else if (statusOfRecord === "Author Signing") {
-                $('.recordRejectedBtn').hide();
-                $('.openDocumentBtn').hide();
-                $('.recordCFTBtn').hide();
-                $('.recordEffectiveBtn').hide();
-                $('.recordBtnSendApproval').hide();
-                $('.recordIssuanceBtn').hide();
-                $('.generateNumber').hide();
-                $('#saveCFTBtn').hide();
-                $('#uploadDocument').hide();
-                $('.recordBtnForApproval').show();
-                $('.recordAcceptBtn').hide();
-                $('#uploadDocumentBtn').hide();
-                $('#editableFieldsForm').hide();
-                $('.recordEditBtn').hide();
-                $('.recordApprovalBtn').hide();
-                $('.qaSigningBtn').hide();
-                $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').hide();
-                $('input[name="trainingDate"]').closest('.full-width').hide();
-                $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
-            }
-            else {
+            } else {
                 $('.recordRejectedBtn').hide();
                 $('.openDocumentBtn').hide();
                 $('#uploadDocumentBtn').hide();
@@ -2081,6 +1999,7 @@
                 $('.recordApprovalBtn').hide();
                 if (statusOfRecord === "QA" && isQaUser) {
                     $('.qaSigningBtn').show();
+                    if (fileId) { $('.openDocumentBtn').show(); } else { $('.openDocumentBtn').hide(); }
                 } else {
                     $('.qaSigningBtn').hide();
                 }
@@ -2097,102 +2016,68 @@
                     } else {
                         $('input[name="trainingDate"]').closest('.full-width').hide();
                     }
-
                     $('textarea[name="trainingRemarks"]').closest('.full-width').show();
                     $('.editPrintBtn').hide();
                     $('.recordEffectiveBtn').hide();
-                    $('.recordIssuanceBtn').show();
+                    if (statusOfRecord === 'Training Complete') {
+                        $('.recordIssuanceBtn').show();
+                        $('#effectiveDatePanel').show();
+                       
+                    } else {
+                        $('.recordIssuanceBtn').hide();
+                        $('#effectiveDatePanel').hide();
+                       
+                    }
                     $('#TrainingDate').prop('disabled', false);
                     $('#TrainingRemarks').prop('readonly', false);
                     $('#comments').prop('readonly', true);
                 }
             }
-
         }
+
+        // Remarks from history
         let oldRemarksDiv = $('#oldRemarks');
         oldRemarksDiv.empty();
-
         let submittedRemarks = '';
         let rejectedRemarks = '';
-
-        if (response.history && response.history.length > 0) {
-            response.history.sort((a, b) => new Date(b.CreatedDate) - new Date(a.CreatedDate));
-
-            for (let i = 0; i < response.history.length; i++) {
-                let historyEntry = response.history[i];
-
+        if (history.length > 0) {
+            history.slice().sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+            for (let i = 0; i < history.length; i++) {
+                let historyEntry = history[i];
                 if (historyEntry.name) {
-                    let approvalIndex = historyEntry.name.indexOf("Submitted For Approval");
-                    if (approvalIndex !== -1 && !submittedRemarks) {
+                    if (historyEntry.name.indexOf("Submitted For Approval") !== -1 && !submittedRemarks) {
                         submittedRemarks = extractRemarks(historyEntry);
                     }
-
-                    let rejectionIndex = historyEntry.name.toLowerCase().indexOf("rejected");
-                    if (rejectionIndex !== -1 && !rejectedRemarks) {
+                    if (historyEntry.name.toLowerCase().indexOf("rejected") !== -1 && !rejectedRemarks) {
                         rejectedRemarks = extractRemarks(historyEntry);
                     }
                 }
-
-                if (submittedRemarks && rejectedRemarks) {
-                    break;
-                }
+                if (submittedRemarks && rejectedRemarks) break;
             }
         }
-
-        if (submittedRemarks || rejectedRemarks) {
-            if (submittedRemarks) {
-                oldRemarksDiv.append('<label for="submittedRemarks">Submitted Remarks</label>');
-                oldRemarksDiv.append('<textarea id="submittedRemarks" rows="3" readonly style="border: none;" class="form-control"></textarea>');
-                $('#submittedRemarks').val(submittedRemarks);
-            }
-            if (rejectedRemarks) {
-                oldRemarksDiv.append('<label for="rejectedRemarks">Rejected Remarks</label>');
-                oldRemarksDiv.append('<textarea id="rejectedRemarks" rows="3" readonly style="border: none;" class="form-control"></textarea>');
-                $('#rejectedRemarks').val(rejectedRemarks);
-            }
+        if (submittedRemarks) {
+            oldRemarksDiv.append('<label for="submittedRemarks">Submitted Remarks</label>');
+            oldRemarksDiv.append('<textarea id="submittedRemarks" rows="3" readonly style="border: none;" class="form-control"></textarea>');
+            $('#submittedRemarks').val(submittedRemarks);
         }
+        if (rejectedRemarks) {
+            oldRemarksDiv.append('<label for="rejectedRemarks">Rejected Remarks</label>');
+            oldRemarksDiv.append('<textarea id="rejectedRemarks" rows="3" readonly style="border: none;" class="form-control"></textarea>');
+            $('#rejectedRemarks').val(rejectedRemarks);
+        }
+
+        // History table
         $('#allStakeholderChangeReqTable').empty();
         $('#allHistoryTable').empty();
-        var innerHtmlStake = '';
-        response.stakeholderList.forEach(val => {
-            innerHtmlStake += `
-                <tr>
-                    <td>
-                        <div class="checkbox" style="margin:0;">
-                            <input class="deleteItemCreatedEntryRow" name="${val.id}" type="checkbox">
-                            <label></label>
-                        </div>
-                    </td>
-                    <td>${val.member.firstName + ' ' + val.member.lastName || ''}</td>
-                    <td>${val.role || ''}</td>
-                </tr>
-            `;
-        });
-        $('#allStakeholderChangeReqTable').html(innerHtmlStake);
-
         let innerHtmlHistory = '';
-        if (!response || response.history.length === 0) {
+        if (history.length === 0) {
             innerHtmlHistory = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
         } else {
-            $.each(response.history, function (i, val) {
-                let remarks = '';
-                if (val.notes) {
-                    let cleanNotes = val.notes.trim();
-                    try {
-                        if (cleanNotes.startsWith('{') && cleanNotes.endsWith('}')) {
-                            let notesObj = JSON.parse(cleanNotes);
-                            remarks = notesObj.remarks || notesObj.requestId || '';
-                        } else {
-                            remarks = cleanNotes.replace(/^"|"$/g, '') || remarks;
-                        }
-                    } catch (e) {
-                        remarks = cleanNotes.replace(/^"|"$/g, '') || remarks;
-                    }
-                }
+            $.each(history, function (i, val) {
+                let remarks = extractRemarks(val);
                 innerHtmlHistory += '<tr>' +
                     '<td>' + (val.name || '') + '</td>' +
                     '<td>' + (JSUTIL.getDate(val.createdDate) || '') + '</td>' +
-                    //'<td>' + ((val.performedBy && (val.performedBy.FirstName + ' ' + val.performedBy.LastName)) || '') + '</td>' +
                     '<td>' + remarks + '</td>' +
                     '</tr>';
             });
@@ -2227,13 +2112,9 @@
     }
     // Fetch and render reviewers (employees) for the current document request
     function fetchReviewersForRequest(requestId) {
-        const payload = {
-            fields: "Id;Reviewer.Id;Request.Id;ProcessStatus",
-            conditions: [`Request.Id = ${requestId}`],
-            logic: "{0}"
-        };
-        const postUrl = JSUTIL.getUrl('/data/QualityDocumentRequestReviewer/list');
-        JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), callbackAfterGetReviewers);
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-request-reviewers/request/' + requestId), function (reviewers) {
+            callbackAfterGetReviewers(Array.isArray(reviewers) ? reviewers : []);
+        });
     }
 
     function callbackAfterGetReviewers(response) {
@@ -2257,96 +2138,87 @@
         $('#capacityTable').append(innerHtml);
     }
     function clearReviewerStatusesForCurrentRequest(next) {
-        const payload = {
-            fields: "Id;Reviewer.Id;Request.Id;ProcessStatus",
-            conditions: [`Request.Id = ${currentRecordId}`],
-            logic: "{0}"
-        };
-        const postUrl = JSUTIL.getUrl('/data/QualityDocumentRequestReviewer/list');
-        JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (reviewerList) {
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-request-reviewers/request/' + currentRecordId), function (reviewerList) {
             if (!Array.isArray(reviewerList) || reviewerList.length === 0) {
-                if (typeof next === 'function') {
-                    next();
-                }
+                if (typeof next === 'function') next();
                 return;
             }
-
-            const bulkPayload = reviewerList.map(function (item) {
-                return {
-                    id: item.id,
-                    processStatus: ""
-                };
-            });
-
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequestReviewer/upsert_multiple', JSON.stringify(bulkPayload), function () {
-                if (typeof next === 'function') {
-                    next();
-                }
-            });
-        });
-    }
-
-    function proceedWithReviewSigningFlow(remarks, next) {
-        var postDocUrl = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-        JSUTIL.callAJAXGet(postDocUrl, function (pageDataResponse) {
-            const history = pageDataResponse.history || [];
-
-            const maxLocation = history.reduce(function (max, entry) {
-                const loc = parseInt(entry.location);
-                return !isNaN(loc) && loc > max ? loc : max;
-            }, 0);
-
-            const newLocation = String(maxLocation + 1);
-            const requestPayload = {
-                processStatus: "Review Signing",
-                inApprovalWorkflow: true
-            };
-
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(requestPayload), function () {
-                const activityPayload = {
-                    parentRecordId: Number(currentRecordId),
-                    name: `Record Status Updated To Review Signing By ${employeeName}`,
-                    performedBy: { id: Number(employeeId) },
-                    notes: remarks || '',
-                    location: newLocation,
-                };
-                JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(activityPayload), function (response) {
-                    if (typeof next === 'function') {
-                        next(response);
+            var pending = reviewerList.length;
+            reviewerList.forEach(function (item) {
+                JSUTIL.callAJAXPost(
+                    JSUTIL.getUrl('/api/quality-document-request-reviewers/update/' + item.id),
+                    JSON.stringify({ id: item.id, processStatus: '' }),
+                    function () {
+                        pending--;
+                        if (pending <= 0 && typeof next === 'function') next();
                     }
-                });
+                );
             });
         });
     }
+
     function proceedWithQaSigningFlow(remarks, next) {
-        var postDocUrl = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-        JSUTIL.callAJAXGet(postDocUrl, function (pageDataResponse) {
-            const history = pageDataResponse.history || [];
-
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), function (activities) {
+            const history = Array.isArray(activities) ? activities : [];
             const maxLocation = history.reduce(function (max, entry) {
                 const loc = parseInt(entry.location);
                 return !isNaN(loc) && loc > max ? loc : max;
             }, 0);
-
             const newLocation = String(maxLocation + 1);
-            const requestPayload = {
-                processStatus: "Training"
-            };
 
-            JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(requestPayload), function () {
-                const activityPayload = {
-                    parentRecordId: Number(currentRecordId),
-                    name: `Record Status Updated To Training By ${employeeName}`,
-                    performedBy: { id: Number(employeeId) },
-                    notes: remarks || '',
-                    location: newLocation,
+            function doUpdate(documentNumber) {
+                var requestPayload = {
+                    processStatus: 'Training',
+                    reviewer: { id: Number(FOX.employeeId) },
+                    reviewedDate: new Date().toISOString()
                 };
-                JSUTIL.callAJAXPost('/data/ProcessActivity/create', JSON.stringify(activityPayload), function (response) {
-                    if (typeof next === 'function') {
-                        next(response);
-                    }
+                if (documentNumber) requestPayload.documentNumber = documentNumber;
+
+                JSUTIL.callAJAXPost('/data/QualityDocumentRequest/update/' + currentRecordId, JSON.stringify(requestPayload), function () {
+                    var activityPayload = {
+                        parentRecordId: Number(currentRecordId),
+                        name: 'Record Status Updated To Training By ' + FOX.employeeName,
+                        performedBy: { id: Number(FOX.employeeId) },
+                        notes: remarks || '',
+                        location: newLocation
+                    };
+                    JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify(activityPayload), function (response) {
+                        if (typeof next === 'function') next(response);
+                    });
                 });
-            });
+            }
+
+            // Only generate documentNumber for New purpose
+            if (purposeOfRecord === 'New' && documentTypeCode) {
+                var year = new Date().getFullYear();
+                var prefix = documentTypeCode + '_' + year + '_';
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocument/list'), JSON.stringify({}), function (docList) {
+                    var newNumber;
+                    if (Array.isArray(docList) && docList.length > 0) {
+                        // Filter to matching prefix
+                        var matching = docList.filter(function (d) {
+                            var num = d.number || d.Number || '';
+                            return num.indexOf(prefix) === 0;
+                        });
+                        if (matching.length > 0) {
+                            // Sort by createdDate descending — latest first
+                            matching.sort(function (a, b) {
+                                return new Date(b.createdDate || b.CreatedDate || 0) - new Date(a.createdDate || a.CreatedDate || 0);
+                            });
+                            var lastNum = matching[0].number || matching[0].Number || '';
+                            var lastSeq = parseInt(lastNum.split('_').pop(), 10) || 0;
+                            newNumber = prefix + String(lastSeq + 1).padStart(3, '0');
+                        } else {
+                            newNumber = prefix + '001';
+                        }
+                    } else {
+                        newNumber = prefix + '001';
+                    }
+                    doUpdate(newNumber);
+                });
+            } else {
+                doUpdate(null);
+            }
         });
     }
     function populateDropdown(response, $dropdown) {
@@ -2362,65 +2234,42 @@
     }
     function callbackAfterEditFile(response) {
         console.log(response);
-        if (response && response.data) {
-            window.open(response.data, '_blank');
-            // Fetch updated record data instead of reloading the page
-            var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-            JSUTIL.callAJAXGet(postDocUrl2, function (updatedResponse) {
-                if (updatedResponse && updatedResponse.extFileId) {
-                    // Update the global fileId with the new extFileId from the response
-                    fileId = updatedResponse.extFileId;
-                    console.log('Updated fileId:', fileId);
-
-                    // Update the recordList item if it exists (so when user closes and reopens, it has the latest fileId)
-                    if (typeof recordList !== 'undefined' && recordList) {
-                        $.each(recordList, function (index, record) {
-                            if (record.id === currentRecordId) {
-                                record.extFileId = updatedResponse.extFileId;
-                                console.log('Updated recordList[' + index + '].extFileId:', record.extFileId);
-                                return false; // break the loop
-                            }
-                        });
-                    }
-
-                    // Update currentRecordData if it exists
-                    if (currentRecordData && currentRecordData.id === currentRecordId) {
-                        currentRecordData.extFileId = updatedResponse.extFileId;
-                        console.log('Updated currentRecordData.extFileId:', currentRecordData.extFileId);
-                    }
-
-                    // Show success message
-                    JSUTIL.showMessage('File updated successfully');
-                }
-            });
-        } else {
-            console.error('Invalid response data.');
-            // Still fetch updated data even on error to ensure consistency
-            var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-            JSUTIL.callAJAXGet(postDocUrl2, function (updatedResponse) {
-                if (updatedResponse && updatedResponse.extFileId) {
-                    fileId = updatedResponse.extFileId;
-                    console.log('Updated fileId on error:', fileId);
-
-                    // Update recordList and currentRecordData on error as well
-                    if (typeof recordList !== 'undefined' && recordList) {
-                        $.each(recordList, function (index, record) {
-                            if (record.id === currentRecordId) {
-                                record.extFileId = updatedResponse.extFileId;
-                                return false;
-                            }
-                        });
-                    }
-                    if (currentRecordData && currentRecordData.id === currentRecordId) {
-                        currentRecordData.extFileId = updatedResponse.extFileId;
-                    }
-                }
-            });
-        }
+        if (fileId) downloadFileById(fileId);
     }
     function callbackAfterShareFile(response) {
         console.log(response);
-        JSUTIL.callAJAXGet('/onedrive/edit/' + fileId, callbackAfterEditFile);
+        if (fileId) downloadFileById(fileId);
+    }
+
+    function downloadFileById(id) {
+        if (!id) return;
+        fetch(JSUTIL.getUrl('/api/files/download/' + id))
+            .then(function (res) {
+                if (!res.ok) { console.error('File download failed', res.status); return; }
+                var contentType = res.headers.get('Content-Type') || '';
+                var disposition = res.headers.get('Content-Disposition') || '';
+                var filename = 'file';
+                var match = disposition.match(/filename[^;=\n]*=(['"]?)([^'";\n]*)\1/);
+                if (match) filename = match[2];
+                return res.blob().then(function (blob) {
+                    var url = URL.createObjectURL(blob);
+                    // Word docs can't render in browser — force download
+                    var isWord = contentType.includes('word') || contentType.includes('officedocument') ||
+                        filename.match(/\.(doc|docx)$/i);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    if (isWord) {
+                        a.download = filename;
+                    } else {
+                        a.target = '_blank';
+                    }
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+                });
+            })
+            .catch(function (err) { console.error('Download error', err); });
     }
 
     function callbackAfterWithdrawal(response) {
@@ -2433,21 +2282,6 @@
     function callbackSuccessWithDrawalEffective(response) {
         console.log(response);
         location.reload();
-    }
-    function callbackAfterEditDepartment(response) {
-        console.log(response);
-        var innerHtml2 = '';
-        $('#editDepartment').empty();
-        innerHtml2 += '<option value = "">--none---</option>';
-        $.each(response, function (j, val2) {
-            if (val2.name === selectedDepartment) {
-                departmentCode = val2.code;
-                innerHtml2 += '<option value = "' + val2.name + '" selected>' + val2.name + '</option>';
-            } else {
-                innerHtml2 += '<option value = "' + val2.name + '">' + val2.name + '</option>';
-            }
-        });
-        $('#editDepartment').append(innerHtml2);
     }
     function extractRemarks(historyEntry) {
         let remarks = '';
@@ -2498,8 +2332,7 @@
         console.log(response);
         $('#addChangeReqPanelByStack').hide();
         $('#editRecordPanel').show();
-        var postDocUrl2 = JSUTIL.getUrl('/dms/request/page_data?id=' + currentRecordId);
-        JSUTIL.callAJAXGet(postDocUrl2, callbackAfterGetData);
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), callbackAfterGetData);
     }
     function completeImcheckCallback(response) {
         console.log(response);
@@ -2509,18 +2342,13 @@
     function sendNotificationToHOD(title, message, eventName, recordData) {
         if (recordData && recordData.requester && recordData.requester.dept && recordData.requester.dept.headId) {
             const headId = recordData.requester.dept.headId;
-            var empParameter = {
-                fields: "Name;User.Id",
-                conditions: [`Id = ${headId}`],
-                logic: "{0}"
-            }
-            // Fetch employee details to get user.id
             const employeeUrl = JSUTIL.getUrl('/data/Employee/list');
-            JSUTIL.callAJAXPost(employeeUrl, JSON.stringify(empParameter), function (empResponse) {
-                console.log('Employee response:', empResponse);
+            JSUTIL.callAJAXPost(employeeUrl, JSON.stringify({}), function (empResponse) {
+                var empFiltered = (empResponse || []).filter(function (e) { return String(e.id) === String(headId); });
+                console.log('Employee response:', empFiltered);
 
-                if (empResponse[0] && empResponse[0].user && empResponse[0].user.id) {
-                    const userId = empResponse[0].user.id;
+                if (empFiltered[0] && empFiltered[0].user && empFiltered[0].user.id) {
+                    const userId = empFiltered[0].user.id;
 
                     // Calculate expiry date (today + 7 days)
                     const today = new Date();
@@ -2561,87 +2389,132 @@
         // var postUrl = JSUTIL.getUrl('/dms/request/convert_to_pdf_review?id=' + currentRecordId);
         // JSUTIL.callAJAXGet(postUrl, callbackAfterPdf);
     }
-    function callbackAfterGetActivity(response) {
-        console.log(response);
-        const activities = Array.isArray(response) ? response : [response];
-
-        for (let activity of activities) {
-            if (activity.description) {
-                const match = activity.description.match(/id=(\d+)/);
-                if (match) {
-                    const extractedId = match[1];
-                    const extractedIdNum = parseInt(extractedId);
-                    const currentRecordIdNum = parseInt(currentRecordId);
-
-                    if (extractedId == currentRecordId || extractedIdNum === currentRecordIdNum) {
-                        activityId = activity.id;
-                        console.log('Found activity ID:', activityId);
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (!activityId) {
-            console.log('No matching activity found for currentRecordId:', currentRecordId);
-        }
-    }
     function callbackSuccessDocumentUpdate(response) {
         console.log(response);
-        var obj = {
-            id: currentRecordId,
-            name: `Document Request Updated by ${employeeName}`,
-            type: "QualityDocumentRequest"
+        var activityPayload = {
+            parentRecordId: Number(currentRecordId),
+            name: 'Document Request Updated by ' + FOX.employeeName,
+            performedBy: { id: Number(FOX.employeeId) }
         };
-
-        var postUrl = '/process/create_activity';
-        JSUTIL.callAJAXPost(postUrl, JSON.stringify(obj), function () {
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/process-activities'), JSON.stringify(activityPayload), function () {
             location.reload();
-        })
+        });
     }
 </script>
 <!-- editDocumentRequest.js end -->
+
+<!-- coverPage.js start -->
+<script>
+    function fmtDate(iso) {
+        if (!iso) return '';
+        try {
+            var d = new Date(iso);
+            var pad = function(n){ return String(n).padStart(2,'0'); };
+            return pad(d.getDate()) + ' ' +
+                ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] +
+                ' ' + d.getFullYear() +
+                ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        } catch(e) { return iso; }
+    }
+
+    function esc(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function sigRowsHTML(signedBy, decisionDate, role, purpose, meaning) {
+        var rows = [
+            ['Signed By', signedBy],
+            ['Decision', 'Approved'],
+            ['Decision Date', decisionDate],
+            ['Role', role],
+            ['Purpose', purpose],
+            ['Meaning Of Signature', meaning]
+        ];
+        return '<div style="margin-bottom:14px;">' +
+            rows.map(function(r){
+                return '<div style="font-size:9pt;line-height:1.6;"><strong>' + esc(r[0]) + ' :</strong> ' + esc(r[1]) + '</div>';
+            }).join('') +
+        '</div>';
+    }
+
+    function buildCoverPageHTML(record, reviewers) {
+        var purposeLabel = record.purpose || '';
+
+        // Info table rows
+        var infoRows = [
+            ['Document Number',          record.documentNumber || ''],
+            ['Document Title',           record.documentName   || ''],
+            ['Description',              record.reason         || ''],
+            ['Version Number',           record.documentVersion || ''],
+            ['Document Status',          'Effective'],
+            ['Major Version Change Date', fmtDate(record.createdDate)]
+        ];
+
+        var tableRows = infoRows.map(function(r){
+            return '<tr>' +
+                '<td style="background:#f0f0f0;font-weight:bold;padding:4px 6px;border:1px solid #333;width:38%;font-size:9pt;">' + esc(r[0]) + '</td>' +
+                '<td style="padding:4px 6px;border:1px solid #333;font-size:9pt;">' + esc(r[1]) + '</td>' +
+            '</tr>';
+        }).join('');
+
+        // Signatures
+        var sigsHTML = '';
+
+        // Author
+        var req = record.requester || {};
+        var authorName = ((req.firstName || '') + ' ' + (req.lastName || '')).trim();
+        sigsHTML += sigRowsHTML(authorName, fmtDate(record.preparedDate || record.createdDate), 'Author', purposeLabel, 'I am the author of this document');
+
+        // Reviewers
+        (reviewers || []).forEach(function(rev) {
+            var emp = rev.reviewer || {};
+            var name = ((emp.firstName || '') + ' ' + (emp.lastName || '')).trim();
+            sigsHTML += sigRowsHTML(name, fmtDate(rev.modifiedDate), 'Reviewer', purposeLabel, 'I have reviewed and I do approve that this document is fit for use');
+        });
+
+        // QA
+        var qa = record.reviewer || {};
+        if (qa.firstName || qa.lastName) {
+            var qaName = ((qa.firstName || '') + ' ' + (qa.lastName || '')).trim();
+            sigsHTML += sigRowsHTML(qaName, fmtDate(record.reviewedDate), 'QA', purposeLabel, 'I have checked this document/collection and approve it for use');
+        }
+
+        return '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<html xmlns="http://www.w3.org/1999/xhtml"><head>' +
+            '<style type="text/css">body{font-family:Arial,sans-serif;margin:20px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}</style>' +
+            '</head><body>' +
+            '<table>' + tableRows + '</table>' +
+            sigsHTML +
+            '<p style="text-align:center;font-size:8pt;">Cover Page 1 of 1</p>' +
+            '</body></html>';
+    }
+</script>
+<!-- coverPage.js end -->
+
 
 
 
 
 <!-- onedriveUpload.html start -->
-<link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
-<div class="row animated fadeInRight aasaanPanel" id="vendorUploadFilesPanel" style="display:none;">
-    <div class="col-lg-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5 id="uploadFileTitle">#</h5>
+<div class="modal inmodal fade" id="annexureUploadModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Upload Annexure</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="ibox-content">
-                <form role="form" name="lnItemObj" action="#" method="post" id="fileFormVQ"
-                    enctype="multipart/form-data">
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <div class="fileinput fileinput-new input-group" data-provides="fileinput"
-                                style="margin-top: 24px;">
-                                <div class="form-control" data-trigger="fileinput" id="fileNameTextVQ">
-                                    <i class="glyphicon glyphicon-file fileinput-exists"></i>
-                                    <span class="fileinput-filename"></span>
-                                </div>
-                                <span class="input-group-addon btn btn-default btn-file">
-                                    <span class="fileinput-new">Select File</span>
-                                    <span class="fileinput-exists">Change</span>
-                                    <input type="file" name="File" id="fileInputVQ">
-                                </span>
-                                <a href="#" class="input-group-addon btn btn-default fileinput-exists"
-                                    data-dismiss="fileinput">Remove</a>
-                            </div>
-                        </div>
-                        <div class="col-lg-6"></div>
-                        <div class="col-sm-12">
-                            <button type="button" class="btn btn-default btn-sm close-box showRequestOnCancel"
-                                id="vendorUploadClosebtn"><i data-lucide="x"></i> Cancel </button>
-                            <button type="button" class="btn btn-secondary btn-sm" id="processBtn"><i
-                                    data-lucide="upload"></i> Upload </button>
-                        </div>
-                    </div>
-                </form>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Select File</label>
+                    <input type="file" class="form-control" id="annexureFileInput">
+                    <div id="annexureFileName" class="form-text text-muted mt-1"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" id="annexureUploadBtn">
+                    <i data-lucide="upload"></i> Upload
+                </button>
             </div>
         </div>
     </div>
@@ -2653,30 +2526,120 @@
 
 <!-- onedriveUpload.js start -->
 <script>
-    function foVendorUploadFile(panelTitle, actionUrl, successCallBack) {
-        $('#uploadFileTitle').html(panelTitle);
-        $('#fileFormVQ').attr('action', actionUrl);
-        userDefineSuccessCallBack = successCallBack;
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-        $('#fileInputVQ').on('change', function (e) {
-            $('#fileNameTextVQ').text(e.target.files[0].name);
-            multipartFile = e.target.files[0];
-        });
-        $('#processBtn').on('click', function () {
-            $('#loadingError').hide();
-            $('#importResults').hide();
-            $('#insertedTable').empty();
-            var formData = new FormData();
-            formData.append('file', multipartFile);
-            var callback = userDefineSuccessCallBack || defaultSuccessCallback;
-            JSUTIL.callAJAXFilePost($('#fileFormVQ').attr('action'), formData, callback, null);
-        });
+    // ── Main document upload (uploadFileModel / processBtn2) ──────────────────
+    $(document).on('change', '#mainDocFileInput', function () {
+        $('#mainDocFileName').text(this.files[0] ? this.files[0].name : '');
     });
-    function defaultSuccessCallback(response) {
-        console.log(response);
-        location.reload();
-    }
+
+    $(document).on('click', '#processBtn2', function () {
+        var file = document.getElementById('mainDocFileInput').files[0];
+        if (!file) { alert('Please select a file.'); return; }
+
+        var folder = currentRecordData && currentRecordData.extFolderId ? currentRecordData.extFolderId : '';
+        if (!folder) { alert('No folder configured for this record.'); return; }
+
+        var formData = new FormData();
+        formData.append('files', file);
+        formData.append('folder', folder);
+
+        JSUTIL.callAJAXFilePost(JSUTIL.getUrl('/api/files/upload'), formData, function (response) {
+            var parsed = typeof response === 'string' ? JSON.parse(response) : response;
+            var uploadedId = Array.isArray(parsed) ? parsed[0].id : (parsed.id || parsed.data);
+            if (!uploadedId) { console.error('Upload failed', parsed); return; }
+
+            JSUTIL.callAJAXPost(
+                '/data/QualityDocumentRequest/update/' + currentRecordId,
+                JSON.stringify({ extFileId: String(uploadedId) }),
+                function () {
+                    bootstrap.Modal.getInstance(document.getElementById('uploadFileModel'))?.hide();
+                    $('#mainDocFileInput').val('');
+                    $('#mainDocFileName').text('');
+                    location.reload();
+                }
+            );
+        }, null);
+    });
+
+    // ── Training/action document upload (uploadModel / processBtn1) ───────────
+    $(document).on('change', '#fileInputAction', function () {
+        $('#fileNameTextAction').text(this.files[0] ? this.files[0].name : '');
+    });
+
+    $(document).on('click', '#processBtn1', function () {
+        var file = document.getElementById('fileInputAction').files[0];
+        if (!file) { alert('Please select a file.'); return; }
+
+        var folder = currentRecordData && currentRecordData.extFolderId ? currentRecordData.extFolderId : '';
+        if (!folder) { alert('No folder configured for this record.'); return; }
+
+        var formData = new FormData();
+        formData.append('files', file);
+        formData.append('folder', folder);
+
+        JSUTIL.callAJAXFilePost(JSUTIL.getUrl('/api/files/upload'), formData, function (response) {
+            var parsed = typeof response === 'string' ? JSON.parse(response) : response;
+            var uploadedId = Array.isArray(parsed) ? parsed[0].id : (parsed.id || parsed.data);
+            if (!uploadedId) { console.error('Upload failed', parsed); return; }
+
+            JSUTIL.callAJAXPost(
+                '/data/QualityDocumentRequest/update/' + currentRecordId,
+                JSON.stringify({ extFileId: String(uploadedId) }),
+                function () {
+                    fileId = String(uploadedId);
+                    if (currentRecordData) currentRecordData.extFileId = String(uploadedId);
+                    bootstrap.Modal.getInstance(document.getElementById('uploadModel'))?.hide();
+                    $('#fileInputAction').val('');
+                    $('#fileNameTextAction').text('');
+                    location.reload();
+                }
+            );
+        }, null);
+    });
+
+    // ── Annexure upload (annexureUploadModal / annexureUploadBtn) ─────────────
+    $(document).on('change', '#annexureFileInput', function () {
+        $('#annexureFileName').text(this.files[0] ? this.files[0].name : '');
+    });
+
+    $(document).on('click', '#uploadDocument', function () {
+        $('#annexureFileInput').val('');
+        $('#annexureFileName').text('');
+        new bootstrap.Modal(document.getElementById('annexureUploadModal')).show();
+    });
+
+    $(document).on('click', '#annexureUploadBtn', function () {
+        var file = document.getElementById('annexureFileInput').files[0];
+        if (!file) { alert('Please select a file.'); return; }
+
+        var folder = currentRecordData && currentRecordData.extFolderId ? currentRecordData.extFolderId : '';
+        if (!folder) { alert('No folder configured for this record.'); return; }
+
+        var formData = new FormData();
+        formData.append('files', file);
+        formData.append('folder', folder);
+
+        JSUTIL.callAJAXFilePost(JSUTIL.getUrl('/api/files/upload'), formData, function (response) {
+            var parsed = typeof response === 'string' ? JSON.parse(response) : response;
+            var uploadedId = Array.isArray(parsed) ? parsed[0].id : (parsed.id || parsed.data);
+            if (!uploadedId) { console.error('Annexure upload failed', parsed); return; }
+
+            var annexureObj = {
+                extFileId: String(uploadedId),
+                documentRequest: { id: Number(currentRecordId) },
+                name: file.name
+            };
+            JSUTIL.callAJAXPost(
+                JSUTIL.getUrl('/data/QualityDocumentAnnexure/create'),
+                JSON.stringify(annexureObj),
+                function () {
+                    bootstrap.Modal.getInstance(document.getElementById('annexureUploadModal'))?.hide();
+                    $('#annexureFileInput').val('');
+                    $('#annexureFileName').text('');
+                    callbackAfterDocumentCreation();
+                }
+            );
+        }, null);
+    });
 </script>
 <!-- onedriveUpload.js end -->
 
@@ -2684,6 +2647,7 @@
 
 
 <!-- newDocumentRequest.html start  -->
+<div class="qa-white-panel">
 <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display:none;">
     <div class="col-lg-12">
         <div class="ibox float-e-margins">
@@ -2697,7 +2661,7 @@
                 </div>
             </div>
             <div class="ibox-content">
-                <form role="form" name="newObj" id="newDocumentForm" action="/dms/request/create_request" method="post">
+                <form role="form" name="newObj" id="newDocumentForm">
                     <div class="row">
                         <div class="col-sm-6">
                             <div class="form-group">
@@ -2714,11 +2678,6 @@
                                 <select class="select2 form-control newRecordInput" name="Purpose" id="purposeValue"
                                     required>
                                     <option value="">--none--</option>
-                                    <option value="New">New</option>
-                                    <!-- <option value="Amendment">Amendment</option> -->
-                                    <option value="Revision">Revision</option>
-                                    <!-- 
-                                    <option value="Access">Access</option> -->
                                 </select>
                             </div>
                         </div>
@@ -2754,6 +2713,8 @@
                                     id="ExtFolderId">
                                 <input type="hidden" class="form-control newRecordInput" name="ExtFileId"
                                     id="ExtFileId">
+                                <input type="hidden" class="form-control newRecordInput" name="Number"
+                                    id="newRequestNumber">
                             </div>
                         </div>
                     </div>
@@ -2761,6 +2722,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 <!-- newDocumentRequest.html end  -->
 
@@ -2771,12 +2733,12 @@
     var folderName;
     var numberValue;
     var nameValue;
+    var documentTypeList = [];
 
     let selectedDocumentForDuplication = null;
 
-    $(document).ready(function () {
 
-        $('.newRecordCancelBtn').on('click', function () {
+    $('.newRecordCancelBtn').on('click', function () {
             $('#newRecordPanel').hide();
             $('#allRecordPanel').show();
         });
@@ -2808,6 +2770,18 @@
 
         $('#type').on('change', function () {
             toggleOtherDocumentField();
+            var selectedTypeId = $(this).val();
+            var $purpose = $('#purposeValue');
+            $purpose.html('<option value="">--none--</option>');
+            if (!selectedTypeId) return;
+            var selectedType = documentTypeList.find(function (t) {
+                return String(t.id || t.Id) === String(selectedTypeId);
+            });
+            $purpose.append('<option value="New">New</option>');
+            if (selectedType && selectedType.isRevision === 'Yes') {
+                $purpose.append('<option value="Revision">Revision</option>');
+            }
+            $purpose.val('');
         });
 
         $('select[name="CcRequired"]').on('change', function () {
@@ -2911,14 +2885,30 @@
         $('.newDocumentSaveBtn').on('click', function () {
             var purpose = $('#purposeValue').val();
 
-            // If the purpose is Amendment or Revision, and a document with an external file ID has been selected.
+            // Use company setting for document_request folder as parent
+            var parentFolder = (FOX.companySettings && FOX.companySettings.document_request)
+                ? FOX.companySettings.document_request
+                : 'DMS/DocumentRequest';
+
+            // Set the request number on the form
+            $('#newRequestNumber').val(folderName);
+
+            var createFolderUrl = JSUTIL.getUrl('/api/files/create-folder?folder=' + encodeURIComponent(folderName) + '&parentFolder=' + encodeURIComponent(parentFolder));
+
             if ((purpose === 'Amendment' || purpose === 'Revision') && selectedDocumentForDuplication && selectedDocumentForDuplication.extDocFileId) {
-                // Start the duplication process by first creating a new folder.
-                // The callback `handleDocumentDuplication` will handle the download/upload process.
-                JSUTIL.callAJAXGet('/onedrive/create_folder?folderName=' + encodeURIComponent(folderName) + '&parentFolderId=' + companySettingMap['document_request'], handleDocumentDuplication);
+                $.ajax({
+                    url: createFolderUrl,
+                    type: 'POST',
+                    success: function (response) { handleDocumentDuplication(response); },
+                    error: function (xhr) { console.error('Folder creation failed:', xhr.responseText); }
+                });
             } else {
-                // Standard process for 'New' requests or any case where duplication is not needed.
-                JSUTIL.callAJAXGet('/onedrive/create_folder?folderName=' + encodeURIComponent(folderName) + '&parentFolderId=' + companySettingMap['document_request'], callbackSuccessFileCreated);
+                $.ajax({
+                    url: createFolderUrl,
+                    type: 'POST',
+                    success: function (response) { callbackSuccessFileCreated(response); },
+                    error: function (xhr) { console.error('Folder creation failed:', xhr.responseText); }
+                });
             }
         });
 
@@ -2949,17 +2939,13 @@
             $('input[name="Document.Id"]').closest('.col-sm-6').hide();
             $('input[name="PagesAmended"]').closest('.col-sm-6').hide();
 
-            const departmentParameter = { fields: "StartDate;Name", conditions: [], logic: "" };
-            JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Department/list'), JSON.stringify(departmentParameter), callbackAfterGetDepartment);
-
             JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-type'), callbackAfterGetType);
         });
-    });
 
 
     function handleDocumentDuplication(response) {
         console.log("Step 1: Folder created.", response);
-        const newFolderId = response.data;
+        const newFolderId = typeof response === 'string' ? response : (response.data || response);
         $('#ExtFolderId').val(newFolderId); // Set the new folder ID on the form.
 
         const originalFileId = selectedDocumentForDuplication.extDocFileId;
@@ -3023,10 +3009,11 @@
 
 
     function callbackAfterGetType(response) {
+        documentTypeList = Array.isArray(response) ? response : [];
         const selectElement = document.getElementById('type');
         selectElement.innerHTML = '<option value="">--none--</option>';
-        if (Array.isArray(response) && response.length > 0) {
-            response.forEach(function (item) {
+        if (documentTypeList.length > 0) {
+            documentTypeList.forEach(function (item) {
                 const option = document.createElement('option');
                 option.value = item.Id || item.id;
                 option.textContent = item.name;
@@ -3086,28 +3073,65 @@
     }
 
     function submitNewDocumentForm() {
-        // Find all input, select, and textarea elements within the form that are empty.
-        const $emptyInputs = $('#newDocumentForm').find('input, select, textarea').filter(function () {
-            // This targets fields with an empty string value.
-            return $(this).val() === '';
-        });
+        var form = $('#newDocumentForm');
+        var payload = {};
 
-        // Disable the empty fields. Disabled fields are not sent with the form data.
-        $emptyInputs.prop('disabled', true);
+        // DocumentType.Id
+        var typeId = form.find('[name="DocumentType.Id"]').val();
+        if (typeId) payload.documentType = { id: Number(typeId) };
 
-        // Submit the form using the existing utility.
-        // We use a custom callback to re-enable the fields before calling the original success function.
-        JSUTIL.callAJAXFormPost('newDocumentForm', function (response) {
-            // ALWAYS re-enable the fields, ensuring the form is usable again.
-            $emptyInputs.prop('disabled', false);
+        // Document.Id
+        var docId = form.find('[name="Document.Id"]').val();
+        if (docId) payload.document = { id: Number(docId) };
 
-            // Now, proceed with the original success logic.
-            callbackSuccessDocumentCreated(response);
-        });
+        // Scalar fields
+        var purpose         = form.find('[name="Purpose"]').val();
+        var documentName    = form.find('[name="DocumentName"]').val();
+        var documentVersion = $('#versionNumber').val();
+        var reason          = form.find('[name="Reason"]').val();
+        var extFolderId     = form.find('[name="ExtFolderId"]').val();
+        var extFileId       = form.find('[name="ExtFileId"]').val();
+        var number          = form.find('[name="Number"]').val();
+
+        if (purpose)      payload.purpose      = purpose;
+        if (documentName) payload.documentName = documentName;
+        payload.documentVersion  = documentVersion || '';
+        if (reason)       payload.reason       = reason;
+        if (extFolderId)  payload.extFolderId  = extFolderId;
+        if (extFileId)    payload.extFileId    = extFileId;
+        if (number)       payload.number       = number;
+
+        payload.processStatus    = 'New';
+        payload.inApprovalWorkflow = false;
+        payload.requester        = { id: Number(FOX.employeeId) };
+
+        JSUTIL.callAJAXPost(
+            JSUTIL.getUrl('/data/QualityDocumentRequest/create'),
+            JSON.stringify(payload),
+            function (response) {
+                console.log(response);
+                var newId = response && (response.id || response.Id);
+                if (newId) {
+                    var activityPayload = {
+                        parentRecordId: Number(newId),
+                        name: 'Document Request Created by ' + FOX.employeeName,
+                        performedBy: { id: Number(FOX.employeeId) }
+                    };
+                    JSUTIL.callAJAXPost(
+                        JSUTIL.getUrl('/api/process-activities'),
+                        JSON.stringify(activityPayload),
+                        callbackSuccessDocumentCreated
+                    );
+                } else {
+                    callbackSuccessDocumentCreated(response);
+                }
+            }
+        );
     }
 
     function callbackSuccessFileCreated(response) {
-        $('#ExtFolderId').val(response.data);
+        var folderId = typeof response === 'string' ? response : (response.data || response);
+        $('#ExtFolderId').val(folderId);
         submitNewDocumentForm();
     }
 
@@ -3121,15 +3145,6 @@
         selectedDocumentForDuplication = null; // Clear the global variable
     }
 
-    function callbackAfterGetDepartment(response) {
-        var innerHtml2 = '';
-        $('#department').empty();
-        innerHtml2 += '<option value = "">--none---</option>';
-        $.each(response, function (j, val2) {
-            innerHtml2 += '<option value = "' + val2.name + '">' + val2.name + '</option>';
-        });
-        $('#department').append(innerHtml2);
-    }
 </script>
 <!-- newDocumentRequest.js end  -->
 
@@ -3177,10 +3192,17 @@
 
 <!-- allDocumentRequest.js start -->
 <script>
-    // recordList is injected by the server (Thymeleaf).
-    // Guard so the ready block doesn't crash if it arrives late.
-    if (typeof recordList === 'undefined') { var recordList = []; }
+    var recordList = [];
     window.recordList = recordList;
+
+    function loadDocumentRequestRecords(onLoaded) {
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentRequest/list'), JSON.stringify({}), function (response) {
+            recordList = Array.isArray(response) ? response : [];
+            window.recordList = recordList;
+            buildDocumentRequestTable(recordList);
+            if (typeof onLoaded === 'function') onLoaded();
+        });
+    }
 
     function buildDocumentRequestTable(list) {
         if ($.fn.DataTable.isDataTable('#documentRequestTable')) {
@@ -3188,9 +3210,16 @@
         }
         $('#allDcoumentTable').empty();
 
-        if (list && list.length > 0) {
+        // Sort by number descending — latest number first
+        var sorted = (list || []).slice().sort(function (a, b) {
+            var numA = parseInt((a.number || '').replace(/\D/g, '')) || 0;
+            var numB = parseInt((b.number || '').replace(/\D/g, '')) || 0;
+            return numB - numA;
+        });
+
+        if (sorted.length > 0) {
             var innerHtml = '';
-            $.each(list, function (i, val) {
+            $.each(sorted, function (i, val) {
                 var docName = (val.purpose === 'New')
                     ? (val.documentName || '')
                     : (val.document ? val.document.name : '');
@@ -3198,7 +3227,7 @@
                 var statusLabel = '';
                 if (status === 'New' || status.toLowerCase().includes('review') || status.toLowerCase().includes('approval') || status.toLowerCase().includes('signing')) {
                     statusLabel = '<span class="label" style="margin-left:10px;">' + status + '</span>';
-                } else if (status === 'Training' || status === 'Effective' || status === 'Issuance' || status === 'CFT' || status === 'Preparation') {
+                } else if (status === 'Training' || status === 'Effective' || status === 'Issuance' || status === 'Training Complete' || status === 'QA') {
                     statusLabel = '<span class="label label-success" style="margin-left:10px;">' + status + '</span>';
                 } else if (status.toLowerCase().includes('rejected')) {
                     statusLabel = '<span class="label label-danger" style="margin-left:10px;">' + status + '</span>';
@@ -3220,17 +3249,16 @@
         // triggers "Requested unknown parameter '1' for row 0, column 1".
         $('#documentRequestTable').DataTable({
             destroy: true,
+            order: [],
             language: { emptyTable: 'No Document Requests found.' }
         });
     }
 
-    $(document).ready(function () {
-        var url = new URL(window.location.href);
-        var type = url.searchParams.get('view');
-        var id = url.searchParams.get('id');
+    var url = new URL(window.location.href);
+    var type = url.searchParams.get('view');
+    var id = url.searchParams.get('id');
 
-        buildDocumentRequestTable(recordList);
-
+    loadDocumentRequestRecords(function () {
         if (type) {
             setTimeout(function () {
                 var btn = $('#newDocumentRequestButton');

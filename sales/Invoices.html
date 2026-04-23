@@ -1084,8 +1084,8 @@
                                     style="display:none;"><i data-lucide="pencil"></i> E-Way Bill</a></li>
                             <li><a href="javascript:void(0)" class="dropdown-item cancelEinvoiceBtn btn-white"
                                     style="display:none;"><i data-lucide="pencil"></i> Cancel E-Invoice</a></li>
-                            <li><a href="javascript:void(0)" class="dropdown-item addPaymentBtn"
-                                    style="display:none;"><i data-lucide="check"></i> Make Payment</a></li>
+                            <!-- <li><a href="javascript:void(0)" class="dropdown-item addPaymentBtn"
+                                    style="display:none;"><i data-lucide="check"></i> Make Payment</a></li> -->
                         </ul>
                     </div>
                 </div>
@@ -1789,7 +1789,7 @@
         });
 
         var nextSequence = maxSequence + 1;
-        return "FIOX-" + String(nextSequence).padStart(4, "0");
+        return "FIOX-" + String(nextSequence).padStart(5, "0");
     }
 
     $(function () {
@@ -2878,7 +2878,7 @@
     }
     function callbackAfterInvoiceSave(response) {
         console.log(response);
-        // location.reload();
+        location.reload();
     }
 
 
@@ -3559,7 +3559,7 @@
             '<img src="/assets/images/logo1.png" style="max-width:80px;max-height:60px;" alt="Logo">' +
             '</div>' +
             '<div class="header-cell company-cell">' +
-            '<div class="company-name">Ipca Laboratories Limited</div>' +
+            '<div class="company-name">Suleshwari Pharma Private Limited</div>' +
             '\'PLOT NO.4722,4723,4731,4732\',\'G.I.D.C. ESTATE\', - ANKLESHWAR,<br>' +
             '\'393002\'<br>' +
             'Ph. No \'02646-220594\', - Fax: -<br>' +
@@ -3671,7 +3671,7 @@
             '</table>' +
             '<div class="one-col-row">' +
             '<div class="col-100 center">' +
-            '<div>' + _fmtPreparedBy(invoice.contact.firstName + ' ' + invoice.contact.lastName) + '</div>' +
+            '<div>' + _fmtPreparedBy(invoice?.contact?.firstName + ' ' + invoice?.contact?.lastName) + '</div>' +
             '<div>' + _fmtDateTime(invoice.invoiceDate) + '</div>' +
             '<div style="margin-top: 2px; font-weight: bold;">(Prepared By)</div>' +
             '</div>' +
@@ -3912,7 +3912,7 @@
 
         // ---------- seller ----------
         const SELLER_GSTIN = EINVOICE_CONFIG.gstin || "24ABRCS3418F1Z9";
-        const sellerState = SELLER_GSTIN.substring(0, 2);
+        const sellerState = SELLER_GSTIN?.substring(0, 2);
 
         // ---------- buyer ----------
         const buyer = invoice.customer || {};
@@ -3924,13 +3924,13 @@
 
         const rawGst = typeof buyer.gst === "string" ? buyer.gst.trim() : "";
         const validBuyerGst = /^[0-9]{2}[A-Z0-9]{13}$/.test(rawGst) ? rawGst : "URP";
-
+        console.log('export')
         const isB2B =
             !isExport && validBuyerGst !== "URP";
 
         console.log("isB2B", isB2B);
 
-        let buyerState = isB2B ? validBuyerGst.substring(0, 2) : sellerState;
+        let buyerState = isB2B ? validBuyerGst?.substring(0, 2) : sellerState;
         if (!/^[0-9]{1,2}$/.test(buyerState)) {
             buyerState = sellerState;
         }
@@ -4081,7 +4081,7 @@
                 Addr2: shippedFrom.billingStreet2 || "",
                 Loc: shippedFrom.billingCity,
                 Pin: Number(shippedFrom.billingPostalCode),
-                Stcd: shippedFrom.gst.substring(0, 2)
+                Stcd: shippedFrom?.gst?.substring(0, 2)
             };
         }
 
@@ -4105,7 +4105,7 @@
                     Addr2: consignee.billingStreet2 || "",
                     Loc: consignee.billingCity,
                     Pin: Number(consignee.billingPostalCode),
-                    Stcd: consignee.gst.substring(0, 2)
+                    Stcd: consignee?.gst?.substring(0, 2)
                 };
             }
         }
@@ -4406,7 +4406,7 @@
 
         /* ---------- FROM (SELLER) ---------- */
         const fromGstin = "24ABRCS3418F1Z9";
-        const fromStateCode = Number(fromGstin.substring(0, 2));
+        const fromStateCode = Number(fromGstin?.substring(0, 2));
 
         /* ---------- TO (BILL TO) ---------- */
         const toGstin = isExport ? "URP" : customer.gst;
@@ -5966,6 +5966,21 @@
         });
 
         $('#invoiceTableRecordList').append(innerHtml);
+         var url = new URL(window.location.href);
+    var id = url.searchParams.get('id');
+    if (id) {
+        setTimeout(function () {
+            var btn = $('#invoiceTableRecordList .selectRecordBtn[data-record-id="' + id + '"]');
+            if (!btn.length) {
+                btn = $('#invoiceTableRecordList .selectRecordBtn[id="' + id + '"]');
+            }
+            if (btn.length) {
+                btn.trigger('click');
+            } else {
+                console.warn("Button with id " + id + " not found.");
+            }
+        }, 200);;
+    }
         JSUTIL.reinitializeDataTable();
     })
 

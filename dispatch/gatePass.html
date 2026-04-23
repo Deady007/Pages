@@ -1170,13 +1170,20 @@ if (selectedType && selectedGorId && !selectedBillId) {
             if (currentGatePassItems.length > 0) {
                 $.each(currentGatePassItems, function (i, item) {
                     var product = (item && item.product) || {};
+                    product = (item.productReleaseItem && item.productReleaseItem.product) ? item.productReleaseItem.product : product;
                     var productId = product.id || item.productId;
+
+                    if(!item.batchNumber) { item.batchNumber = item.productReleaseItem.batchNumber; }
+                    if(!item.quantity) { item.quantity = item.productReleaseItem.quantity; }
+                    if(!item.netWeight) { item.netWeight = item.productReleaseItem.netWeight; }
                     
                     // ✅ Enrich product with full details from cache
-                    var productDetails = products.find(function(p) { return p.id == productId; });
+                    var productDetails = products.find(function(p) { return p.id === productId; });
                     if (productDetails) {
                         product = productDetails;
                     }
+                    console.log('product: ', product)
+                    console.log(item)
                     
                     // Create enriched item with full product data
                     var enrichedItem = {
@@ -1188,7 +1195,8 @@ if (selectedType && selectedGorId && !selectedBillId) {
                         netWeight: item.netWeight || '',
                         containerNumber: item.containerNumber || ''
                     };
-                    
+                    console.log('enrichedItem: ', enrichedItem)
+
                     buildItemRow(enrichedItem, 'editItemsTable', false);
                 });
             }

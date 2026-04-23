@@ -1,7 +1,7 @@
 <script src="pages/lib/jquery-3.7.1.js"></script>
 <script src="pages/lib/moment.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script> -->
 <script src="pages/lib/dataTables.js"></script>
 <script src="pages/lib/lucide.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
@@ -2539,7 +2539,7 @@
                 var productPart = [opt.productNumber, opt.productName].filter(Boolean).join(' - ');
                 var stagePart = [opt.code, opt.name].filter(Boolean).join(' - ');
                 var label = [productPart, stagePart].filter(Boolean).join(' | ');
-                options.push('<option value="' + opt.id + '">' + (label || opt.name || ('Stage ' + opt.id)) + '</option>');
+                options.push('<option value="' + opt.id + '">' + (opt.code || opt.name || ('Stage ' + opt.id)) + '</option>');
             });
             $select.html(options.join(''));
             if (hasCurrent) {
@@ -3030,7 +3030,7 @@
 
         function initializeBatchStartDatePickers(container) {
             var $scope = container ? $(container) : $(document);
-            var $inputs = $scope.find('.batch-start-date-input, .datepicker');
+            var $inputs = $scope.find('.batch-start-date-input, .datepicker , .flatpickr-input');
             if (!$inputs.length || !$.fn) {
                 return;
             }
@@ -3213,12 +3213,25 @@
                     console.warn('BPCR record not found in recordList for id:', orderId);
                 }
 
-
                 // toggleProductTransferButtons(selectedStatus);
-                if (currentBPCRRecord.orderStatus == "QC-Approved") {
+                var selectedStatus = (currentBPCRRecord && (currentBPCRRecord.orderStatus || currentBPCRRecord.OrderStatus) || '')
+                    .toString()
+                    .trim()
+                    .toLowerCase();
+
+                if (selectedStatus === 'qc-approved') {
                     console.log("showing buttons")
                     $(".get-intermediate-btn").show()
                     $(".add-transfer-btn").show()
+                    
+                }
+                else if (selectedStatus === 'sent to qa')
+                {
+                    $(".get-intermediate-btn").hide()
+                    $(".add-transfer-btn").hide()
+                    $(".header-save-btn").hide()
+                    $(".print-final-label").hide()
+                    $(".print-bpcr-report").hide()
                 }
                 else {
                     console.log("hiding buttons")
@@ -3446,6 +3459,7 @@
             resetBPCRHeader(false);
 
             var displayNumber = (record && record.number) || fallbackId || '';
+            console.log('>>> displayNumber:', displayNumber, '| raw record.number:', record?.number);
             var displayName = (record && record.name) || fallbackId || '';
             var productInfo = getBPCRProductInfo(record);
             var stageInfo = getBPCRStageInfo(record);
@@ -3511,6 +3525,9 @@
                 || isReleaseStatus(normalized)) {
                 $('.send-to-qc').hide().prop('disabled', true);
             }
+
+            // Single source rule: Sent to QA should never show these header actions.
+            enforceHeaderActionVisibility(currentStatusValue);
         }
 
         function resetBPCRHeader(resetState) {
@@ -4397,9 +4414,17 @@
             $('.edit-bpcr-material').toggle(!materialEditEnabled && allowEdit);
         }
 
+        function normalizeStatusValue(status) {
+            return (status || '').toString().trim().toLowerCase();
+        }
+
+        function isSentToQaStatus(status) {
+            return normalizeStatusValue(status) === 'sent to qa';
+        }
+
         function setHeaderEditMode(enable) {
-            var normalized = (currentStatusValue || '').toLowerCase();
-            var lockedForTest = normalized === 'under test' || normalized === 'under-test';
+            var normalized = normalizeStatusValue(currentStatusValue);
+            var lockedForTest = normalized === 'under test' || normalized === 'under-test' || normalized === 'sent to qa';
             headerEditEnabled = !!enable && !lockedForTest;
 
             // Toggle Edit ↔ Save immediately
@@ -4416,6 +4441,45 @@
 
             $('#bpcrActualStartInput, #bpcrActualEndInput').prop('disabled', !canEditTimes);
             toggleActualTimeEditControls(currentStatusValue);
+            enforceHeaderActionVisibility(currentStatusValue);
+        }
+
+        function enforceHeaderActionVisibility(status) {
+            var normalized = normalizeStatusValue(status);
+            var isSentToQa = normalized === 'sent to qa';
+            var isNew = normalized === 'new';
+            var isRmRequest = normalized === 'rm-request' || normalized === 'rm-requested';
+            var isRmIssued = normalized === 'rm issued' || normalized === 'rm-issued';
+            var isPackingList = normalized === "packing list creation" || normalized === "packing-list-creation";
+            var mustHideHeaderButtons = isSentToQa || isNew || isRmRequest || isRmIssued || isPackingList;
+
+            document.querySelectorAll('.header-save-btn, .print-final-label, .print-bpcr-report').forEach(function (el) {
+                if (mustHideHeaderButtons) {
+                    el.style.setProperty('display', 'none', 'important');
+                } else {
+                    el.style.removeProperty('display');
+                }
+            });
+
+            if (isNew) {
+                $('#bpcrProductTransferTab').hide();
+            }
+
+            if (isRmRequest ) {
+                $('#bpcrFinalProductTab').hide();
+                                $('#bpcrProductTransferTab').show();
+            }
+
+            if(isRmIssued)
+            {
+                $('#bpcrFinalProductTab').show();
+                $('#bpcrProductTransferTab').show();
+            }
+
+            if(isPackingList)
+            {
+
+            }
         }
 
         // Force visibility with !important to override any CSS rule. Operates on every matching node.
@@ -4698,10 +4762,11 @@
 
         function toggleQCButton(status) {
             var isFinalStage = isFinalStageForCurrentBatch();
-            var normalized = (status || '').toLowerCase();
+            var normalized = normalizeStatusValue(status);
 
             var mustHide = normalized === 'under test'
                 || normalized === 'under-test'
+                || isSentToQaStatus(normalized)
                 || normalized === 'complete'
                 || normalized === 'release'
                 || normalized === 'released'
@@ -4713,14 +4778,15 @@
             if (mustHide) {
                 $('.send-to-qc').hide().prop('disabled', true);
                 $('.print-final-label').hide();
-                var showReport = isCompletedStatus(status)
+                var showReport = !isSentToQaStatus(normalized) && (isCompletedStatus(status)
                     || (!isFinalStage && (normalized === 'production output'
-                        || isProductionEndedStatus(status)));
+                        || isProductionEndedStatus(status))));
                 $('.print-bpcr-report').toggle(showReport);
                 toggleFinishProductionButton(status);
                 // Also set the CSS attribute fallback
                 var statusKey = normalized.replace(/\s+/g, '-');
                 $('#editBPCRPanel').attr('data-status', statusKey);
+                enforceHeaderActionVisibility(status);
                 return;
             }
 
@@ -4742,6 +4808,7 @@
 
             var statusKey = normalized.replace(/\s+/g, '-');
             $('#editBPCRPanel').attr('data-status', statusKey);
+            enforceHeaderActionVisibility(status);
         }
 
         function toggleActualTimeEditControls(status) {
@@ -4802,6 +4869,7 @@
 
         function updateProgressSteps(status) {
             const currentStep = getProgressStepForStatus(status);
+            updateProgressStepNumbers();
             const $steps = $('.step-button');
             $steps.each(function () {
                 var stepNumber = Number($(this).data('step'));
@@ -4810,6 +4878,13 @@
                 const isActive = stepNumber === currentStep;
                 $(this).toggleClass('completed', isCompleted);
                 $(this).toggleClass('active', isActive);
+            });
+        }
+
+        function updateProgressStepNumbers() {
+            const $visibleSteps = $('.process-flow-container .flow-row .step-button:visible');
+            $visibleSteps.each(function (index) {
+                $(this).find('.stepnumber').text(index + 1);
             });
         }
 
@@ -5001,6 +5076,14 @@
             const displayValue = uom
                 ? `${formattedQty || '0'} ${uom}`
                 : (formattedQty || '0');
+                if(displayValue == 0){
+                    $('#bpcrTransferQuantity').prop('disabled',true)
+                    $('#bpcrTransferSaveBtn').prop('disabled',true)
+                }
+                else{
+                                        $('#bpcrTransferQuantity').prop('disabled',false)
+                    $('#bpcrTransferSaveBtn').prop('disabled',false)
+                }
             $input.val(displayValue);
         }
 
@@ -5259,8 +5342,9 @@
                 conditions: [`BatchNumber = '${batchNumber}'`],
                 logic: '{0}'
             };
-            JSUTIL.callAJAXPost('/api/order-material-transactions/list',
-                JSON.stringify(payload),
+            // JSUTIL.callAJAXPost('/api/order-material-transactions/list',
+            //     JSON.stringify(payload),
+            JSUTIL.callAJAXGet('/api/order-material-transactions/order/'+batchNumber,
                 function (res) {
                     const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
                     productTransferTransactions = (list || []).slice().sort(function (a, b) {
@@ -5873,8 +5957,10 @@
                     + '<td>' + formatDateShortDisplay(txn.transactionDate || txn.TransactionDate) + '</td>'
                     + '<td>' + escapeHtml(txnDocCode) + '</td>'
                     + '<td>' + escapeHtml(transferTo || '-') + '</td>'
-                    + '<td>' + escapeHtml(productName || '-') + '</td>'
-                    + '<td>' + escapeHtml(productUom) + '</td>'   // ← UOM next to Product
+                    // + '<td>' + escapeHtml(productName || '-') + '</td>'
+                    // + '<td>' + escapeHtml(productUom) + '</td>' 
+                    + '<td>' + (currentBPCRRecord.productStage.product.name || '') + '</td>'
++ '<td>' + (currentBPCRRecord.productStage.product.uom || '') + '</td>'
                     + '<td class="text-right">' + receiptDisplay + '</td>'
                     + '<td class="text-right">' + issueDisplay + '</td>'
                     + '<td class="text-right">' + balanceDisplay + '</td>'
@@ -6034,9 +6120,17 @@
                         orderMaterialId: orderMaterialId
                     },
                     function () {
+                        var targetStatus = '';
                         // Step 4: Update BPCR status
-                        const targetStatus = BPCR_PACKING_LIST_STATUS; // "Packing List Creation"
+                        if(!currentBPCRRecord.productStage.isFinalStage)
+                        {
+                            targetStatus = "Release"
+                        }
+                        else{
+                            targetStatus = BPCR_PACKING_LIST_STATUS; // "Packing List Creation"
+                        }
 
+                        console.log("Target Status : ", targetStatus)
                         updateBPCRStatusValue(targetStatus, function () {
                             currentStatusValue = targetStatus;
 
@@ -6477,7 +6571,7 @@
             if (requestType) {
                 requestPayload.type = requestType;
             }
-            const remarksText = buildProductRequestRemark(currentBPCRRecord, currentBPCRId, lotLabel);
+            const remarksText = buildProductRequestRemark(currentBPCRRecord, currentBPCRId, lotLabel, materials);
             if (remarksText) {
                 requestPayload.remarks = remarksText;
             }
@@ -6606,11 +6700,22 @@
             });
         }
 
-        function buildProductRequestRemark(record, fallbackId, lotLabel) {
+        function buildProductRequestRemark(record, fallbackId, lotLabel, materials) {
             const orderNumber = (record?.number || '').toString().trim();
             const idPart = fallbackId ? ` (ID:${fallbackId})` : '';
             const baseText = `${orderNumber || fallbackId || ''}${idPart}`.trim();
             let remark = baseText;
+            if (Array.isArray(materials) && materials.length) {
+                const matIds = materials
+                    .filter(function (m) { return m.requestedQty > 0; })
+                    .map(function (m) { return m.orderMaterialId; })
+                    .filter(Boolean)
+                    .filter(function (v, i, arr) { return arr.indexOf(v) === i; });
+                if (matIds.length) {
+                    const matPart = 'Mat-Order ID: ' + matIds.join(', ');
+                    remark = remark ? `${remark} | ${matPart}` : matPart;
+                }
+            }
             if (lotLabel) {
                 remark = remark ? `${remark} | Lot: ${lotLabel}` : `Lot: ${lotLabel}`;
             }
@@ -9375,10 +9480,12 @@
 
         function toggleQualityControlStep(show) {
             $('.step-button[data-step="6"]').toggle(!!show);
+            updateProgressStepNumbers();
         }
 
         function togglePackingListStep(show) {
             $('.step-button[data-step="5"]').toggle(!!show);
+            updateProgressStepNumbers();
         }
 
         function isFinalStageForCurrentBatch() {

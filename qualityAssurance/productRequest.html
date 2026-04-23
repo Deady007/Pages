@@ -438,7 +438,7 @@
                             </div>
                             <div class="col-sm-6 approver" style="display: none;" >
                                 <div class="form-group">
-                                    <label for="">Approved By</label>
+                                    <label for="">Reviewed By</label>
                                     <input type="text" class="form-control approvedBy" disabled readonly>
                                 </div>
                             </div>
@@ -650,6 +650,7 @@
     <!--newMaterialRequestPanel.html end-->
 
     <script>
+        var updatedStatus = ''
         lucide.createIcons();
         // allMaterialRequestPanel.js start
         if (typeof window.jQuery === "undefined") {
@@ -1129,7 +1130,7 @@
                                 $(".sendApproval").hide();
 
                                 // Only show Accept/Reject buttons if user is QA Head
-                                if (isQAHead) {
+                                if (isQAHead && (currentRecordData?.initiator?.id != FOX.employeeId)) {
                                     $(".acceptBtn").show();
                                     $(".rejectBtn").show();
                                     $("#approveRejectResultBtn").show();
@@ -1350,6 +1351,7 @@
                             postUrl,
                             JSON.stringify(editDocumentPayload),
                             function (response) {
+                                updatedStatus = 'Updated'
                                 callbackSuccessDocumentUpdate(response, {
                                     showToast: true,
                                     message: "Material request saved successfully.",
@@ -1364,6 +1366,7 @@
                     const dataToSend = {
                         processStatus: "In Review",
                     };
+                    updatedStatus = 'In Review'
                     var postUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1380,6 +1383,7 @@
                     const statusUpdateData = {
                         processStatus: "Accepted",
                     };
+                    updatedStatus = 'Approved'
                     var statusUpdateUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1457,6 +1461,7 @@
                     const dataToSend = {
                         processStatus: "Rejected",
                     };
+                    updatedStatus ='Rejected'
                     var postUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1475,6 +1480,7 @@
                         processStatus: "Accepted",
                         approvedBy:{id:FOX.employeeId}
                     };
+                    updatedStatus = 'Approved'
                     var statusUpdateUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1550,6 +1556,7 @@
                         approvedBy:{id:FOX.employeeId}
 
                     };
+                    updatedStatus = 'Rejected'
                     var postUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1673,7 +1680,7 @@
         function callbackSuccessDocumentUpdate(response, options) {
             console.log(response);
             var historyObj = {
-                name: "Product Request is updated",
+                name: "Product Request is "+updatedStatus,
                 startDate: new Date(),
                 performedBy: { id: FOX.employeeId },
                 parentRecordId: currentRecordId,
@@ -1963,7 +1970,6 @@
                 $(".product-search-results").remove();
             });
 
-            $(document).off("click.materialReqSave", ".newMaterialSaveBtn");
             $(document).on(
                 "click.materialReqSave",
                 ".newMaterialSaveBtn",
@@ -2237,12 +2243,13 @@
         }
 
         function callbackNewProduct(response) {
-            console.log(response);
+            console.log('abcdd',response);
+            response = response.sort((a,b) => b.id -a.id)
             var historyObj = {
                 name: "Product Request Created",
                 performedBy: { id: FOX.employeeId },
                 startDate: new Date(),
-                parentRecordId: response.id,
+                parentRecordId: response[0].id,
             };
             JSUTIL.callAJAXPost(
                 "/api/process-activities",
@@ -2265,6 +2272,10 @@
         }
 
         function saveNewMaterialRequest($btn) {
+            if(!FOX.employeeId){
+                JSUTIL.buildErrorModal('Employee is not assigned')
+                return
+            }
             var categoryPayload = JSUTIL.buildFormDataJSON("newRecordInput");
             var _missing = [];
             if (!categoryPayload.purpose) _missing.push("Purpose");

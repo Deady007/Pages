@@ -161,6 +161,8 @@
                     <div class="ibox-tools">
                         <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
                                 data-lucide="x"></i> Close </button>
+                              <button type="button" class="btn btn-sm btn-default viewHistory"><i data-lucide="clock"></i>History</button>
+                      
                         <button type="button" class="btn btn-default btn-sm printSlip" style="display: none;"><i
                                 data-lucide="printer"></i> Print Packing Slip </button>
                         <button type="button" class="btn btn-secondary btn-sm finalizeBtn" style="display: none;"><i
@@ -288,7 +290,8 @@
                             <label for="invoiceDate">
                                 <i class="ti ti-calendar"></i> Invoice Date <span class="text-danger">*</span>
                             </label>
-                            <input type="text" class="form-control" id="invoiceDate" placeholder="DD/MM/YYYY" autocomplete="off">
+                            <input type="text" class="form-control" id="invoiceDate" placeholder="DD/MM/YYYY"
+                                autocomplete="off">
                         </div>
 
                         <!-- Distance (approx) -->
@@ -638,12 +641,16 @@
 
         // Save button
         $('.newDispatchSaveBtn').on('click', function () {
-            saveDispatch();
+            JSUTIL.buildAuthenticationModal(function(){
+                saveDispatch();
+            })
         });
 
         // Cancel button
         $('.newRecordCancelBtn').on('click', function () {
-            cancelDispatch();
+            JSUTIL.buildAuthenticationModal(function(){
+                cancelDispatch();
+            })
         });
     }
 
@@ -652,27 +659,58 @@
     // OLD: POST /data/ProductionRequest/list with conditions/logic/fields
     // NEW: GET /api/production-requests/search?number=xxx (try number first, then name)
     // ============================================================
+    // function searchProductionRequests(searchTerm) {
+    //     var upperTerm = searchTerm.toUpperCase();
+    //     // Try search by number first
+    //     JSUTIL.callAJAXGet('/api/production-requests/search?number=' + encodeURIComponent(upperTerm), function (response) {
+    //         var results = response || [];
+    //         if (!Array.isArray(results)) results = [results];
+
+    //         if (results.length > 0) {
+    //             displayProductionRequestResults(results);
+    //         } else {
+    //             // Fallback: try search by name
+    //             JSUTIL.callAJAXGet('/api/production-requests/search?name=' + encodeURIComponent(upperTerm), function (nameResponse) {
+    //                 var nameResults = nameResponse || [];
+    //                 if (!Array.isArray(nameResults)) nameResults = [nameResults];
+    //                 displayProductionRequestResults(nameResults);
+    //             });
+    //         }
+    //     });
+    // }
     function searchProductionRequests(searchTerm) {
         var upperTerm = searchTerm.toUpperCase();
-        // Try search by number first
-        JSUTIL.callAJAXGet('/api/production-requests/search?number=' + encodeURIComponent(upperTerm), function (response) {
-            var results = response || [];
-            if (!Array.isArray(results)) results = [results];
 
-            if (results.length > 0) {
-                displayProductionRequestResults(results);
-            } else {
-                // Fallback: try search by name
-                JSUTIL.callAJAXGet('/api/production-requests/search?name=' + encodeURIComponent(upperTerm), function (nameResponse) {
-                    var nameResults = nameResponse || [];
-                    if (!Array.isArray(nameResults)) nameResults = [nameResults];
-                    displayProductionRequestResults(nameResults);
+        // Fire all three searches in parallel, then merge & deduplicate
+        var results = { byNumber: null, byName: null, byEpo: null };
+
+        function tryRender() {
+            if (results.byNumber === null || results.byName === null || results.byEpo === null) return;
+            var seen = {};
+            var merged = [];
+            [results.byNumber, results.byName, results.byEpo].forEach(function (list) {
+                (list || []).forEach(function (pr) {
+                    var id = pr.id || pr.Id;
+                    if (id && !seen[id]) { seen[id] = true; merged.push(pr); }
                 });
-            }
+            });
+            displayProductionRequestResults(merged);
+        }
+
+        JSUTIL.callAJAXGet('/api/production-requests/search?number=' + encodeURIComponent(upperTerm), function (r) {
+            results.byNumber = Array.isArray(r) ? r : (r ? [r] : []);
+            tryRender();
+        });
+        JSUTIL.callAJAXGet('/api/production-requests/search?name=' + encodeURIComponent(upperTerm), function (r) {
+            results.byName = Array.isArray(r) ? r : (r ? [r] : []);
+            tryRender();
+        });
+        JSUTIL.callAJAXGet('/api/production-requests/search?epoNumber=' + encodeURIComponent(upperTerm), function (r) {
+            results.byEpo = Array.isArray(r) ? r : (r ? [r] : []);
+            tryRender();
         });
     }
 
-    // Display Production Request search results
     function displayProductionRequestResults(list) {
         var $resultsContainer = $('#productionRequestResults');
         $resultsContainer.empty();
@@ -684,11 +722,12 @@
                 var number = pr.number || pr.Number || '';
                 var product = pr.product || pr.Product || {};
                 var productName = product.name || product.Name || '';
-                var text = number;
-                if (productName) {
-                    text += ' - ' + productName;
-                }
+                var epoNumber = pr.epoNumber || pr.EpoNumber || '';
+                var text = '';
 
+                if (epoNumber) { text += ' ' + epoNumber + ''; }
+                if (productName) { text += ' - ' + productName; }
+                if (number) { text += ' - ' + '(' + number + ')' }
                 var $item = $('<a href="javascript:void(0);" class="list-group-item list-group-item-action"></a>')
                     .text(text || 'Production Request')
                     .css({ background: '#fff', color: '#333' })
@@ -703,6 +742,38 @@
 
         $resultsContainer.show();
     }
+
+    // Display Production Request search results
+    // function displayProductionRequestResults(list) {
+    //     var $resultsContainer = $('#productionRequestResults');
+    //     $resultsContainer.empty();
+
+    //     if (!list || !list.length) {
+    //         $resultsContainer.html('<a class="list-group-item">No production requests found</a>');
+    //     } else {
+    //         $.each(list, function (index, pr) {
+    //             var number = pr.number || pr.Number || '';
+    //             var product = pr.product || pr.Product || {};
+    //             var productName = product.name || product.Name || '';
+    //             var text = number;
+    //             if (productName) {
+    //                 text += ' - ' + productName;
+    //             }
+
+    //             var $item = $('<a href="javascript:void(0);" class="list-group-item list-group-item-action"></a>')
+    //                 .text(text || 'Production Request')
+    //                 .css({ background: '#fff', color: '#333' })
+    //                 .data('productionRequest', pr)
+    //                 .on('click', function () {
+    //                     selectProductionRequest($(this).data('productionRequest'));
+    //                     $resultsContainer.hide();
+    //                 });
+    //             $resultsContainer.append($item);
+    //         });
+    //     }
+
+    //     $resultsContainer.show();
+    // }
 
     // When a Production Request is chosen, autofill dependent fields and lock them
     function selectProductionRequest(pr) {
@@ -1127,6 +1198,7 @@
         }
         payload.processStatus = "New";
         payload.type = "Dispatch";
+        payload['initiator'] = {id:FOX.employeeId}
         var remainingQty = parseFloat($('#quantity').val()) || 0;
         var totalNetWeight = 0;
         $.each(releaseItems, function (i, item) {
@@ -1138,9 +1210,9 @@
 
         // Fetch all product releases to generate next number, then create via REST API
         JSUTIL.callAJAXGet('/api/product-releases', function (allReleases) {
-            payload.number = generateNextNumber(allReleases, 'PR');
-            console.log('aaaaaa', payload);
-
+            payload.number = generateNextNumber(allReleases, 'PL');
+            
+            console.log('final payload',payload)
             JSUTIL.callAJAXPost('/api/product-releases', JSON.stringify(payload), function (productRelease) {
                 // Now create ProductReleaseItems one by one
                 saveProductReleaseItems(productRelease.id);
@@ -1203,7 +1275,16 @@
         // Create items one by one sequentially
         function createItemSequentially(idx) {
             if (idx >= itemsToCreate.length) {
-                location.reload();
+                // location.reload();
+                var historyObj = {
+                    name:"Material Release is created",
+                    startDate:new Date(),
+                    parentRecordId : productReleaseId,
+                    performedBy:{id:FOX.employeeId}
+                }
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                    location.reload()
+                })
                 return;
             }
 
@@ -1214,7 +1295,16 @@
         }
 
         if (itemsToCreate.length === 0) {
-            location.reload();
+            // location.reload();
+            var historyObj = {
+                    name:"Material Release is created",
+                    startDate:new Date(),
+                    parentRecordId : productReleaseId,
+                    performedBy:{id:FOX.employeeId}
+                }
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                    location.reload()
+                })
             return;
         }
 
@@ -1636,11 +1726,6 @@
         clearInvoiceModalError();
     }
 
-    // ============================================================
-    // NEW REST API: Create Invoice with Items
-    // OLD: POST /data/Invoice/create_with_sequence, /data/InvoiceLineItem/create_multiple
-    // NEW: POST /api/sales/invoices (with auto-number), then POST /api/sales/invoices/{id}/items one by one
-    // ============================================================
     function createInvoiceWithItems(customer, paymentTerms, invoiceNotes, invoiceDistance) {
 
         // Ensure we have the latest DispatchInstruction (for LR details) before creating invoice
@@ -1659,7 +1744,7 @@
 
             $.each(currentReleaseItems, function (index, releaseItem) {
                 var productLot = releaseItem.productLot || {};
-                var productObj = productLot.product || {};
+                var productObj = productLot?.product || releaseItem?.product || {};
                 var batchNumber = releaseItem.batchNumber || '';
                 var productId = productObj.id || '';
                 var key = (productId || 'unknown') + '|' + batchNumber;
@@ -1875,7 +1960,17 @@
 
             // JSUTIL.openInNewTab('/app/sales_cloud/invoices?id=' + invoiceId);
 
-            loadContentPage("sales/Invoices.html");
+            // loadContentPage("sales/Invoices.html");
+            var historyObj = {
+                    name:"Material Release is Closed",
+                    startDate:new Date(),
+                    parentRecordId : productReleaseId,
+                    performedBy:{id:FOX.employeeId}
+                }
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                    // location.reload()
+                    loadContentPage('sales/Invoices.html')
+                })
 
             // Commenting out reload to preserve SPA state after navigation
             // setTimeout(function () {
@@ -1970,12 +2065,12 @@
             String(today.getMonth() + 1).padStart(2, '0') + '/' +
             today.getFullYear();
 
-        var plNumber = 'PL' + today.getFullYear() +
+        var plNumber = 'PL-' + today.getFullYear() +
             String(today.getMonth() + 1).padStart(2, '0') +
-            String(today.getDate()).padStart(2, '0') +
-            String(currentDispatchId).padStart(4, '0');
+            String(today.getDate()).padStart(2, '0') + '-'
+        String(currentDispatchId).padStart(4, '0');
 
-        var companyName = 'SULESHVARI LABORATORIES LIMITED';
+        var companyName = 'SULESHVARI PHARMA PRIVATE LIMITED';
         var location = currentDispatchData.location || '168 - ANKLESHWAR';
         var consignee = currentDispatchData.account ? currentDispatchData.account.name : '';
         var epoNumber = currentDispatchData.epoNumber || '';
@@ -2199,7 +2294,26 @@
                     </table>
                 </div>
 
-                
+                <div class="container-details" style="margin-top: 30px;">
+                    <h4 style="margin: 15px 0 10px 0;">Container Details (Total: ${containerCount})</h4>
+                    <table class="container-table" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #e0e0e0;">
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 10%;">Container</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left; width: 15%;">Batch Number</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: left; width: 20%;">Product Name</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 10%;">Product Code</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 13%;">Stock Type</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 11%;">Gross Weight</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 11%;">Tare Weight</th>
+                                <th style="border: 1px solid #000; padding: 8px; text-align: right; width: 10%;">Net Weight</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${containerRows}
+                        </tbody>
+                    </table>
+                </div>
                 
                 <div style="margin-top: 30px; margin-bottom: 30px;">
                     <table style="width: 100%; border: 1px solid #000;">
@@ -2398,25 +2512,41 @@
             $('.acceptBtn').hide();
             $('.rejectBtn').hide();
         } else if (currentDispatchData.processStatus === 'New' || currentDispatchData.processStatus === 'Rejected') {
-            $('.printSlip').hide();
+            $('.printSlip').show();
             $('.generateInvoice').hide();
             $('.finalizeBtn').hide();
             $('.openInvoice').hide();
-            $('.submitForApproval').show();
             $('.acceptBtn').hide();
             $('.rejectBtn').hide();
+            if(currentDispatchData.initiator && currentDispatchData.initiator.id == FOX.employeeId){
+                $('.submitForApproval').show();
+            }
+            else{
+                $('.submitForApproval').hide();
+            }
         } else if (currentDispatchData.processStatus === 'In Review') {
-            $('.printSlip').hide();
+            $('.printSlip').show();
             $('.generateInvoice').hide();
             $('.finalizeBtn').hide();
             $('.openInvoice').hide();
             $('.submitForApproval').hide();
-            $('.acceptBtn').show();
+            if(FOX.employeeDepartment == 'QA' || FOX.employeeDepartment == 'Quality Assuarance'){
+                $('.acceptBtn').show();
             $('.rejectBtn').show();
+            }
+            else{
+                $('.acceptBtn').hide();
+            $('.rejectBtn').hide();
+            }
         } else if (currentDispatchData.processStatus === 'Accepted') {
             $('.printSlip').show();
             $('.generateInvoice').hide();
-            $('.finalizeBtn').show();
+            if(currentDispatchData.initiator && currentDispatchData.initiator.id == FOX.employeeId){
+                $('.finalizeBtn').show();
+            }
+            else{
+                $('.finalizeBtn').hide();
+            }
             $('.openInvoice').hide();
             $('.submitForApproval').hide();
             $('.acceptBtn').hide();
@@ -2457,33 +2587,82 @@
             return;
         }
 
+        JSUTIL.buildAuthenticationModal(function(){
+
         JSUTIL.startSpinner();
-        finalizeDispatch();
+            finalizeDispatch();
+        })
     });
 
     $('.submitForApproval').on('click', function () {
-        JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
+       JSUTIL.buildAuthenticationModal(function(){
+         JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
             JSON.stringify({ processStatus: 'In Review' }),
-            function () { location.reload(); }
+            function () { 
+                // location.reload(); 
+                var historyObj = {
+                    name:"Material Release is sent for QA Approval",
+                    startDate:new Date(),
+                    parentRecordId : productReleaseId,
+                    performedBy:{id:FOX.employeeId}
+                }
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                    location.reload()
+                })
+            }
         );
+       })
     });
 
     $('.acceptBtn').on('click', function () {
-        JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
-            JSON.stringify({ processStatus: 'Accepted' }),
-            function () { location.reload(); }
+        JSUTIL.buildAuthenticationModal(function(){
+                    JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
+            JSON.stringify({ processStatus: 'Accepted' ,
+                reviewer:{id:FOX.employeeId}
+            }),
+            function () { 
+                // location.reload();
+                var historyObj = {
+                    name:"Material Release is approved by QA",
+                    startDate:new Date(),
+                    parentRecordId : productReleaseId,
+                    performedBy:{id:FOX.employeeId}
+                }
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                    location.reload()
+                })
+             }
         );
+
+        })
     });
 
     $('.rejectBtn').on('click', function () {
-        JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
-            JSON.stringify({ processStatus: 'Rejected' }),
-            function () { location.reload(); }
+        JSUTIL.buildAuthenticationModal(function(){
+                    JSUTIL.callAJAXPut('/api/product-releases/' + currentDispatchId,
+            JSON.stringify({ processStatus: 'Rejected' ,
+                reviewer:{id:FOX.employeeId}
+            }),
+            function () { 
+                // location.reload();
+                var historyObj = {
+                    name:"Material Release is rejected by QA",
+                    startDate:new Date(),
+                    parentRecordId : productReleaseId,
+                    performedBy:{id:FOX.employeeId}
+                }
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                    location.reload()
+                })
+             }
         );
+
+        })
     });
 
     $('.openInvoice').on('click', function () {
-        JSUTIL.openInNewTab('/app/sales_cloud/invoices?id=' + invoiceId1);
+        // JSUTIL.openInNewTab('/app/sales_cloud/invoices?id=' + invoiceId1);
+        JSUTIL.openInNewTab('/invoices?id='+invoiceId1)
     });
 
     // ============================================================
@@ -2537,7 +2716,7 @@
             var rawLotQty = productLotObj.quantityOnHand ?? productLotObj.QuantityOnHand ?? productLotObj.quantity ?? productLotObj.Quantity ?? null;
             var lotQuantity = rawLotQty !== null && rawLotQty !== undefined ? Number(rawLotQty) : null;
             lotQuantity = isNaN(lotQuantity) ? null : lotQuantity;
-
+            console.log('aa', productObj)
             if (!productId || !batchNumber) {
                 console.warn('Skipping item with missing product or batch:', item);
                 return;
@@ -2600,7 +2779,16 @@
             JSUTIL.stopSpinner();
             showSuccess('Dispatch finalized successfully! Inventory quantities updated.');
             console.log('All inventory updates completed successfully');
-            location.reload();
+            // location.reload();
+            var historyObj = {
+                    name:"Material Release sent to Dispatch Instruction",
+                    startDate:new Date(),
+                    parentRecordId : productReleaseId,
+                    performedBy:{id:FOX.employeeId}
+                }
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                    location.reload()
+                })
             return;
         }
 
@@ -2759,6 +2947,7 @@
     // NEW: POST /api/product-transactions (one at a time)
     // ============================================================
     function createTransactionRecords(batch, callback) {
+        console.log('data', batch)
         var transactionsToCreate = batch.items.length;
 
         if (transactionsToCreate === 0) {
@@ -2986,6 +3175,11 @@
     }
 
     $(document).ready(function () {
+
+
+         $(document).on('click','.viewHistory',function(){
+            JSUTIL.showProcessActivityPanel(currentDispatchData.id,'#editRecordPanel','History of '+currentDispatchData.number)
+        })
         // Fetch all product releases via REST API
         JSUTIL.callAJAXGet('/api/product-releases', function (response) {
             // Client-side filter: only type = 'Dispatch'

@@ -1441,14 +1441,14 @@
         }
     }
 
-     var typeMap = {
-            RM: ["raw material"],
-            PM: ["packaging material"],
-            GM: ["general material"],
-        };
+    var typeMap = {
+        RM: ["raw material"],
+        PM: ["packaging material"],
+        GM: ["general material"],
+    };
     function getVendorTypeAllowedTypes() {
         var vType = _currentVendorType || "";
-         typeMap = {
+        typeMap = {
             RM: ["raw material"],
             PM: ["packaging material"],
             GM: ["general material"],
@@ -1498,8 +1498,8 @@
                         itemId === currentRowProductId
                     );
                 });
-                var vendorItems = allItems.filter(v=>v.vendor.id == currentRecord.vendor.id)
-                console.log('final',finalFilteredResults,vendorItems)
+                var vendorItems = allItems.filter(v => v.vendor.id == currentRecord.vendor.id)
+                console.log('final', finalFilteredResults, vendorItems)
                 finalFilteredResults = finalFilteredResults.filter(
                     (p) =>
                         !allItems.some(
@@ -3010,7 +3010,17 @@
         location.reload();
     }
     function deleteVendorQualificationCallbackComplete(response) {
-        location.reload();
+        var historyObj = {
+            name: 'Manufacturer Qualification is cancelled',
+            performedBy: { id: FOX.employeeId },
+            parentRecordId: currentRecord.id,
+            startDate: new Date()
+        }
+        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify(historyObj), function (res) {
+            console.log(res)
+            location.reload()
+        })
+        // location.reload();
     }
 
     // Vendor search for edit mode
@@ -3615,6 +3625,29 @@
                     );
                     if ($(".newManuType").val() === "newManu") {
                         var obj = JSUTIL.buildFormDataJSON("newRecordInput");
+
+                        var number = obj.number || obj.Number || '';
+
+                        // Required check
+                        if (!number || number.trim() === '') {
+                            JSUTIL.buildErrorModal('Manufacturer Code is required.');
+                            return;
+                        }
+
+                        number = number.trim();
+
+                        // Length check (3–10)
+                        if (number.length < 3 || number.length > 10) {
+                            JSUTIL.buildErrorModal('Manufacturer Code must be between 3 and 10 characters.');
+                            return;
+                        }
+
+                        var regex = /^(?=[A-Za-z0-9#\/-]{3,10}$)(?!.*#.*#)(?!.*-.*-)(?!.*\/.*\/)[A-Za-z0-9#\/-]+$/;
+
+                        if (!regex.test(number)) {
+                            JSUTIL.buildErrorModal('Manufacturer Code can only contain letters, numbers, and at most one of each: #, -, /. No spaces allowed.');
+                            return;
+                        }
                         obj["accountStatus"] = "Pending Qualification";
                         JSUTIL.callAJAXPost(
                             "/api/account",

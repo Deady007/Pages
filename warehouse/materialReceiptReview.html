@@ -3945,7 +3945,7 @@ var dataflag = ''
 
             var receiptUpdateData = {
                 processStatus: newStatus,
-                modifiedBy: { id: FOX.employeeId }
+                reviewer: { id: FOX.employeeId }
             };
             JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
                 console.log('Receipt status updated to ' + newStatus + ':', receiptRes);
@@ -4040,7 +4040,8 @@ var dataflag = ''
         }
         else if (dataflag == false) {
             var receiptUpdateData = {
-                processStatus: 'GIM Rejected'
+                processStatus: 'GIM Rejected',
+                reviewer:{id:FOX.employeeId}
             };
             JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipts/' + currentRecordId), JSON.stringify(receiptUpdateData), function (receiptRes) {
                 console.log('Receipt rejected:', receiptRes);
@@ -4504,7 +4505,7 @@ var dataflag = ''
                     id: c.id,
                     quantity: c.quantity,
                     netweight: c.netWeight,
-                    uom: c.uom
+                    uom: c.uom || currentProductsDetails?.product?.uom || ''
                 }, index + 1, list.length);
             });
         }

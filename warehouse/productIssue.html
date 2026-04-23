@@ -330,10 +330,12 @@
                     <div id="allocationOverviewSections" style="max-height:420px; overflow-y:auto;">
                         <div class="text-center text-muted">No allocation available.</div>
                     </div>
-                    <div id="allocationContainerValidationMessage" class="alert alert-danger small" style="display:none; margin-top:8px;"></div>
+                    <div id="allocationContainerValidationMessage" class="alert alert-danger small"
+                        style="display:none; margin-top:8px;"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="saveAllocationContainersBtn">Save Containers</button>
+                    <button type="button" class="btn btn-primary" id="saveAllocationContainersBtn">Save
+                        Containers</button>
                     <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -1272,7 +1274,7 @@
                     if (lotId) {
                         const url = '/api/product-containers/search?productLotId=' + encodeURIComponent(lotId);
                         JSUTIL.callAJAXGet(url, function (res) {
-                        console.log("product containers for lot", lotId, res);  
+                            console.log("product containers for lot", lotId, res);
                             const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
                             containersByLot[lotId] = list;
                             pending--;
@@ -1318,6 +1320,7 @@
                 totalQuantity: totalQty,
                 uom: lot?.uom || lot?.Uom || '',
                 expiryDate: lot?.expiryDate || lot?.ExpiryDate || '',
+                retestDate: lot?.retestDate || '',
                 manufacturingDate: lot?.manufacturingDate || lot?.ManufacturingDate || '',
                 processStatus: lot?.processStatus || lot?.ProcessStatus || '',
                 receiptItem: lot?.receiptItem,
@@ -1358,7 +1361,15 @@
             const lots = (state.productLots && (state.productLots[productId] || state.productLots[String(productId)])) || [];
             const availableLots = (lots || []).filter(function (lot) {
                 const status = (lot?.processStatus || '').toString().toLowerCase();
-                return status === 'approved' && Number(lot?.quantity || 0) > 0;
+
+              return (
+  status === 'approved' &&
+  Number(lot?.quantity || 0) > 0 &&
+  (
+    (lot?.expiryDate && new Date(lot.expiryDate) > new Date()) ||
+    (lot?.retestDate && new Date(lot.retestDate) > new Date())
+  )
+);
                 // return Number(lot?.quantity || 0) > 0;
             });
             return sortLotsForIssue(availableLots);
@@ -1682,7 +1693,7 @@
 
         function formatDateVal(val) {
             if (!val) {
-                return '-';
+                return 'N/A';
             }
             return JSUTIL.getDate ? JSUTIL.getDate(val) : val;
         }
@@ -2020,6 +2031,7 @@
                             lotId: lotId,
                             batchNumber: lot.batchNumber || '',
                             expiryDate: lot.expiryDate || '',
+                            retestDate: lot.retestDate || '',
                             uom: lot.uom || '',
                             allocatedWeight: allocToUse,
                             arn: lot.arn || '',
@@ -2171,6 +2183,7 @@
                         arn: lotInfo.arn || '',
                         lotName: lotInfo.name || '',
                         expiryDate: lotInfo.expiryDate || '',
+                        retestDate: lotInfo.retestDate || '',
                         uom: lotInfo.uom || c.uom || '',
                         containers: [],
                         allocatedWeight: 0
@@ -2276,27 +2289,28 @@
         <td>${arnVal}</td>
         <td>${availableQty}</td>
         <td>${formatDateVal(lot.expiryDate)}</td>
+        <td>${formatDateVal(lot.retestDate)}</td>
         <td>${formatWeightVal(totalAllocated, uom)}</td>
     </tr>
 `);
 
-                                                const rawBodyId = `allocation-lot-containers-${product.productId || 'p'}-${lot.lotId || lotIdx}-${lotIdx}`;
-                                                const bodyId = rawBodyId.replace(/[^a-zA-Z0-9_-]/g, '_');
-                                                const existingContainers = Array.isArray(lot?.containers) ? lot.containers : [];
-                                                const containerRowsHtml = existingContainers.length
-                                                    ? existingContainers.map(function (container) {
-                                                        const qtyVal = Number(container?.quantity);
-                                                        const netWeightVal = Number(container?.netWeight);
-                                                        const rowUom = container?.uom || uom || '';
-                                                        return buildContainerInputRowHtml(
-                                                            Number.isFinite(qtyVal) ? qtyVal : '',
-                                                            Number.isFinite(netWeightVal) ? netWeightVal : '',
-                                                            rowUom
-                                                        );
-                                                    }).join('')
-                                                    : buildContainerInputRowHtml('', '', uom);
+                        const rawBodyId = `allocation-lot-containers-${product.productId || 'p'}-${lot.lotId || lotIdx}-${lotIdx}`;
+                        const bodyId = rawBodyId.replace(/[^a-zA-Z0-9_-]/g, '_');
+                        const existingContainers = Array.isArray(lot?.containers) ? lot.containers : [];
+                        const containerRowsHtml = existingContainers.length
+                            ? existingContainers.map(function (container) {
+                                const qtyVal = Number(container?.quantity);
+                                const netWeightVal = Number(container?.netWeight);
+                                const rowUom = container?.uom || uom || '';
+                                return buildContainerInputRowHtml(
+                                    Number.isFinite(qtyVal) ? qtyVal : '',
+                                    Number.isFinite(netWeightVal) ? netWeightVal : '',
+                                    rowUom
+                                );
+                            }).join('')
+                            : buildContainerInputRowHtml('', '', uom);
 
-                                                lotContainerBlocks.push(`
+                        lotContainerBlocks.push(`
                                                     <div class="allocation-lot-container-block" style="margin:10px 0 14px 0; border:1px solid #e5e5e5; border-radius:4px; padding:10px; background:#fafafa;">
                                                         <div style="margin-bottom:6px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
                                                             <span class="text-muted small" style="font-weight:600;">Container details for batch <em>${lot.batchNumber || '-'}</em></span>
@@ -2328,7 +2342,8 @@
 <th style="width:25%;">Batch</th>
 <th style="width:20%;">ARN</th>
 <th style="width:20%;">Available</th>
-<th style="width:20%;">Expiry</th>
+<th style="width:10%;">Expiry</th>
+<th style="width:10%">Retest</th>
 <th style="width:15%;">Allocated</th>
                                 </tr>
                             </thead>
@@ -2410,6 +2425,7 @@
                         lotId: newKey,
                         batchNumber: lotInfo.batchNumber || '',
                         expiryDate: lotInfo.expiryDate || '',
+                        retestDate: lotInfo.retestDate || '',
                         uom: lotInfo.uom || productEntry.uom || '',
                         allocatedWeight: allocatedWeight,
                         containers: selection?.selections || []
@@ -2450,6 +2466,7 @@
                         lotId: lotId,
                         batchNumber: lotInfo.batchNumber || '',
                         expiryDate: lotInfo.expiryDate || '',
+                        retestDate: lotInfo.retestDate || '',
                         uom: lotInfo.uom || '',
                         arn: lotInfo.arn || '',
                         allocatedWeight: val,
@@ -2964,17 +2981,68 @@
                 $('#productIssueStatus').html(module.buildStatusLabel ? module.buildStatusLabel(statusValue) : statusValue);
                 toggleDetailActions(statusValue);
 
-                // Update linked ProductionOrder (BPCR) status if this is an issuance
+                // Update order-material(s) to Issued, then conditionally update ProductionOrder status
                 if (statusValue === 'Issued' && state.currentRecord) {
                     const info = module.parseWorkOrderRemark ? module.parseWorkOrderRemark(state.currentRecord.remarks || '') : null;
                     const bpcrId = info?.bpcrId;
-                    if (bpcrId) {
-                        const bpcrPayload = { orderStatus: 'RM Issued' };
-                        JSUTIL.callAJAXPut(`/api/production-orders/${bpcrId}`, JSON.stringify(bpcrPayload), function () {
-                            console.log(`BPCR ${bpcrId} status updated to RM Issued`);
+                    const remarks = state.currentRecord.remarks || '';
+
+                    // Parse Mat-Order IDs from remarks: "Mat-Order ID: 101, 102"
+                    const matOrderMatch = remarks.match(/Mat-Order ID\s*:\s*([\d,\s]+)/i);
+                    const matOrderIds = matOrderMatch
+                        ? matOrderMatch[1].split(',').map(function (s) { return s.trim(); }).filter(Boolean)
+                        : [];
+
+                    function checkAllIssuedAndUpdateBpcr() {
+                        if (!bpcrId) {
+                            return;
+                        }
+                        // Fetch all order-materials for this production order
+                        JSUTIL.callAJAXGet('/api/order-materials?orderId=' + encodeURIComponent(bpcrId), function (res) {
+                            const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+                            if (!list.length) {
+                                return;
+                            }
+                            const allIssued = list.every(function (om) {
+                                const ms = (om?.materialStatus || om?.MaterialStatus || '').toString().trim().toLowerCase();
+                                return ms === 'issued';
+                            });
+                            if (allIssued) {
+                                const bpcrPayload = { orderStatus: 'RM Issued' };
+                                JSUTIL.callAJAXPut(`/api/production-orders/${bpcrId}`, JSON.stringify(bpcrPayload), function () {
+                                    console.log(`BPCR ${bpcrId} status updated to RM Issued`);
+                                }, function (err) {
+                                    console.error(`Failed to update BPCR ${bpcrId} status`, err);
+                                });
+                            } else {
+                                console.log(`BPCR ${bpcrId}: not all order-materials are Issued yet. Skipping production order status update.`);
+                            }
                         }, function (err) {
-                            console.error(`Failed to update BPCR ${bpcrId} status`, err);
+                            console.error('Failed to fetch order-materials for BPCR', bpcrId, err);
                         });
+                    }
+
+                    if (matOrderIds.length) {
+                        // Update each order-material's materialStatus to Issued, then check all
+                        let pending = matOrderIds.length;
+                        matOrderIds.forEach(function (omId) {
+                            JSUTIL.callAJAXPut(`/api/order-materials/${omId}`, JSON.stringify({ materialStatus: 'Issued' }), function () {
+                                console.log(`Order-material ${omId} materialStatus updated to Issued`);
+                                pending--;
+                                if (pending <= 0) {
+                                    checkAllIssuedAndUpdateBpcr();
+                                }
+                            }, function (err) {
+                                console.error(`Failed to update order-material ${omId} materialStatus`, err);
+                                pending--;
+                                if (pending <= 0) {
+                                    checkAllIssuedAndUpdateBpcr();
+                                }
+                            });
+                        });
+                    } else {
+                        // No Mat-Order IDs in remarks — still check if all are issued
+                        checkAllIssuedAndUpdateBpcr();
                     }
                 }
 
@@ -3059,33 +3127,36 @@
                 return;
             }
             setLabelModalMessage('', false);
-            const allocation = (state.allocationCache && state.allocationCache[state.currentRequestId]) || state.allocationResults || { products: [] };
-            const preferContainerLabels = hasContainerLabelData(allocation);
-            fetchIssueTransactions(state.currentRequestId, function (result) {
-                const normalized = normalizeTransactionResult(result);
-                let labelRecords = [];
-                if (preferContainerLabels) {
-                    labelRecords = buildLabelRecordsFromAllocation(allocation);
-                }
-                if (!labelRecords.length) {
-                    labelRecords = buildLabelRecords(normalized.list || []);
-                }
-                if (!labelRecords.length) {
-                    labelRecords = buildLabelRecordsFromAllocation(allocation);
-                }
-                if (!labelRecords.length) {
-                    const fallback = buildLabelRecordsFromIssuedItems();
-                    if (fallback.records.length) {
-                        labelRecords = fallback.records;
-                        openLabelModal(labelRecords, normalized.issuedOn, { text: fallback.message, type: 'warning' });
+            fetchIssuedContainersForRequest(state.currentRequestId, function () {
+                const allocation = (state.allocationCache && state.allocationCache[state.currentRequestId]) || state.allocationResults || { products: [] };
+                const preferContainerLabels = hasContainerLabelData(allocation);
+                fetchIssueTransactions(state.currentRequestId, function (result) {
+                    const normalized = normalizeTransactionResult(result);
+                    let labelRecords = [];
+                    if (preferContainerLabels) {
+                        labelRecords = buildLabelRecordsFromAllocation(allocation);
+                    }
+                    if (!labelRecords.length) {
+                        labelRecords = buildLabelRecords(normalized.list || []);
+                    }
+                    if (!labelRecords.length) {
+                        labelRecords = buildLabelRecordsFromAllocation(allocation);
+                    }
+                    if (!labelRecords.length) {
+                        const fallback = buildLabelRecordsFromIssuedItems();
+                        if (fallback.records.length) {
+                            labelRecords = fallback.records;
+                            openLabelModal(labelRecords, normalized.issuedOn, { text: fallback.message, type: 'warning' });
+                            return;
+                        }
+                        JSUTIL.buildErrorModal('No issued batch details available for labels. Please ensure the request has recorded batch transactions.');
                         return;
                     }
-                    JSUTIL.buildErrorModal('No issued batch details available for labels. Please ensure the request has recorded batch transactions.');
-                    return;
-                }
-                openLabelModal(labelRecords, normalized.issuedOn);
+                    openLabelModal(labelRecords, normalized.issuedOn);
+                });
             });
         }
+
 
         function fetchIssueTransactions(requestId, callback) {
             if (!requestId || !state.currentRecord) {
@@ -3267,7 +3338,7 @@
             }
             const $info = $('#labelModalInfo');
             if (infoText) {
-                const typeClass = (noteOptions && noteOptions.type === 'warning') ? 'alert-warning' : 'alert-info';
+                const typeClass = noteOptions?.type === 'warning' ? 'alert-warning' : 'alert-info';
                 const formatted = infoText.replace(/\n/g, '<br>');
                 $info.removeClass('alert-info alert-warning').addClass(typeClass).html(formatted).show();
             } else {
@@ -3275,7 +3346,37 @@
             }
             $('#labelModalSelectAll').prop('checked', true);
             loadLabelPrinterOptions();
-            showIssueLabelModal();
+            showModalCompat('#productIssueLabelModal');
+        }
+
+        function showModalCompat(selector) {
+            const $modal = $(selector);
+            if (!$modal.length) {
+                return;
+            }
+
+            // Bootstrap 3/4 jQuery plugin path
+            if (typeof $modal.modal === 'function') {
+                $modal.modal('show');
+                return;
+            }
+
+            // Bootstrap 5 native API path
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                try {
+                    const el = $modal.get(0);
+                    const modalObj = bootstrap.Modal.getOrCreateInstance
+                        ? bootstrap.Modal.getOrCreateInstance(el)
+                        : new bootstrap.Modal(el);
+                    modalObj.show();
+                    return;
+                } catch (err) {
+                    console.error('Modal initialization failed:', err);
+                }
+            }
+
+            // Final fallback so UI is not blocked
+            $modal.show();
         }
 
         function showIssueLabelModal() {
@@ -3293,9 +3394,7 @@
             }
         }
 
-        function loadLabelPrinterOptions() {
-            // ... existing load logic if any, or placeholder
-        }
+
 
         function populateLabelTable(records) {
             const body = $('#productIssueLabelTableBody');
