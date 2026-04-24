@@ -448,7 +448,7 @@
 
         var tableHTML = ''
         var type
-        JSUTIL.callAJAXGet('/api/extension-request', function (res) {
+        JSUTIL.callAJAXGet('/api/extensionrequest', function (res) {
             recordList = res
             console.log('record', recordList)
             $('#allExtensionRequestReviewTable').empty()
@@ -460,54 +460,53 @@
 
                 // Determine which number to display - check capa, deviation, qualityEvent, changeRequest
                 let recordNumber = '-';
-                if (val.capa && val.capa.number) {
-                    recordNumber = val.capa.number;
+                if (val.capa && val.capa.id) {
+                    recordNumber = val.capa.number || val.capa.id;
                     type = "capa"
                     currtype = 'Capa'
                     updateObject = 'capa'
-                } else if (val.deviation && val.deviation.number) {
-                    recordNumber = val.deviation.number;
+                } else if (val.deviation && val.deviation.id) {
+                    recordNumber = val.deviation.number || val.deviation.id;
                     type = "deviation"
                     currtype = 'Deviation'
                     updateObject = 'deviation'
-                } else if (val.complaint && val.complaint.number) {
-                    recordNumber = val.complaint.number;
+                } else if (val.complaint && val.complaint.id) {
+                    recordNumber = val.complaint.number || val.complaint.id;
                     type = "complaint"
                     currtype = 'Complaint'
                     updateObject = 'complaint'
-                } else if (val.qualityEvent && val.qualityEvent.number) {
-                    recordNumber = val.qualityEvent.number;
-                    type = "qualityEvent"
-                    currtype = 'QualityEvent'
-                    updateObject = 'quality-event'
-                } else if (val.changeRequest && val.changeRequest.number) {
-                    recordNumber = val.changeRequest.number;
+                } else if (val.changeRequest && val.changeRequest.id) {
+                    recordNumber = val.changeRequest.number || val.changeRequest.id;
                     type = "changeRequest"
                     currtype = 'ChangeRequest'
                     updateObject = 'change-request'
-                } else if (val.investigation && val.investigation.number) {
-                    recordNumber = val.investigation.number;
+                } else if (val.investigation && val.investigation.id) {
+                    recordNumber = val.investigation.number || val.investigation.id;
                     type = "investigation"
                     currtype = 'Investigation'
                     updateObject = 'investigation'
                 }
-                else if (val.capaEffectiveness && val.capaEffectiveness.number) {
-                    recordNumber = val.capaEffectiveness.number;
+                else if (val.capaEffectiveness && val.capaEffectiveness.id) {
+                    recordNumber = val.capaEffectiveness.number || val.capaEffectiveness.id;
                     type = 'capaEffectiveness'
                     currtype = 'CapaEffectiveness'
                     updateObject = 'capa-effectiveness'
                 }
-                else if (val.qualityEvent && val.qualityEvent.number) {
-                    recordNumber = val.qualityEvent.number;
+                else if (val.qualityEvent && val.qualityEvent.id) {
+                    recordNumber = val.qualityEvent.number || val.qualityEvent.id;
                     type = 'qualityEvent'
                     currtype = 'QualityEvent'
                     updateObject = 'quality-event'
                 }
-                else if (val.incident && val.incident.number) {
-                    recordNumber = val.incident.number;
+                else if (val.incident && val.incident.id) {
+                    recordNumber = val.incident.number || val.incident.id;
                     type = 'incident'
                     currtype = 'Incident'
                     updateObject = 'incident'
+                } else {
+                    type = 'unknown'
+                    currtype = ''
+                    updateObject = ''
                 }
 
                 tableHTML += `
@@ -525,7 +524,7 @@
             $('#allExtensionRequestReviewTable').append(tableHTML)
 
         })
-        $('.selectExtensionRequest').on('click', function (e) {
+        $(document).on('click', '.selectExtensionRequest', function (e) {
             e.preventDefault();
             let extensionRequestId = $(this).attr('val');
             currentRecordEquipId = extensionRequestId
@@ -642,7 +641,7 @@
             if ($('.editExtensionInput1[name="supervisorname"]').val()) {
                 obj["supervisor"] = { id: Number($('.editExtensionInput1[name="supervisorname"]').val()) }
             }
-            JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify(obj), function (res) {
+            JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify(obj), function (res) {
                 console.log('res', res)
                 var obj = {
                     name: "ExtensionRequest Updated",
@@ -801,7 +800,7 @@
     }
 
     function newStatus() {
-        JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify({ supervisor: { id: Number($('.editExtensionInput1[name="supervisorname"]').val() || selectedExtensionRequest.supervisor.id) }, processStatus: "Awaiting Approval" }), function (res) {
+        JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify({ supervisor: { id: Number($('.editExtensionInput1[name="supervisorname"]').val() || selectedExtensionRequest.supervisor.id) }, processStatus: "Awaiting Approval" }), function (res) {
             console.log('res', res)
             var obj = {
                 name: "ExtensionRequest sent to Supervisor Review",
@@ -818,7 +817,7 @@
     }
     function hodApprove() {
         if (dataflag == 'Approve') {
-            JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": "Site Head Review", "siteHead": { id: Number($('.siteHead').val()) } }), function (res) {
+            JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": "Site Head Review", "siteHead": { id: Number($('.siteHead').val()) } }), function (res) {
                 console.log(res)
                 var historyObj = {
                     name: "Extension Request Gone to Site Head",
@@ -836,7 +835,7 @@
 
         }
         else if (dataflag == 'Return') {
-            JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": "Supervisor Rejected" }), function (res) {
+            JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": "Supervisor Rejected" }), function (res) {
                 console.log(res)
                 var historyObj = {
                     name: "Extension Request Rejected By Supervisor",
@@ -862,7 +861,7 @@
             else {
                 targetstatus = 'QA Manager Review'
             }
-            JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": targetstatus, "approvedBy": { id: Number($('.qamanagerDrop').val()) } }), function (res) {
+            JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": targetstatus, "approvedBy": { id: Number($('.qamanagerDrop').val()) } }), function (res) {
                 console.log(res)
                 var historyObj = {
                     name: "Extension Request Gone to " + targetstatus,
@@ -879,7 +878,7 @@
             })
         }
         else if (dataflag == 'Return') {
-            JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": "Site Head Rejected" }), function (res) {
+            JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": "Site Head Rejected" }), function (res) {
                 console.log(res)
                 var historyObj = {
                     name: "Extension Request Rejected By Site Head",
@@ -912,7 +911,7 @@
                 JSUTIL.buildErrorModal('Please Enter Remarks')
                 return
             }
-            JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": status }), function (res) {
+            JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": status }), function (res) {
                 console.log(res)
                 var historyObj = {
                     name: status + 'Request',
@@ -948,7 +947,7 @@
                 JSUTIL.buildErrorModal('Please Enter Remarks')
                 return
             }
-            JSUTIL.callAJAXPut('/api/extension-request/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": status }), function (res) {
+            JSUTIL.callAJAXPut('/api/extensionrequest/' + selectedExtensionRequest.id, JSON.stringify({ "processStatus": status }), function (res) {
                 console.log(res)
                 var historyObj = {
                     name: status + 'Request',

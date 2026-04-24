@@ -5702,7 +5702,7 @@
         });
 
         if (!isValid) {
-            alert('Validation errors:\n' + errors.join('\n'));
+            JSUTIL.buildErrorModal('Validation errors:\n' + errors.join('\n'));
         }
 
         return isValid;
@@ -5838,11 +5838,15 @@
         if (id) {
             JSUTIL.callAJAXDelete(JSUTIL.getUrl('/api/product-containers/' + id), function (res) {
                 console.log('res', res)
-                var length = $('#containerTable tbody tr').length
-                JSUTIL.callAJAXPut(JSUTIL.getUrl('/api/product-receipt-items/' + currentPRIId), JSON.stringify({ "numberOfContainers": length }), function (res) {
-                    console.log('res', res)
-                    $('#cpNOC').val(length).trigger('change')
+                // loadContainers();
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify({
+                    name:'Containers is updated',
+                    startDate:new Date,
+                    performedBy:{id:FOX.employeeId},
+                    parentRecordId:currentReceiptData.id
+                }),function(){
                     loadContainers();
+            
                 })
             })
         }
@@ -5862,14 +5866,14 @@
                 $(this).find('.quantity-input').val()
             ) || 0;
 
-            containerCount++;
+            containerCount+=qty;
             totalQty += qty;
         });
 
-        // RULE 1: container count
-        if (containerCount > maxContainers) {
+        // RULE 1: container count must match expected number
+        if (containerCount !== maxContainers) {
             errors.push(
-                `Container count (${containerCount}) cannot exceed ${maxContainers}`
+                `Number of containers (${containerCount}) must match expected containers (${maxContainers})`
             );
         }
 
@@ -5881,7 +5885,7 @@
         }
 
         if (errors.length) {
-            alert(errors.join('\n'));
+            JSUTIL.buildErrorModal(errors.join('\n'));
             return; // ❌ block save
         }
 
@@ -5905,8 +5909,16 @@
         function saveNextContainer(idx) {
             if (idx >= payload.length) {
                 console.log('All containers saved');
-                loadContainers();
+                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify({
+                    name:'Containers are updated',
+                    startDate:new Date(),
+                    performedBy:{id:FOX.employeeId},
+                    parentRecordId:currentReceiptData.id
+                }),function(){
+                    loadContainers();
                 return;
+                })
+                
             }
             var item = payload[idx];
             if (item.id) {
@@ -5938,6 +5950,26 @@
 
 
     $('#closeContainerPanel').on('click', function () {
+        const maxContainers = parseInt($('#cpNOC').val(), 10) || 0;
+        var containerCount = 0;
+         $('#containerTable tbody tr').each(function () {
+            const qty = parseFloat(
+                $(this).find('.quantity-input').val()
+            ) || 0;
+
+            containerCount+=qty;
+           
+        });
+        // Check if container count matches expected number
+        if (maxContainers > 0 && containerCount !== maxContainers) {
+            if (containerCount < maxContainers) {
+                JSUTIL.buildErrorModal(`Incomplete containers: You have ${containerCount} container(s) but ${maxContainers} are required. Please add ${maxContainers - containerCount} more container(s) before closing.`);
+            } else {
+                JSUTIL.buildErrorModal(`Too many containers: You have ${containerCount} container(s) but only ${maxContainers} are expected. Please remove ${containerCount - maxContainers} container(s) before closing.`);
+            }
+            return; // ❌ block close
+        }
+        
         $('#containerPanel').hide();
         $('#editInwardPanel').show();
     });
@@ -6173,7 +6205,7 @@
             var mfgM = moment(mfgDate, 'DD/MM/YYYY');
             var expM = moment(expDate, 'DD/MM/YYYY');
             if (mfgM.isValid() && expM.isValid() && !expM.isAfter(mfgM)) {
-                alert('Expiry date must be greater than manufacturing date');
+                JSUTIL.buildErrorModal('Expiry date must be greater than manufacturing date');
                 $(this).val('');
             }
         }
@@ -6289,7 +6321,7 @@
                 $('#editProductSelect').prop('disabled', false);
 
                 if (currentProducts.filter(p => p.remainingQty > 0).length === 0) {
-                    alert("All items from this PO have been fully received!");
+                    JSUTIL.buildErrorModal("All items from this PO have been fully received!");
                     $('#editProductSelect').prop('disabled', true);
                 }
             }
@@ -6676,7 +6708,7 @@
     }
 
     function completeSubmitToQC() {
-        alert('Receipt submitted to QC successfully!');
+        JSUTIL.buildErrorModal('Receipt submitted to QC successfully!');
         $('#editInwardTable .status-badge').removeClass().addClass('status-badge status-submitted').text('Submitted');
         isEditMode = false;
         updateUIState();
@@ -6905,7 +6937,7 @@
         }
 
         if (errors.length) {
-            alert(errors.join('\n'));
+            JSUTIL.buildErrorModal(errors.join('\n'));
             return; // ❌ stop everything
         }
 
@@ -7061,7 +7093,7 @@
 
     $('#closeBtn').on('click', function () {
         if (!currentProductsDetails || currentProductsDetails.length === 0) {
-            alert('No items found in this receipt.');
+            JSUTIL.buildErrorModal('No items found in this receipt.');
             return;
         }
 
@@ -7072,7 +7104,7 @@
         );
 
         if (approvedItems.length === 0) {
-            alert('No approved items found in this receipt.');
+            JSUTIL.buildErrorModal('No approved items found in this receipt.');
             return;
         }
 
@@ -7244,7 +7276,7 @@
         var productIds = Object.keys(productQuantities);
 
         if (productIds.length === 0) {
-            alert('No valid products found to update inventory.');
+            JSUTIL.buildErrorModal('No valid products found to update inventory.');
             return;
         }
 
@@ -7330,7 +7362,7 @@
     function submitToQC() {
         // Use the already loaded currentProductsDetails
         if (!currentProductsDetails || currentProductsDetails.length === 0) {
-            alert('No items found in this receipt.');
+            JSUTIL.buildErrorModal('No items found in this receipt.');
             return;
         }
 
@@ -7342,7 +7374,7 @@
             .filter(Boolean);
 
         if (productIds.length === 0) {
-            alert('No valid products found in this receipt.');
+            JSUTIL.buildErrorModal('No valid products found in this receipt.');
             return;
         }
 
@@ -7593,7 +7625,7 @@
 
     function printQuarantineLabelsWithARN(receiptData, itemDetails, arnMap, containersByItemId) {
         if (!itemDetails || itemDetails.length === 0) {
-            alert('No products found to print quarantine labels.');
+            JSUTIL.buildErrorModal('No products found to print quarantine labels.');
             return;
         }
 
@@ -7746,7 +7778,7 @@
         if (allLabelsHtml) {
             JSUTIL.printQuarantineLabelsNew(allLabelsHtml);
         } else {
-            alert('No containers found to print quarantine labels.');
+            JSUTIL.buildErrorModal('No containers found to print quarantine labels.');
         }
     }
     // UPDATED PRINT HELPER FUNCTION FOR NEW LABEL FORMAT
@@ -7938,7 +7970,7 @@
 
     function fetchTestRequestsAndPrint(receiptData, itemDetails) {
         if (!itemDetails || itemDetails.length === 0) {
-            alert('No products found to print quarantine labels.');
+            JSUTIL.buildErrorModal('No products found to print quarantine labels.');
             return;
         }
 
@@ -7972,7 +8004,7 @@
     // Function to print GRN Accept Labels (APPROVED)
     function printGrnAcceptLabels(receiptData, itemDetails) {
         if (!itemDetails || itemDetails.length === 0) {
-            alert('No products found to print accept labels.');
+            JSUTIL.buildErrorModal('No products found to print accept labels.');
             return;
         }
 
@@ -8102,7 +8134,7 @@
         if (allLabelsHtml) {
             JSUTIL.printAcceptLabels(allLabelsHtml);
         } else {
-            alert('No approved containers found to print accept labels.');
+            JSUTIL.buildErrorModal('No approved containers found to print accept labels.');
         }
     }
 

@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="pages/lib/choices.min.css" />
 <script src="pages/lib/choices.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
 <style>
     .btn .lucide {
         width: 17px;
@@ -46,10 +47,24 @@
         display: none;
     }
 
-    #docViewerFrame {
+    #docPdfViewer {
         width: 100%;
         height: 78vh;
-        border: none;
+        overflow-y: auto;
+        background: #404040;
+    }
+
+    #docPdfViewer canvas {
+        display: block;
+        margin: 10px auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+
+    #docPdfLoading {
+        text-align: center;
+        padding: 40px;
+        color: #888;
+        font-size: 14px;
     }
 
     /* Block printing for entire page */
@@ -133,8 +148,10 @@
                         </button>
                     </div>
                 </div>
-                <div class="ibox-content">
-                    <iframe id="docViewerFrame" src=""></iframe>
+                <div class="ibox-content" style="padding:0;">
+                    <div id="docPdfViewer">
+                        <div id="docPdfLoading">Loading document...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,7 +250,7 @@
                 var ver = r.documentVersion || {};
                 var doc = ver.document      || {};
                 var innerHtml = '<tr>' +
-                    '<td class="itemNum" style="font-weight:600"><a href="javascript:void(0);" class="selectDocumentBtn" id="' + (r.id || '') + '"><img src="https://raw.githubusercontent.com/dev22419/image/refs/heads/main/blue-folder.png?raw=true" style="width: auto; height: 30px;margin-bottom:2px"> ' + (doc.number || '') + '</a></td>' +
+                    '<td class="itemNum" style="font-weight:600"><a href="javascript:void(0);" class="selectDocumentBtn" id="' + (r.id || '') + '">' + (doc.number || '') + '</a></td>' +
                     '<td>' + (doc.name || '') + '</td>' +
                     '<td>' + (ver.currentVersion || '') + '</td>' +
                     '<td>' + getDocTypeName(r) + '</td>' +
@@ -305,7 +322,7 @@
             applyDocFiltersAndBuild();
         });
 
-        // Row click → fetch file and show in viewer
+        // Row click → fetch blob and render with pdf.js
         $('#allDocumentsPanel tbody').on('click', '.selectDocumentBtn', function () {
             var id = $(this).attr('id');
             var record = null;
@@ -314,30 +331,73 @@
             });
             if (!record) return;
 
-            var ver      = record.documentVersion || {};
-            var doc      = ver.document           || {};
-            var extFileId = ver.extFileId         || '';
+            var ver       = record.documentVersion || {};
+            var doc       = ver.document           || {};
+            var extFileId = ver.extFileId          || '';
 
             if (!extFileId) {
                 alert('No file linked to this document.');
                 return;
             }
 
-            var fileUrl = JSUTIL.getUrl('/api/files/download/' + encodeURIComponent(extFileId));
-            var title   = (doc.number ? doc.number + ' - ' : '') + (doc.name || '');
-
+            var title = (doc.number ? doc.number + ' - ' : '') + (doc.name || '');
             $('#docViewerTitle').text(title);
-            $('#docViewerFrame').attr('src', fileUrl);
-
+            $('#docPdfViewer').html('<div id="docPdfLoading">Loading document...</div>');
             $('#allDocumentsPanel').hide();
             $('#docViewerPanel').show();
-
             lucide.createIcons();
+
+            // Fetch as blob
+            $.ajax({
+                url: JSUTIL.getUrl('/api/files/download/' + encodeURIComponent(extFileId)),
+                type: 'GET',
+                xhrFields: { responseType: 'blob' },
+                success: function (blob) {
+                    var fileReader = new FileReader();
+                    fileReader.onload = function () {
+                        var typedArray = new Uint8Array(this.result);
+                        renderDocPdf(typedArray);
+                    };
+                    fileReader.readAsArrayBuffer(blob);
+                },
+                error: function () {
+                    $('#docPdfViewer').html('<div id="docPdfLoading">Failed to load document.</div>');
+                }
+            });
         });
+
+        function renderDocPdf(typedArray) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+            pdfjsLib.getDocument({ data: typedArray }).promise.then(function (pdfDoc) {
+                $('#docPdfViewer').empty();
+                var totalPages = pdfDoc.numPages;
+                for (var pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    (function (num) {
+                        pdfDoc.getPage(num).then(function (page) {
+                            var dpr      = window.devicePixelRatio || 2;
+                            var scale    = 2.0 * dpr;
+                            var viewport = page.getViewport({ scale: scale });
+                            var canvas   = document.createElement('canvas');
+                            var ctx      = canvas.getContext('2d');
+
+                            canvas.height = viewport.height;
+                            canvas.width  = viewport.width;
+                            canvas.style.width  = (viewport.width  / dpr) + 'px';
+                            canvas.style.height = (viewport.height / dpr) + 'px';
+
+                            $('#docPdfViewer').append(canvas);
+                            page.render({ canvasContext: ctx, viewport: viewport });
+                        });
+                    })(pageNum);
+                }
+            }).catch(function () {
+                $('#docPdfViewer').html('<div id="docPdfLoading">Unable to render PDF.</div>');
+            });
+        }
 
         // Close viewer → back to list
         $('#docViewerCloseBtn').on('click', function () {
-            $('#docViewerFrame').attr('src', '');
+            $('#docPdfViewer').empty();
             $('#docViewerPanel').hide();
             $('#allDocumentsPanel').show();
         });

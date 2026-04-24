@@ -9,7 +9,7 @@
         padding-bottom: 0px !important;
     }
 
-    .selectCapaBtn {
+    .selectCapaBtn, .selectEMBtn {
         color: #337AB7 !important;
     }
 
@@ -1667,7 +1667,7 @@
                                 style="display: none;"><i data-lucide="check"></i>
                             Save </button>
                     </div>
-
+</div>
                     <div class="ibox-content">
                         <form role="form">
                             <div class="section-header " onclick="toggleStandardSection(this)"
@@ -1848,7 +1848,7 @@
                         </div>
                     </div> -->
                     </div>
-                </div>
+                
             </div>
         </div>
     </div>
@@ -2561,7 +2561,7 @@
 
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-default" onclick="$('#esignModal').modal('hide');$('#eSignReportPasswordField').val('');$('#pageErrorPanel5').hide();">Close</button>
                     <button type="button" class="btn btn-secondary" id="completeVerificationBtn"> Sign In to Approve
                         Signing</button>
 
@@ -2628,36 +2628,13 @@
 
             if (id) {
                 setTimeout(function () {
-                    const table = $('.table').DataTable();
-
-                    // Find row index containing the CAPA id
-                    let rowIndex = -1;
-
-                    table.rows().every(function (idx) {
-                        const rowNode = this.node();
-                        const btn = $(rowNode).find('.selectCapaBtn');
-
-                        if (btn.attr('name') == id) {
-                            rowIndex = idx;
-                            return false; // break
-                        }
-                    });
-
-                    if (rowIndex !== -1) {
-                        const pageSize = table.page.len();
-                        const pageNumber = Math.floor(rowIndex / pageSize);
-
-                        // Move to correct page
-                        table.page(pageNumber).draw(false);
-
-                        // Trigger click AFTER page draw
-                        setTimeout(() => {
-                            $('.selectCapaBtn[name="' + id + '"]').trigger('click');
-                        }, 200);
+                    var btn = $('#allCapaTable').find('.selectCapaBtn[name="' + id + '"]');
+                    if (btn.length) {
+                        btn.trigger('click');
                     } else {
                         console.warn('CAPA id not found in table:', id);
                     }
-                }, 300);
+                }, 500);
             }
 
         })
@@ -3650,6 +3627,34 @@
         $('.recordNewCapaSaveBtn').on('click', function () {
             var selectedSource = $('#createSourceSelect').val();
 
+            // Required field validation
+            var newDueDate = $('.createRecordInput[name="DueDate"]').val();
+            var newDepartment = $('.createRecordInput[name="Department.Id"]').val();
+            var newType = $('.createRecordInput[name="Type"]').val();
+            var newDescription = $('.createRecordInput[name="Description"]').val();
+            var newCapaOwner = $('.createRecordInput[name="CapaOwner.Id"]').val();
+
+            if (!newDueDate) {
+                JSUTIL.buildErrorModal("Due Date is required");
+                return;
+            }
+            if (!newDepartment) {
+                JSUTIL.buildErrorModal("Department is required");
+                return;
+            }
+            if (!newType) {
+                JSUTIL.buildErrorModal("Type is required");
+                return;
+            }
+            if (!newCapaOwner) {
+                JSUTIL.buildErrorModal("CAPA Owner is required");
+                return;
+            }
+            if (!newDescription || !newDescription.trim()) {
+                JSUTIL.buildErrorModal("Description is required");
+                return;
+            }
+
             var obj = {
                 department: { id: Number($('.createRecordInput[name="Department.Id"]').val()) },
                 description: $('.createRecordInput[name="Description"]').val(),
@@ -4026,11 +4031,6 @@
         //     // $('.createIncidentDrop').select2();
         // });
 
-
-
-
-
-
     }
 
     // Load Quality Events based on type
@@ -4284,7 +4284,7 @@
                 var innerHtml = ''
                 $('#allEffectivenessChecks').empty()
                 $.each(response, function (i, val) {
-                    innerHtml += `<tr><td><a href="#" class="selectEMBtn" name="${val.id}">${val.number}</a></td><td>${JSUTIL.getDate(val.dueDate)}</td><td>${val.effectivenessOwner.name}</td><td>`
+                    innerHtml += `<tr><td><a href="#" class="selectEMBtn" name="${val.id}">${val.number}</a></td><td>${JSUTIL.getDate(val.dueDate)}</td><td>${(val.effectivenessOwner?.firstName || '') + ' ' + (val.effectivenessOwner?.lastName || '')}</td><td>`
                     if (val.processStatus == 'New' || val.processStatus == 'Draft') {
                         innerHtml += '<span class="label" style="margin-left: 10px;">' + val.processStatus + '</span>';
                     }
@@ -4778,8 +4778,19 @@
                 return;
             }
 
-            // Build record link (adjust URL if needed)
-            var recordUrl = '/view/' + recordType + '/' + recordId;
+            // Build record link with correct path
+            var recordUrlMap = {
+                'capa':             '/capa',
+                'complaint':        '/complaint',
+                'changeRequest':    '/changeRequest',
+                'deviation':        '/deviation',
+                'investigation':    '/investigation',
+                'incident':         '/incident',
+                'qualityEvent-OOS': '/qualityEvent',
+                'qualityEvent-OOT': '/qualityEvent',
+                'qualityEvent-OOC': '/qualityEvent'
+            };
+            var recordUrl = (recordUrlMap[recordType] || '/' + recordType) + '?id=' + recordId;
 
             var row = `
 <tr data-record-id="${recordId}"
@@ -4792,7 +4803,7 @@
     </td>
     <td>${recordType}</td>
     <td>
-        <a href="${recordUrl}" target="_blank">${recordNumber}</a>
+        <a href="${recordUrl}" target="_blank" style="color:#337AB7;">${recordNumber}</a>
     </td>
 </tr>`;
 
@@ -5531,18 +5542,17 @@
                             }
                             else if (processStatus == 'QA Review') {
                                 $('.ECCreateBtn').hide()
-                                // if(employeeDept == 'QA'){
-                                $('.editQAU').prop('disabled', false)
-                                $('#effectiveCheckNeededInput').prop('disabled', false).prop('readonly', false)
-                                $('.QAUApproveBtn').show()
-                                $('.QAURejectBtn').show()
-                                // }
-                                // else{
-                                //       $('.editQAU').prop('disabled', true)
-                                // $('#effectiveCheckNeededInput').prop('disabled', true).prop('readonly', true)
-                                // $('.QAUApproveBtn').hide()
-                                // $('.QAURejectBtn').hide()
-                                // }
+                                if (FOX.employeeDepartment == 'Quality Assurance') {
+                                    $('.editQAU').prop('disabled', false)
+                                    $('#effectiveCheckNeededInput').prop('disabled', false).prop('readonly', false)
+                                    $('.QAUApproveBtn').show()
+                                    $('.QAURejectBtn').show()
+                                } else {
+                                    $('.editQAU').prop('disabled', true)
+                                    $('#effectiveCheckNeededInput').prop('disabled', true).prop('readonly', true)
+                                    $('.QAUApproveBtn').hide()
+                                    $('.QAURejectBtn').hide()
+                                }
 
                             }
 
@@ -5600,7 +5610,11 @@
                             $('.ECCreateBtn').hide()
                         }
                         else {
-                            $('.ECCreateBtn').show()
+                            if (FOX.employeeDepartment == 'Quality Assurance') {
+                                $('.ECCreateBtn').show()
+                            } else {
+                                $('.ECCreateBtn').hide()
+                            }
                         }
                         $('.QAUApproveBtn').hide();
                         $('.QAURejectBtn').hide();
@@ -5609,8 +5623,13 @@
                         $("#effectiveCheckNeededInput").select2('val', 'No');
                         $('#effectivenessCheckRow').hide();
                         if (val.processStatus == 'QA Review' && !isCapaOverdue) {
-                            $('.QAUApproveBtn').show();
-                            $('.QAURejectBtn').show();
+                            if (FOX.employeeDepartment == 'Quality Assurance') {
+                                $('.QAUApproveBtn').show();
+                                $('.QAURejectBtn').show();
+                            } else {
+                                $('.QAUApproveBtn').hide();
+                                $('.QAURejectBtn').hide();
+                            }
                             $('.ECCreateBtn').hide();
                         }
                     } else {
@@ -5686,6 +5705,34 @@
 
             const id = currentRecordId;
             var selectedSource = $('.editRecordInput[name="Source"]').val();
+
+            // Required field validation
+            var editDueDate = $('.editRecordInput[name="DueDate"]').val();
+            var editDepartment = $('.editRecordInput[name="Department.Id"]').val();
+            var editType = $('.editRecordInput[name="Type"]').val();
+            var editDescription = $('.editRecordInput[name="Description"]').val();
+            var editCapaOwner = $('.editRecordInput[name="CapaOwner.Id"]').val();
+
+            if (!editDueDate) {
+                JSUTIL.buildErrorModal("Due Date is required");
+                return;
+            }
+            if (!editDepartment) {
+                JSUTIL.buildErrorModal("Department is required");
+                return;
+            }
+            if (!editType) {
+                JSUTIL.buildErrorModal("Type is required");
+                return;
+            }
+            if (!editCapaOwner) {
+                JSUTIL.buildErrorModal("CAPA Owner is required");
+                return;
+            }
+            if (!editDescription || !editDescription.trim()) {
+                JSUTIL.buildErrorModal("Description is required");
+                return;
+            }
 
             var obj = {
                 department: { id: Number($('.editRecordInput[name="Department.Id"]').val()) },
@@ -6551,7 +6598,8 @@
             $('#uploadFileTitleCapa1').text(title);
             $('#fileFormActionCapa1').attr('action', postUrl);
         }
-        $(document).on('click', '.selectEMBtn', function () {
+        $(document).on('click', '.selectEMBtn', function (e) {
+            e.preventDefault()
             var id = $(this).attr('name');
             console.log('Clicked EM ID:', id);
             currentEMId = id
@@ -6561,32 +6609,30 @@
 
             // Load the effectiveness check data
             $.each(effectivenessCheckList, function (i, val) {
-                if (val.id == id) {
+                if (val.id == id){ 
                     console.log('Found EM:', val);
                     currentEMProcessStatus = val.processStatus
                     currentEM = val
                     // Populate the form fields
-                    $('.editEffectivenessInput[name="ownerNotifyDate"]').val(JSUTIL.getDate(val.ownerNotifyDate));
-                    $('.editEffectivenessInput[name="dueDate"]').val(JSUTIL.getDate(val.dueDate));
-                    $('.editEffectivenessInput[name="effectivenessOwner.id"]').val(val.effectivenessOwner.id).trigger('change');
-                    $('.editEffectivenessInput[name="approvedBy.id"]').val(val.approvedBy.id).trigger('change');
-                    $('.editEffectivenessInput[name="supervisor.id"]').val(val.supervisor.id).trigger('change');
-                    $('.ecCapaDetails[name="number"]').val(val.capa.number)
-                    $('.ecCapaDetails[name="summary"]').val(val.capa.description)
+                    $('.editEffectivenessInput[name="ownerNotifyDate"]').val(JSUTIL.getDate(val?.ownerNotifyDate));
+                    $('.editEffectivenessInput[name="dueDate"]').val(JSUTIL.getDate(val?.dueDate));
+                    $('.editEffectivenessInput[name="effectivenessOwner.id"]').val(val?.effectivenessOwner?.id).trigger('change');
+                    $('.editEffectivenessInput[name="effectivenessOwner.id"]').parent().find('.select2-selection__rendered').text((val?.effectivenessOwner?.firstName || '') + ' ' + (val?.effectivenessOwner?.lastName || ''));
+                    $('.editEffectivenessInput[name="approvedBy.id"]').val(val?.approvedBy?.id).trigger('change');
+                    $('.editEffectivenessInput[name="approvedBy.id"]').parent().find('.select2-selection__rendered').text((val?.approvedBy?.firstName || '') + ' ' + (val?.approvedBy?.lastName || ''));
+                    $('.editEffectivenessInput[name="supervisor.id"]').val(val?.supervisor?.id).trigger('change');
+                    $('.editEffectivenessInput[name="supervisor.id"]').parent().find('.select2-selection__rendered').text((val?.supervisor?.firstName || '') + ' ' + (val?.supervisor?.lastName || ''));
+                    $('.ecCapaDetails[name="number"]').val(val?.capa?.number)
+                    $('.ecCapaDetails[name="summary"]').val(val?.capa?.description)
 
-
-                    $('#editEMPanel [name="effectivenessOwner.id"]').val(val.effectivenessOwner.name || '')
-                    $('#editEMPanel [name="approvedBy.id"]').val(val.approvedBy.name || '')
-                    $('#editEMPanel [name="supervisor.id"]').val(val.supervisor.name || '')
-
-                    $('.editEffectivenessInput[name="description"]').val(val.description)
-                    $('.editEffectivenessInput[name="remarks"]').val(val.remarks)
+                    $('.editEffectivenessInput[name="description"]').val(val?.description)
+                    $('.editEffectivenessInput[name="remarks"]').val(val?.remarks)
 
                     $('.editEffectivenessInput[name="result"]').val(val.result).trigger('change')
                     // $('.editEffectivenessInput[name="recurrence"]').val(val.recurrence).trigger('change')
                     $('.editEffectivenessInput[name="dataCollectionSummary"]').val(val.dataCollectionSummary)
                     $('#EMNumber').text(val.number);
-
+                    console.log('current EM process status', currentEMProcessStatus)
                     if (val.processStatus == 'New') {
                         $('.recordEMEditBtn').show()
                         // $('.recordEMApprovalBtn').show()
@@ -7112,6 +7158,38 @@
 
         $('#saveEffectivenessCheckBtn').on('click', function () {
 
+            var emOwner = $('.newEffectiveInput[name="effectivenessOwner.id"]').val();
+            var emDescription = $('.newEffectiveInput[name="description"]').val();
+            var emDueDate = $('.newEffectiveInput[name="dueDate"]').val();
+            var emNotifyDate = $('.newEffectiveInput[name="ownerNotifyDate"]').val();
+            var emSupervisor = $('.newEffectiveInput[name="supervisor.id"]').val();
+            var emQAManager = $('.newEffectiveInput[name="approvedBy.id"]').val();
+
+            if (!emOwner) {
+                JSUTIL.buildErrorModal("Owner is required");
+                return;
+            }
+            if (!emDescription || !emDescription.trim()) {
+                JSUTIL.buildErrorModal("Effectiveness Description is required");
+                return;
+            }
+            if (!emDueDate) {
+                JSUTIL.buildErrorModal("Due Date is required");
+                return;
+            }
+            if (!emNotifyDate) {
+                JSUTIL.buildErrorModal("Date To Notify Owner is required");
+                return;
+            }
+            if (!emSupervisor) {
+                JSUTIL.buildErrorModal("Supervisor is required");
+                return;
+            }
+            if (!emQAManager) {
+                JSUTIL.buildErrorModal("QA Manager is required");
+                return;
+            }
+
             var year2 = new Date().getFullYear().toString().slice(-2); // 26
 
             // ✅ Step 1: Get all effectiveness records
@@ -7217,33 +7295,24 @@
         $('.recordtablebody').empty();
 
         records.forEach(function (rec) {
-            var url
-            if (rec.type == 'Capa') {
-                url = '/app/qac/qmsCapa?id='
-            }
-            else if (rec.type == 'ChangeRequest') {
-                url = '/app/qac/change_request2?id='
-            }
-            else if (rec.type == 'Complaint') {
-                url = '/app/qac/complaint?id='
-            }
-            else if (rec.type == 'Deviation') {
-                url = '/app/qac/deviation?id='
-            }
-            else if (rec.type == 'Investigation') {
-                url = '/app/qac/investigation?id='
-            }
-            else if (rec.type == 'Incident') {
-                url = '/app/qac/incident?id='
-            }
-            else if (rec.type.includes('QualityEvent')) {
-                if (rec.type.includes('OOS')) {
-                    url = '/app/qac/quality_events?id='
-                }
-                else if (rec.type.includes('OOT')) {
-                    url = '/app/qac/quality_events_oot?id='
-                }
-            }
+            var urlMap = {
+                'capa':             '/capa',
+                'Capa':             '/capa',
+                'complaint':        '/complaint',
+                'Complaint':        '/complaint',
+                'changeRequest':    '/changeRequest',
+                'ChangeRequest':    '/changeRequest',
+                'deviation':        '/deviation',
+                'Deviation':        '/deviation',
+                'investigation':    '/investigation',
+                'Investigation':    '/investigation',
+                'incident':         '/incident',
+                'Incident':         '/incident',
+                'qualityEvent-OOS': '/qualityEvent',
+                'qualityEvent-OOT': '/qualityEvent',
+                'qualityEvent-OOC': '/qualityEvent'
+            };
+            var url = (urlMap[rec.type] || '/' + rec.type) + '?id=';
 
             var row = `
         <tr data-record-id="${rec.id}"
@@ -7256,7 +7325,7 @@
             </td>
             <td>${rec.type}</td>
             <td>
-                <button data-link="${url}" class="openrecord btn-sm btn">${rec.number}</button>
+                <a href="${url}${rec.id}" target="_blank" style="color:#337AB7;">${rec.number}</a>
             </td>
         </tr>`;
 
@@ -7450,8 +7519,8 @@
         })
     }
     function loadEditDocuments1(recordId) {
-        var postDocUrl = JSUTIL.getUrl('/api/files?requestId=' + referenceId);
-        JSUTIL.callAJAXGet(postDocUrl, displayEditDocuments1);
+        // var postDocUrl = JSUTIL.getUrl('/api/files?requestId=' + recordId);
+        // JSUTIL.callAJAXGet(postDocUrl, displayEditDocuments1);
     }
 
 
@@ -8953,6 +9022,11 @@
                 'username': FOX.employeeUsername,
                 'password': password
             }), callbackAfterVerification);
+        });
+
+        $('#esignModal').on('hidden.bs.modal', function () {
+            $('#eSignReportPasswordField').val('');
+            $('#pageErrorPanel5').hide().text('');
         });
 
     })

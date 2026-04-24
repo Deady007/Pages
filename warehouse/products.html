@@ -6,231 +6,243 @@
 <script src="pages/lib/lucide.min.js"></script>
 <link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
 <!-- allProductPanel.html   Start -->
- <style>
-    .btn .lucide {
-      width: 17px;
-      height: 17px;
-      stroke-width: 4;
-      vertical-align: middle;
-      margin-right: 5px;
-      padding: 2px;
-    }
-    #allProductPanelTable thead th {
-        border-bottom: 1px solid #eee !important;
-    }
-    #allProductPanelTable tbody tr:last-child td {
-        border-bottom: none !important;
-    } 
-    #productTypeFilterGroup {
-        margin-bottom: 16px;
-    }
-    #productTypeFilterGroup {
-        margin-bottom: 25px;
-    }
-    .selectRecordBtn{
-        color: #337AB7!important;
-        text-decoration: none;
-    }
-    #editProductForm select.editInput:disabled {
-        background-color: #fff !important;
-        opacity: 1 !important;
-    }
- </style>
+<style>
+  .btn .lucide {
+    width: 17px;
+    height: 17px;
+    stroke-width: 4;
+    vertical-align: middle;
+    margin-right: 5px;
+    padding: 2px;
+  }
+
+  #allProductPanelTable thead th {
+    border-bottom: 1px solid #eee !important;
+  }
+
+  #allProductPanelTable tbody tr:last-child td {
+    border-bottom: none !important;
+  }
+
+  #productTypeFilterGroup {
+    margin-bottom: 16px;
+  }
+
+  #productTypeFilterGroup {
+    margin-bottom: 25px;
+  }
+
+  .selectRecordBtn {
+    color: #337AB7 !important;
+    text-decoration: none;
+  }
+
+  #editProductForm select.editInput:disabled {
+    background-color: #fff !important;
+    opacity: 1 !important;
+  }
+</style>
 <div class="qa-white-panel">
-<div class="row animated fadeInRight aasaanPanel" id="ProductList">
+  <div class="row animated fadeInRight aasaanPanel" id="ProductList">
     <div class="col-lg-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-              <h5>Materials <small>Warehouse</small></h5>
-                <div class="ibox-tools">
-                    <button type="button" class="btn btn-secondary exportBtn"><i data-lucide="upload"></i>Export to Excel</button>
-                </div>
-            </div>
-            <div class="ibox-content">
-                <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px;">
-                    <i class="ti ti-loader ti-spin fs-22"></i>
-                    <div style="margin-top: 10px;">Loading products...</div>
-                </div>
-                
-                <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
-                
-                <style>
-                    #productTypeFilterGroup .filter-btn-wrapper {
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 10px;
-                    }
-
-                    #productTypeFilterGroup .product-filter {
-                        border-radius: 20px;
-                        min-width: 140px;
-                        font-weight: 600;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    }
-
-                    #productTypeFilterGroup .product-filter.active {
-                        box-shadow: 0 3px 8px rgba(38,115,207,0.35);
-                    }
-                </style>
-
-                <div class="m-b-sm" id="productTypeFilterGroup">
-                    <div class="filter-btn-wrapper">
-                        <button type="button" class="btn btn-purple product-filter active" data-filter="ALL">All</button>
-                        <button type="button" class="btn btn-default product-filter" data-filter="Raw Material">Raw Material</button>
-                        <button type="button" class="btn btn-default product-filter" data-filter="Packaging Material">Packaging Material</button>
-                        <button type="button" class="btn btn-default product-filter" data-filter="Finished Goods">Finished Goods</button>
-                        <button type="button" class="btn btn-default product-filter" data-filter="Intermediate Goods">Intermediate Goods</button>
-                        <button type="button" class="btn btn-default product-filter" data-filter="General Material">General Material</button>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table id="allProductPanelTable" class="table table-bordered table-hover table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Material #</th>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Unit Price</th>
-                                <th>Quantity Available</th>
-                                <th>Quantity In Stock</th>
-                                <!-- <th>Quantity Reserved</th> -->
-                                <th>Quantity Under Test</th>
-                                <th>Quantity Under Retest</th>
-                                <th>Quantity On Order</th>
-                                <th>Quantity Rejected</th>
-                            </tr>
-                        </thead>
-                        <tbody id="productTable">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5>Materials <small>Warehouse</small></h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-secondary exportBtn"><i data-lucide="upload"></i>Export to
+              Excel</button>
+          </div>
         </div>
+        <div class="ibox-content">
+          <div id="loadingIndicator" style="display: none; text-align: center; padding: 20px;">
+            <i class="ti ti-loader ti-spin fs-22"></i>
+            <div style="margin-top: 10px;">Loading products...</div>
+          </div>
+
+          <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+
+          <style>
+            #productTypeFilterGroup .filter-btn-wrapper {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 10px;
+            }
+
+            #productTypeFilterGroup .product-filter {
+              border-radius: 20px;
+              min-width: 140px;
+              font-weight: 600;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            #productTypeFilterGroup .product-filter.active {
+              box-shadow: 0 3px 8px rgba(38, 115, 207, 0.35);
+            }
+          </style>
+
+          <div class="m-b-sm" id="productTypeFilterGroup">
+            <div class="filter-btn-wrapper">
+              <button type="button" class="btn btn-purple product-filter active" data-filter="ALL">All</button>
+              <button type="button" class="btn btn-default product-filter" data-filter="Raw Material">Raw
+                Material</button>
+              <button type="button" class="btn btn-default product-filter" data-filter="Packaging Material">Packaging
+                Material</button>
+              <button type="button" class="btn btn-default product-filter" data-filter="Finished Goods">Finished
+                Goods</button>
+              <button type="button" class="btn btn-default product-filter" data-filter="Intermediate Goods">Intermediate
+                Goods</button>
+              <button type="button" class="btn btn-default product-filter" data-filter="General Material">General
+                Material</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table id="allProductPanelTable" class="table table-bordered table-hover table-bordered">
+              <thead>
+                <tr>
+                  <th>Material #</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Unit Price</th>
+                  <th>Quantity Available</th>
+                  <th>Quantity In Stock</th>
+                  <!-- <th>Quantity Reserved</th> -->
+                  <th>Quantity Under Test</th>
+                  <th>Quantity Under Retest</th>
+                  <th>Quantity On Order</th>
+                  <th>Quantity Rejected</th>
+                </tr>
+              </thead>
+              <tbody id="productTable">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
-<!-- allProductPanel.html   End -->
+  </div>
+  <!-- allProductPanel.html   End -->
 
 
 
 
 
 
-<!-- materialLotPanel   Start -->
-<div class="row animated fadeInRight" id="MaterialLotPanel" style="display: none;">
+  <!-- materialLotPanel   Start -->
+  <div class="row animated fadeInRight" id="MaterialLotPanel" style="display: none;">
     <div class="col-lg-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5>Material Lot <small id="materialLotProductName"></small></h5>
-                <div class="ibox-tools">
-                    <button type="button" class="btn btn-default btn-sm" id="closeMaterialLotBtn">
-                        <i class="ti ti-x"></i> Close
-                    </button>
-                </div>
-            </div>
-            <div class="ibox-content">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th>Batch Number</th>
-                                <th>ARN</th>
-                                <th>Doc Code</th>
-                                <th>Manufacturing Date</th>
-                                <th>Expiry Date</th>
-                                <th>Retest Date</th>
-                                <th>Status</th>
-                                <th>Quantity</th>
-                                <th>Amount</th>
-                                <th>Storage Location</th>
-                                <th>Containers</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lotTable"></tbody>
-                    </table>
-                </div>
-            </div>
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5>Material Lot <small id="materialLotProductName"></small></h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-default btn-sm" id="closeMaterialLotBtn">
+              <i class="ti ti-x"></i> Close
+            </button>
+          </div>
         </div>
+        <div class="ibox-content">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>Batch Number</th>
+                  <th>ARN</th>
+                  <th>Doc Code</th>
+                  <th>Manufacturing Date</th>
+                  <th>Expiry Date</th>
+                  <th>Retest Date</th>
+                  <th>Status</th>
+                  <th>Quantity</th>
+                  <th>Amount</th>
+                  <th>Storage Location</th>
+                  <th>Containers</th>
+                </tr>
+              </thead>
+              <tbody id="lotTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
-<!-- materialLotPanel   End -->
+  </div>
+  <!-- materialLotPanel   End -->
 
 
-<!-- productUomPanel.html   Start -->
-<div class="row animated fadeInRight" id="UomPanel" style="display: none;">
+  <!-- productUomPanel.html   Start -->
+  <div class="row animated fadeInRight" id="UomPanel" style="display: none;">
     <div class="col-lg-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5>Measure of Uncertainty (Type B)<small id="productNameUncertainity"></small></h5>
-                <div class="ibox-tools">
-                    <button type="button" class="btn btn-default btn-sm close-uncertainity">
-                        <i class="ti ti-x"></i> Close
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="newUncertainityBtn">
-                        <i class="ti ti-plus"></i> New Measurement
-                    </button>
-                </div>
-            </div>
-            <div class="ibox-content">
-                <div class="alert alert-danger" id="uncertainityErrorPanel" style="display: none;"></div>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                            <th></th>
-                            <th>Performed Date</th>
-                            <th>Measured Value</th>
-                            <th>Uncertainty as per Calibration Certificate</th>
-                            <th>Absolute Error (UB1)</th>
-                            <th>Relative Uncertainty (UB1)</th>
-                        </thead>
-                        </tr>
-                        <tbody id="uncertainityTable"></tbody>
-                    </table>
-                </div>
-            </div>
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5>Measure of Uncertainty (Type B)<small id="productNameUncertainity"></small></h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-default btn-sm close-uncertainity">
+              <i class="ti ti-x"></i> Close
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="newUncertainityBtn">
+              <i class="ti ti-plus"></i> New Measurement
+            </button>
+          </div>
         </div>
+        <div class="ibox-content">
+          <div class="alert alert-danger" id="uncertainityErrorPanel" style="display: none;"></div>
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Performed Date</th>
+                  <th>Measured Value</th>
+                  <th>Uncertainty as per Calibration Certificate</th>
+                  <th>Absolute Error (UB1)</th>
+                  <th>Relative Uncertainty (UB1)</th>
+              </thead>
+              </tr>
+              <tbody id="uncertainityTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<div class="modal inmodal fade" id="certifyModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal inmodal fade" id="certifyModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-md">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">Certify Measurement</h4>
-            </div>
-            <div class="modal-body">
-                <form role="form" id="newUncertainityForm">
-                    <div class="form-group">
-                        <label>Measured Value</label>
-                        <input type="number" class="form-control uncertainityInput" name="MeasuredValue">
-                    </div>
-                        <div class="form-group">
-                            <label>Measured Unit</label>
-                            <input type="text" class="form-control uncertainityInput" name="MeasuredUnit" required>
-                        </div>
-                    <div class="form-group">
-                        <label>Certified Uncertainty</label>
-                        <input type="number" class="form-control uncertainityInput" name="CertifiedUncertainity">
-                    </div>
-                    <div class="form-group">
-                        <label>Absolute Error</label>
-                        <input type="number" class="form-control uncertainityInputCalc" name="AbsoluteError" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label>Relative Uncertainty</label>
-                        <input type="number" class="form-control uncertainityInputCalc" name="RelativeUncertainity" readonly>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-secondary" id="certifyModal_completeBtn">Complete</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Certify Measurement</h4>
         </div>
+        <div class="modal-body">
+          <form role="form" id="newUncertainityForm">
+            <div class="form-group">
+              <label>Measured Value</label>
+              <input type="number" class="form-control uncertainityInput" name="MeasuredValue">
+            </div>
+            <div class="form-group">
+              <label>Measured Unit</label>
+              <input type="text" class="form-control uncertainityInput" name="MeasuredUnit" required>
+            </div>
+            <div class="form-group">
+              <label>Certified Uncertainty</label>
+              <input type="number" class="form-control uncertainityInput" name="CertifiedUncertainity">
+            </div>
+            <div class="form-group">
+              <label>Absolute Error</label>
+              <input type="number" class="form-control uncertainityInputCalc" name="AbsoluteError" readonly>
+            </div>
+            <div class="form-group">
+              <label>Relative Uncertainty</label>
+              <input type="number" class="form-control uncertainityInputCalc" name="RelativeUncertainity" readonly>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-secondary" id="certifyModal_completeBtn">Complete</button>
+        </div>
+      </div>
     </div>
-</div>
-<!-- productUomPanel.html -->
+  </div>
+  <!-- productUomPanel.html -->
 
 
 
@@ -238,239 +250,240 @@
 
 
 
-<!-- newProductPanel.html   Start -->
+  <!-- newProductPanel.html   Start -->
 
-<div class="row animated fadeInRight" id="AddProduct" style="display:none;">
+  <div class="row animated fadeInRight" id="AddProduct" style="display:none;">
     <div class="col-lg-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5>Material <small>New</small></h5>
-                <div class="ibox-tools">
-                    <button type="button" class="btn btn-default btn-sm close-box newProductCancelBtn">
-                        <i data-lucide="x"></i> Cancel
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" id="createProductBtn">
-                        <i class="ti ti-check"></i> Save
-                    </button>
-                </div>
-            </div>
-            <div class="ibox-content">
-                <form role="form" id="newProductForm" action="/api/products" method="post" enctype="multipart/form-data">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label>Material Name</label>
-                                <input type="hidden" name="id">
-                                <input class="form-control productInput" name="Name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="">Product Code</label>
-                                <input type="text" name="Number" class="form-control productInput">
-                            </div>
-                            <div class="form-group">
-                                <label for="">Version</label>
-                                <input type="text" class="form-control productInput" name="Version">
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <input class="form-control productInput" name="Description">
-                            </div>
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select class="form-control productInput select2" id="productCategory" name="Category">
-                                  <option value="">-- Select Category --</option>
-                                </select>   
-                            </div>
-                            <div class="form-group">
-                                <label>Restock/Minimum Quantity</label>
-                                <input type="text" class="form-control productInput" name="RestockQuantity">
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label>HSN Code</label>
-                                <input class="form-control productInput" name="Hsn" required>
-                            </div>
-                            <div class="form-group">
-                                <label>UOM</label>
-                                <select class="form-control select2 productInput" name="Uom">
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Type</label>
-                                <select class="form-control select2 productInput" name="Type">
-                                    <option value="">--none--</option>
-                                    <option value="Raw Material">Raw Material</option>
-                                    <option value="Packaging Material">Packaging Material</option>
-                                    <option value="Finished Goods">Finished Goods</option>
-                                    <option value="Intermediate Goods">Intermediate Goods</option>
-                                    <option value="General Material">General Material</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Unit Price</label>
-                                <input type="text" class="form-control productInput" name="UnitPrice">
-                            </div>
-                            
-                        </div>
-                    </div>
-                </form>
-            </div>
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5>Material <small>New</small></h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-default btn-sm close-box newProductCancelBtn">
+              <i data-lucide="x"></i> Cancel
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="createProductBtn">
+              <i class="ti ti-check"></i> Save
+            </button>
+          </div>
         </div>
+        <div class="ibox-content">
+          <form role="form" id="newProductForm" action="/api/products" method="post" enctype="multipart/form-data">
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>Material Name</label>
+                  <input type="hidden" name="id">
+                  <input class="form-control productInput" name="Name" required>
+                </div>
+                <div class="form-group">
+                  <label for="">Product Code</label>
+                  <input type="text" name="Number" class="form-control productInput">
+                </div>
+                <div class="form-group">
+                  <label for="">Version</label>
+                  <input type="text" class="form-control productInput" name="Version">
+                </div>
+                <div class="form-group">
+                  <label>Description</label>
+                  <input class="form-control productInput" name="Description">
+                </div>
+                <div class="form-group">
+                  <label>Category</label>
+                  <select class="form-control productInput select2" id="productCategory" name="Category">
+                    <option value="">-- Select Category --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Restock/Minimum Quantity</label>
+                  <input type="text" class="form-control productInput" name="RestockQuantity">
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group">
+                  <label>HSN Code</label>
+                  <input class="form-control productInput" name="Hsn" required>
+                </div>
+                <div class="form-group">
+                  <label>UOM</label>
+                  <select class="form-control select2 productInput" name="Uom">
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Type</label>
+                  <select class="form-control select2 productInput" name="Type">
+                    <option value="">--none--</option>
+                    <option value="Raw Material">Raw Material</option>
+                    <option value="Packaging Material">Packaging Material</option>
+                    <option value="Finished Goods">Finished Goods</option>
+                    <option value="Intermediate Goods">Intermediate Goods</option>
+                    <option value="General Material">General Material</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Unit Price</label>
+                  <input type="text" class="form-control productInput" name="UnitPrice">
+                </div>
+
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<style>
-#createProductBtn:disabled,
-#createProductBtn.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background-color: #6c757d !important;
-    border-color: #6c757d !important;
-}
-
-#createProductBtn:disabled:hover,
-#createProductBtn.disabled:hover {
-    background-color: #6c757d !important;
-    border-color: #6c757d !important;
-}
-</style>
-
-
-<!-- newProductPanel.html   End -->
-
-
-
-
-
-
-<!-- editProductPanel.html   Start -->
-
-<link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
-<style>
-  .disabled {
-    pointer-events: none;
-    opacity: 0.6;
-    cursor: not-allowed !important;
-  }
-
-  .modal-side-by-side {
-    display: block !important;
-  }
-
-  .modal-left:not(.modal-side-by-side) .modal-dialog {
-    position: relative;
-    margin: 30px auto;
-    width: auto;
-    max-width: 600px;
-  }
-
-  .modal-left.modal-side-by-side .modal-dialog {
-    position: fixed;
-    left: 50%;
-    top: 10%;
-    transform: translateX(-50%);
-    margin: 0;
-    width: 500px;
-    max-width: 500px;
-  }
-
-  .modal-right.modal-side-by-side .modal-dialog {
-    position: fixed;
-    right: 0px;
-    top: 10%;
-    margin: 0;
-    width: 350px;
-    max-width: 350px;
-  }
-
-  .modal-right.fade.in.modal-side-by-side .modal-dialog {
-    animation: slideInLeft 0.3s ease-out;
-  }
-
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-100px);
+  <style>
+    #createProductBtn:disabled,
+    #createProductBtn.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: #6c757d !important;
+      border-color: #6c757d !important;
     }
 
-    to {
-      opacity: 1;
-      transform: translateX(0);
+    #createProductBtn:disabled:hover,
+    #createProductBtn.disabled:hover {
+      background-color: #6c757d !important;
+      border-color: #6c757d !important;
     }
-  }
+  </style>
 
 
-  .modal-right {
-    z-index: 1055;
-  }
+  <!-- newProductPanel.html   End -->
 
-  .modal-left {
-    z-index: 1050;
-  }
 
-  .modal:not(.modal-side-by-side) .modal-dialog {
-    position: relative;
-    margin: 30px auto;
-    transform: none;
-  }
 
-  @media (max-width: 1024px) {
+
+
+
+  <!-- editProductPanel.html   Start -->
+
+  <link href="/resources/inspinia_theme/css/plugins/jasny/jasny-bootstrap.min.css" rel="stylesheet">
+  <style>
+    .disabled {
+      pointer-events: none;
+      opacity: 0.6;
+      cursor: not-allowed !important;
+    }
+
+    .modal-side-by-side {
+      display: block !important;
+    }
+
+    .modal-left:not(.modal-side-by-side) .modal-dialog {
+      position: relative;
+      margin: 30px auto;
+      width: auto;
+      max-width: 600px;
+    }
+
     .modal-left.modal-side-by-side .modal-dialog {
-      width: 450px;
+      position: fixed;
+      left: 50%;
+      top: 10%;
+      transform: translateX(-50%);
+      margin: 0;
+      width: 500px;
+      max-width: 500px;
     }
 
     .modal-right.modal-side-by-side .modal-dialog {
-      left: 1%;
-      width: 320px;
+      position: fixed;
+      right: 0px;
+      top: 10%;
+      margin: 0;
+      width: 350px;
+      max-width: 350px;
     }
-  }
 
-  @media (max-width: 768px) {
-    .modal-left.modal-side-by-side .modal-dialog {
+    .modal-right.fade.in.modal-side-by-side .modal-dialog {
+      animation: slideInLeft 0.3s ease-out;
+    }
+
+    @keyframes slideInLeft {
+      from {
+        opacity: 0;
+        transform: translateX(-100px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+
+    .modal-right {
+      z-index: 1055;
+    }
+
+    .modal-left {
+      z-index: 1050;
+    }
+
+    .modal:not(.modal-side-by-side) .modal-dialog {
       position: relative;
-      left: auto;
-      top: auto;
+      margin: 30px auto;
       transform: none;
-      width: 90%;
-      max-width: 90%;
-      margin: 10px auto;
     }
 
-    .modal-right.modal-side-by-side .modal-dialog {
-      position: relative;
-      left: auto;
-      top: auto;
-      width: 90%;
-      max-width: 90%;
-      margin: 10px auto;
+    @media (max-width: 1024px) {
+      .modal-left.modal-side-by-side .modal-dialog {
+        width: 450px;
+      }
+
+      .modal-right.modal-side-by-side .modal-dialog {
+        left: 1%;
+        width: 320px;
+      }
     }
-  }
 
-  .modal-left .modal-content {
-    border: 2px solid #ddd;
-  }
+    @media (max-width: 768px) {
+      .modal-left.modal-side-by-side .modal-dialog {
+        position: relative;
+        left: auto;
+        top: auto;
+        transform: none;
+        width: 90%;
+        max-width: 90%;
+        margin: 10px auto;
+      }
 
-  .modal-right .modal-content {
-    border: 2px solid #337ab7;
-    box-shadow: 0 5px 15px rgba(51, 122, 183, 0.3);
-  }
-</style>
-<div class="row animated fadeInRight" id="EditProduct" style="display: none;">
-  <div class="col-lg-12">
-    <div class="ibox float-e-margins">
-      <div class="ibox-title">
-        <h5 style="display:inline-flex; align-items:center; gap:8px; margin:0;">
-          <span id="productName"></span>
-          <small id="productType"></small>
-          <span id="qualifyDisplay"></span>
-        </h5>
-        <div class="ibox-tools">
-          <button type="button" class="btn btn-default btn-sm close-box"><i data-lucide="x"></i>Close</button>
-          <button type="button" class="btn btn-default btn-sm" id="materialLotBtn"><i data-lucide="box"></i>Material Lot</button>
-          
+      .modal-right.modal-side-by-side .modal-dialog {
+        position: relative;
+        left: auto;
+        top: auto;
+        width: 90%;
+        max-width: 90%;
+        margin: 10px auto;
+      }
+    }
 
-          <!-- <div class="btn-group" role="group" aria-label="Assign">
+    .modal-left .modal-content {
+      border: 2px solid #ddd;
+    }
+
+    .modal-right .modal-content {
+      border: 2px solid #337ab7;
+      box-shadow: 0 5px 15px rgba(51, 122, 183, 0.3);
+    }
+  </style>
+  <div class="row animated fadeInRight" id="EditProduct" style="display: none;">
+    <div class="col-lg-12">
+      <div class="ibox float-e-margins">
+        <div class="ibox-title">
+          <h5 style="display:inline-flex; align-items:center; gap:8px; margin:0;">
+            <span id="productName"></span>
+            <small id="productType"></small>
+            <span id="qualifyDisplay"></span>
+          </h5>
+          <div class="ibox-tools">
+            <button type="button" class="btn btn-default btn-sm close-box"><i data-lucide="x"></i>Close</button>
+            <button type="button" class="btn btn-default btn-sm" id="materialLotBtn"><i data-lucide="box"></i>Material
+              Lot</button>
+
+
+            <!-- <div class="btn-group" role="group" aria-label="Assign">
             <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"
               aria-haspopup="true" aria-expanded="false">
               <i class="ti ti-settings"></i> Assign <span class="caret"></span>
@@ -485,93 +498,93 @@
 
           <button type="button" class="btn btn-default btn-sm" id="viewTransactionsBtn"> <i class="ti ti-file"></i>
             Transactions</button> -->
+          </div>
         </div>
-      </div>
-      <div class="ibox-content">
-        <div class="alert alert-danger" id="errorPanel" style="display: none;"></div>
+        <div class="ibox-content">
+          <div class="alert alert-danger" id="errorPanel" style="display: none;"></div>
 
-        <!-- OLD: action="/inventory/product/update" -->
-        <!-- NEW: action="/data/Product/update/{id}" -->
-        <form role="form" id="editProductForm" action="/data/Product/update" method="post" name="editProductForm">
-          <div class="row g-3">
-            <div class="col-sm-6">
-              <div class="form-group mb-3">
-                <label>Material Name</label>
-                <input type="text" class="form-control editInput" name="Name" readonly required="">
+          <!-- OLD: action="/inventory/product/update" -->
+          <!-- NEW: action="/data/Product/update/{id}" -->
+          <form role="form" id="editProductForm" action="/data/Product/update" method="post" name="editProductForm">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="form-group mb-3">
+                  <label>Material Name</label>
+                  <input type="text" class="form-control editInput" name="Name" readonly required="">
+                </div>
+                <div class="form-group mb-3">
+                  <label>Product Code</label>
+                  <input type="text" name="Number" class="form-control editInput" readonly>
+                </div>
+                <div class="form-group mb-3">
+                  <label>Version</label>
+                  <input type="text" class="form-control editInput" name="Version" readonly>
+                </div>
+                <div class="form-group mb-3">
+                  <label>Description</label>
+                  <input type="text" class="form-control editInput" name="Description" readonly required="">
+                </div>
+                <div class="form-group mb-3">
+                  <label>Unit Price</label>
+                  <input type="number" class="form-control editInput" name="UnitPrice" readonly>
+                </div>
               </div>
-              <div class="form-group mb-3">
-                <label>Product Code</label>
-                <input type="text" name="Number" class="form-control editInput" readonly>
-              </div>
-              <div class="form-group mb-3">
-                <label>Version</label>
-                <input type="text" class="form-control editInput" name="Version" readonly>
-              </div>
-              <div class="form-group mb-3">
-                <label>Description</label>
-                <input type="text" class="form-control editInput" name="Description" readonly required="">
-              </div>
-              <div class="form-group mb-3">
-                <label>Unit Price</label>
-                <input type="number" class="form-control editInput" name="UnitPrice" readonly>
-              </div>
-            </div>
-            <div class="col-sm-6">
-              <div class="form-group mb-3">
-                <label>HSN Code</label>
-                <input type="text" class="form-control editInput" name="Hsn" readonly>
-              </div>
-              <div class="form-group mb-3">
-                <label>UOM</label>
-                <select class="form-control select2 editInput" name="Uom" disabled>
-                </select>
-              </div>
-              <div class="form-group mb-3">
-                <label>Type</label>
-                <select class="form-control select2 editInput" name="Type" disabled>
-                  <option value="">--none--</option>
-                  <option value="Raw Material">Raw Material</option>
-                  <option value="Packaging Material">Packaging Material</option>
-                  <option value="Finished Goods">Finished Goods</option>
-                  <option value="Intermediate Goods">Intermediate Goods</option>
-                  <option value="General Material">General Material</option>
-                </select>
-              </div>
-              <div class="form-group mb-3">
-                <label>Restock/Minimum Quantity</label>
-                <input type="number" class="form-control editInput" name="RestockQuantity" readonly>
-              </div>
-              <div class="form-group mb-3">
-                <label>Quantity Available</label>
-                <input type="text" class="form-control editInput" id="currentAvailability" readonly>
-              </div>
-            </div>
-          </div>
-          <div class="row g-3">
-            <div class="col-sm-6">
-              <div class="form-group mb-3">
-                <label>Category</label>
-                <input type="hidden" class="editInput" name="Category" id="editCategoryHiddenInput" value="">
-                <div class="form-check mt-1">
-                  <input type="checkbox" class="form-check-input" id="editBlendingMaterialCheckbox" disabled>
-                  <label class="form-check-label" for="editBlendingMaterialCheckbox">Blending Material</label>
+              <div class="col-sm-6">
+                <div class="form-group mb-3">
+                  <label>HSN Code</label>
+                  <input type="text" class="form-control editInput" name="Hsn" readonly>
+                </div>
+                <div class="form-group mb-3">
+                  <label>UOM</label>
+                  <select class="form-control select2 editInput" name="Uom" disabled>
+                  </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label>Type</label>
+                  <select class="form-control select2 editInput" name="Type" disabled>
+                    <option value="">--none--</option>
+                    <option value="Raw Material">Raw Material</option>
+                    <option value="Packaging Material">Packaging Material</option>
+                    <option value="Finished Goods">Finished Goods</option>
+                    <option value="Intermediate Goods">Intermediate Goods</option>
+                    <option value="General Material">General Material</option>
+                  </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label>Restock/Minimum Quantity</label>
+                  <input type="number" class="form-control editInput" name="RestockQuantity" readonly>
+                </div>
+                <div class="form-group mb-3">
+                  <label>Quantity Available</label>
+                  <input type="text" class="form-control editInput" id="currentAvailability" readonly>
                 </div>
               </div>
             </div>
-            <div class="col-sm-6">
-              <div class="form-group mb-3">
-                <label>Is KSM ?</label>
-                <input type="hidden" class="editInput" name="isKsm" id="isKsmHiddenInput" value="No">
-                <div class="form-check mt-1">
-                  <input type="checkbox" class="form-check-input" id="isKsmCheckbox" disabled>
-                  <label class="form-check-label" for="isKsmCheckbox">KSM Material</label>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <div class="form-group mb-3">
+                  <label>Category</label>
+                  <input type="hidden" class="editInput" name="Category" id="editCategoryHiddenInput" value="">
+                  <div class="form-check mt-1">
+                    <input type="checkbox" class="form-check-input" id="editBlendingMaterialCheckbox" disabled>
+                    <label class="form-check-label" for="editBlendingMaterialCheckbox">Blending Material</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-sm-6">
+                <div class="form-group mb-3">
+                  <label>Is KSM ?</label>
+                  <input type="hidden" class="editInput" name="isKsm" id="isKsmHiddenInput" value="No">
+                  <div class="form-check mt-1">
+                    <input type="checkbox" class="form-check-input" id="isKsmCheckbox" disabled>
+                    <label class="form-check-label" for="isKsmCheckbox">KSM Material</label>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <input type="hidden" name="id" id="productId">
+            <input type="hidden" name="id" id="productId">
 
-          </div>
+        </div>
 
         </form>
         <hr>
@@ -598,7 +611,8 @@
             </a>
           </li> -->
           <li class="nav-item">
-            <a href="#productLabelTab" data-bs-toggle="tab" aria-expanded="false" class="nav-link active" style="color: black;">
+            <a href="#productLabelTab" data-bs-toggle="tab" aria-expanded="false" class="nav-link active"
+              style="color: black;">
               Material Label
             </a>
           </li>
@@ -638,8 +652,8 @@
                 <button type="button" class="btn btn-secondary btn-sm" id="saveScheduleBtn"
                   style="margin-right: 5px;display: none;"><i data-lucide="check"></i> Save
                 </button>
-                <button type="button" class="btn btn-default btn-sm labControlBtn" id="deleteScheduleBtn"
-                  disabled><i data-lucide="trash"></i> Delete
+                <button type="button" class="btn btn-default btn-sm labControlBtn" id="deleteScheduleBtn" disabled><i
+                    data-lucide="trash"></i> Delete
                   Label </button>
               </div>
               <div class="table-responsive px-3" style="margin-top: 20px;">
@@ -1093,82 +1107,82 @@
 </div>
 
 <script>
-lucide.createIcons();
-// allProductPanel.js   Start
-var recordList = [];
+  lucide.createIcons();
+  // allProductPanel.js   Start
+  var recordList = [];
 
-function refreshProductList() {
+  function refreshProductList() {
     console.log('refreshProductList called');
     $('#loadingIndicator').show();
     JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products'), function (response) {
-        console.log('API response:', response);
-        $('#loadingIndicator').hide();
-        recordList = Array.isArray(response) ? response : [];
-        console.log('recordList set to:', recordList);
-        applyProductTypeFilter(selectedProductFilter || 'ALL');
+      console.log('API response:', response);
+      $('#loadingIndicator').hide();
+      recordList = Array.isArray(response) ? response : [];
+      console.log('recordList set to:', recordList);
+      applyProductTypeFilter(selectedProductFilter || 'ALL');
     }, function (error) {
-        console.log('API error:', error);
-        $('#loadingIndicator').hide();
-        recordList = [];
-        applyProductTypeFilter('ALL');
+      console.log('API error:', error);
+      $('#loadingIndicator').hide();
+      recordList = [];
+      applyProductTypeFilter('ALL');
     });
-}
+  }
 
-function destroyProductDataTable() {
+  function destroyProductDataTable() {
     if (!window.$ || !$.fn.DataTable) {
-        return;
+      return;
     }
 
     if ($.fn.DataTable.isDataTable('#allProductPanelTable')) {
-        try {
-            $('#allProductPanelTable').DataTable().destroy(true);  // true removes wrapper divs
-        } catch (e) {
-            console.warn('Error destroying DataTable:', e);
-        }
+      try {
+        $('#allProductPanelTable').DataTable().destroy(true);  // true removes wrapper divs
+      } catch (e) {
+        console.warn('Error destroying DataTable:', e);
+      }
     }
-}
-
-function populateTable(products) {
-  console.log("Products abc", products);
-    console.log('populateTable called with', products.length, 'products');
-  function getCreatedTime(product) {
-    var createdDate = (product && product.createdDate) || '';
-    if (typeof createdDate !== 'string') {
-      return 0;
-    }
-    // Normalize timezone format like +00:00 for broader parser compatibility.
-    var normalized = createdDate.replace(/([+-]\d{2}):(\d{2})$/, '$1$2');
-    var parsed = Date.parse(normalized);
-    return isNaN(parsed) ? 0 : parsed;
   }
 
+  function populateTable(products) {
+    console.log("Products abc", products);
+    console.log('populateTable called with', products.length, 'products');
+    function getCreatedTime(product) {
+      var createdDate = (product && product.createdDate) || '';
+      if (typeof createdDate !== 'string') {
+        return 0;
+      }
+      // Normalize timezone format like +00:00 for broader parser compatibility.
+      var normalized = createdDate.replace(/([+-]\d{2}):(\d{2})$/, '$1$2');
+      var parsed = Date.parse(normalized);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
     var sortedProducts = Array.isArray(products)
-        ? products.slice().sort(function (a, b) {
-      var aTime = getCreatedTime(a);
-      var bTime = getCreatedTime(b);
-            return bTime - aTime;
-        })
-        : [];
-    
+      ? products.slice().sort(function (a, b) {
+        var aTime = getCreatedTime(a);
+        var bTime = getCreatedTime(b);
+        return bTime - aTime;
+      })
+      : [];
+
     // Step 1: Get the tbody element safely
     var $tbody = $('#productTable');
-    
+
     // If tbody doesn't exist, try to find it inside the table
     if ($tbody.length === 0) {
-        $tbody = $('#allProductPanelTable tbody');
+      $tbody = $('#allProductPanelTable tbody');
     }
-    
+
     console.log('tbody element found:', $tbody.length > 0);
 
     // Step 2: Destroy existing DataTable if it exists
     if ($.fn.DataTable.isDataTable('#allProductPanelTable')) {
-        try {
-            var table = $('#allProductPanelTable').DataTable();
-            // Use destroy with deferred rendering - simpler approach
-            table.destroy();
-        } catch (e) {
-            console.warn('Error destroying DataTable:', e);
-        }
+      try {
+        var table = $('#allProductPanelTable').DataTable();
+        // Use destroy with deferred rendering - simpler approach
+        table.destroy();
+      } catch (e) {
+        console.warn('Error destroying DataTable:', e);
+      }
     }
 
     // Step 3: Clear the tbody
@@ -1177,194 +1191,194 @@ function populateTable(products) {
 
     // Step 4: Build and populate HTML with products
     if (sortedProducts.length > 0) {
-        var innerHtml = '';
+      var innerHtml = '';
       $.each(sortedProducts, function (i, product) {
-          //  JSUTIL.callAJAXGet("/api/product-lots/" + product.id, function(lotResponse) {
-          //      console.log('Lot response for product', product.id, lotResponse);
-          //  });
-            innerHtml += '<tr>' +
-                '<td><a href="javascript:void(0);" class="selectRecordBtn" id="' + product.id + '">' + (product.number) + '</a></td>' +
-                '<td>' + (product.name) + '</td>' +
-                '<td>' + (product.type) + '</td>' +
-                '<td>' + (product.unitPrice || 0).toFixed(2) + '</td>' +
-                // '<td>' + ((product.quantityOnHand) - (product.quantityReserved) || 0).toFixed(2) + '</td>' +
-                '<td>' + ((product.quantityOnHand || 0)+(product.quantityUnderInspection || 0)).toFixed(2) + '</td>' +
-                '<td>' + ((product.quantityOnHand || 0)).toFixed(2) + '</td>' +
-                // '<td>' + (product.quantityReserved || 0).toFixed(2) + '</td>' +
-                '<td>' + (product.quantityUnderInspection || 0).toFixed(2) + '</td>' +
-                `<td>${(product.quantityUnderRetest || 0).toFixed(2)}</td>`+
-                '<td>' + (product.quantityOnOrder || 0).toFixed(2) + '</td>' +
-                '<td>' + (product.quantityRejected || 0).toFixed(2) + '</td>' +
-                '</tr>';
-        });
-        
-        $tbody.html(innerHtml);
-        console.log('Populated', sortedProducts.length, 'rows into tbody');
-        
-        // Step 5: Small delay then reinitialize DataTable
-        setTimeout(function() {
-            if ($tbody.find('tr').length > 0) {
-                try {
-                    if ($.fn.DataTable.isDataTable('#allProductPanelTable')) {
-    $('#allProductPanelTable').DataTable().destroy();
-}
-$('#allProductPanelTable').DataTable({ 
-    order: [], 
-    pageLength:10,
-    paging: true,
-    searching: true
-});
-                    console.log('DataTable reinitialized successfully');
-                } catch (e) {
-                    console.error('Error initializing DataTable:', e);
-                }
+        //  JSUTIL.callAJAXGet("/api/product-lots/" + product.id, function(lotResponse) {
+        //      console.log('Lot response for product', product.id, lotResponse);
+        //  });
+        innerHtml += '<tr>' +
+          '<td><a href="javascript:void(0);" class="selectRecordBtn" id="' + product.id + '">' + (product.number) + '</a></td>' +
+          '<td>' + (product.name) + '</td>' +
+          '<td>' + (product.type) + '</td>' +
+          '<td>' + (product.unitPrice || 0).toFixed(2) + '</td>' +
+          // '<td>' + ((product.quantityOnHand) - (product.quantityReserved) || 0).toFixed(2) + '</td>' +
+          '<td>' + ((product.quantityOnHand || 0) + (product.quantityUnderInspection || 0)).toFixed(2) + '</td>' +
+          '<td>' + ((product.quantityOnHand || 0)).toFixed(2) + '</td>' +
+          // '<td>' + (product.quantityReserved || 0).toFixed(2) + '</td>' +
+          '<td>' + (product.quantityUnderInspection || 0).toFixed(2) + '</td>' +
+          `<td>${(product.quantityUnderRetest || 0).toFixed(2)}</td>` +
+          '<td>' + (product.quantityOnOrder || 0).toFixed(2) + '</td>' +
+          '<td>' + (product.quantityRejected || 0).toFixed(2) + '</td>' +
+          '</tr>';
+      });
+
+      $tbody.html(innerHtml);
+      console.log('Populated', sortedProducts.length, 'rows into tbody');
+
+      // Step 5: Small delay then reinitialize DataTable
+      setTimeout(function () {
+        if ($tbody.find('tr').length > 0) {
+          try {
+            if ($.fn.DataTable.isDataTable('#allProductPanelTable')) {
+              $('#allProductPanelTable').DataTable().destroy();
             }
-        }, 50);
+            $('#allProductPanelTable').DataTable({
+              order: [],
+              pageLength: 10,
+              paging: true,
+              searching: true
+            });
+            console.log('DataTable reinitialized successfully');
+          } catch (e) {
+            console.error('Error initializing DataTable:', e);
+          }
+        }
+      }, 50);
     } else {
-        console.log('No products to display');
-        setTimeout(function() {
-            try {
-               if ($.fn.DataTable.isDataTable('#allProductPanelTable')) {
-    $('#allProductPanelTable').DataTable().destroy();
-}
-$('#allProductPanelTable').DataTable({ 
-    order: [], 
-    pageLength: 10,
-    paging: true,
-    searching: true
-});
-            } catch (e) {
-                console.error('Error initializing empty DataTable:', e);
-            }
-        }, 50);
+      console.log('No products to display');
+      setTimeout(function () {
+        try {
+          if ($.fn.DataTable.isDataTable('#allProductPanelTable')) {
+            $('#allProductPanelTable').DataTable().destroy();
+          }
+          $('#allProductPanelTable').DataTable({
+            order: [],
+            pageLength: 10,
+            paging: true,
+            searching: true
+          });
+        } catch (e) {
+          console.error('Error initializing empty DataTable:', e);
+        }
+      }, 50);
     }
-}
+  }
 
-var selectedProductFilter = 'ALL';
+  var selectedProductFilter = 'ALL';
 
-function filterProductsByType(filterValue) {
+  function filterProductsByType(filterValue) {
     if (!Array.isArray(recordList)) {
-        return [];
+      return [];
     }
 
     if (filterValue === 'ALL') {
-        return recordList;
+      return recordList;
     }
 
     return recordList.filter(function (product) {
-        return (product.type || '').toLowerCase() === (filterValue || '').toLowerCase();
+      return (product.type || '').toLowerCase() === (filterValue || '').toLowerCase();
     });
-}
+  }
 
-function applyProductTypeFilter(filterValue) {
+  function applyProductTypeFilter(filterValue) {
     selectedProductFilter = filterValue;
     // Destroy existing DataTable before re-rendering
     if ($.fn.DataTable.isDataTable('#allProductPanelTable')) {
-        $('#allProductPanelTable').DataTable().destroy();
+      $('#allProductPanelTable').DataTable().destroy();
     }
     var filteredProducts = filterProductsByType(filterValue);
     populateTable(filteredProducts);
-}
+  }
 
 
-$(document).on('click', '.exportBtn', function() {
+  $(document).on('click', '.exportBtn', function () {
     exportToExcel();
-});
+  });
 
-function exportToExcel() {
+  function exportToExcel() {
     $('#loadingIndicator').show();
-    
+
     try {
-        const date = new Date();
-        const dateStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear();
-        
-        const exportData = recordList.map(product => ({
-            'Material Code': product.number || '',
-            'Name': product.name || '',
-            'UOM': product.uom || '',
-            'Quantity On Hand': product.quantityOnHand || 0,
-            'Quantity Under Test': product.quantityUnderInspection || 0,
-            'Quantity Rejected': product.quantityRejected || 0
-        }));
-        
-        const ws = XLSX.utils.json_to_sheet(exportData, { origin: 'A2' });
-        
-        XLSX.utils.sheet_add_aoa(ws, [['Stock Statement Summary as on : ' + dateStr]], { origin: 'A1' });
-        
-        if (!ws['!merges']) ws['!merges'] = [];
-        ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
-        
-        ws['!cols'] = [
-            { wch: 15 }, 
-            { wch: 40 }, 
-            { wch: 10 }, 
-            { wch: 20 }, 
-            { wch: 20 }, 
-            { wch: 20 }  
-        ];
-        
-        
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-        
-        
-        const filename = 'Stock_Statement_' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + '.xlsx';
-        
-        
-        XLSX.writeFile(wb, filename);
-        
-        
-        $('#loadingIndicator').hide();
-        
+      const date = new Date();
+      const dateStr = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear();
+
+      const exportData = recordList.map(product => ({
+        'Material Code': product.number || '',
+        'Name': product.name || '',
+        'UOM': product.uom || '',
+        'Quantity On Hand': product.quantityOnHand || 0,
+        'Quantity Under Test': product.quantityUnderInspection || 0,
+        'Quantity Rejected': product.quantityRejected || 0
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(exportData, { origin: 'A2' });
+
+      XLSX.utils.sheet_add_aoa(ws, [['Stock Statement Summary as on : ' + dateStr]], { origin: 'A1' });
+
+      if (!ws['!merges']) ws['!merges'] = [];
+      ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } });
+
+      ws['!cols'] = [
+        { wch: 15 },
+        { wch: 40 },
+        { wch: 10 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 20 }
+      ];
+
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+
+      const filename = 'Stock_Statement_' + date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + '.xlsx';
+
+
+      XLSX.writeFile(wb, filename);
+
+
+      $('#loadingIndicator').hide();
+
     } catch (error) {
-        console.error('Export error:', error);
-        $('#loadingIndicator').hide();
-        setTimeout(function() {
-            $('#errorMessage').hide();
-        }, 3000);
+      console.error('Export error:', error);
+      $('#loadingIndicator').hide();
+      setTimeout(function () {
+        $('#errorMessage').hide();
+      }, 3000);
     }
-}
+  }
 
 
-$(document).on('click', '.selectRecordBtn', function () {
+  $(document).on('click', '.selectRecordBtn', function () {
     const productId = $(this).attr('id');
     const product = recordList.find(c => c.id == productId);
     currentRecordId = productId;
-    
+
     if (product) {
-        $('#EditProduct').show();
-        $('#ProductList').hide();
-        populateEditProductForm(product);
+      $('#EditProduct').show();
+      $('#ProductList').hide();
+      populateEditProductForm(product);
     }
-    
+
 
     // OLD: JSUTIL.callAJAXGet('/inventory/product/assigned_vendors?id=' + currentRecordId, callbackVendor);
     // NEW: Using /data/Product/vendors/list with POST
-  $('#vendorsTable').empty();
-var vendorPayload = JSON.stringify({
-    "conditions": ["Product.Id=" + Number(currentRecordId)],
-    "logic": "{0}"
-});
-JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Product/vendors/list'), vendorPayload, callbackVendor);
-    
+    $('#vendorsTable').empty();
+    // var vendorPayload = JSON.stringify({
+    //   "conditions": ["Product.Id=" + Number(currentRecordId)],
+    //   "logic": "{0}"
+    // });
+    // JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Product/vendors/list'), vendorPayload, callbackVendor);
 
-    var getUrl = JSUTIL.getUrl('/inventory/product/get_uploaded_image?id=' + currentRecordId);
-    JSUTIL.callAJAXGet(getUrl, function (response) {
-        if (response.length > 0) {
-            $('#fileSelection').html('Change File')
-            $('#viewDocumentBtn').show();
-        }
-        else {
-            $('#fileSelection').html('Select File')
-            $('#viewDocumentBtn').hide();
-        }
-    });
-    
+
+    // var getUrl = JSUTIL.getUrl('/inventory/product/get_uploaded_image?id=' + currentRecordId);
+    // JSUTIL.callAJAXGet(getUrl, function (response) {
+    //   if (response.length > 0) {
+    //     $('#fileSelection').html('Change File')
+    //     $('#viewDocumentBtn').show();
+    //   }
+    //   else {
+    //     $('#fileSelection').html('Select File')
+    //     $('#viewDocumentBtn').hide();
+    //   }
+    // });
+
     JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products/' + currentRecordId), function (res) {
-        console.log('res is', res)
-        $('#storageLocation').html(res?.storageLocation?.name)
+      console.log('res is', res)
+      $('#storageLocation').html(res?.storageLocation?.name)
     })
-    
+
     // OLD CODE - COMMENTED OUT
     // var obj2 = {
     //     "fields": "Number;Name",
@@ -1373,61 +1387,61 @@ JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Product/vendors/list'), vendorPayload, 
     // }
     // var lsurl2 = JSUTIL.getUrl('/api/product-labels/list')
     // JSUTIL.callAJAXPost(lsurl2, JSON.stringify(obj2), callbackAfterGetLabel);
-    
+
     // NEW CODE - GET request
     JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-labels'), callbackAfterGetLabel);
-});
+  });
 
-$('.newProductBtn').on('click', function () {
+  $('.newProductBtn').on('click', function () {
     console.log('you touched new category');
     var currentId = $(this).attr('id');
 
     $('#AddProduct').show();
     $('#ProductList').hide();
 
-});
+  });
 
-$(document).on('click', '.product-filter', function () {
+  $(document).on('click', '.product-filter', function () {
     var filterValue = $(this).data('filter');
 
     $('.product-filter').removeClass('btn-primary active').addClass('btn-default');
     $(this).addClass('btn-primary active').removeClass('btn-default');
 
     applyProductTypeFilter(filterValue);
-});
+  });
 
-$(document).ready(function () {
+  $(document).ready(function () {
     $('#EditProduct').hide();
     $('#ProductList').show();
     refreshProductList();
-});
+  });
 
-function populateEditProductForm(product) {
+  function populateEditProductForm(product) {
     console.log('abcd', product)
     if (product.type === "Raw Material") {
-        $('#assignVendorBtn').show();
-        $('#vendorsSection').show()
+      $('#assignVendorBtn').show();
+      $('#vendorsSection').show()
     }
     else {
-        $('#assignVendorBtn').hide();
-        $('#vendorsSection').hide()
+      $('#assignVendorBtn').hide();
+      $('#vendorsSection').hide()
     }
     var _onHand = Number(product.quantityOnHand) || 0;
     var _restock = Number(product.restockQuantity) || 0;
     var _tagStyle = 'display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;line-height:1;';
     var _dot = function (color) {
-        return '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + color + ';"></span>';
+      return '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + color + ';"></span>';
     };
     var innerHTML;
     if (_onHand <= 0) {
-        innerHTML = '<span style="' + _tagStyle + 'background:#fdecea;color:#c0392b;border:1px solid #f5c6cb;">'
-            + _dot('#c0392b') + 'Out of Stock</span>';
+      innerHTML = '<span style="' + _tagStyle + 'background:#fdecea;color:#c0392b;border:1px solid #f5c6cb;">'
+        + _dot('#c0392b') + 'Out of Stock</span>';
     } else if (_restock > 0 && _onHand <= _restock) {
-        innerHTML = '<span style="' + _tagStyle + 'background:#fff4e0;color:#b8860b;border:1px solid #ffe4a3;">'
-            + _dot('#f39c12') + 'Low Stock</span>';
+      innerHTML = '<span style="' + _tagStyle + 'background:#fff4e0;color:#b8860b;border:1px solid #ffe4a3;">'
+        + _dot('#f39c12') + 'Low Stock</span>';
     } else {
-        innerHTML = '<span style="' + _tagStyle + 'background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;">'
-            + _dot('#2e7d32') + 'In Stock</span>';
+      innerHTML = '<span style="' + _tagStyle + 'background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;">'
+        + _dot('#2e7d32') + 'In Stock</span>';
     }
     $('#qualifyDisplay').append(innerHTML);
 
@@ -1459,36 +1473,36 @@ function populateEditProductForm(product) {
 
     $('#EditProduct').show();
     $('#ProductList').hide();
-}
+  }
 
-// function callbackVendor(response) {
-//     console.log(response)
-//     $.each(response, function (i, val1) {
-//         var innerHtml = `
-//             <tr id="vendorRow_${val1.id}">
-//                 <td><a class="btn btn-default btn-sm unassignVendorBtn" id="${val1.id}"><i class="ti ti-trash"></i></a></td>
-//                 <td>${val1.vendor.name}</td>
-//                 <td>${val1.vendor.phone || ''}</td>
-//                 <td>${val1.vendor.email || ''}</td>
-//                 <td>${val1.vendor.billingStreet + ',' + val1.vendor.billingStreet2 + ',' + val1.vendor.billingCity + ',' + val1.vendor.billingState || ''}</td>
-//             </tr>
-//         `;
-//         $('#vendorsTable').append(innerHtml);
-//     });
-//     $('.unassignVendorBtn').on('click', function () {
-//         const deleteId = $(this).attr('id');
-//         const deleteUrl = `/data/VendorProduct/delete?id=${deleteId}`;
-//         JSUTIL.callAJAXGet(deleteUrl, function (res) {
-//             console.log("Deleted", res);
-//             $("#vendorRow_" + deleteId).remove();
-//         });
-//     });
-// };
+  // function callbackVendor(response) {
+  //     console.log(response)
+  //     $.each(response, function (i, val1) {
+  //         var innerHtml = `
+  //             <tr id="vendorRow_${val1.id}">
+  //                 <td><a class="btn btn-default btn-sm unassignVendorBtn" id="${val1.id}"><i class="ti ti-trash"></i></a></td>
+  //                 <td>${val1.vendor.name}</td>
+  //                 <td>${val1.vendor.phone || ''}</td>
+  //                 <td>${val1.vendor.email || ''}</td>
+  //                 <td>${val1.vendor.billingStreet + ',' + val1.vendor.billingStreet2 + ',' + val1.vendor.billingCity + ',' + val1.vendor.billingState || ''}</td>
+  //             </tr>
+  //         `;
+  //         $('#vendorsTable').append(innerHtml);
+  //     });
+  //     $('.unassignVendorBtn').on('click', function () {
+  //         const deleteId = $(this).attr('id');
+  //         const deleteUrl = `/data/VendorProduct/delete?id=${deleteId}`;
+  //         JSUTIL.callAJAXGet(deleteUrl, function (res) {
+  //             console.log("Deleted", res);
+  //             $("#vendorRow_" + deleteId).remove();
+  //         });
+  //     });
+  // };
 
-function callbackVendor(response) {
+  function callbackVendor(response) {
     console.log(response)
     $.each(response, function (i, val1) {
-        var innerHtml = `
+      var innerHtml = `
             <tr id="vendorRow_${val1.id}">
                 <td><a class="btn btn-default btn-sm unassignVendorBtn" id="${val1.id}"><i class="ti ti-trash"></i></a></td>
                 <td>${val1.vendor.name}</td>
@@ -1497,32 +1511,32 @@ function callbackVendor(response) {
                 <td>${val1.vendor.billingStreet + ',' + val1.vendor.billingStreet2 + ',' + val1.vendor.billingCity + ',' + val1.vendor.billingState || ''}</td>
             </tr>
         `;
-        $('#vendorsTable').append(innerHtml);
+      $('#vendorsTable').append(innerHtml);
     });
     $('.unassignVendorBtn').on('click', function () {
-        const deleteId = $(this).attr('id');
-        JSUTIL.callAJAXGet(JSUTIL.getUrl('/data/Product/vendors/unassign?id=' + deleteId), function (res) {
-    console.log("Deleted", res);
-    $("#vendorRow_" + deleteId).remove();
-});
+      const deleteId = $(this).attr('id');
+      JSUTIL.callAJAXGet(JSUTIL.getUrl('/data/Product/vendors/unassign?id=' + deleteId), function (res) {
+        console.log("Deleted", res);
+        $("#vendorRow_" + deleteId).remove();
+      });
     });
-};
+  };
 
-function callbackAfterGetLabel(response) {
+  function callbackAfterGetLabel(response) {
     console.log('product labels', response)
     $('#labelTable').empty();
     $.each(response, function (i, val) {
-        var innerHtml = `
+      var innerHtml = `
             <tr class="newItemEntry" name="${val.id}">
                 <td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" name="${val.id}" type="checkbox"><label></label></div></td>
                 <td><input type="text" class="form-control newItemInput1" name="number" value="${val.number || ''}" disabled></td>
                 <td><input type="text" class="form-control newItemInput1" name="name" value="${val.name || ''}" disabled></td>
             </tr>
         `;
-        $('#labelTable').append(innerHtml);
+      $('#labelTable').append(innerHtml);
     });
-}
-//  allProductPanel.js   End
+  }
+  //  allProductPanel.js   End
 
 
 
@@ -1530,96 +1544,96 @@ function callbackAfterGetLabel(response) {
 
 
 
-//  productUomPanel.js   Start
-var uncertainityRecId = '';
-var elementToDelete = '';
-var currentRecordId = '';
-$(document).ready(function() {
+  //  productUomPanel.js   Start
+  var uncertainityRecId = '';
+  var elementToDelete = '';
+  var currentRecordId = '';
+  $(document).ready(function () {
 
     productId = $('#productId').val();
 
-    $('#productUncertainityBtn').on('click', function() {
-        var getUrl = JSUTIL.getUrl('/inventory/product/product_uncertainity?id=' + currentRecordId);
-        handleUOM();
-        JSUTIL.callAJAXGet(getUrl, getProductUcCallback);
+    $('#productUncertainityBtn').on('click', function () {
+      var getUrl = JSUTIL.getUrl('/inventory/product/product_uncertainity?id=' + currentRecordId);
+      handleUOM();
+      JSUTIL.callAJAXGet(getUrl, getProductUcCallback);
     });
 
-    $('.close-uncertainity').on('click', function() {
-        $('#EditProduct').show();
-        $('#UomPanel').hide();
+    $('.close-uncertainity').on('click', function () {
+      $('#EditProduct').show();
+      $('#UomPanel').hide();
     });
 
-    $('#newUncertainityBtn').on('click', function() {
-        $('#certifyModal').modal('show');
+    $('#newUncertainityBtn').on('click', function () {
+      $('#certifyModal').modal('show');
     });
 
-    $('.uncertainityInput').on('change', function() {
-        let measuredValue = $('.uncertainityInput[name="MeasuredValue"]').val();
-        let certifiedUc = $('.uncertainityInput[name="CertifiedUncertainity"]').val();
-        
-        if(measuredValue && certifiedUc) {
-            let absoluteError = certifiedUc / 2;
-            let relativeUc = absoluteError / measuredValue;
-            $('.uncertainityInputCalc[name="AbsoluteError"]').val(absoluteError);
-            $('.uncertainityInputCalc[name="RelativeUncertainity"]').val(relativeUc);
-        }
+    $('.uncertainityInput').on('change', function () {
+      let measuredValue = $('.uncertainityInput[name="MeasuredValue"]').val();
+      let certifiedUc = $('.uncertainityInput[name="CertifiedUncertainity"]').val();
+
+      if (measuredValue && certifiedUc) {
+        let absoluteError = certifiedUc / 2;
+        let relativeUc = absoluteError / measuredValue;
+        $('.uncertainityInputCalc[name="AbsoluteError"]').val(absoluteError);
+        $('.uncertainityInputCalc[name="RelativeUncertainity"]').val(relativeUc);
+      }
     });
 
 
-$('#certifyModal_completeBtn').on('click', function() {
-    console.log(currentRecordId);
-    var postUrl = JSUTIL.getUrl('/inventory/product/create_product_uncertainity?id='+currentRecordId);
-    $('#newUncertainityForm').attr('action',postUrl);
-    JSUTIL.callAJAXFormPost('newUncertainityForm',callbackaftercreate)
-});
+    $('#certifyModal_completeBtn').on('click', function () {
+      console.log(currentRecordId);
+      var postUrl = JSUTIL.getUrl('/inventory/product/create_product_uncertainity?id=' + currentRecordId);
+      $('#newUncertainityForm').attr('action', postUrl);
+      JSUTIL.callAJAXFormPost('newUncertainityForm', callbackaftercreate)
+    });
 
-function callbackaftercreate(response){
-    console.log(response);
-    location.reload();
-}
+    function callbackaftercreate(response) {
+      console.log(response);
+      location.reload();
+    }
 
-function getProductUcCallback(objList) {
-    $("#uncertainityTable").empty();
-    console.log(objList);
-    var innerHtml = '';
-    
-    if(objList) {
-        $.each(objList, function(i, val) {
-            innerHtml += '<tr>' + 
-                '<td><button type="button" class="btn btn-default deleteUncertainitySelect" name="' + val.id + 
-                '"><i class="ti ti-trash"></i></button></td>' +
-                '<td>' + JSUTIL.getDate(val.performedDate) + '</td>' +
-                '<td>' + val.measuredValue + ' ' + val.measuredUnit + '</td>' +
-                '<td>' + val.certifiedUncertainity + '</td>' +
-                '<td>' + val.absoluteError + '</td>' +
-                '<td>' + val.relativeUncertainity + '</td>' +
-                '</tr>';
+    function getProductUcCallback(objList) {
+      $("#uncertainityTable").empty();
+      console.log(objList);
+      var innerHtml = '';
+
+      if (objList) {
+        $.each(objList, function (i, val) {
+          innerHtml += '<tr>' +
+            '<td><button type="button" class="btn btn-default deleteUncertainitySelect" name="' + val.id +
+            '"><i class="ti ti-trash"></i></button></td>' +
+            '<td>' + JSUTIL.getDate(val.performedDate) + '</td>' +
+            '<td>' + val.measuredValue + ' ' + val.measuredUnit + '</td>' +
+            '<td>' + val.certifiedUncertainity + '</td>' +
+            '<td>' + val.absoluteError + '</td>' +
+            '<td>' + val.relativeUncertainity + '</td>' +
+            '</tr>';
         });
-        
+
         $("#uncertainityTable").append(innerHtml);
         $('#EditProduct').hide();
         $("#UomPanel").show();
-    }
+      }
 
-    $('.deleteUncertainitySelect').on('click', function() {
+      $('.deleteUncertainitySelect').on('click', function () {
         elementToDelete = $(this).parent().parent();
         uncertainityRecId = $(this).attr('name');
         MODALUTIL.deleteConfirmModal(deleteUncertainityCallback);
-    });
-}
-
-function deleteUncertainityCallback() {
-    if(uncertainityRecId) {
-        var postUrl = JSUTIL.getUrl('/inventory/product/delete_product_uncertainity?id=' + uncertainityRecId +'&productid='+ currentRecordId);
-        JSUTIL.callAJAXPost(postUrl, {}, function(response) {
-            elementToDelete.remove();
-        });
+      });
     }
-}
-})
+
+    function deleteUncertainityCallback() {
+      if (uncertainityRecId) {
+        var postUrl = JSUTIL.getUrl('/inventory/product/delete_product_uncertainity?id=' + uncertainityRecId + '&productid=' + currentRecordId);
+        JSUTIL.callAJAXPost(postUrl, {}, function (response) {
+          elementToDelete.remove();
+        });
+      }
+    }
+  })
 
 
-//  productUomPanel.js   End
+  //  productUomPanel.js   End
 
 
 
@@ -1629,173 +1643,173 @@ function deleteUncertainityCallback() {
 
 
 
-//  newProductPanel.js   Start
+  //  newProductPanel.js   Start
 
-$(document).ready(function() {
+  $(document).ready(function () {
     loadCategoryList();
     loadUOMList();
     $('.select2').select2();
-$('.newProductBtn').on('click', function() {
-        $('#AddProduct').show();
-        $('#EditProduct').hide();
-        validateForm(); 
+    $('.newProductBtn').on('click', function () {
+      $('#AddProduct').show();
+      $('#EditProduct').hide();
+      validateForm();
     });
 
-    $('.newProductCancelBtn').on('click', function() {
-        $('#AddProduct').hide();
-        $('#ProductList').show();
-        resetForm();
+    $('.newProductCancelBtn').on('click', function () {
+      $('#AddProduct').hide();
+      $('#ProductList').show();
+      resetForm();
     });
 
-    $('#createProductBtn').on('click', function() {
-        if (isFormValid()) {
-            createProduct();
-        }
+    $('#createProductBtn').on('click', function () {
+      if (isFormValid()) {
+        createProduct();
+      }
     });
 
-    $('.productInput').on('input change', function() {
-        validateForm();
+    $('.productInput').on('input change', function () {
+      validateForm();
     });
 
-    $('.select2').on('select2:select select2:unselect', function() {
-        validateForm();
+    $('.select2').on('select2:select select2:unselect', function () {
+      validateForm();
     });
 
     function validateForm() {
-        const isValid = isFormValid();
-        const saveBtn = $('#createProductBtn');
-        
-        if (isValid) {
-            saveBtn.prop('disabled', false).removeClass('disabled');
-        } else {
-            saveBtn.prop('disabled', true).addClass('disabled');
-        }
+      const isValid = isFormValid();
+      const saveBtn = $('#createProductBtn');
+
+      if (isValid) {
+        saveBtn.prop('disabled', false).removeClass('disabled');
+      } else {
+        saveBtn.prop('disabled', true).addClass('disabled');
+      }
     }
 
     function isFormValid() {
-        const productName = $('input[name="Name"]').val().trim();
-        const type = $('select[name="Type"]').val();
-        if (!productName || !type ) {
-            return false;
-        }
+      const productName = $('input[name="Name"]').val().trim();
+      const type = $('select[name="Type"]').val();
+      if (!productName || !type) {
+        return false;
+      }
 
-        return true;
+      return true;
     }
 
     function createProduct() {
-        var productCode = $('.productInput[name="Number"]').val()
-        var check = true
-        $.each(recordList,function(i,val){
-            if(productCode == val.number){
-                JSUTIL.buildErrorModal('Product Code already in use')
-                check = false
-                return
-            }
-        })
-        if(check){
-        
-            
-        JSUTIL.callAJAXFormPost('newProductForm', callbackSuccessCreateProduct);
+      var productCode = $('.productInput[name="Number"]').val()
+      var check = true
+      $.each(recordList, function (i, val) {
+        if (productCode == val.number) {
+          JSUTIL.buildErrorModal('Product Code already in use')
+          check = false
+          return
         }
+      })
+      if (check) {
+
+
+        JSUTIL.callAJAXFormPost('newProductForm', callbackSuccessCreateProduct);
+      }
 
     }
 
     function buildFormDataJSON(className) {
-        let jsonPayload = {};
-        $('.' + className).each(function () {
-            let attrName = $(this).attr('name');
-            let attrValue = $(this).val();
-            console.log(attrValue);
-            if(attrValue) {
-                if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance') || $(this).hasClass('datepickerCompliance2')) {
-                    attrValue = JSUTIL.toDatabaseDate(attrValue);
-                    jsonPayload[attrName] = attrValue;
-                } else if ($(this).hasClass('datetimepicker')) {
-                    attrValue = JSUTIL.getDatabaseDateTime(attrValue);
-                    jsonPayload[attrName] = attrValue;
-                } else if ($(this).hasClass('select2')) {
-                    attrValue = $(this).select2('val');
-                    jsonPayload[attrName] = attrValue;
-                } else if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
-                    attrValue = $(this).prop('checked');  
-                    jsonPayload[attrName] = attrValue;
-                }  else if ($(this).attr('type') && $(this).attr('type') === 'number') {
-                    attrValue = Number(attrValue);
-                    jsonPayload[attrName] = attrValue;
-                } else if ($(this).attr('name') && $(this).attr('name').indexOf('.') >= 0) {
-                    console.log()
-                    let splitArray = $(this).attr('name').split('.');
-                    jsonPayload[splitArray[0]] = {};
-                    jsonPayload[splitArray[0]][splitArray[1]] = Number(attrValue);
-                } else {    
-                    console.log(attrName);
-                    if (attrName === 'id'){
-                        attrValue = Number(attrValue);
-                        jsonPayload[attrName] = attrValue;
-                    }
-                    jsonPayload[attrName] = attrValue;
-                }
+      let jsonPayload = {};
+      $('.' + className).each(function () {
+        let attrName = $(this).attr('name');
+        let attrValue = $(this).val();
+        console.log(attrValue);
+        if (attrValue) {
+          if ($(this).hasClass('datepicker') || $(this).hasClass('datepickerCompliance') || $(this).hasClass('datepickerCompliance2')) {
+            attrValue = JSUTIL.toDatabaseDate(attrValue);
+            jsonPayload[attrName] = attrValue;
+          } else if ($(this).hasClass('datetimepicker')) {
+            attrValue = JSUTIL.getDatabaseDateTime(attrValue);
+            jsonPayload[attrName] = attrValue;
+          } else if ($(this).hasClass('select2')) {
+            attrValue = $(this).select2('val');
+            jsonPayload[attrName] = attrValue;
+          } else if ($(this).attr('type') && $(this).attr('type') === 'checkbox') {
+            attrValue = $(this).prop('checked');
+            jsonPayload[attrName] = attrValue;
+          } else if ($(this).attr('type') && $(this).attr('type') === 'number') {
+            attrValue = Number(attrValue);
+            jsonPayload[attrName] = attrValue;
+          } else if ($(this).attr('name') && $(this).attr('name').indexOf('.') >= 0) {
+            console.log()
+            let splitArray = $(this).attr('name').split('.');
+            jsonPayload[splitArray[0]] = {};
+            jsonPayload[splitArray[0]][splitArray[1]] = Number(attrValue);
+          } else {
+            console.log(attrName);
+            if (attrName === 'id') {
+              attrValue = Number(attrValue);
+              jsonPayload[attrName] = attrValue;
             }
-        });
-        console.info(jsonPayload);
-        return jsonPayload;
+            jsonPayload[attrName] = attrValue;
+          }
+        }
+      });
+      console.info(jsonPayload);
+      return jsonPayload;
     }
-    
+
     function loadUOMList() {
-        var innerHtml = '';
-        var uomSelect = $('select[name="Uom"]');
-        uomSelect.empty();
-        
-        innerHtml += '<option value="">--none--</option>';
-        $.each(uomList, function(i, uom) {
-            innerHtml += '<option value="'+ uom.name +'">'+ uom.name +'</option>';
-        });
-        
-        uomSelect.append(innerHtml);
-        
-        validateForm();
+      var innerHtml = '';
+      var uomSelect = $('select[name="Uom"]');
+      uomSelect.empty();
+
+      innerHtml += '<option value="">--none--</option>';
+      $.each(uomList, function (i, uom) {
+        innerHtml += '<option value="' + uom.name + '">' + uom.name + '</option>';
+      });
+
+      uomSelect.append(innerHtml);
+
+      validateForm();
     }
 
     function loadCategoryList() {
-        console.log("loadCategoryList called");
-        var condition = {
-            "fields": "Name"
-        }
-        JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-categories/list'), JSON.stringify(condition), callbackAfterProductCategory)
+      console.log("loadCategoryList called");
+      var condition = {
+        "fields": "Name"
+      }
+      JSUTIL.callAJAXPost(JSUTIL.getUrl('/api/product-categories/list'), JSON.stringify(condition), callbackAfterProductCategory)
     }
 
-    function callbackAfterProductCategory(response){
-        console.log("response",response);
-        var innerHtml = '';
-        var categorySelect = $('select[name="Category"]');
-        categorySelect.empty();
-        
-        innerHtml += '<option value="">--none--</option>';
-        $.each(response, function(i, category) { 
-            innerHtml += '<option value="'+ category.name +'">'+ category.name +'</option>';
-        });
-        
-        categorySelect.append(innerHtml);
-        
-        validateForm();
+    function callbackAfterProductCategory(response) {
+      console.log("response", response);
+      var innerHtml = '';
+      var categorySelect = $('select[name="Category"]');
+      categorySelect.empty();
+
+      innerHtml += '<option value="">--none--</option>';
+      $.each(response, function (i, category) {
+        innerHtml += '<option value="' + category.name + '">' + category.name + '</option>';
+      });
+
+      categorySelect.append(innerHtml);
+
+      validateForm();
     }
 
     function callbackSuccessCreateProduct(response) {
-        console.log(response);
-        location.reload();
+      console.log(response);
+      location.reload();
     }
 
     function resetForm() {
-        $('#newProductForm')[0].reset();
-        $('.select2').val('').trigger('change');
-        validateForm(); 
+      $('#newProductForm')[0].reset();
+      $('.select2').val('').trigger('change');
+      validateForm();
     }
 
     function reloadProductList() {
-        location.reload();
+      location.reload();
     }
-});
-//  newProductPanel.js   End
+  });
+  //  newProductPanel.js   End
 
 
 
@@ -1803,294 +1817,300 @@ $('.newProductBtn').on('click', function() {
 
 
 
-//  editProductPanel.js   Start
+  //  editProductPanel.js   Start
 
 
-var currentRecordId = '';
-var vendorList = [];
-var warehouseList = [];
-var multipartFile = '';
-var formData;
-var userDefineSuccessCallBack = '';
+  var currentRecordId = '';
+  var vendorList = [];
+  var warehouseList = [];
+  var multipartFile = '';
+  var formData;
+  var userDefineSuccessCallBack = '';
 
-$(document).ready(function () {
+  $(document).ready(function () {
     $('#saveBtn').hide();
     $('#assignVendorBtn').hide();
 
     $('#fileInput').on('change', function (e) {
-        $('#fileNameText').text(e.target.files[0].name);
-        multipartFile = e.target.files[0];
+      $('#fileNameText').text(e.target.files[0].name);
+      multipartFile = e.target.files[0];
     });
 
     // Sync Is KSM checkbox with hidden input
     $('#isKsmCheckbox').on('change', function () {
-        $('#isKsmHiddenInput').val($(this).is(':checked') ? 'Yes' : 'No');
+      $('#isKsmHiddenInput').val($(this).is(':checked') ? 'Yes' : 'No');
     });
 
     // Sync Blending Material checkbox with hidden input
     $('#editBlendingMaterialCheckbox').on('change', function () {
-        $('#editCategoryHiddenInput').val($(this).is(':checked') ? 'Blending Material' : '');
+      $('#editCategoryHiddenInput').val($(this).is(':checked') ? 'Blending Material' : '');
     });
 
     $('#editBtn').on('click', function () {
-        $('.editInput').prop('readonly', false);
-        $('.editInput').prop('disabled', false);
-        $('#fileInput').prop('disabled', false);
-        $('#currentAvailability').prop('readonly', true);
-        $('#isKsmCheckbox').prop('disabled', false);
-        $('#editBlendingMaterialCheckbox').prop('disabled', false);
-        $('#saveBtn').show();
-        $(this).hide();
+      $('.editInput').prop('readonly', false);
+      $('.editInput').prop('disabled', false);
+      $('#fileInput').prop('disabled', false);
+      $('#currentAvailability').prop('readonly', true);
+      $('#isKsmCheckbox').prop('disabled', false);
+      $('#editBlendingMaterialCheckbox').prop('disabled', false);
+      $('#saveBtn').show();
+      $(this).hide();
 
-        enableAssignButtons();
+      enableAssignButtons();
     });
 
     $('a[href="#productImageTab"]').on('show.bs.tab', function (e) {
-        loadProductImage();
+      loadProductImage();
     });
 
     $('#viewDocumentBtn').on('click', function () {
-        console.log(currentRecordId)
-        var getUrl = JSUTIL.getUrl('/inventory/product/get_uploaded_image?id=' + currentRecordId);
-        JSUTIL.callAJAXGet(getUrl, openDocumentInNewWindow);
+      console.log(currentRecordId)
+      var getUrl = JSUTIL.getUrl('/inventory/product/get_uploaded_image?id=' + currentRecordId);
+      JSUTIL.callAJAXGet(getUrl, openDocumentInNewWindow);
     });
 
     $('#saveBtn').on('click', function () {
-        $('#loadingError').hide();
-        $('#importResults').hide();
-        $('#insertedTable').empty();
-        formData = new FormData();
-        formData.append('File', multipartFile);
+      $('#loadingError').hide();
+      $('#importResults').hide();
+      $('#insertedTable').empty();
+      formData = new FormData();
+      formData.append('File', multipartFile);
 
-        updateProduct();
+      updateProduct();
 
-        $('.editInput').prop('readonly', true);
-        $('.editInput').prop('disabled', true);
-        $('#isKsmCheckbox').prop('disabled', true);
-        $('#editBlendingMaterialCheckbox').prop('disabled', true);
-        $('#editBtn').show();
-        $(this).hide();
+      $('.editInput').prop('readonly', true);
+      $('.editInput').prop('disabled', true);
+      $('#isKsmCheckbox').prop('disabled', true);
+      $('#editBlendingMaterialCheckbox').prop('disabled', true);
+      $('#editBtn').show();
+      $(this).hide();
 
     });
 
     $('.close-box').on('click', function () {
-        $('#EditProduct').hide();
-        $('#ProductList').show();
-        resetForm();
-        $('#vendorsTable').empty();
-        $('#qualifyDisplay').empty();
+      $('#EditProduct').hide();
+      $('#ProductList').show();
+      resetForm();
+      $('#vendorsTable').empty();
+      $('#qualifyDisplay').empty();
     });
 
     $('#materialLotBtn').on('click', function () {
-        $('#materialLotProductName').text($('#productName').text());
-        $('#EditProduct').hide();
-        $('#MaterialLotPanel').show();
-        
-        // Fetch material lots for the current product
-        console.log('>>> Fetching material lots for currentRecordId:', currentRecordId);
-        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-lots'), callbackAfterGetLot);
+      $('#materialLotProductName').text($('#productName').text());
+      $('#EditProduct').hide();
+      $('#MaterialLotPanel').show();
+
+      // Fetch material lots for the current product
+      console.log('>>> Fetching material lots for currentRecordId:', currentRecordId);
+      JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-lots'), callbackAfterGetLot);
     });
 
     $('#closeMaterialLotBtn').on('click', function () {
-        $('#MaterialLotPanel').hide();
-        $('#EditProduct').show();
+      $('#MaterialLotPanel').hide();
+      $('#EditProduct').show();
     });
 
     $('#deleteProductBtn').on('click', function () {
-        MODALUTIL.deleteConfirmModal(deleteProduct);
+      MODALUTIL.deleteConfirmModal(deleteProduct);
     });
 
     $('#addVendorModal').on('shown.bs.modal', function () {
-        $('#vendorSearchInput').focus();
+      $('#vendorSearchInput').focus();
     });
 
     $('#productLocationModal').on('shown.bs.modal', function () {
-        loadWarehouseList();
+      loadWarehouseList();
     });
 
     $('#viewTransactionsBtn').on('click', function () {
-        // OLD: var postUrl = JSUTIL.getUrl('/inventory/product/product_transactions?id=' + currentRecordId);
-        // NEW: POST /data/Product/transactions/list
-        var transactionPayload = {
-            "conditions": [`Product.Id=${Number(currentRecordId)}`],
-            "fields": "TransactionDate;Type;Description;QuantityChange;TransactionAmount"
-        };
-        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Product/transactions/list'), JSON.stringify(transactionPayload), handleTransactions);
+      // OLD: var postUrl = JSUTIL.getUrl('/inventory/product/product_transactions?id=' + currentRecordId);
+      // NEW: POST /data/Product/transactions/list
+      var transactionPayload = {
+        "conditions": [`Product.Id=${Number(currentRecordId)}`],
+        "fields": "TransactionDate;Type;Description;QuantityChange;TransactionAmount"
+      };
+      JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/Product/transactions/list'), JSON.stringify(transactionPayload), handleTransactions);
     });
 
     $('select[name="type"]').on('change', function () {
-        CheckProductType($(this).val());
+      CheckProductType($(this).val());
     });
 
     $('#recipeManageBtn').on('click', function () {
-        handleUOM();
+      handleUOM();
     });
 
     $('#vendorSearchBtn').on('click', function () {
-        $("#vendorSearchTable").empty();
-        var searchParam = $('#vendorSearchInput').val();
-        if (searchParam.length < 1) return;
+      $("#vendorSearchTable").empty();
+      var searchParam = $('#vendorSearchInput').val();
+      if (searchParam.length < 1) return;
 
-        JSUTIL.startSpinner();
-        var getUrl = JSUTIL.getUrl('/api/account/search?searchParam=' + searchParam);
-        JSUTIL.callAJAXGet(getUrl, afterVendorSearchHandle);
+      JSUTIL.startSpinner();
+      var getUrl = JSUTIL.getUrl('/api/account/search?searchParam=' + searchParam);
+      JSUTIL.callAJAXGet(getUrl, afterVendorSearchHandle);
     });
 
     $('#assignLocationBtn').on('click', function () {
-        var warehouseId = $('#warehouseSelect').val();
-        var locationDetails = $('#locationDetails').val();
+      var warehouseId = $('#warehouseSelect').val();
+      var locationDetails = $('#locationDetails').val();
 
-        if (!warehouseId) {
-            JSUTIL.buildErrorModal('Please select a warehouse');
-            return;
+      if (!warehouseId) {
+        JSUTIL.buildErrorModal('Please select a warehouse');
+        return;
+      }
+      var obj = {
+        id: Number(currentRecordId),
+        storageLocation: { id: Number(warehouseId) }
+      }
+      $('#productLocationModal').modal('hide')
+      $.ajax({
+        url: JSUTIL.getUrl('/api/products/' + currentRecordId),
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(obj),
+        success: function (res) {
+          console.log('assign location', res)
+          location.reload();
         }
-        var obj = {
-            id: Number(currentRecordId),
-            storageLocation: { id: Number(warehouseId) }
-        }
-        $('#productLocationModal').modal('hide')
-        $.ajax({
-            url: JSUTIL.getUrl('/api/products/' + currentRecordId),
-            method: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify(obj),
-            success: function (res) {
-                console.log('assign location', res)
-                location.reload();
-            }
-        });
+      });
     });
 
     $('[data-toggle="modal"]').on('click', function (e) {
-        if ($(this).hasClass('disabled')) {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
+      if ($(this).hasClass('disabled')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
     });
     $('#editScheduleBtn').on('click', function () {
-        $(this).hide();
-        $('#addScheduleBtn').removeAttr('disabled');
-        $('.newItemInput1').removeAttr('disabled');
-        $("#saveScheduleBtn").show();
+      $(this).hide();
+      $('#addScheduleBtn').removeAttr('disabled');
+      $('.newItemInput1').removeAttr('disabled');
+      $("#saveScheduleBtn").show();
     });
     $('#addScheduleBtn').on('click', function () {
-        var innerHtml = '<tr class="newItemEntry" name="">' +
-            '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" name="" type="checkbox"><label></label></td>' +
-            '<td><input type="text" class="form-control newItemInput" name="number"></td>' +
-            '<td><input type="text" class="form-control newItemInput" name="name"></td>' +
-            '</tr>';
+      var innerHtml = '<tr class="newItemEntry" name="">' +
+        '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" name="" type="checkbox"><label></label></td>' +
+        '<td><input type="text" class="form-control newItemInput" name="number"></td>' +
+        '<td><input type="text" class="form-control newItemInput" name="name"></td>' +
+        '</tr>';
 
-        $('#labelTable').append(innerHtml);
+      $('#labelTable').append(innerHtml);
     });
     $('#saveScheduleBtn').on('click', function () {
-        let items = [];
-        // Only iterate through NEW items (class "newItemEntry"), not existing ones
-        $('#labelTable tr.newItemEntry').each(function () {
-            const scheduleId = $(this).attr('name');
-            let item = {
-                id: scheduleId,
-                product: {
-                    id: currentRecordId
-                },
-                name: $(this).find('input[name="name"]').val(),
-                number: $(this).find('input[name="number"]').val(),
-            };
-            if (item['name'] !== '') {
-                items.push(item);
-            }
-        });
-
-        console.log('Saving only new items:', items);
-
-        // Only make API call if there are new items to save
-        if (items.length > 0) {
-            const postUrl = JSUTIL.getUrl('/api/product-labels/create_multiple');
-            JSUTIL.callAJAXPost(postUrl, JSON.stringify(items), callbackAfterEditResponse);
-        } else {
-            callbackAfterEditResponse([]);
+      let items = [];
+      // Only iterate through NEW items (class "newItemEntry"), not existing ones
+      $('#labelTable tr.newItemEntry').each(function () {
+        const scheduleId = $(this).attr('name');
+        let item = {
+          id: scheduleId,
+          product: {
+            id: currentRecordId
+          },
+          name: $(this).find('input[name="name"]').val(),
+          number: $(this).find('input[name="number"]').val(),
+        };
+        if (item['name'] !== '') {
+          items.push(item);
         }
+      });
+
+      console.log('Saving only new items:', items);
+
+      // Only make API call if there are new items to save
+      if (items.length > 0) {
+        const postUrl = JSUTIL.getUrl('/api/product-labels/create_multiple');
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify(items), callbackAfterEditResponse);
+      } else {
+        callbackAfterEditResponse([]);
+      }
     });
     $('#deleteScheduleBtn').on('click', function () {
-        let jsObj = [];
-        let rangeId = '';
-        $('.deleteItemCreatedEntryRow1:checked').each(function () {
-            rangeId = $(this).attr('name');
-            const $row = $(this).closest('tr');
-            
-            // If it's an existing item (has an ID), add to deletion list
-            if (rangeId != '') {
-                jsObj.push(Number(rangeId));
-            }
-            
-            // Remove the row from table (whether new or existing)
-            $row.remove();
-        });
-        
-        console.log('Items to delete from API:', jsObj);
-        
-        if (jsObj.length > 0) {
-            let pending = jsObj.length;
-            let completed = 0;
-            jsObj.forEach(function(labelId) {
-                $.ajax({
-                    url: JSUTIL.getUrl('/api/product-labels/' + labelId),
-                    method: 'DELETE',
-                    success: function() { completed++; if (completed === pending) callbackAfterEditResponse([]); },
-                    error: function() { completed++; if (completed === pending) callbackAfterEditResponse([]); }
-                });
-            });
+      let jsObj = [];
+      let rangeId = '';
+      $('.deleteItemCreatedEntryRow1:checked').each(function () {
+        rangeId = $(this).attr('name');
+        const $row = $(this).closest('tr');
+
+        // If it's an existing item (has an ID), add to deletion list
+        if (rangeId != '') {
+          jsObj.push(Number(rangeId));
         }
+
+        // Remove the row from table (whether new or existing)
+        $row.remove();
+      });
+
+      console.log('Items to delete from API:', jsObj);
+
+      if (jsObj.length > 0) {
+        let pending = jsObj.length;
+        let completed = 0;
+        jsObj.forEach(function (labelId) {
+          $.ajax({
+            url: JSUTIL.getUrl('/api/product-labels/' + labelId),
+            method: 'DELETE',
+            success: function () { completed++; if (completed === pending) callbackAfterEditResponse([]); },
+            error: function () { completed++; if (completed === pending) callbackAfterEditResponse([]); }
+          });
+        });
+      }
     });
     $('#labelTable').on('change', '.deleteItemCreatedEntryRow1', function () {
-        toggleDeleteButton('#labelTable .deleteItemCreatedEntryRow1', '#deleteScheduleBtn');
+      toggleDeleteButton('#labelTable .deleteItemCreatedEntryRow1', '#deleteScheduleBtn');
     });
 
     $(document).on('click', '.view-lot-containers-btn', function () {
-        var lotId = $(this).data('lot-id');
-        var batch = $(this).data('batch') || '';
-        var productName = $('#productName').text() || '-';
+      var lotId = $(this).data('lot-id');
+      var batch = $(this).data('batch') || '';
+      var productName = $('#productName').text() || '-';
 
-        if (!lotId) {
-            JSUTIL.buildErrorModal('Batch not found for this row.');
-            return;
-        }
+      if (!lotId) {
+        JSUTIL.buildErrorModal('Batch not found for this row.');
+        return;
+      }
 
-        $('#lotContainersProduct').text(productName);
-        $('#lotContainersBatch').text(batch || '-');
-        loadLotContainers(lotId);
-        $('#lotContainersModal').modal('show');
+      $('#lotContainersProduct').text(productName);
+      $('#lotContainersBatch').text(batch || '-');
+      loadLotContainers(lotId);
+      $('#lotContainersModal').modal('show');
     });
-});
-$('.selectRecordBtn').on('click', function () {
-    currentRecordId = $(this).attr('id'); 
-    console.log('>>> selectRecordBtn handler fired');
-    console.log(currentRecordId);
+  });
+  // $('.selectRecordBtn').on('click', function () {
+  //   console.log('product  ')
+  //   currentRecordId = $(this).attr('id');
+  //   console.log('>>> selectRecordBtn handler fired');
+  //   console.log(currentRecordId);
 
-    var getUrl = JSUTIL.getUrl('/inventory/product/get_uploaded_image?id=' + currentRecordId);
-    JSUTIL.callAJAXGet(getUrl, function (response) {
-        if (response.length > 0) {
-            $('#fileSelection').html('Change File')
-            $('#viewDocumentBtn').show();
-        }
-        else {
-            $('#fileSelection').html('Select File')
-            $('#viewDocumentBtn').hide();
-        }
-    });
+  //   // var getUrl = JSUTIL.getUrl('/inventory/product/get_uploaded_image?id=' + currentRecordId);
+  //   // JSUTIL.callAJAXGet(getUrl, function (response) {
+  //   //     if (response.length > 0) {
+  //   //         $('#fileSelection').html('Change File')
+  //   //         $('#viewDocumentBtn').show();
+  //   //     }
+  //   //     else {
+  //   //         $('#fileSelection').html('Select File')
+  //   //         $('#viewDocumentBtn').hide();
+  //   //     }
+  //   // });
 
-    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products/' + currentRecordId), function (res) {
-        console.log('res is', res)
+  //   // JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/products/' + currentRecordId), function (res) {
+  //   //     console.log('res is', res)
 
-        $('#storageLocation').html(res?.storageLocation?.name)
-    })
-    // Get all product lots and filter by currentRecordId on frontend
-    console.log('>>> About to call /api/product-lots for currentRecordId:', currentRecordId);
-    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-lots'), callbackAfterGetLot);
-    // Using GET endpoint to fetch labels
-    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-labels'), callbackAfterGetLabel)
-});
-function callbackAfterEditResponse(response) {
+  //   //     $('#storageLocation').html(res?.storageLocation?.name)
+  //   // })
+  //   // Get all product lots and filter by currentRecordId on frontend
+  //   console.log('>>> About to call /api/product-lots for currentRecordId:', currentRecordId);
+  //   JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-lots'), callbackAfterGetLot);
+  //   // Using GET endpoint to fetch labels
+  //   JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-labels'), callbackAfterGetLabel)
+  // });
+ 
+ 
+ 
+ 
+ 
+  function callbackAfterEditResponse(response) {
     console.log('Labels saved/updated:', response);
     // Refresh labels for the current product only
     JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/product-labels'), callbackAfterGetLabel)
@@ -2098,57 +2118,57 @@ function callbackAfterEditResponse(response) {
     $('#editScheduleBtn').show();
     $('#deleteScheduleBtn').prop('disabled', true);
     $('#addScheduleBtn').prop('disabled', true);
-}
-function callbackAfterGetLabel(response) {
+  }
+  function callbackAfterGetLabel(response) {
     $('#labelTable').empty()
     console.log("prod", response);
-    
+
     // Filter labels to only show those for the current product
     var filteredLabels = [];
     if (Array.isArray(response)) {
-        filteredLabels = response.filter(function(label) {
-            return label.product && label.product.id == currentRecordId;
-        });
+      filteredLabels = response.filter(function (label) {
+        return label.product && label.product.id == currentRecordId;
+      });
     }
-    
+
     $.each(filteredLabels, function (i, val1) {
-        var innerHtml = '<tr class="existingItemEntry" name="' + val1.id + '">' +
-            '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" name="' + val1.id + '" type="checkbox"><label></label></div></td>' +
-            '<td><input type="text" class="form-control newItemInput1" name="number" value="' + (val1.number || '') + '" disabled></td>' +
-            '<td><input type="text" class="form-control newItemInput1" name="name" value="' + (val1.name || '') + '" disabled></td>' +
-            '</tr>';
-        $('#labelTable').append(innerHtml);
+      var innerHtml = '<tr class="existingItemEntry" name="' + val1.id + '">' +
+        '<td><div class="checkbox" style="margin:0;"><input class="deleteItemCreatedEntryRow1" name="' + val1.id + '" type="checkbox"><label></label></div></td>' +
+        '<td><input type="text" class="form-control newItemInput1" name="number" value="' + (val1.number || '') + '" disabled></td>' +
+        '<td><input type="text" class="form-control newItemInput1" name="name" value="' + (val1.name || '') + '" disabled></td>' +
+        '</tr>';
+      $('#labelTable').append(innerHtml);
     });
-}
-function callbackAfterGetLot(response) {
+  }
+  function callbackAfterGetLot(response) {
     $('#lotTable').empty();
     console.log("prod response:", response);
     console.log("currentRecordId:", currentRecordId);
-    
+
     // Filter lots by current product ID (frontend filtering)
     var filteredLots = [];
-    
+
     if (Array.isArray(response)) {
-        filteredLots = response.filter(function(lot) {
-            console.log("checking lot:", lot, "product id:", lot.product?.id, "current:", currentRecordId);
-            // Check different ways the product ID might be stored
-            if (lot.product?.id == currentRecordId) return true;
-            if (lot.productId == currentRecordId) return true;
-            if (lot.product?.id == Number(currentRecordId)) return true;
-            if (lot.productId == Number(currentRecordId)) return true;
-            return false;
-        });
+      filteredLots = response.filter(function (lot) {
+        console.log("checking lot:", lot, "product id:", lot.product?.id, "current:", currentRecordId);
+        // Check different ways the product ID might be stored
+        if (lot.product?.id == currentRecordId) return true;
+        if (lot.productId == currentRecordId) return true;
+        if (lot.product?.id == Number(currentRecordId)) return true;
+        if (lot.productId == Number(currentRecordId)) return true;
+        return false;
+      });
     }
-    
+
     console.log("filtered lots:", filteredLots);
-    
+
     if (filteredLots.length === 0) {
-        $('#lotTable').append('<tr><td colspan="11" class="text-center text-muted">No product lots found for this material</td></tr>');
-        return;
+      $('#lotTable').append('<tr><td colspan="11" class="text-center text-muted">No product lots found for this material</td></tr>');
+      return;
     }
-    
+
     $.each(filteredLots, function (i, val1) {
-        var innerHtml = `
+      var innerHtml = `
             <tr>
                 <td>${val1.batchNumber}</td>
                 <td>${val1.arn}</td>
@@ -2169,36 +2189,36 @@ function callbackAfterGetLot(response) {
                 </td>
             </tr>
         `;
-        $('#lotTable').append(innerHtml);
+      $('#lotTable').append(innerHtml);
     });
-}
+  }
 
-function loadLotContainers(lotId) {
+  function loadLotContainers(lotId) {
     var payload = {
-        fields: "Id;Number;Quantity;NetWeight;Uom;ProcessStatus;ProductLot.Id",
-        conditions: [`ProductLot.Id='${lotId}'`],
-        logic: "{0}"
+      fields: "Id;Number;Quantity;NetWeight;Uom;ProcessStatus;ProductLot.Id",
+      conditions: [`ProductLot.Id='${lotId}'`],
+      logic: "{0}"
     };
 
     JSUTIL.callAJAXPost('/api/product-containers/list', JSON.stringify(payload), function (res) {
-        var list = Array.isArray(res?.data) ? res.data : (res || []);
-        renderLotContainers(list);
+      var list = Array.isArray(res?.data) ? res.data : (res || []);
+      renderLotContainers(list);
     }, function () {
-        renderLotContainers([]);
+      renderLotContainers([]);
     });
-}
+  }
 
-function renderLotContainers(list) {
+  function renderLotContainers(list) {
     var $tbody = $('#lotContainersTable tbody');
     $tbody.empty();
 
     if (!Array.isArray(list) || list.length === 0) {
-        $tbody.html('<tr><td colspan="4" class="text-center text-muted">No containers found for this batch.</td></tr>');
-        return;
+      $tbody.html('<tr><td colspan="4" class="text-center text-muted">No containers found for this batch.</td></tr>');
+      return;
     }
 
     list.forEach(function (c) {
-        var row = `
+      var row = `
             <tr>
                 <td>${c.quantity || c.Quantity || ''}</td>
                 <td>${c.netWeight || c.NetWeight || ''}</td>
@@ -2206,13 +2226,13 @@ function renderLotContainers(list) {
                 <td>${c.processStatus || c.ProcessStatus || ''}</td>
             </tr>
         `;
-        $tbody.append(row);
+      $tbody.append(row);
     });
-}
-function openDocumentInNewWindow(response) {
+  }
+  function openDocumentInNewWindow(response) {
     if (!response) return;
 
-    var mimeType = 'image/png'; 
+    var mimeType = 'image/png';
     if (response.startsWith('/9j/')) mimeType = 'image/jpeg';
     else if (response.startsWith('iVBOR')) mimeType = 'image/png';
     else if (response.startsWith('R0lGOD')) mimeType = 'image/gif';
@@ -2220,121 +2240,121 @@ function openDocumentInNewWindow(response) {
     var pdfData = atob(response);
     var binaryData = new Uint8Array(pdfData.length);
     for (var i = 0; i < pdfData.length; i++) {
-        binaryData[i] = pdfData.charCodeAt(i);
+      binaryData[i] = pdfData.charCodeAt(i);
     }
 
     var blob = new Blob([binaryData], { type: mimeType });
     var url = URL.createObjectURL(blob);
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 100);
-}
-function loadProductImage() {
+  }
+  function loadProductImage() {
     console.log('Loading product image for ID:', currentRecordId);
     $('#productImagePreview').hide().attr('src', '');
     $('#noImageMessage').hide();
     $('#downloadDocumentLink').hide().attr('href', '#');
 
     if (!currentRecordId) {
-        $('#noImageMessage').text('Please select a product first.').show();
-        return;
+      $('#noImageMessage').text('Please select a product first.').show();
+      return;
     }
 
     var getUrl = JSUTIL.getUrl('/inventory/product/get_uploaded_image?id=' + currentRecordId);
 
     JSUTIL.callAJAXGet(getUrl, handleImageLoadResponse);
-}
+  }
 
-function handleImageLoadResponse(response) {
+  function handleImageLoadResponse(response) {
     console.log(response);
     if (response && response.length > 0) {
-        var base64Data = response;
-        var mimeType = 'image/png'; 
-        var url = 'data:' + mimeType + ';base64,' + base64Data;
+      var base64Data = response;
+      var mimeType = 'image/png';
+      var url = 'data:' + mimeType + ';base64,' + base64Data;
 
-        $('#productImagePreview').attr('src', url).show();
-        $('#downloadDocumentLink').attr('href', url).attr('download', 'product_image_' + currentRecordId + '.png').show();
-        $('#viewDocumentBtn').show(); 
+      $('#productImagePreview').attr('src', url).show();
+      $('#downloadDocumentLink').attr('href', url).attr('download', 'product_image_' + currentRecordId + '.png').show();
+      $('#viewDocumentBtn').show();
     } else {
-        $('#productImagePreview').hide();
-        $('#downloadDocumentLink').hide();
-        $('#noImageMessage').text('No product image uploaded yet.').show();
-        $('#viewDocumentBtn').hide();
+      $('#productImagePreview').hide();
+      $('#downloadDocumentLink').hide();
+      $('#noImageMessage').text('No product image uploaded yet.').show();
+      $('#viewDocumentBtn').hide();
     }
-}
+  }
 
-function updateProduct() {
+  function updateProduct() {
     var productPayload = JSUTIL.buildFormDataJSON('editInput');
 
     var productCode = $('.editInput[name="Number"]').val()
     var edit = true
-    $.each(recordList,function(i,val){
-        if(val.id!=currentRecordId && val.number == productCode){
-            edit = false
-            JSUTIL.buildErrorModal('ProductCode of 2 products cannot be same.')
-            return
-        }
+    $.each(recordList, function (i, val) {
+      if (val.id != currentRecordId && val.number == productCode) {
+        edit = false
+        JSUTIL.buildErrorModal('ProductCode of 2 products cannot be same.')
+        return
+      }
     })
-    console.log('product payload',productPayload)
-    
+    console.log('product payload', productPayload)
+
     $.ajax({
-        url: JSUTIL.getUrl('/api/products/' + currentRecordId),
-        method: 'PUT',
-        contentType: 'application/json',
-        data: JSON.stringify(productPayload),
-        success: function (response) {
-            console.log('response submit', response);
+      url: JSUTIL.getUrl('/api/products/' + currentRecordId),
+      method: 'PUT',
+      contentType: 'application/json',
+      data: JSON.stringify(productPayload),
+      success: function (response) {
+        console.log('response submit', response);
 
-            if (multipartFile) {
-                JSUTIL.callAJAXFilePost(
-                    JSUTIL.getUrl('/inventory/product/upload_image?id=' + currentRecordId),
-                    formData,
-                    function (data) {
-                        console.log('Image uploaded successfully:', data);
-                        location.reload();
-                    },
-                    function (error) {
-                        console.error('Image upload failed:', error);
-                        location.reload();
-                    }
-                );
-            } else {
-                
-                location.reload();
+        if (multipartFile) {
+          JSUTIL.callAJAXFilePost(
+            JSUTIL.getUrl('/inventory/product/upload_image?id=' + currentRecordId),
+            formData,
+            function (data) {
+              console.log('Image uploaded successfully:', data);
+              location.reload();
+            },
+            function (error) {
+              console.error('Image upload failed:', error);
+              location.reload();
             }
-        }
-    });
-}
+          );
+        } else {
 
-function foUploadFile(panelTitle, actionUrl, successCallBack) {
+          location.reload();
+        }
+      }
+    });
+  }
+
+  function foUploadFile(panelTitle, actionUrl, successCallBack) {
     $('#uploadFileTitle').text(panelTitle);
     $('#fileForm').attr('action', actionUrl);
     userDefineSuccessCallBack = successCallBack;
-}
+  }
 
-function defaultSuccessCallback(response) {
+  function defaultSuccessCallback(response) {
     console.log(response);
     location.reload();
-}
+  }
 
-function toggleDeleteButton(checkboxSelector, buttonSelector) {
+  function toggleDeleteButton(checkboxSelector, buttonSelector) {
     const isChecked = $(checkboxSelector).is(':checked');
     $(buttonSelector).prop('disabled', !isChecked);
-}
+  }
 
-function deleteProduct() {
+  function deleteProduct() {
     console.log('file to delete' + currentRecordId);
     $.ajax({
-        url: JSUTIL.getUrl('/api/products/' + currentRecordId),
-        method: 'DELETE',
-        success: afterDelete
+      url: JSUTIL.getUrl('/api/products/' + currentRecordId),
+      method: 'DELETE',
+      success: afterDelete
     });
-}
+  }
 
-function afterDelete(response) {
+  function afterDelete(response) {
     console.log(response);
-}
+  }
 
-function resetForm() {
+  function resetForm() {
     $('.editInput').val('').prop('readonly', true).prop('disabled', true);
     $('#isKsmCheckbox').prop('checked', false).prop('disabled', true);
     $('#isKsmHiddenInput').val('No');
@@ -2343,50 +2363,50 @@ function resetForm() {
     $('#editBtn').show();
     $('#saveBtn').hide();
     $('#errorPanel').hide();
-}
+  }
 
-$('.saveBtn').on('click', function () {
+  $('.saveBtn').on('click', function () {
     JSUTIL.startSpinner();
     $('#editProductForm').submit();
-});
+  });
 
-function handleTransactions(data) {
+  function handleTransactions(data) {
     var innerHtml = '';
     $('#productTrTable').empty();
 
     $.each(data, function (i, val) {
-        innerHtml += '<tr>' +
-            '<td>' + JSUTIL.getDate(val.transactionDate) + '</td>' +
-            '<td>' + val.type + '</td>' +
-            '<td>' + val.description + '</td>' +
-            '<td style="text-align: right;">' + val.quantityChange + '</td>' +
-            '<td style="text-align: right;">' + val.transactionAmount + '</td>' +
-            '</tr>';
+      innerHtml += '<tr>' +
+        '<td>' + JSUTIL.getDate(val.transactionDate) + '</td>' +
+        '<td>' + val.type + '</td>' +
+        '<td>' + val.description + '</td>' +
+        '<td style="text-align: right;">' + val.quantityChange + '</td>' +
+        '<td style="text-align: right;">' + val.transactionAmount + '</td>' +
+        '</tr>';
     });
 
     $('#productTrTable').append(innerHtml);
     $('#productTrModal').modal('show');
-}
+  }
 
-function handleUOM() {
+  function handleUOM() {
     $('#EditProduct').hide();
     $('#UomPanel').show();
-}
+  }
 
-function loadUOMList() {
+  function loadUOMList() {
     var innerHtml = '';
     var uomSelect = $('select[name="uom"]');
     uomSelect.empty();
 
     innerHtml += '<option value="">--None--</option>';
     $.each(uomList, function (i, uom) {
-        innerHtml += '<option value="' + uom.name + '">' + uom.name + '</option>';
+      innerHtml += '<option value="' + uom.name + '">' + uom.name + '</option>';
     });
 
     uomSelect.append(innerHtml);
-}
+  }
 
-function loadWarehouseList() {
+  function loadWarehouseList() {
     var warehouseSelect = $('#warehouseSelect');
     warehouseSelect.empty();
 
@@ -2422,81 +2442,81 @@ function loadWarehouseList() {
         $('#createWarehouseBtn').show();
       }
     });
-}
+  }
 
-function assignProductLocation(warehouseId, locationDetails) {
+  function assignProductLocation(warehouseId, locationDetails) {
     var payload = {
-        productId: currentRecordId,
-        warehouseId: warehouseId,
-        locationDetails: locationDetails
+      productId: currentRecordId,
+      warehouseId: warehouseId,
+      locationDetails: locationDetails
     };
 
     var postUrl = JSUTIL.getUrl('/inventory/product/assign_location');
     JSUTIL.callAJAXPost(postUrl, JSON.stringify(payload), function (response) {
-        console.log('Product location assigned successfully');
-        $('#productLocationModal').modal('hide');
-        
-        location.reload();
+      console.log('Product location assigned successfully');
+      $('#productLocationModal').modal('hide');
+
+      location.reload();
     });
-}
+  }
 
-function CheckProductType(type) {
+  function CheckProductType(type) {
     if (type === 'Raw Material') {
-        $('#assignVendorBtn').show();
-        console.log('assign should be visible');
+      $('#assignVendorBtn').show();
+      console.log('assign should be visible');
     } else {
-        $('#assignVendorBtn').hide();
-        console.log('assign should not be visible');
+      $('#assignVendorBtn').hide();
+      console.log('assign should not be visible');
     }
-}
+  }
 
-$(document).ready(function () {
+  $(document).ready(function () {
     loadUOMList();
-});
+  });
 
-function initializeEditProduct() {
+  function initializeEditProduct() {
     loadCategoryList();
     CheckProductType($('select[name="type"]').val());
 
-}
+  }
 
-function enableAssignButtons() {
+  function enableAssignButtons() {
     $('.dropdown-toggle').prop('disabled', false);
     $('#assignVendorBtn').removeClass('disabled').prop('disabled', false);
     $('#productLocationBtn').removeClass('disabled').prop('disabled', false);
     $('[data-toggle="modal"][data-target="#addVendorModal"]').removeClass('disabled');
     $('[data-toggle="modal"][data-target="#productLocationModal"]').removeClass('disabled');
-}
+  }
 
-function afterVendorSearchHandle(response) {
+  function afterVendorSearchHandle(response) {
     var innerHtml = '';
     console.log(response)
     vendorList = response;
     $('#vendorSearchTable').empty();
 
     $.each(response, function (i, val) {
-        innerHtml += '<tr>' +
-            '<td><a href="javascript:void(0);" class="selectVendorBtn" id="' + val.id + '" data-dismiss="modal">' + val.name + '</a></td>' +
-            '<td>' + (val.billingStreet + ',' + val.billingStreet2 + ',' + val.billingCity + ',' + val.billingState || '') + '</td>' +
-            '</tr>';
+      innerHtml += '<tr>' +
+        '<td><a href="javascript:void(0);" class="selectVendorBtn" id="' + val.id + '" data-dismiss="modal">' + val.name + '</a></td>' +
+        '<td>' + (val.billingStreet + ',' + val.billingStreet2 + ',' + val.billingCity + ',' + val.billingState || '') + '</td>' +
+        '</tr>';
     });
 
     $('#vendorSearchTable').append(innerHtml);
 
     $('.selectVendorBtn').on('click', function () {
-        var selectedVendor = vendorList[$(this).closest('tr').index()];
-        var vendorId = $(this).attr('id');
+      var selectedVendor = vendorList[$(this).closest('tr').index()];
+      var vendorId = $(this).attr('id');
       var postUrl = JSUTIL.getUrl('/data/Product/vendors/assign?productId=' + currentRecordId + '&vendorId=' + vendorId);
-JSUTIL.callAJAXGet(postUrl, afterVendorAdd);
+      JSUTIL.callAJAXGet(postUrl, afterVendorAdd);
 
-        $('#addVendorModal').modal('hide');
+      $('#addVendorModal').modal('hide');
     });
-}
+  }
 
-function afterVendorAdd(response) {
+  function afterVendorAdd(response) {
     console.log(response);
     location.reload();
-}
+  }
 
-//  editProductPanel.js   End
+  //  editProductPanel.js   End
 </script>

@@ -307,6 +307,8 @@
                             data-lucide="pencil"></i> Edit </button>
                     <button type="button" class="btn btn-secondary btn-sm documentSaveAndUpdateBtn"
                         style="display: none;"><i data-lucide="check"></i> Save </button>
+                    <button type="button" class="btn btn-danger btn-sm qaReviewRejectBtn" style="display: none;"><i
+                            data-lucide="x"></i> Send Back To Author</button>
                     <button type="button" class="btn btn-secondary btn-sm recordBtnSendApproval" style="display: none;"><i
                             data-lucide="check"></i> Sign &amp; Send For Review</button>
                     <button type="button" class="btn btn-secondary btn-sm recordApprovalBtn" style="display: none;"><i
@@ -493,6 +495,8 @@
                             <div class="ibox-tools" style="margin-bottom:10px;">
                                 <button type="button" class="btn btn-default btn-sm labControlBtn"
                                     id="uploadDocument"><i data-lucide="upload"></i> Upload Annexures</button>
+                                <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                    id="uploadNewAnnexureBtn" style="display:none;"><i data-lucide="plus"></i> Add New Annexure</button>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-hover table-bordered">
@@ -500,6 +504,7 @@
                                         <tr>
                                             <th></th>
                                             <th>Name</th>
+                                            <th>Version</th>
                                             <th>Date</th>
                                         </tr>
                                     </thead>
@@ -589,7 +594,7 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Select File</label>
                     <input type="file" class="form-control" id="mainDocFileInput"
-                        accept=".doc,.docx,.pdf,.xls,.xlsx,.ppt,.pptx">
+                        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
                     <div id="mainDocFileName" class="form-text text-muted mt-1"></div>
                 </div>
             </div>
@@ -632,6 +637,26 @@
                 <button type="button" class="btn btn-secondary btn-sm" id="processBtn1">
                     <i data-lucide="upload"></i> Upload
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal inmodal fade" id="qaReviewRejectModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Send Back To Author</h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger" id="qaReviewRejectError" style="display:none;"></div>
+                <div class="form-group">
+                    <label><strong>Remarks</strong></label>
+                    <textarea rows="4" id="qaReviewRejectRemarks" class="form-control" placeholder="Enter reason for sending back..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="qaReviewRejectConfirmBtn">Send Back</button>
             </div>
         </div>
     </div>
@@ -679,7 +704,7 @@
                 <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-secondary" id="completeVerificationBtn">Verify Password</button>
                 <button type="button" class="btn btn-danger" id="qaRejectBtn" style="display:none;">Reject</button>
-                <button type="button" class="btn btn-secondary" id="completeSigningBtn" style="display:none;">Send For Approval</button>
+                <button type="button" class="btn btn-secondary" id="completeSigningBtn" style="display:none;">Approve</button>
             </div>
         </div>
     </div>
@@ -1218,11 +1243,43 @@
             $('#eSignReportPasswordFieldRow').show();
             $('#completeVerificationBtn').show();
             $('#addESignatureDetailsRow').hide();
-            $('#completeSigningBtn').hide();
+            $('#completeSigningBtn').hide().text('Send For Approval');
             $('#qaRejectBtn').hide();
             new bootstrap.Modal(document.getElementById('esignModal')).show();
             $('#eSignUserName').val(FOX.employeeUsername);
         });
+        // QA Head sends Review back to author
+        $(document).on('click', '.qaReviewRejectBtn', function () {
+            $('#qaReviewRejectRemarks').val('');
+            $('#qaReviewRejectError').hide();
+            new bootstrap.Modal(document.getElementById('qaReviewRejectModal')).show();
+        });
+        $(document).on('click', '#qaReviewRejectConfirmBtn', function () {
+            var remarks = $('#qaReviewRejectRemarks').val();
+            if (!remarks) { $('#qaReviewRejectError').text('Please enter remarks').show(); return; }
+            JSUTIL.callAJAXPost(
+                '/data/QualityDocumentRequest/update/' + currentRecordId,
+                JSON.stringify({ processStatus: 'New', inApprovalWorkflow: false }),
+                function () {
+                    JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/process-activities/parent/' + currentRecordId), function (activities) {
+                        var maxLocation = (Array.isArray(activities) ? activities : []).reduce(function (max, e) {
+                            var loc = parseInt(e.location); return !isNaN(loc) && loc > max ? loc : max;
+                        }, 0);
+                        JSUTIL.callAJAXPost('/api/process-activities', JSON.stringify({
+                            parentRecordId: Number(currentRecordId),
+                            name: 'Sent Back To Author By ' + FOX.employeeName,
+                            performedBy: { id: Number(FOX.employeeId) },
+                            notes: remarks,
+                            location: String(maxLocation + 1)
+                        }), function () {
+                            bootstrap.Modal.getInstance(document.getElementById('qaReviewRejectModal'))?.hide();
+                            location.reload();
+                        });
+                    });
+                }
+            );
+        });
+
         $('.qaSigningBtn').on('click', function () {
             currentSigningFlowType = 'qa';
             $('#eSignReportPasswordField').val('');
@@ -1230,7 +1287,7 @@
             $('#eSignReportPasswordFieldRow').show();
             $('#completeVerificationBtn').show();
             $('#addESignatureDetailsRow').hide();
-            $('#completeSigningBtn').hide();
+            $('#completeSigningBtn').hide().text('Approve');
             $('#qaRejectBtn').hide();
             new bootstrap.Modal(document.getElementById('esignModal')).show();
             $('#eSignUserName').val(FOX.employeeUsername);
@@ -1400,15 +1457,53 @@
                         function (reviewers) {
                             var revList = Array.isArray(reviewers) ? reviewers : [];
                             var htmlContent = buildCoverPageHTML(currentRecordData, revList);
-                            // Step 3: POST HTML to generateEffective
-                            JSUTIL.callAJAXPost(
-                                '/data/QualityDocumentRequest/generateEffective/' + currentRecordId,
-                                JSON.stringify({ HtmlContent: htmlContent }),
-                                function () {
-                                    $('#drSpinnerOverlay').hide();
-                                    location.reload();
-                                }
-                            );
+                            var typeName = (currentRecordData.documentType && currentRecordData.documentType.name) || typeOfDocument || 'Document';
+
+                            // Build documentRequest metadata
+                            var docRequestPayload = {
+                                document_number: 'Document Number',
+                                document_number_value: currentRecordData.documentNumber || '',
+                                document_title: 'Document Title',
+                                document_title_value: currentRecordData.documentName || (currentRecordData.document && currentRecordData.document.name) || '',
+                                document_description_value: currentRecordData.reason || ''
+                            };
+
+                            // Fetch annexures then POST
+                            JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentAnnexure/list'), JSON.stringify({}), function (allAnnexures) {
+                                var filtered = (allAnnexures || []).filter(function (a) {
+                                    return String(a.documentRequest && a.documentRequest.id) === String(currentRecordId);
+                                });
+
+                                var annexuresPayload = filtered.map(function (ann) {
+                                    var cleanName = (ann.name || '').replace(/\.docx$/i, '');
+                                    return {
+                                        document_number: typeName + ' Number',
+                                        document_number_value: ann.number || '',
+                                        document_title: typeName + ' Title',
+                                        document_title_value: cleanName,
+                                        document_description_value: cleanName
+                                    };
+                                });
+
+                                JSUTIL.callAJAXPost(
+                                    '/data/QualityDocumentRequest/generateEffective/' + currentRecordId,
+                                    JSON.stringify({
+                                        HtmlContent: htmlContent,
+                                        documentRequest: docRequestPayload,
+                                        annexures: annexuresPayload
+                                    }),
+                                    function () {
+                                        JSUTIL.callAJAXPost(
+                                            '/data/QualityDocumentRequest/makeEffective/' + currentRecordId,
+                                            JSON.stringify({}),
+                                            function () {
+                                                $('#drSpinnerOverlay').hide();
+                                                location.reload();
+                                            }
+                                        );
+                                    }
+                                );
+                            });
                         }
                     );
                 }
@@ -1524,33 +1619,118 @@
         console.log(objList);
         $('#editRecordPanel').show();
         $('#allDocumentsTable').empty();
+        $('#uploadNewAnnexureBtn').hide();
+
+        if (purposeOfRecord === 'Revision') {
+            // Check if original document had annexures via parent.id
+            var parentDocId = currentRecordData && currentRecordData.document && currentRecordData.document.id;
+            if (parentDocId) {
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocument/list'), JSON.stringify({}), function (docList) {
+                    var childDocs = (Array.isArray(docList) ? docList : []).filter(function (d) {
+                        return String(d.parent && d.parent.id) === String(parentDocId);
+                    });
+
+                    if (childDocs.length > 0) {
+                        // Case 2: Revision with prior annexures — show parent annexures + upload version btn
+                        $('#uploadNewAnnexureBtn').show();
+                        renderRevisionAnnexures(childDocs, objList);
+                    } else {
+                        // Case 3: Revision but no prior annexures — treat like New
+                        $('#uploadDocument').show();
+                        renderNewAnnexures(objList);
+                    }
+                });
+            } else {
+                // No parent document — treat like New
+                renderNewAnnexures(objList);
+            }
+        } else {
+            // Case 1: New — show normal upload
+            renderNewAnnexures(objList);
+        }
+    }
+
+    function renderNewAnnexures(objList) {
         var innerHtml = '';
         if (!objList || objList.length === 0) {
-            innerHtml = '<tr><td colspan="3" class="text-center">No Data available</td></tr>';
+            innerHtml = '<tr><td colspan="4" class="text-center">No Data available</td></tr>';
         } else {
             $.each(objList, function (i, val) {
-                innerHtml += '<tr><td style="width: 12%;">';
-
-                // --- MODIFIED: Also check isCurrentRecordFinal ---
-                if (val.isLocked) {
-                    innerHtml += '<button type="button" class="btn btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '" disabled>' +
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
-                        '</button>';
-                } else {
-                    innerHtml += '<button type="button" class="btn btn-outline btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '">' +
-                        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
-                        '</button>';
-                }
-                innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.extFileId + '" style="margin-left: 5px;">' +
-                    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
-                    '</button>' +
-                    '</td>' +
+                var version = val.currentVersion || '01';
+                innerHtml += '<tr><td style="width:12%;">';
+                innerHtml += buildAnnexureActionBtns(val);
+                innerHtml += '</td>' +
                     '<td>' + (val.name || '') + '</td>' +
+                    '<td>' + version + '</td>' +
                     '<td>' + JSUTIL.getDate(val.createdDate) + '</td>' +
                     '</tr>';
             });
         }
-        $('#allDocumentsTable').append(innerHtml);
+        $('#allDocumentsTable').html(innerHtml);
+    }
+
+    function renderRevisionAnnexures(parentAnnexures, currentAnnexures) {
+        // Show parent annexures with upload-new-version btn + current request's new annexures
+        var innerHtml = '';
+        if (parentAnnexures.length === 0 && (!currentAnnexures || currentAnnexures.length === 0)) {
+            innerHtml = '<tr><td colspan="4" class="text-center">No Data available</td></tr>';
+        } else {
+            // Parent annexures (from original doc) — show with "Upload Version" btn
+            $.each(parentAnnexures, function (i, doc) {
+                var version = doc.currentVersion || '01';
+                // Find if there's a revised annexure for this in current request
+                var revisedAnnexure = currentAnnexures && currentAnnexures.find(function (a) {
+                    return a.parentAnnexure && String(a.parentAnnexure.id) === String(doc.id);
+                });
+                innerHtml += '<tr>' +
+                    '<td style="width:15%;">' +
+                    '<button type="button" class="btn btn-outline btn-success viewDocumentBtn" id="' + doc.extFileId + '" style="margin-right:3px;">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+                    '</button>';
+                if (!revisedAnnexure) {
+                    innerHtml += '<button type="button" class="btn btn-outline btn-secondary btn-sm uploadVersionBtn" data-parent-id="' + doc.id + '" data-version="' + version + '">' +
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>' +
+                        ' Update</button>';
+                } else {
+                    innerHtml += '<span class="label label-success" style="margin-left:3px;">Updated</span>';
+                }
+                innerHtml += '</td>' +
+                    '<td>' + (doc.name || doc.documentName || '') + '</td>' +
+                    '<td>' + version + '</td>' +
+                    '<td>' + JSUTIL.getDate(doc.createdDate) + '</td>' +
+                    '</tr>';
+            });
+            // Also show new annexures added for this revision
+            $.each(currentAnnexures || [], function (i, val) {
+                if (val.parentAnnexure) return; // skip revision uploads shown above
+                var version = val.currentVersion || '01';
+                innerHtml += '<tr><td style="width:15%;">';
+                innerHtml += buildAnnexureActionBtns(val);
+                innerHtml += '</td>' +
+                    '<td>' + (val.name || '') + ' <span class="label">New</span></td>' +
+                    '<td>' + version + '</td>' +
+                    '<td>' + JSUTIL.getDate(val.createdDate) + '</td>' +
+                    '</tr>';
+            });
+        }
+        $('#allDocumentsTable').html(innerHtml);
+    }
+
+    function buildAnnexureActionBtns(val) {
+        var html = '';
+        if (val.isLocked) {
+            html += '<button type="button" class="btn btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '" disabled>' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
+                '</button>';
+        } else {
+            html += '<button type="button" class="btn btn-outline btn-danger deleteTrSelect deleteDocumentBtn" name="' + val.id + '">' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
+                '</button>';
+        }
+        html += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.extFileId + '" style="margin-left:5px;">' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+            '</button>';
+        return html;
     }
 
     $(document).on('click', '.deleteDocumentBtn', function () {
@@ -1959,7 +2139,12 @@
             $('#saveCFTBtn').hide();
             $('.recordEditBtn').hide();
             $('.recordApprovalBtn').hide();
-            $('.qaSigningBtn').hide();
+            $('.qaSigningBtn').hide(); $('.qaReviewRejectBtn').hide();
+            if (statusOfRecord === 'Review' && isQaUser) {
+                $('.qaReviewRejectBtn').show();
+            } else {
+                $('.qaReviewRejectBtn').hide();
+            }
             $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').hide();
             $('input[name="trainingDate"]').closest('.full-width').hide();
             $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
@@ -1979,7 +2164,7 @@
                 $('#editableFieldsForm').hide();
                 $('.recordEditBtn').show();
                 $('.recordApprovalBtn').hide();
-                $('.qaSigningBtn').hide();
+                $('.qaSigningBtn').hide(); $('.qaReviewRejectBtn').hide();
                 $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').show();
                 $('input[name="trainingDate"]').closest('.full-width').hide();
                 $('textarea[name="trainingRemarks"]').closest('.full-width').hide();
@@ -2001,7 +2186,7 @@
                     $('.qaSigningBtn').show();
                     if (fileId) { $('.openDocumentBtn').show(); } else { $('.openDocumentBtn').hide(); }
                 } else {
-                    $('.qaSigningBtn').hide();
+                    $('.qaSigningBtn').hide(); $('.qaReviewRejectBtn').hide();
                 }
                 $('a[data-toggle="tab"][href="#distribution"]').parent('li').show();
                 $('#deleteStackeChangeBtn, #addStakeholderBtnChangeReq,#addScheduleBtn,#editScheduleBtn,#deleteScheduleBtn,#addCriticalBtn,#editCriticalBtn,#deleteCriticalBtn,#addDistributionBtn,#editDistributionBtn,#deleteDistributionBtn').hide();
@@ -2189,32 +2374,65 @@
             }
 
             // Only generate documentNumber for New purpose
-            if (purposeOfRecord === 'New' && documentTypeCode) {
-                var year = new Date().getFullYear();
-                var prefix = documentTypeCode + '_' + year + '_';
+            if (purposeOfRecord === 'New') {
+                var requester = currentRecordData && currentRecordData.requester;
+                var deptCode = (requester && requester.dept && requester.dept.code) ? requester.dept.code : 'GEN';
+                var docVersion = (currentRecordData && currentRecordData.documentVersion) ? currentRecordData.documentVersion : '01';
+                var prefix = deptCode + '/';
+
                 JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocument/list'), JSON.stringify({}), function (docList) {
-                    var newNumber;
+                    var newDocNumber;
                     if (Array.isArray(docList) && docList.length > 0) {
-                        // Filter to matching prefix
+                        // Filter to same dept prefix and find highest sequence
                         var matching = docList.filter(function (d) {
                             var num = d.number || d.Number || '';
                             return num.indexOf(prefix) === 0;
                         });
                         if (matching.length > 0) {
-                            // Sort by createdDate descending — latest first
                             matching.sort(function (a, b) {
                                 return new Date(b.createdDate || b.CreatedDate || 0) - new Date(a.createdDate || a.CreatedDate || 0);
                             });
                             var lastNum = matching[0].number || matching[0].Number || '';
-                            var lastSeq = parseInt(lastNum.split('_').pop(), 10) || 0;
-                            newNumber = prefix + String(lastSeq + 1).padStart(3, '0');
+                            // Extract the sequence part: deptCode/0001
+                            var lastSeqPart = lastNum.split('/').pop();
+                            var lastSeq = parseInt(lastSeqPart, 10) || 0;
+                            newDocNumber = prefix + String(lastSeq + 1).padStart(4, '0');
                         } else {
-                            newNumber = prefix + '001';
+                            newDocNumber = prefix + '0001';
                         }
                     } else {
-                        newNumber = prefix + '001';
+                        newDocNumber = prefix + '0001';
                     }
-                    doUpdate(newNumber);
+
+                    // Extract sequence number from new doc number for annexure numbering
+                    var docSeq = newDocNumber.split('/').pop(); // e.g. "0001"
+
+                    // Fetch existing annexures for this request to determine F-number
+                    JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentAnnexure/list'), JSON.stringify({}), function (allAnnexures) {
+                        var existingAnnexures = (allAnnexures || []).filter(function (a) {
+                            return String(a.documentRequest && a.documentRequest.id) === String(currentRecordId);
+                        });
+                        var annexureCount = existingAnnexures.length;
+
+                        // Update each annexure with its number
+                        var pendingAnnexures = annexureCount;
+                        if (pendingAnnexures > 0) {
+                            existingAnnexures.forEach(function (ann, idx) {
+                                var fNum = 'F' + String(idx + 1).padStart(2, '0');
+                                var annexureNumber = prefix + docSeq + '/' + fNum + '-' + docVersion;
+                                JSUTIL.callAJAXPost(
+                                    JSUTIL.getUrl('/data/QualityDocumentAnnexure/update/' + ann.id),
+                                    JSON.stringify({ number: annexureNumber }),
+                                    function () {
+                                        pendingAnnexures--;
+                                        if (pendingAnnexures <= 0) doUpdate(newDocNumber);
+                                    }
+                                );
+                            });
+                        } else {
+                            doUpdate(newDocNumber);
+                        }
+                    });
                 });
             } else {
                 doUpdate(null);
@@ -2440,20 +2658,20 @@
     function buildCoverPageHTML(record, reviewers) {
         var purposeLabel = record.purpose || '';
 
-        // Info table rows
+        // Info table rows — first 3 use backend placeholders for both label and value
         var infoRows = [
-            ['Document Number',          record.documentNumber || ''],
-            ['Document Title',           record.documentName   || ''],
-            ['Description',              record.reason         || ''],
-            ['Version Number',           record.documentVersion || ''],
-            ['Document Status',          'Effective'],
-            ['Major Version Change Date', fmtDate(record.createdDate)]
+            ['<%document_number%>',          '<%document_number_value%>'],
+            ['<%document_title%>',           '<%document_title_value%>'],
+            ['Description',                  '<%document_description_value%>'],
+            ['Version Number',               record.documentVersion || ''],
+            ['Document Status',              'Effective'],
+            ['Major Version Change Date',    fmtDate(record.createdDate)]
         ];
 
         var tableRows = infoRows.map(function(r){
             return '<tr>' +
-                '<td style="background:#f0f0f0;font-weight:bold;padding:4px 6px;border:1px solid #333;width:38%;font-size:9pt;">' + esc(r[0]) + '</td>' +
-                '<td style="padding:4px 6px;border:1px solid #333;font-size:9pt;">' + esc(r[1]) + '</td>' +
+                '<td style="background:#f0f0f0;font-weight:bold;padding:4px 6px;border:1px solid #333;width:38%;font-size:9pt;">' + r[0] + '</td>' +
+                '<td style="padding:4px 6px;border:1px solid #333;font-size:9pt;">' + r[1] + '</td>' +
             '</tr>';
         }).join('');
 
@@ -2506,7 +2724,8 @@
             <div class="modal-body">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Select File</label>
-                    <input type="file" class="form-control" id="annexureFileInput">
+                    <input type="file" class="form-control" id="annexureFileInput"
+                        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
                     <div id="annexureFileName" class="form-text text-muted mt-1"></div>
                 </div>
             </div>
@@ -2568,6 +2787,7 @@
     $(document).on('click', '#processBtn1', function () {
         var file = document.getElementById('fileInputAction').files[0];
         if (!file) { alert('Please select a file.'); return; }
+        if (!file.name.toLowerCase().endsWith('.docx')) { alert('Only .docx files are allowed.'); return; }
 
         var folder = currentRecordData && currentRecordData.extFolderId ? currentRecordData.extFolderId : '';
         if (!folder) { alert('No folder configured for this record.'); return; }
@@ -2607,9 +2827,34 @@
         new bootstrap.Modal(document.getElementById('annexureUploadModal')).show();
     });
 
-    $(document).on('click', '#annexureUploadBtn', function () {
+
+    // ── Upload New Annexure (for Revision purpose — adds with version 01) ──────
+    $(document).on('click', '#uploadNewAnnexureBtn', function () {
+        $('#annexureFileInput').val('');
+        $('#annexureFileName').text('');
+        new bootstrap.Modal(document.getElementById('annexureUploadModal')).show();
+    });
+
+    // ── Upload Version btn (for Revision — updates existing annexure's version) ─
+    var uploadVersionParentId = null;
+    var uploadVersionCurrentVer = '01';
+
+    $(document).on('click', '.uploadVersionBtn', function () {
+        uploadVersionParentId = $(this).data('parent-id');
+        uploadVersionCurrentVer = String($(this).data('version') || '01');
+        $('#annexureFileInput').val('');
+        $('#annexureFileName').text('');
+        new bootstrap.Modal(document.getElementById('annexureUploadModal')).show();
+        // Mark modal as version-upload mode
+        $('#annexureUploadModal').data('mode', 'version');
+        $('#annexureUploadModal').data('parentAnnexureId', uploadVersionParentId);
+    });
+
+    // Override annexureUploadBtn for version mode
+    $(document).off('click.annexureUpload', '#annexureUploadBtn').on('click.annexureUpload', '#annexureUploadBtn', function () {
         var file = document.getElementById('annexureFileInput').files[0];
         if (!file) { alert('Please select a file.'); return; }
+        if (!file.name.toLowerCase().endsWith('.docx')) { alert('Only .docx files are allowed.'); return; }
 
         var folder = currentRecordData && currentRecordData.extFolderId ? currentRecordData.extFolderId : '';
         if (!folder) { alert('No folder configured for this record.'); return; }
@@ -2618,26 +2863,46 @@
         formData.append('files', file);
         formData.append('folder', folder);
 
+        var mode = $('#annexureUploadModal').data('mode');
+        var parentAnnexureId = $('#annexureUploadModal').data('parentAnnexureId');
+
         JSUTIL.callAJAXFilePost(JSUTIL.getUrl('/api/files/upload'), formData, function (response) {
             var parsed = typeof response === 'string' ? JSON.parse(response) : response;
-            var uploadedId = Array.isArray(parsed) ? parsed[0].id : (parsed.id || parsed.data);
-            if (!uploadedId) { console.error('Annexure upload failed', parsed); return; }
+            var uploadedId2 = Array.isArray(parsed) ? parsed[0].id : (parsed.id || parsed.data);
+            if (!uploadedId2) { console.error('Upload failed', parsed); return; }
 
-            var annexureObj = {
-                extFileId: String(uploadedId),
-                documentRequest: { id: Number(currentRecordId) },
-                name: file.name
-            };
-            JSUTIL.callAJAXPost(
-                JSUTIL.getUrl('/data/QualityDocumentAnnexure/create'),
-                JSON.stringify(annexureObj),
-                function () {
+            if (mode === 'version' && parentAnnexureId) {
+                // Increment version from parent
+                var lastVer = parseInt(uploadVersionCurrentVer, 10) || 1;
+                var newVersion = String(lastVer + 1).padStart(2, '0');
+                var annexureObj = {
+                    extFileId: String(uploadedId2),
+                    documentRequest: { id: Number(currentRecordId) },
+                    name: file.name,
+                    currentVersion: newVersion,
+                    parentAnnexure: { id: Number(parentAnnexureId) }
+                };
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentAnnexure/create'), JSON.stringify(annexureObj), function () {
+                    $('#annexureUploadModal').data('mode', '').data('parentAnnexureId', null);
                     bootstrap.Modal.getInstance(document.getElementById('annexureUploadModal'))?.hide();
-                    $('#annexureFileInput').val('');
-                    $('#annexureFileName').text('');
                     callbackAfterDocumentCreation();
-                }
-            );
+                });
+            } else {
+                // New annexure with version 01
+                var docNum2 = currentRecordData && currentRecordData.documentNumber;
+                var annexureObj2 = {
+                    extFileId: String(uploadedId2),
+                    documentRequest: { id: Number(currentRecordId) },
+                    name: file.name,
+                    currentVersion: '01',
+                    number: ''
+                };
+                JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentAnnexure/create'), JSON.stringify(annexureObj2), function () {
+                    $('#annexureUploadModal').data('mode', '').data('parentAnnexureId', null);
+                    bootstrap.Modal.getInstance(document.getElementById('annexureUploadModal'))?.hide();
+                    callbackAfterDocumentCreation();
+                });
+            }
         }, null);
     });
 </script>

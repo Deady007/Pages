@@ -1343,6 +1343,19 @@
     }
 
     $(document).ready(function () {
+        $('#newManuCode').on('input', function () {
+    let val = this.value;
+
+    let isValid = /^[A-Za-z0-9]+([\-\/][A-Za-z0-9]+)?$/.test(val)
+        && val.length >= 3
+        && val.length <= 10;
+
+    if (!isValid) {
+        $(this).addClass('manu-input-err');
+    } else {
+        $(this).removeClass('manu-input-err');
+    }
+});
         renderLucideIcons();
         loadVendorQualificationRecords();
     });
@@ -3649,6 +3662,7 @@
                             return;
                         }
                         obj["accountStatus"] = "Pending Qualification";
+                        obj['initiator'] = {id:FOX.employeeId}
                         JSUTIL.callAJAXPost(
                             "/api/account",
                             JSON.stringify(obj),
@@ -3710,7 +3724,14 @@
                                                 parentRecordId: vqId,
                                             }),
                                             function () {
-                                                location.reload();
+                                                // location.reload();
+                                                JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify({name:'Manufacturer is Created',
+                                                    startDate:new Date(),
+                                                    parentRecordId:newAccountId,
+                                                    performedBy:{id:FOX.employeeId}
+                                                }),function(){
+                                                    location.reload()
+                                                })
                                             },
                                         );
                                     },

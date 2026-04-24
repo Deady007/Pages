@@ -1,3 +1,47 @@
+<script src="pages/lib/jquery-3.7.1.js"></script>
+<script src="pages/lib/moment.min.js"></script>
+<link rel="stylesheet" href="pages/lib/daterangepicker.css">
+<script src="pages/lib/daterangepicker.min.js"></script>
+<script src="pages/lib/dataTables.js"></script>
+<script src="pages/lib/lucide.min.js"></script>
+<link rel="stylesheet" href="pages/lib/choices.min.css" />
+<script src="pages/lib/choices.min.js"></script>
+<link rel="stylesheet" href="pages/lib/dataTables.dataTables.css">
+<style>
+    .btn .lucide {
+        width: 17px;
+        height: 17px;
+        stroke-width: 4;
+        vertical-align: middle;
+        margin-right: 5px;
+        padding: 2px;
+    }
+
+    #documentControlTable thead th {
+        border-bottom: 1px solid #eee !important;
+    }
+
+    #documentControlTable tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+
+    #documentControlTable .selectDocumentsBtn {
+        color: #337ab7;
+        text-decoration: none;
+    }
+
+    div.dt-container .dt-search input {
+        border: 1px solid #aaa !important;
+        margin-top: 2px !important;
+        box-sizing: border-box;
+    }
+
+    #dcYearFilterWrap,
+    #dcDeptFilterWrap {
+        display: none;
+    }
+</style>
+
 <!-- allDocumentControl.html start -->
 <div class="qa-white-panel">
     <div class="row animated fadeInRight aasaanPanel" id="allDocumentsPanel">
@@ -5,278 +49,121 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h5>Documents <small>Document Control</small></h5>
-                    <div class="ibox-tools" style="margin-left:auto; text-align:right;">
-                        <button type="button" class="btn btn-white exportBtn">
-                            <i class="fa fa-upload"></i> Export to Excel
-                        </button>
-                    </div>
                 </div>
                 <div class="ibox-content m-b-sm border-bottom">
                     <div class="row">
                         <div class="col-lg-3">
                             <div class="form-group">
                                 <label>Type</label>
-                                <select class="select2 form-control" id="typeFilter">
+                                <select class="form-control" id="dcTypeFilter">
                                     <option value="">All</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="col-lg-3">
+                        <div class="col-lg-3" id="dcYearFilterWrap">
+                            <div class="form-group">
+                                <label>Year</label>
+                                <select class="form-control" id="dcYearFilter">
+                                    <option value="">All Years</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3" id="dcDeptFilterWrap">
                             <div class="form-group">
                                 <label>Department</label>
-                                <select class="select2 form-control" id="sampleTypeFilter">
+                                <select class="form-control" id="dcDeptFilter">
                                     <option value="">All</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive" style="margin-top: 10px;">
-                        <table class="table table-hover dataTables">
+                </div>
+                <div class="ibox-content m-b-sm border-bottom">
+                    <div class="table-responsive">
+                        <table id="documentControlTable" class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Document Number</th>
                                     <th>Document Name</th>
                                     <th>Department</th>
                                     <th>Type</th>
+                                    <th>Year</th>
                                 </tr>
                             </thead>
-                            <tbody class="recordTableBody" id="allDocumentsTable"></tbody>
+                            <tbody id="documentControlTableBody"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 </div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- allDocumentControl.html end -->
-
-
-
-<!-- allDocumentControl.js start -->
-<script>
-    let allDocumentsData = [];
-    const typeParameter = {
-        fields: "ExtFolderId;Name",
-        conditions: [],
-        logic: ""
-    };
-    var ansUrl = JSUTIL.getUrl('/data/QualityDocumentType/list');
-    JSUTIL.callAJAXPost(ansUrl, JSON.stringify(typeParameter), callbackAfterGetType);
-    const departmentParameter = {
-        fields: "StartDate;Name",
-        conditions: [],
-        logic: ""
-    };
-    var ansUrlDept = JSUTIL.getUrl('/data/Department/list');
-    JSUTIL.callAJAXPost(ansUrlDept, JSON.stringify(departmentParameter), callbackAfterGetDepartment);
-
-    const versionParameter = {
-        fields: "Document.Id;Document.Number;Document.Name;Document.Department;CurrentVersion;CreatedDate;DueDate;IssueDate;EffectiveDate;ExtFileId;MasterExtFileId;IsArchived;IsObsolete;TechReviewDate",
-        conditions: ['IsArchived = false', 'IsObsolete = false'],
-        logic: "{0} AND {1}"
-    };
-    var ansUrlVersion = JSUTIL.getUrl('/data/QualityDocumentVersion/list');
-    JSUTIL.callAJAXPost(ansUrlVersion, JSON.stringify(versionParameter), callbackAfterGetVersions1);
-
-    function callbackAfterGetVersions1(response) {
-        allDocumentsData = response || [];
-
-        const tableBody = $('#allDocumentsTable');
-        tableBody.empty();
-
-        let innerHtml = '';
-        $.each(recordList, function (i, u) {
-            innerHtml += `
-            <tr>
-                <td class="itemNum"><a href="javascript:void(0);" class="selectDocumentsBtn" name="${u.id}">${u.number}</a></td>
-                <td>${u.name}</td>
-                <td>${u.department}</td>
-                <td>${u.documentType.name}</td>
-            </tr>`;
-        });
-        $('.recordTableBody').append(innerHtml);
-
-        JSUTIL.reinitializeDataTable();
-    }
-    function callbackAfterGetType(response) {
-        console.log(response);
-        $('#typeFilter').empty();
-        var innerHtml = '<option value="">All</option>';
-        $.each(response, function (i, val) {
-            innerHtml += '<option value="' + val.name + '">' + val.name + '</option>';
-        });
-        $('#typeFilter').append(innerHtml);
-    }
-    function callbackAfterGetDepartment(response) {
-        $('#sampleTypeFilter').empty();
-        var innerHtml = '<option value="">All</option>';
-        $.each(response, function (i, val) {
-            innerHtml += '<option value="' + val.name + '">' + val.name + '</option>';
-        });
-        $('#sampleTypeFilter').append(innerHtml);
-    }
-
-    $(document).ready(function () {
-        $('#allDocumentsPanel').show();
-        $('#newDocumentsPanel').hide();
-        $('#editDocumentsPanel').hide();
-
-        $('#typeFilter, #sampleTypeFilter').on('change', function () {
-            $('.dataTables').DataTable().draw();
-        });
-
-        $('.exportBtn').on('click', function () {
-            if (allDocumentsData.length === 0) {
-                alert("No data available to export.");
-                return;
-            }
-
-            const exportData = allDocumentsData.map(version => {
-                const doc = version.document || {};
-                return {
-                    "Document Number": doc.number || '',
-                    "Document Name": doc.name || '',
-                    "Current Version": version.currentVersion || '',
-                    "Department": doc.department || '',
-                    "Due Date": JSUTIL.getDate(version.dueDate),
-                    "Issue Date": JSUTIL.getDate(version.issueDate),
-                    "Effective Date": JSUTIL.getDate(version.effectiveDate)
-                };
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Documents");
-
-            XLSX.writeFile(workbook, "Document List.xlsx");
-        });
-    });
-    $.fn.dataTable.ext.search.push(
-        function (settings, data, dataIndex) {
-            var typeFilter = $('#typeFilter').val();
-            var typeColVal = data[3];
-            if ((typeColVal == '') || (typeColVal.indexOf(typeFilter) >= 0)) {
-                return true;
-            }
-            return false;
-        }
-    );
-    $.fn.dataTable.ext.search.push(
-        function (settings, data, dataIndex) {
-            var typeFilter = $('#sampleTypeFilter').val();
-            var typeColVal = data[2];
-            if (typeFilter === "" || typeColVal.indexOf(typeFilter) >= 0) {
-                return true;
-            }
-            return false;
-        }
-    );  
-</script>
-<!-- allDocumentControl.js end -->
-
 
 
 <!-- editDocumentControl.html start -->
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <div class="qa-white-panel">
-<div class="row animated fadeInRight aasaanPanel editPagePanel" id="editDocumentsPanel" style="display: none;">
-    <div class="col-lg-12">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5><span id="editRecordTitle"></span></h5>
-                <div class="ibox-tools">
-                    <button type="button" class="btn btn-default btn-sm close-box editDocumentsCancelBtn">
-                        <i data-lucide="x"></i> Close
-                    </button>
-                    <button type="button" class="btn btn-default btn-sm masterViewBtn">
-                        <img src="https://github.com/dev22419/image/blob/main/master_copy2.png?raw=true"
-                            style="width: auto; height: 13px;margin-bottom:2px">
-                    </button>
-                </div>
-            </div>
-            <div class="ibox-content">
-                <form role="form" name="editDocumentsObj" id="editDocumentsForm">
-                    <div class="row">
-                        <!-- Left Column -->
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="documentNumber">Document Number</label>
-                                <input type="text" class="form-control editDocumentsInput" id="documentNumber"
-                                    name="Number" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label>Department</label>
-                                <input type="text" class="form-control editDocumentsInput" id="department"
-                                    name="Department" readonly>
-                            </div>
-                            <!-- <div class="form-group">
-                                <label for="preparedBy">Prepared By</label>
-                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
-                                <input type="hidden" id="preparedById" name="PreparedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
-                            </div>
-                            <div class="form-group">
-                                <label for="approvedBy">Approved By</label>
-                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
-                                <input type="hidden" id="approvedById" name="ApprovedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
-                            </div>
-                            <div class="form-group">
-                                <label for="issuedBy">Issued By</label>
-                                <input type="text" class="typeahead_3 form-control selectSearchInputAutoComplete" placeholder="search.." readonly>
-                                <input type="hidden" id="issuedById" name="IssuedBy.Id" class="selectSearchInputAutoCompleteId editDocumentsInput">
-                            </div> -->
-                        </div>
-                        <!-- Right Column -->
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="documentName">Document Name</label>
-                                <input type="text" class="form-control editDocumentsInput" id="documentName" name="Name"
-                                    readonly>
-                            </div>
-                            <div class="form-group">
-                                <label for="withdrawalDate">Withdrawal Date</label>
-                                <input type="text" class="form-control editDocumentsInput" id="withdrawalDate"
-                                    name="withdrawalDate" readonly>
-                            </div>
-                            <!-- <div class="form-group">
-                                <label for="preparedDate">Prepared Date</label>
-                                <input type="text" class="form-control datepicker editDocumentsInput" id="preparedDate" name="PreparedDate" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label for="approvedDate">Approved Date</label>
-                                <input type="text" class="form-control datepicker editDocumentsInput" id="approvedDate" name="ApprovedDate" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label for="issueDate">Issue Date</label>
-                                <input type="text" class="form-control datepicker editDocumentsInput" id="issueDate" name="IssueDate" disabled>
-                            </div> -->
-                            <input type="hidden" id="editDocumentsId" name="Id" />
-                        </div>
+    <div class="row animated fadeInRight aasaanPanel editPagePanel" id="editDocumentsPanel" style="display:none;">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5><span id="editRecordTitle"></span></h5>
+                    <div class="ibox-tools">
+                        <button type="button" class="btn btn-default btn-sm editDocumentsCancelBtn">
+                            <i data-lucide="x"></i> Close
+                        </button>
                     </div>
-                </form>
-                <hr>
-                <div class="tabs-container">
-                    <ul class="nav nav-tabs">
-                        <li class="active">
-                            <a data-toggle="tab" href="#Uploads" aria-expanded="false">Document Versions</a>
-                        </li>
-                    </ul>
-                    <div class="tab-content">
-                        <div id="Uploads" class="tab-pane active">
-                            <div class="panel-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th></th>
-                                                <th>Name</th>
-                                                <th>Version</th>
-                                                <th>Due Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="allDocuments"></tbody>
-                                    </table>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" name="editDocumentsObj" id="editDocumentsForm">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Document Number</label>
+                                    <input type="text" class="form-control editDocumentsInput" id="documentNumber" name="Number" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Department</label>
+                                    <input type="text" class="form-control editDocumentsInput" id="department" name="Department" readonly>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label>Document Name</label>
+                                    <input type="text" class="form-control editDocumentsInput" id="documentName" name="Name" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label>Withdrawal Date</label>
+                                    <input type="text" class="form-control editDocumentsInput" id="withdrawalDate" name="withdrawalDate" readonly>
+                                </div>
+                                <input type="hidden" id="editDocumentsId" name="Id" />
+                            </div>
+                        </div>
+                    </form>
+                    <hr>
+                    <div class="tabs-container">
+                        <ul class="nav nav-tabs">
+                            <li class="active">
+                                <a data-toggle="tab" href="#dcUploads" aria-expanded="false">Document Versions</a>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div id="dcUploads" class="tab-pane active">
+                                <div class="panel-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th>Name</th>
+                                                    <th>Version</th>
+                                                    <th>Due Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dcVersionsTable"></tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -286,184 +173,424 @@
         </div>
     </div>
 </div>
-</div>
 <!-- editDocumentControl.html end -->
 
+<!-- Print Reason Modal -->
+<div class="modal fade" id="dcPrintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Print Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Select Print Reason</label>
+                    <select class="form-control" id="dcPrintReason">
+                        <option value="">-- Select Reason --</option>
+                        <option>Audit</option>
+                        <option>Controlled Distribution</option>
+                        <option>Distribution</option>
+                        <option>External Distribution</option>
+                        <option>For SOP Files</option>
+                        <option>For Submission</option>
+                        <option>Information</option>
+                        <option>Print to Pdf</option>
+                        <option>Production</option>
+                        <option>Protocol Execution</option>
+                        <option>QMS Attachment</option>
+                        <option>Reprint-Damaged</option>
+                        <option>Reprint-Misplaced</option>
+                        <option>Reprint-Printing Error</option>
+                        <option>Review</option>
+                        <option>Training</option>
+                        <option>True-Copy</option>
+                        <option>Uncontrolled Copy</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="dcPrintConfirmBtn">
+                    <i data-lucide="printer"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Print Reason Modal end -->
 
 
-<!-- editDocumentControl.js start -->
+<!-- allDocumentControl.js start -->
 <script>
-    var documentId;
-    var documentPath1;
-    var fileName;
-    var masterId;
+    var dcAllRecords    = [];
+    var dcAllTypes      = [];
+    var dcFilteredList  = [];
+    var dcDocumentId;
+    var dcFileName;
+    var dcCurrentRecordId;
+
+    /* ── helpers ───────────────────────────────────────────────── */
+    function getDcYear(r) {
+        var d = r.createdDate || r.modifiedDate || '';
+        return d ? new Date(d).getFullYear() : '';
+    }
+
+    function getDcDept(r) {
+        return r.department || '';
+    }
+
+    function getDcTypeName(r) {
+        return (r.documentType && r.documentType.name) || '';
+    }
+
+    function getDcTypeId(r) {
+        return (r.documentType && r.documentType.id) || '';
+    }
+
+    /* ── filter bar visibility ─────────────────────────────────── */
+    function updateDcFilterVisibility() {
+        var typeId  = $('#dcTypeFilter').val();
+        var typeObj = null;
+        $.each(dcAllTypes, function (i, t) {
+            if (String(t.id) === String(typeId)) { typeObj = t; return false; }
+        });
+        var filterBy = (typeObj && typeObj.filterBy) ? typeObj.filterBy : '';
+        var hasYear  = filterBy.toLowerCase().indexOf('year') >= 0;
+        var hasDept  = filterBy.toLowerCase().indexOf('department') >= 0;
+        $('#dcYearFilterWrap').toggle(hasYear);
+        $('#dcDeptFilterWrap').toggle(hasDept);
+        if (!hasYear) $('#dcYearFilter').val('');
+        if (!hasDept) $('#dcDeptFilter').val('');
+    }
+
+    /* ── populate year dropdown ────────────────────────────────── */
+    function populateDcYearFilter() {
+        var typeId = $('#dcTypeFilter').val();
+        var subset = dcAllRecords.filter(function (r) {
+            return !typeId || String(getDcTypeId(r)) === String(typeId);
+        });
+        var prevYear = $('#dcYearFilter').val();
+        var years = [], seen = {};
+        $.each(subset, function (i, r) {
+            var y = String(getDcYear(r));
+            if (y && !seen[y]) { seen[y] = true; years.push(y); }
+        });
+        years.sort(function (a, b) { return b - a; });
+        var $yr = $('#dcYearFilter').empty().append('<option value="">All Years</option>');
+        $.each(years, function (i, y) {
+            $yr.append('<option value="' + y + '"' + (y === prevYear ? ' selected' : '') + '>' + y + '</option>');
+        });
+    }
+
+    /* ── apply filters and build table ────────────────────────── */
+    function applyDcFiltersAndBuild() {
+        var typeId   = $('#dcTypeFilter').val();
+        var year     = $('#dcYearFilter').val();
+        var deptName = $('#dcDeptFilter').val();
+
+        dcFilteredList = dcAllRecords.filter(function (r) {
+            if (typeId   && String(getDcTypeId(r)) !== String(typeId)) return false;
+            if (year     && String(getDcYear(r))   !== String(year))   return false;
+            if (deptName && getDcDept(r)           !== deptName)       return false;
+            return true;
+        });
+
+        buildDcTable(dcFilteredList);
+    }
+
+    /* ── build DataTable — copied from allDocuments.html ──────── */
+    function buildDcTable(records) {
+        if ($.fn.DataTable.isDataTable('#documentControlTable')) {
+            $('#documentControlTable').DataTable().destroy();
+        }
+        $('#documentControlTableBody').empty();
+
+        if (records && records.length > 0) {
+            $.each(records, function (i, r) {
+                var innerHtml = '<tr>' +
+                    '<td class="itemNum" style="font-weight:600"><a href="javascript:void(0);" class="selectDocumentsBtn" id="' + (r.id || '') + '">' + (r.number || '') + '</a></td>' +
+                    '<td>' + (r.name || '') + '</td>' +
+                    '<td>' + getDcDept(r) + '</td>' +
+                    '<td>' + getDcTypeName(r) + '</td>' +
+                    '<td>' + getDcYear(r) + '</td>' +
+                    '</tr>';
+                $('#documentControlTableBody').append(innerHtml);
+            });
+        }
+
+        $('#documentControlTable').DataTable({
+            destroy: true,
+            language: { emptyTable: 'No documents found.' }
+        });
+    }
+
+    /* ── fetch QualityDocument list, filter client-side ─────────── */
+    function loadDcRecords() {
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocument/list'), JSON.stringify({}), function (response) {
+            var list = Array.isArray(response) ? response : [];
+            dcAllRecords = list.filter(function (r) {
+                return r.isArchived !== true && r.isObsolete !== true;
+            });
+            populateDcYearFilter();
+            applyDcFiltersAndBuild();
+        });
+    }
+
+    /* ── load types ────────────────────────────────────────────── */
+    function loadDcTypes() {
+        JSUTIL.callAJAXGet(JSUTIL.getUrl('/api/quality-document-type'), function (response) {
+            dcAllTypes = Array.isArray(response) ? response : [];
+            var $sel = $('#dcTypeFilter').empty().append('<option value="">All</option>');
+            $.each(dcAllTypes, function (i, t) {
+                $sel.append('<option value="' + t.id + '">' + t.name + '</option>');
+            });
+        });
+    }
+
+    /* ── load departments ──────────────────────────────────────── */
+    function loadDcDepartments() {
+        $.ajax({
+            url: JSUTIL.getUrl('/api/departments'),
+            type: 'GET',
+            success: function (response) {
+                var depts = Array.isArray(response) ? response : [];
+                var $dp = $('#dcDeptFilter').empty().append('<option value="">All</option>');
+                $.each(depts, function (i, d) {
+                    if (!d.name) return;
+                    $dp.append('<option value="' + d.name + '">' + d.name + '</option>');
+                });
+            }
+        });
+    }
+
+    /* ── version list for edit panel ───────────────────────────── */
+    function loadDcVersionsForDoc(docId) {
+        JSUTIL.callAJAXPost(JSUTIL.getUrl('/data/QualityDocumentVersion/list'), JSON.stringify({}), function (response) {
+            var list = Array.isArray(response) ? response : [];
+            var versions = list.filter(function (v) {
+                return v.document && String(v.document.id) === String(docId)
+                    && v.isArchived !== true
+                    && v.isObsolete !== true;
+            });
+            buildDcVersionsTable(versions);
+        });
+    }
+
+    function buildDcVersionsTable(versions) {
+        $('#dcVersionsTable').empty();
+        var innerHtml = '';
+        $.each(versions, function (i, val) {
+            var docName   = val.document ? (val.document.name   || '') : '';
+            var docNumber = val.document ? (val.document.number || '') : '';
+            innerHtml +=
+                '<tr><td style="width:8%;">' +
+                '<button type="button" class="btn btn-default btn-sm dcPrintBtn" ' +
+                    'data-ext-file-id="' + (val.extFileId || '') + '" ' +
+                    'data-is-legacy="' + (val.isLegacy || false) + '" ' +
+                    'data-doc-name="' + docName + '" ' +
+                    'data-doc-number="' + docNumber + '" ' +
+                    'data-effective-date="' + (val.effectiveDate || '') + '" ' +
+                    'title="Print"><i data-lucide="printer"></i></button>' +
+                '</td>' +
+                '<td>' + docName + '</td>' +
+                '<td>' + (val.currentVersion || '') + '</td>' +
+                '<td>' + JSUTIL.getDate(val.dueDate) + '</td>' +
+                '</tr>';
+        });
+        $('#dcVersionsTable').append(innerHtml);
+        lucide.createIcons();
+    }
+
+    /* ── print modal state ──────────────────────────────────────── */
+    var dcPrintTarget = {};
+
+    /* ── fetch blob then stamp and open ─────────────────────────── */
+    async function dcStampAndPrint(extFileId, isLegacy, docName, docNumber, effectiveDate, printReason) {
+        try {
+            var response = await $.ajax({
+                url: JSUTIL.getUrl('/api/files/download/' + encodeURIComponent(extFileId)),
+                type: 'GET',
+                xhrFields: { responseType: 'blob' }
+            });
+
+            var arrayBuffer = await new Promise(function (resolve, reject) {
+                var reader = new FileReader();
+                reader.onload  = function () { resolve(reader.result); };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(response);
+            });
+
+            const { PDFDocument, rgb, StandardFonts } = PDFLib;
+            const pdfDoc       = await PDFDocument.load(new Uint8Array(arrayBuffer));
+            const regularFont  = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const boldFont     = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            const pages        = pdfDoc.getPages();
+
+            // format dates
+            var now           = new Date();
+            var printDate     = now.toLocaleDateString('en-IN');
+            var printTime     = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            var effectiveFmt  = effectiveDate ? new Date(effectiveDate).toLocaleString('en-IN') : '';
+            var reviewFmt     = effectiveDate ? new Date(effectiveDate).toLocaleString('en-IN') : '';
+            var printedBy     = (typeof FOX !== 'undefined' && FOX.employeeName) ? FOX.employeeName : '';
+
+            var fontSize  = 7;
+            var black     = rgb(0, 0, 0);
+            var lineH     = 10;
+
+            pages.forEach(function (page) {
+                var w = page.getWidth();
+                var h = page.getHeight();
+
+                // draw a thin line across the bottom
+                page.drawLine({
+                    start: { x: 30, y: 55 },
+                    end:   { x: w - 30, y: 55 },
+                    thickness: 0.5,
+                    color: black
+                });
+
+                // ── bottom-left ──────────────────────────────────
+                var leftX  = 30;
+                var startY = 50;
+
+                page.drawText('Document Name : ' + docName, {
+                    x: leftX, y: startY,
+                    font: regularFont, size: fontSize, color: black
+                });
+                page.drawText('Document Number : ' + docNumber, {
+                    x: leftX, y: startY - lineH,
+                    font: regularFont, size: fontSize, color: black
+                });
+                page.drawText('Effective Date : ' + effectiveFmt, {
+                    x: leftX, y: startY - lineH * 2,
+                    font: regularFont, size: fontSize, color: black
+                });
+                page.drawText('Review Date : ' + reviewFmt, {
+                    x: leftX, y: startY - lineH * 3,
+                    font: regularFont, size: fontSize, color: black
+                });
+
+                // ── bottom-right ─────────────────────────────────
+                var rightColW = 180;
+                var rightX    = w - rightColW - 30;
+
+                page.drawText('Printed By : ' + printedBy, {
+                    x: rightX, y: startY,
+                    font: regularFont, size: fontSize, color: black
+                });
+                page.drawText('Print Date : ' + printDate, {
+                    x: rightX, y: startY - lineH,
+                    font: regularFont, size: fontSize, color: black
+                });
+                page.drawText('Print Time : ' + printTime, {
+                    x: rightX, y: startY - lineH * 2,
+                    font: regularFont, size: fontSize, color: black
+                });
+                page.drawText('Print Reason : ' + printReason, {
+                    x: rightX, y: startY - lineH * 3,
+                    font: regularFont, size: fontSize, color: black
+                });
+            });
+
+            var modifiedBytes = await pdfDoc.save();
+            var blob = new Blob([modifiedBytes], { type: 'application/pdf' });
+            var url  = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+
+        } catch (err) {
+            console.error('Print error:', err);
+            alert('Failed to process PDF for printing.');
+        }
+    }
+
+    /* ── events ────────────────────────────────────────────────── */
     $(document).ready(function () {
+
+        $('#dcTypeFilter').on('change', function () {
+            updateDcFilterVisibility();
+            populateDcYearFilter();
+            applyDcFiltersAndBuild();
+        });
+
+        $('#dcYearFilter, #dcDeptFilter').on('change', function () {
+            applyDcFiltersAndBuild();
+        });
+
+        /* row click */
+        $('#documentControlTableBody').on('click', '.selectDocumentsBtn', function () {
+            var id = $(this).attr('id');
+            var record = null;
+            $.each(dcFilteredList, function (i, r) {
+                if (String(r.id) === String(id)) { record = r; return false; }
+            });
+            if (!record) return;
+
+            dcCurrentRecordId = record.id;
+            dcDocumentId      = record.id;
+            dcFileName        = record.name;
+
+            $('.editDocumentsInput[name="Name"]').val(record.name || '');
+            $('.editDocumentsInput[name="Number"]').val(record.number || '');
+            $('.editDocumentsInput[name="Department"]').val(record.department || '');
+
+            if (record.withdrawalDate) {
+                $('.editDocumentsInput[name="withdrawalDate"]').val(JSUTIL.getDate(record.withdrawalDate));
+                $('input[name="withdrawalDate"]').closest('.form-group').show();
+            } else {
+                $('input[name="withdrawalDate"]').closest('.form-group').hide();
+            }
+
+            $('#editDocumentsId').val(record.id);
+            $('#editRecordTitle').text((record.number || '') + ' - ' + (record.name || ''));
+
+            $('#allDocumentsPanel').hide();
+            $('#editDocumentsPanel').show();
+
+            loadDcVersionsForDoc(record.id);
+            lucide.createIcons();
+        });
+
+        /* print button → open reason modal */
+        $(document).on('click', '.dcPrintBtn', function () {
+            dcPrintTarget = {
+                extFileId    : $(this).data('ext-file-id'),
+                isLegacy     : $(this).data('is-legacy'),
+                docName      : $(this).data('doc-name'),
+                docNumber    : $(this).data('doc-number'),
+                effectiveDate: $(this).data('effective-date')
+            };
+            $('#dcPrintReason').val('');
+            var modal = new bootstrap.Modal(document.getElementById('dcPrintModal'));
+            modal.show();
+        });
+
+        /* confirm print */
+        $('#dcPrintConfirmBtn').on('click', function () {
+            var reason = $('#dcPrintReason').val();
+            if (!reason) { alert('Please select a print reason.'); return; }
+            bootstrap.Modal.getInstance(document.getElementById('dcPrintModal')).hide();
+            dcStampAndPrint(
+                dcPrintTarget.extFileId,
+                dcPrintTarget.isLegacy,
+                dcPrintTarget.docName,
+                dcPrintTarget.docNumber,
+                dcPrintTarget.effectiveDate,
+                reason
+            );
+        });
+
+        /* close edit panel */
         $('.editDocumentsCancelBtn').on('click', function () {
             $('#allDocumentsPanel').show();
             $('#editDocumentsPanel').hide();
         });
-        $('.masterViewBtn').on('click', function () {
-            JSUTIL.callAJAXGet('/onedrive/view/' + masterId, callbackAfterEditFile);
-        });
-        $('#allDocumentsTable').on('click', '.selectDocumentsBtn', function () {
-            const currentId = $(this).attr('name');
-            currentRecordEquipId = currentId;
-            $.each(recordList, function (i, val) {
-                if (currentRecordEquipId == val.id) {
-                    $('.editDocumentsInput[name="Name"]').val(val.name);
-                    $('.editDocumentsInput[name="Number"]').val(val.number);
-                    $('.editDocumentsInput[name="Department"]').val(val.department);
-                    if (val.withdrawalDate) {
-                        $('.editDocumentsInput[name="withdrawalDate"]').val(JSUTIL.getDate(val.withdrawalDate));
-                        $('input[name="withdrawalDate"]').closest('.form-group').show();
-                    }
-                    else {
-                        $('input[name="withdrawalDate"]').closest('.form-group').hide();
-                    }
-                    $('#editDocumentsId').val(val.id);
-                    $('#editRecordTitle').text(val.number + '-' + val.name);
-                    documentId = val.id;
-                    fileName = val.name
-                }
-            });
-            $('#allDocumentsPanel').hide();
-            $('#editDocumentsPanel').show();
-            const versionParameter = {
-                fields: "Document.Id;CurrentVersion;CreatedDate;DueDate;ExtFileId;MasterExtFileId;IsArchived;IsObsolete;TechReviewDate;IsLegacy;DocumentRequest.Id",
-                conditions: [`Document.Id = ${documentId}`, 'IsArchived = false', 'IsObsolete = false'],
-                logic: "{0} AND {1} AND {2}"
-            };
-            var ansUrl = JSUTIL.getUrl('/data/QualityDocumentVersion/list');
-            JSUTIL.callAJAXPost(ansUrl, JSON.stringify(versionParameter), callbackAfterGetVersions);
-        });
+
+        loadDcTypes();
+        loadDcDepartments();
+        loadDcRecords();
     });
-    function callbackAfterGetVersions(response) {
-        console.log(response);
-        masterId = response[response.length - 1].masterExtFileId;
-        $('#allDocuments').empty();
-        var innerHtml = '';
-        $.each(response, function (i, val) {
-            innerHtml += '<tr><td style="width: 10%;">';
-
-            innerHtml += '<button type="button" class="btn btn-outline btn-info deleteTrSelect downloadReceiptBtn" name="' + val.extFileId + '"><i class="fa fa-download"></i></button>';
-
-            // MODIFICATION: Added data-is-legacy attribute to the view button
-            innerHtml += '<button type="button" class="btn btn-outline btn-success deleteTrSelect viewDocumentBtn" id="' + val.extFileId + '" data-is-legacy="' + val.isLegacy + '" style="margin-left: 5px;"><i class="fa fa-eye"></i></button>' +
-                '</td>' +
-                '<td>' + val.document.name + '</td>' +
-                '<td>' + val.currentVersion + '</td>' +
-                '<td>' + JSUTIL.getDate(val.dueDate) + '</td>' +
-                '</tr>';
-        });
-        $('#allDocuments').append(innerHtml);
-
-        $('.viewDocumentBtn').on('click', function () {
-            documentPath1 = $(this).attr('id');
-
-            // MODIFICATION: Get the isLegacy flag from the button's data attribute
-            const isLegacy = $(this).data('is-legacy');
-
-            var postDocUrl1 = JSUTIL.getUrl('/onedrive/download/' + encodeURIComponent(documentPath1));
-
-            // MODIFICATION: Pass isLegacy to the callback by wrapping it in a function
-            JSUTIL.callAJAXGet(postDocUrl1, function (response) {
-                getBlobCallback(response, isLegacy);
-            });
-        });
-
-        $('.downloadReceiptBtn').on('click', function () {
-            var documentPath2 = $(this).attr('name');
-            var postDocUrl = JSUTIL.getUrl('/onedrive/download/' + encodeURIComponent(documentPath2));
-            JSUTIL.callAJAXGet(postDocUrl, getFormCallback);
-        });
-    }
-    function getFormCallback(response) {
-        console.log(response);
-        var data = 'application/pdf' + ";base64," + encodeURIComponent(response);
-        var a = document.createElement('a');
-        a.href = 'data:' + data;
-        a.download = fileName;
-        a.innerHTML = 'download file';
-        a.click();
-    }
-    async function getBlobCallback(response, isLegacy) {
-        console.log(response);
-
-        try {
-            // Convert base64 to array buffer (needed for both scenarios)
-            const binaryString = atob(response);
-            const pdfBytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                pdfBytes[i] = binaryString.charCodeAt(i);
-            }
-
-            // MODIFICATION: Check if the document is a legacy document
-            // If isLegacy is true, don't stamp. If it's false or undefined, stamp it.
-            if (isLegacy === true) {
-                console.log("Legacy document detected. Skipping watermark.");
-                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-                return; // Exit the function to prevent stamping
-            }
-
-            // --- Stamping logic for non-legacy documents ---
-            console.log("Stamping document with 'CONTROLLED COPY'.");
-            const { PDFDocument, rgb } = PDFLib;
-            const pdfDoc = await PDFDocument.load(pdfBytes);
-            const helveticaFont = await pdfDoc.embedFont('Helvetica-Bold');
-            const pages = pdfDoc.getPages();
-            const footerFontSize = 12;
-            const footerY = 40;
-            const redColor = rgb(1, 0, 0);
-            const controlledCopyText = 'CONTROLLED COPY';
-            const controlledCopyWidth = helveticaFont.widthOfTextAtSize(controlledCopyText, footerFontSize);
-            const controlledCopyX = 225;
-            const controlledBoxPadding = 8;
-            const controlledBoxWidth = controlledCopyWidth + (controlledBoxPadding * 2);
-            const controlledBoxHeight = 20;
-
-            pages.forEach(page => {
-                const { height } = page.getSize();
-
-                page.drawRectangle({
-                    x: controlledCopyX - controlledBoxPadding,
-                    y: footerY - 5,
-                    width: controlledBoxWidth,
-                    height: controlledBoxHeight,
-                    borderColor: redColor,
-                    borderWidth: 2,
-                });
-
-                page.drawText(controlledCopyText, {
-                    x: controlledCopyX,
-                    y: footerY,
-                    font: helveticaFont,
-                    size: footerFontSize,
-                    color: redColor,
-                });
-            });
-
-            const modifiedPdfBytes = await pdfDoc.save();
-            const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-
-            setTimeout(() => URL.revokeObjectURL(url), 100);
-
-        } catch (error) {
-            console.error('Error processing PDF:', error);
-            alert('Failed to process PDF');
-        }
-    }
-    function callbackAfterEditFile(response) {
-        console.log(response);
-        if (response && response.data) {
-            window.open(response.data, '_blank');
-        } else {
-            console.error('Invalid response data.');
-        }
-    }  
 </script>
-<!-- editDocumentControl.js end -->
+<!-- allDocumentControl.js end -->

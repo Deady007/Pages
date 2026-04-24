@@ -1463,69 +1463,96 @@
 
         // });
 
-        $('.editOrderSaveBtn').on('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
+    $('.editOrderSaveBtn').on('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-            JSUTIL.startSpinner();
+    JSUTIL.startSpinner();
 
-            var headerPayload = {};
-            headerPayload['vendorId'] = Number($('#customerId').val()) || '';
-            headerPayload['manufacturerId'] = Number($('#manuId').val()) || '';
+    var headerPayload = {};
+    headerPayload['vendorId'] = Number($('#customerId').val()) || '';
+    headerPayload['manufacturerId'] = Number($('#manuId').val()) || '';
 
-            var taxId1 = $('#editTaxAccountId1').val();
-            var taxId2 = $('#editTaxAccountId2').val();
-            if (taxId1) headerPayload['taxAccountId1'] = Number(taxId1);
-            if (taxId2) headerPayload['taxAccountId2'] = Number(taxId2);
+    var taxId1 = $('#editTaxAccountId1').val();
+    var taxId2 = $('#editTaxAccountId2').val();
+    if (taxId1) headerPayload['taxAccountId1'] = Number(taxId1);
+    if (taxId2) headerPayload['taxAccountId2'] = Number(taxId2);
 
-            var rawOrderDate = $('#orderDate').val();
-            headerPayload['orderDate'] = rawOrderDate
-                ? moment(rawOrderDate, ['DD/MM/YYYY', 'YYYY-MM-DD'], true)
-                    .utc().startOf('day').format('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
-                : '';
+    var rawOrderDate = $('#orderDate').val();
+    headerPayload['orderDate'] = rawOrderDate
+        ? moment(rawOrderDate, ['DD/MM/YYYY', 'YYYY-MM-DD'], true)
+            .utc().startOf('day').format('YYYY-MM-DD[T]HH:mm:ss.SSSZ')
+        : '';
 
-            headerPayload['deliveryDate'] = normalizeUiDate($('#editDeliveryDate').val());
-            headerPayload['quoteDate'] = normalizeUiDate($('#editQuotationDate').val());
+    headerPayload['deliveryDate'] = normalizeUiDate($('#editDeliveryDate').val());
+    headerPayload['quoteDate'] = normalizeUiDate($('#editQuotationDate').val());
 
-            headerPayload['quoteNumber'] = $('#editQuotationNumber').val() || '';
-            headerPayload['paymentTerms'] = $('#editPoTerms').val() || '';
-            headerPayload['notes'] = '';
+    headerPayload['quoteNumber'] = $('#editQuotationNumber').val() || '';
+    headerPayload['paymentTerms'] = $('#editPoTerms').val() || '';
+    headerPayload['notes'] = '';
 
-            headerPayload['subTotalAmount'] = Number($('#editSubTotal').val()) || 0;
-            headerPayload['taxAmount'] = Number($('#deductionTotal').val()) || 0;
-            headerPayload['taxAmount2'] = Number($('#deductionTotal2').val()) || 0;
-            headerPayload['totalAmount'] = Number($('#editInvoiceTotal').val()) || 0;
+    headerPayload['subTotalAmount'] = Number($('#editSubTotal').val()) || 0;
+    headerPayload['taxAmount'] = Number($('#deductionTotal').val()) || 0;
+    headerPayload['taxAmount2'] = Number($('#deductionTotal2').val()) || 0;
+    headerPayload['totalAmount'] = Number($('#editInvoiceTotal').val()) || 0;
 
-            var itemsPayload = [];
-            $('#orderLnItemTable tr').each(function () {
-                var $row = $(this);
-                var itemId = $row.find('.deleteLnItem1').attr('id');
-                var productId = Number($row.find('.lnItemProductId1').val()) || '';
-                if (!productId) return;
-                var obj = {
-                    // itemId:          Number(itemId)                                   || '',
-                    purchaseOrder: { id: Number(currentRecordId) },
-                    product: { id: productId },
-                    quantity: Number($row.find('.lnItemQuantity1').val()) || 0,
-                    itemPrice: Number($row.find('.lnItemPrice1').val()) || 0,
-                    discountPercent: Number($row.find('.lnItemDiscount1').val()) || 0,
-                    lineTotal: Number($row.find('.lnItemTotal1').val()) || 0
-                }
-                if (itemId) {
-                    obj['id'] = itemId
-                }
-                itemsPayload.push(obj);
-            });
-            var headerUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
-            var itemsUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/items');
+    var itemsPayload = [];
+    var hasError = false;
 
-            JSUTIL.callAJAXPut(headerUrl, JSON.stringify(headerPayload), function (headerResponse) {
-                JSUTIL.callAJAXPut(itemsUrl, JSON.stringify(itemsPayload), function (itemsResponse) {
-                    JSUTIL.stopSpinner();
-                    callbackAfterEditRequest(itemsResponse);
-                });
-            });
+    $('#orderLnItemTable tr').each(function () {
+        var $row = $(this);
+
+        var itemId = $row.find('.deleteLnItem1').attr('id');
+        var productId = Number($row.find('.lnItemProductId1').val()) || '';
+        if (!productId) return;
+
+        var qty = Number($row.find('.lnItemQuantity1').val()) || 0;
+        var price = Number($row.find('.lnItemPrice1').val()) || 0;
+        var discount = Number($row.find('.lnItemDiscount1').val()) || 0;
+
+        // ✅ Proper validation
+        if (qty < 0 || price < 0 || discount < 0) {
+            JSUTIL.buildErrorModal('Numbers cannot be negative');
+            hasError = true;
+            return false; // 🔥 break loop
+        }
+
+        var obj = {
+            purchaseOrder: { id: Number(currentRecordId) },
+            product: { id: productId },
+            quantity: qty,
+            itemPrice: price,
+            discountPercent: discount,
+            lineTotal: Number($row.find('.lnItemTotal1').val()) || 0
+        };
+
+        if (itemId) {
+            obj['id'] = itemId;
+        }
+
+        itemsPayload.push(obj);
+    });
+
+    // ✅ STOP everything if error
+    if (hasError) {
+        JSUTIL.stopSpinner();
+        return;
+    }
+
+    var headerUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId);
+    var itemsUrl = JSUTIL.getUrl('/api/purchase/orders/' + currentRecordId + '/items');
+
+    JSUTIL.callAJAXPut(headerUrl, JSON.stringify(headerPayload), function (headerResponse) {
+        JSUTIL.callAJAXPut(itemsUrl, JSON.stringify(itemsPayload), function (itemsResponse) {
+            JSUTIL.stopSpinner();
+            callbackAfterEditRequest(itemsResponse);
         });
+    });
+});
+    
+    
+    
+    
     });
 
     // Print functionality — use event delegation so it fires reliably after panel switches
@@ -1977,32 +2004,46 @@
 
     // function afterDeleteTrHandle(data) { elementToDelete.remove(); }
 
-    function populateOrderItems() {
-        $('#orderLnItemTable').empty();
-        let itemCount = 1;
-        $.each(orderItemList, function (index, item) {
-            var innerHtml = '<tr>' +
-                '<td><button type="button" class="btn btn-sm btn-default deleteLnItem1" style="padding: 3px 6px;" disabled id="' + item.id + '"><i data-lucide="trash"></i></button>' +
-                '<input type="hidden" class="lnItemProductId1" value="' + (item.product ? item.product.id : '') + '"/></td>' +
-                '<td style="text-align: left;">' + itemCount + '</td>' +
-                '<td style="text-align: left;"><strong>' + item.product?.name + '</strong></td>' +
-                '<td style="text-align: left;"><strong>' + item.product?.uom + '</strong></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" value="' + item?.quantity + '" class="form-control lnItemInputVal1 lnItemQuantity1"  name="poItemList[' + (itemCount - 1) + '].Quantity" readonly/></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemPrice1" value="' + item.itemPrice + '"  name="poItemList[' + (itemCount - 1) + '].ItemPrice" readonly/></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemDiscount1" value="' + (item.discountPercent || 0) + '"  name="poItemList[' + (itemCount - 1) + '].DiscountPercent" readonly/></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemTotal1" value="' + item.lineTotal + '"  name="poItemList[' + (itemCount - 1) + '].LineTotal" readonly/></td>' +
-                '</tr>';
+  function populateOrderItems() {
+    $('#orderLnItemTable').empty();
+    let itemCount = 1;
 
-            itemCount++;
-            $('#orderLnItemTable').append(innerHtml);
-            lucide.createIcons();
+    $.each(orderItemList, function (index, item) {
 
-        });
+        // ✅ sanitize values
+        var qty = Math.max(0, Number(item?.quantity) || 0);
+        var price = Math.max(0, Number(item?.itemPrice) || 0);
+        var discount = Math.max(0, Number(item?.discountPercent) || 0);
+        var total = Math.max(0, Number(item?.lineTotal) || 0);
 
+        var innerHtml = '<tr>' +
+            '<td><button type="button" class="btn btn-sm btn-default deleteLnItem1" style="padding: 3px 6px;" disabled id="' + item.id + '"><i data-lucide="trash"></i></button>' +
+            '<input type="hidden" class="lnItemProductId1" value="' + (item.product ? item.product.id : '') + '"/></td>' +
+            '<td style="text-align: left;">' + itemCount + '</td>' +
+            '<td style="text-align: left;"><strong>' + item.product?.name + '</strong></td>' +
+            '<td style="text-align: left;"><strong>' + item.product?.uom + '</strong></td>' +
 
-        updateTotals();
-    }
+            '<td style="width: 12%;text-align: right;">' +
+            '<input min="0" style="text-align: right;" type="number" value="' + qty + '" class="form-control lnItemInputVal1 lnItemQuantity1" readonly/></td>' +
 
+            '<td style="width: 12%;text-align: right;">' +
+            '<input min="0" style="text-align: right;" type="number" value="' + price + '" class="form-control lnItemInputVal1 lnItemPrice1" readonly/></td>' +
+
+            '<td style="width: 12%;text-align: right;">' +
+            '<input min="0" style="text-align: right;" type="number" min="0" max="100" value="' + discount + '" class="form-control lnItemInputVal1 lnItemDiscount1" readonly/></td>' +
+
+            '<td style="width: 12%;text-align: right;">' +
+            '<input min="0" style="text-align: right;" type="number" value="' + total + '" class="form-control lnItemInputVal1 lnItemTotal1" readonly/></td>' +
+
+            '</tr>';
+
+        itemCount++;
+        $('#orderLnItemTable').append(innerHtml);
+        lucide.createIcons();
+    });
+
+    updateTotals();
+}
 
     function updateTotals() {
         let summaryHTML = `
@@ -2031,12 +2072,13 @@
 
     // Cancel PO
     $('.orderCancelBtn').on('click', function () {
-
+       JSUTIL.buildAuthenticationModal(function(){
+         console.log('ordered cancelled')
         JSUTIL.startSpinner();
         // OLD: var postUrl = '/purchase/po/cancel?id=' + currentRecordId;
         var postUrl = 'api/purchase/orders/' + currentRecordId + '/cancel';
-        JSUTIL.callAJAXPost(postUrl, JSON.stringify({}), function (response) {
-            console.log(response)
+        JSUTIL.callAJAXPost(postUrl, JSON.stringify({}), function () {
+            console.log('sss')
              var historyObj = {
                 name:'Purchase Order is cancelled',
                 startDate:new Date(),
@@ -2047,6 +2089,7 @@
                 location.reload()
             })
         });
+       })
         
     });
 
@@ -2572,16 +2615,33 @@
 
                 invObj['totalAmount'] = Number($('#invoiceTotal').text()) || 0;
 
-                $('.lnItemTotal').each(function () {
-                    var lineItem = {};
-                    lineItem['productId'] = Number($(this).parent().find('.lnItemId').val()) || 0;
-                    lineItem['quantity'] = Number($(this).parent().find('.lnItemQuantity').val()) || 0;
-                    lineItem['unitPrice'] = Number($(this).parent().find('.lnItemPrice').val()) || 0;
-                    lineItem['discountPercent'] = Number($(this).parent().find('.lnItemDiscount').val()) || 0;
-                    lineItem['lineTotal'] = Number($(this).text()) || 0;
-                    invObj['subTotal'] += lineItem['lineTotal'];
-                    invObj['items'].push(lineItem);
-                });
+               var hasError = false;
+
+$('.lnItemTotal').each(function () {
+    var qty = Number($(this).parent().find('.lnItemQuantity').val());
+    var price = Number($(this).parent().find('.lnItemPrice').val());
+
+    if (qty === 0 || price === 0) {
+        JSUTIL.buildErrorModal('Quantity and Price cannot be 0');
+        hasError = true;
+        return false; // 🔥 breaks the .each loop
+    }
+
+    var lineItem = {};
+    lineItem['productId'] = Number($(this).parent().find('.lnItemId').val()) || 0;
+    lineItem['quantity'] = qty;
+    lineItem['unitPrice'] = price;
+    lineItem['discountPercent'] = Number($(this).parent().find('.lnItemDiscount').val()) || 0;
+    lineItem['lineTotal'] = Number($(this).text()) || 0;
+
+    invObj['subTotal'] += lineItem['lineTotal'];
+    invObj['items'].push(lineItem);
+});
+
+if (hasError) {
+    JSUTIL.stopSpinner();
+    return; // 🔥 stops API call completely
+}
 
                 JSUTIL.callAJAXPost('/api/purchase/orders', JSON.stringify(invObj), function (response) {
                     JSUTIL.stopSpinner();
@@ -2779,54 +2839,201 @@
             });
         }
     }
-    function addProductToTable(product) {
-        console.log(product);
-        if (state === 'editRecordPanel') {
-            // Build a row that matches the edit-panel structure (classes with "1" suffix,
-            // hidden productId input, non-readonly so the user can edit the values).
-            var editItemCount = $('#orderLnItemTable tr').length + 1;
-            var editHtml =
-                '<tr>' +
+//     function addProductToTable(product) {
+//         console.log(product);
+//         if (state === 'editRecordPanel') {
+//             // Build a row that matches the edit-panel structure (classes with "1" suffix,
+//             // hidden productId input, non-readonly so the user can edit the values).
+//             var editItemCount = $('#orderLnItemTable tr').length + 1;
+//             var editHtml =
+//                 '<tr>' +
+//                 '<td>' +
+//                 '<button type="button" class="btn btn-sm btn-default deleteLnItem1" style="padding: 3px 6px;"><i data-lucide="trash"></i></button>' +
+//                 '<input type="hidden" class="lnItemProductId1" value="' + (product.id || '') + '"/>' +
+//                 '</td>' +
+//                 '<td style="text-align: left;">' + editItemCount + '</td>' +
+//                 '<td style="text-align: left;"><strong>' + (product.name || '') + '</strong></td>' +
+//                 '<td style="text-align: left;"><strong>' + (product.uom || '') + '</strong></td>' +
+//                 '<td style="width: 12%;text-align: right;"><input min="0" style="text-align: right;" type="number" value="1" class="form-control lnItemInputVal1 lnItemQuantity1"/></td>' +
+//                 '<td style="width: 12%;text-align: right;"><input min="0" style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemPrice1" value="' + Number(product.unitPrice || 0) + '"/></td>' +
+//                 '<td style="width: 12%;text-align: right;"><input min="0" style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemDiscount1" value="0"/></td>' +
+//                 '<td style="width: 12%;text-align: right;"><input min="0" style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemTotal1" value="0" readonly/></td>' +
+//                 '</tr>';
+//             $('#orderLnItemTable').append(editHtml);
+//             calculateTotals1();
+//             lucide.createIcons();
+//             return;
+//         }
+
+//         var innerHtml = `
+//             <tr>
+//                 <td><a class="btn btn-sm btn-default deleteLnItem"><i data-lucide="trash"></i></a></td>
+//                 <td style="text-align:left">
+//                     <div><strong>${product.name}</strong></div>
+//                     <small>${product.description || ''}</small>
+//                     <input type="hidden" class="lnItemId" value="${product.id}"/>
+//                 </td>
+//                 <td style="width: 12%;"><input style="text-align:right" type="text" value="${product.uom}" class="form-control" readonly/></td>
+//                 <td style="width: 12%;"><input type="number" min="0" value="${1.00.toFixed(FOX.financialDecimals)}" class="form-control lnItemInputVal lnItemQuantity"/></td>
+//                 <td style="width: 12%;"><input type="number" min="0" class="form-control lnItemInputVal lnItemPrice" value="${Number(product.unitPrice)}"></td>
+//                 <td style="width: 12%;"><input type="number" min="0" class="form-control lnItemInputVal lnItemDiscount" value="${0.00.toFixed(FOX.financialDecimals)}"></td>
+//                 <td class="lnItemTotal">0.00</td>
+//             </tr>
+//         `;
+
+//         $('#invoiceLnItemTable').append(innerHtml);
+//         $(document).on('input', '.lnItemInputVal', function () {
+//     if (this.value < 0) {
+//         this.value = 0;
+//     }
+// });
+//         calculateTotals();
+//         lucide.createIcons();
+//     }
+
+    // Close button — reload the page
+    
+    
+    
+    // 🔥 Run this ONCE (not inside function)
+$(document).on('keydown', '.lnItemInputVal, .lnItemInputVal1', function (e) {
+    if (e.key === '-') {
+        e.preventDefault();
+    }
+});
+
+$(document).on('input', '.lnItemInputVal, .lnItemInputVal1', function () {
+    if (this.value < 0) {
+        this.value = 0;
+    }
+
+    updateRowTotal($(this).closest('tr'));
+});
+
+$(document).on('blur', '.lnItemInputVal, .lnItemInputVal1', function () {
+    this.value = Number(this.value || 0).toFixed(FOX.financialDecimals);
+});
+
+
+// ✅ helper to avoid negatives
+function nonNegative(val) {
+    return Math.max(0, Number(val) || 0);
+}
+
+
+// ✅ row total calculation
+function updateRowTotal($row) {
+    var qty = nonNegative($row.find('.lnItemQuantity, .lnItemQuantity1').val());
+    var price = nonNegative($row.find('.lnItemPrice, .lnItemPrice1').val());
+    var discount = nonNegative($row.find('.lnItemDiscount, .lnItemDiscount1').val());
+
+    var total = qty * price * (1 - discount / 100);
+
+    if ($row.find('.lnItemTotal1').length) {
+        $row.find('.lnItemTotal1').val(total.toFixed(FOX.financialDecimals));
+        calculateTotals1();
+    } else {
+        $row.find('.lnItemTotal').text(total.toFixed(FOX.financialDecimals));
+        calculateTotals();
+    }
+}
+
+
+// ✅ MAIN FUNCTION
+function addProductToTable(product) {
+    console.log(product);
+
+    var safePrice = nonNegative(product.unitPrice);
+
+    // ================= EDIT PANEL =================
+    if (state === 'editRecordPanel') {
+        var editItemCount = $('#orderLnItemTable tr').length + 1;
+
+        var editHtml =
+            '<tr>' +
                 '<td>' +
-                '<button type="button" class="btn btn-sm btn-default deleteLnItem1" style="padding: 3px 6px;"><i data-lucide="trash"></i></button>' +
-                '<input type="hidden" class="lnItemProductId1" value="' + (product.id || '') + '"/>' +
+                    '<button type="button" class="btn btn-sm btn-default deleteLnItem1" style="padding: 3px 6px;">' +
+                        '<i data-lucide="trash"></i>' +
+                    '</button>' +
+                    '<input type="hidden" class="lnItemProductId1" value="' + (product.id || '') + '"/>' +
                 '</td>' +
                 '<td style="text-align: left;">' + editItemCount + '</td>' +
                 '<td style="text-align: left;"><strong>' + (product.name || '') + '</strong></td>' +
                 '<td style="text-align: left;"><strong>' + (product.uom || '') + '</strong></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" value="1" class="form-control lnItemInputVal1 lnItemQuantity1"/></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemPrice1" value="' + Number(product.unitPrice || 0) + '"/></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemDiscount1" value="0"/></td>' +
-                '<td style="width: 12%;text-align: right;"><input style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemTotal1" value="0" readonly/></td>' +
-                '</tr>';
-            $('#orderLnItemTable').append(editHtml);
-            calculateTotals1();
-            lucide.createIcons();
-            return;
-        }
 
-        var innerHtml = `
-            <tr>
-                <td><a class="btn btn-sm btn-default deleteLnItem"><i data-lucide="trash"></i></a></td>
-                <td style="text-align:left">
-                    <div><strong>${product.name}</strong></div>
-                    <small>${product.description || ''}</small>
-                    <input type="hidden" class="lnItemId" value="${product.id}"/>
-                </td>
-                <td style="width: 12%;"><input style="text-align:right" type="text" value="${product.uom}" class="form-control" readonly/></td>
-                <td style="width: 12%;"><input type="number" value="${1.00.toFixed(FOX.financialDecimals)}" class="form-control lnItemInputVal lnItemQuantity"/></td>
-                <td style="width: 12%;"><input type="number" class="form-control lnItemInputVal lnItemPrice" value="${Number(product.unitPrice)}"></td>
-                <td style="width: 12%;"><input type="number" class="form-control lnItemInputVal lnItemDiscount" value="${0.00.toFixed(FOX.financialDecimals)}"></td>
-                <td class="lnItemTotal">0.00</td>
-            </tr>
-        `;
+                '<td style="width: 12%;text-align: right;">' +
+                    '<input min="0" style="text-align: right;" type="number" value="1" class="form-control lnItemInputVal1 lnItemQuantity1"/>' +
+                '</td>' +
 
-        $('#invoiceLnItemTable').append(innerHtml);
-        calculateTotals();
+                '<td style="width: 12%;text-align: right;">' +
+                    '<input min="0" style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemPrice1" value="' + safePrice + '"/>' +
+                '</td>' +
+
+                '<td style="width: 12%;text-align: right;">' +
+                    '<input min="0" style="text-align: right;" type="number" class="form-control min="0" max="100" lnItemInputVal1 lnItemDiscount1" value="0"/>' +
+                '</td>' +
+
+                '<td style="width: 12%;text-align: right;">' +
+                    '<input min="0" style="text-align: right;" type="number" class="form-control lnItemInputVal1 lnItemTotal1" value="0" readonly/>' +
+                '</td>' +
+            '</tr>';
+
+        $('#orderLnItemTable').append(editHtml);
         lucide.createIcons();
+
+        // 🔥 calculate immediately
+        updateRowTotal($('#orderLnItemTable tr:last'));
+
+        return;
     }
 
-    // Close button — reload the page
+    // ================= CREATE PANEL =================
+    var innerHtml = `
+        <tr>
+            <td>
+                <a class="btn btn-sm btn-default deleteLnItem">
+                    <i data-lucide="trash"></i>
+                </a>
+            </td>
+
+            <td style="text-align:left">
+                <div><strong>${product.name || ''}</strong></div>
+                <small>${product.description || ''}</small>
+                <input type="hidden" class="lnItemId" value="${product.id || ''}"/>
+            </td>
+
+            <td style="width: 12%;">
+                <input style="text-align:right" type="text" value="${product.uom || ''}" class="form-control" readonly/>
+            </td>
+
+            <td style="width: 12%;">
+                <input type="number" min="0" value="${(1).toFixed(FOX.financialDecimals)}"
+                       class="form-control lnItemInputVal lnItemQuantity"/>
+            </td>
+
+            <td style="width: 12%;">
+                <input type="number" min="0" class="form-control lnItemInputVal lnItemPrice"
+                       value="${safePrice}">
+            </td>
+
+            <td style="width: 12%;">
+                <input type="number" min="0" class="form-control lnItemInputVal lnItemDiscount"
+                       value="${(0).toFixed(FOX.financialDecimals)}">
+            </td>
+
+            <td class="lnItemTotal">0.00</td>
+        </tr>
+    `;
+
+    $('#invoiceLnItemTable').append(innerHtml);
+    lucide.createIcons();
+
+    // 🔥 calculate immediately
+    updateRowTotal($('#invoiceLnItemTable tr:last'));
+}
+    
+    
+    
     $(document).off('click.closeBtn', '.CloseBtn').on('click.closeBtn', '.CloseBtn', function () {
         location.reload();
     });

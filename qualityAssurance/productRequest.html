@@ -265,7 +265,7 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-title">
                     <h5>
-                        <span id="editRecordTitle"></span> <small>Edit Request</small>
+                        <span id="editRecordTitle"></span> Edit Request
                     </h5>
                     <div class="ibox-tools">
                         <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn">
@@ -438,7 +438,7 @@
                             </div>
                             <div class="col-sm-6 approver" style="display: none;" >
                                 <div class="form-group">
-                                    <label for="">Reviewed By</label>
+                                    <label for="">Approved By</label>
                                     <input type="text" class="form-control approvedBy" disabled readonly>
                                 </div>
                             </div>
@@ -650,7 +650,6 @@
     <!--newMaterialRequestPanel.html end-->
 
     <script>
-        var updatedStatus = ''
         lucide.createIcons();
         // allMaterialRequestPanel.js start
         if (typeof window.jQuery === "undefined") {
@@ -1130,7 +1129,7 @@
                                 $(".sendApproval").hide();
 
                                 // Only show Accept/Reject buttons if user is QA Head
-                                if (isQAHead && (currentRecordData?.initiator?.id != FOX.employeeId)) {
+                                if (isQAHead && FOX.employeeId != val2.initiator.id) {
                                     $(".acceptBtn").show();
                                     $(".rejectBtn").show();
                                     $("#approveRejectResultBtn").show();
@@ -1315,9 +1314,21 @@
                 )
                     _missing.push("Retest Duration (in days)");
                 if (_missing.length) {
-                    alert("Please fill the required field(s): " + _missing.join(", "));
+                    JSUTIL.buildErrorModal("Please fill the required field(s): " + _missing.join(", "));
                     return;
                 }
+                if(editDocumentPayload.retestPeriod>9999 || editDocumentPayload.retestPeriod < 0){
+                    JSUTIL.buildErrorModal('Retest period in range 0-9999')
+                    return
+                }
+                            if(editDocumentPayload.restockQuantity>99999 || editDocumentPayload.restockQuantity<0){
+                JSUTIL.buildErrorModal('Restock Quantity range is 1-99999')
+                return
+            }
+            if(editDocumentPayload.unitPrice < 0 || editDocumentPayload.unitPrice>99999999){
+                JSUTIL.buildErrorModal('Unit Price range is 0-99999999')
+                return
+            }
                 $btn.prop("disabled", true);
                 editDocumentPayload.isKsm = $("#editIsKsmCheckbox").is(":checked")
                     ? "Yes"
@@ -1339,7 +1350,7 @@
                     currentRecordId,
                     function (isUnique) {
                         if (!isUnique) {
-                            alert(
+                            JSUTIL.buildErrorModal(
                                 'Material Code "' +
                                 editDocumentPayload.number +
                                 '" already exists. Please use a unique code.',
@@ -1351,7 +1362,6 @@
                             postUrl,
                             JSON.stringify(editDocumentPayload),
                             function (response) {
-                                updatedStatus = 'Updated'
                                 callbackSuccessDocumentUpdate(response, {
                                     showToast: true,
                                     message: "Material request saved successfully.",
@@ -1366,7 +1376,6 @@
                     const dataToSend = {
                         processStatus: "In Review",
                     };
-                    updatedStatus = 'In Review'
                     var postUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1383,7 +1392,6 @@
                     const statusUpdateData = {
                         processStatus: "Accepted",
                     };
-                    updatedStatus = 'Approved'
                     var statusUpdateUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1461,7 +1469,6 @@
                     const dataToSend = {
                         processStatus: "Rejected",
                     };
-                    updatedStatus ='Rejected'
                     var postUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1480,7 +1487,6 @@
                         processStatus: "Accepted",
                         approvedBy:{id:FOX.employeeId}
                     };
-                    updatedStatus = 'Approved'
                     var statusUpdateUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1556,7 +1562,6 @@
                         approvedBy:{id:FOX.employeeId}
 
                     };
-                    updatedStatus = 'Rejected'
                     var postUrl = JSUTIL.getUrl(
                         "/api/quality-assurance/product-versions/" + currentRecordId,
                     );
@@ -1680,7 +1685,7 @@
         function callbackSuccessDocumentUpdate(response, options) {
             console.log(response);
             var historyObj = {
-                name: "Product Request is "+updatedStatus,
+                name: "Product Request is updated",
                 startDate: new Date(),
                 performedBy: { id: FOX.employeeId },
                 parentRecordId: currentRecordId,
@@ -1970,11 +1975,12 @@
                 $(".product-search-results").remove();
             });
 
+            $(document).off("click.materialReqSave", ".newMaterialSaveBtn");
             $(document).on(
                 "click.materialReqSave",
                 ".newMaterialSaveBtn",
                 function () {
-                    $(this).prop("disabled", true);
+                    // $(this).prop("disabled", true);
                     saveNewMaterialRequest($(this));
                 },
             );
@@ -2243,27 +2249,44 @@
         }
 
         function callbackNewProduct(response) {
-            console.log('abcdd',response);
-            response = response.sort((a,b) => b.id -a.id)
-            var historyObj = {
-                name: "Product Request Created",
-                performedBy: { id: FOX.employeeId },
-                startDate: new Date(),
-                parentRecordId: response[0].id,
-            };
-            JSUTIL.callAJAXPost(
-                "/api/process-activities",
-                JSON.stringify(historyObj),
+    console.log('sssss', response);
+
+    let recordId = null;
+
+    if (Array.isArray(response)) {
+        // sort descending and take first
+        response.sort((a, b) => (b.id || 0) - (a.id || 0));
+        recordId = response[0]?.id || null;
+
+    } else if (response && typeof response === 'object') {
+        recordId = response.id || null;
+    }
+
+    if (!recordId) {
+        console.error("Invalid response: ID not found");
+        return;
+    }
+
+    var historyObj = {
+        name: "Product Request Created",
+        performedBy: { id: FOX.employeeId },
+        startDate: new Date(),
+        parentRecordId: recordId,
+    };
+
+    JSUTIL.callAJAXPost(
+        "/api/process-activities",
+        JSON.stringify(historyObj),
+        function () {
+            showSaveSuccessToast(
+                "Material request saved successfully.",
                 function () {
-                    showSaveSuccessToast(
-                        "Material request saved successfully.",
-                        function () {
-                            location.reload();
-                        },
-                    );
-                },
+                    location.reload();
+                }
             );
         }
+    );
+}
 
         function callbackNewProductFailure() {
             console.log(
@@ -2272,11 +2295,8 @@
         }
 
         function saveNewMaterialRequest($btn) {
-            if(!FOX.employeeId){
-                JSUTIL.buildErrorModal('Employee is not assigned')
-                return
-            }
             var categoryPayload = JSUTIL.buildFormDataJSON("newRecordInput");
+            
             var _missing = [];
             if (!categoryPayload.purpose) _missing.push("Purpose");
             if (categoryPayload.purpose === "New") {
@@ -2301,7 +2321,7 @@
             )
                 _missing.push("Retest Duration (in days)");
             if (_missing.length) {
-                alert("Please fill the required field(s): " + _missing.join(", "));
+                JSUTIL.buildErrorModal("Please fill the required field(s): " + _missing.join(", "));
                 return;
             }
             categoryPayload.isKsm = $("#isKsmCheckbox").is(":checked") ? "Yes" : "No";
@@ -2310,6 +2330,18 @@
                 : "";
             if (categoryPayload.number) {
                 categoryPayload.number = String(categoryPayload.number).toUpperCase();
+            }
+            if(categoryPayload.retestPeriod>9999 || categoryPayload.retestPeriod<0){
+                JSUTIL.buildErrorModal('Retest Duration Range is 0 - 9999')
+                return
+            }
+            if(categoryPayload.restockQuantity>99999 || categoryPayload.restockQuantity<0){
+                JSUTIL.buildErrorModal('Restock Quantity range is 1-99999')
+                return
+            }
+            if(categoryPayload.unitPrice < 0 || categoryPayload.unitPrice>99999999){
+                JSUTIL.buildErrorModal('Unit Price range is 0-99999999')
+                return
             }
             try {
                 var _fox = typeof FOX !== "undefined" && FOX ? FOX : window.FOX || {};
@@ -2330,7 +2362,7 @@
                 categoryPayload.purpose === "New" ? categoryPayload.number : "";
             checkMaterialCodeUnique(codeToCheck, null, function (isUnique) {
                 if (!isUnique) {
-                    alert(
+                    JSUTIL.buildErrorModal(
                         'Material Code "' +
                         categoryPayload.number +
                         '" already exists. Please use a unique code.',

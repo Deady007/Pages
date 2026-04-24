@@ -124,8 +124,11 @@
                         </button>
                         <button type="button" class="btn btn-default btn-sm extensionDueDateBtn" style="display: none;">
                             <i data-lucide="calendar"></i> Request Extension <span class="extensionNumber"></span>
-                            <button type="button" class="btn btn-default btn-sm goToCapa"><i data-lucide="send"></i>
-                                Redirect to Capa</button>
+                        </button>
+                        <button type="button" class="btn btn-default btn-sm goToCapa"><i data-lucide="send"></i>
+                            Redirect to Capa</button>
+                        <button type="button" class="btn btn-default btn-sm viewECHistory"><i data-lucide="clock"></i>
+                            View History</button>
                     </div>
                 </div>
                 <div class="ibox-content">
@@ -336,64 +339,60 @@
 
 
                     </form>
-                    <div class="tabs-container">
-                        <ul class="nav nav-tabs">
-                            <li class="nav-item active">
-                                <a class="nav-link" data-toggle="tab" href="#Uploads" aria-expanded="true">Uploads</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" data-toggle="tab" href="#History" aria-expanded="true">History</a>
-                            </li>
-
-
-                        </ul>
-
-                        <div class="tab-content">
-                            <div id="Uploads" class="tab-pane active">
-                                <div class="panel-body">
-                                    <div class="ibox-title d-flex justify-content-end">
-                                        <div class="ibox-tools ms-auto">
-                                            <button type="button" class="btn btn-default btn-sm labControlBtn"
-                                                id="uploadDocumentBtn"><i data-lucide="upload"></i> Upload
-                                                Document</button>
-                                        </div>
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th></th>
-                                                    <th>Name</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="allDocumentsTable2"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="History" class="tab-pane">
-                                <div class="panel-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Name</th>
-                                                    <th>Date</th>
-                                                    <th>Performed By</th>
-                                                    <th>Notes</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="allHistoryTable"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="section-header" onclick="toggleStandardSection(this)">
+                        <h6 class="details-subtitle">Uploads</h6>
+                        <div class="ibox-tools" onclick="event.stopPropagation()" style="margin-left:auto;">
+                            <button type="button" class="btn btn-default btn-sm labControlBtn"
+                                id="uploadDocumentBtn"><i data-lucide="upload"></i> Upload Document</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allDocumentsTable2"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
             </div>
         </div>
+        <div class="row animated fadeInRight aasaanPanel" id="historyECPanel" style="display:none;">
+            <div class="col-lg-12">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>History</h5>
+                        <div class="ibox-tools">
+                            <button type="button" class="btn btn-default btn-sm closeECHistory">
+                                <i data-lucide="arrow-left"></i> Back
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Date</th>
+                                        <th>Performed By</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allHistoryTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row  aasaanPanel" id="foUploadFilesPanel1" style="display:none;">
             <div class="col-lg-12">
 
@@ -700,6 +699,7 @@
             recordList = res
             var innerHtml = '';
             $.each(recordList, function (i, val) {
+                if (val.processStatus == 'New') return;
 
                 innerHtml += '<tr>' +
                     '<td><a href="javascript:void(0);" class="selectEMBtn" name="' + val.id + '">' + (val.number || 'CE-null') + '</a></td>'
@@ -858,12 +858,12 @@
                     // Populate the form fields
                     $('.editEffectivenessInput[name="ownerNotifyDate"]').val(JSUTIL.getDate(val.ownerNotifyDate));
                     $('.editEffectivenessInput[name="dueDate"]').val(JSUTIL.getDate(val.dueDate));
-                    $('.editEffectivenessInput[name="effectivenessOwner.id"]').val(val.effectivenessOwner.id).trigger('change');
-                    $('.editEffectivenessInput[name="approvedBy.Id"]').val(val.approvedBy.id).trigger('change');
-                    $('.editEffectivenessInput[name="supervisor.Id"]').val(val.supervisor.id).trigger('change');
+                    $('.editEffectivenessInput[name="effectivenessOwner.id"]').val(val.effectivenessOwner?.id).trigger('change');
+                    $('.editEffectivenessInput[name="approvedBy.Id"]').val(val.approvedBy?.id).trigger('change');
+                    $('.editEffectivenessInput[name="supervisor.Id"]').val(val.supervisor?.id).trigger('change');
                     $('.editEffectivenessInput[name="description"]').val(val.description)
                     $('.editEffectivenessInput[name="remarks"]').val(val.remarks)
-                    $('#editEMPanel [name="effectivenessOwner.id"]').val(val.effectivenessOwner.name || '')
+                    $('#editEMPanel [name="effectivenessOwner.id"]').val(val.effectivenessOwner?.name || '')
                     $('.editEffectivenessInput[name="result"]').val(val.result).trigger('change')
                     // $('.editEffectivenessInput[name="recurrence"]').val(val.recurrence).trigger('change')
                     $('.editEffectivenessInput[name="dataCollectionSummary"]').val(val.dataCollectionSummary)
@@ -890,7 +890,7 @@
                         return; // Skip further processing
                     }
                     if (currentEMProcessStatus == 'Draft' || currentEMProcessStatus == 'Supervisor Returned') {
-                        if (FOX.employeeId == currentEM.effectivenessOwner.id) {
+                        if (FOX.employeeId == currentEM.effectivenessOwner?.id) {
                             $('.recordEMApprovalBtn').show()
                             $('.recordEMEditBtn').show()
                             if (currentEMProcessStatus != 'Draft') {
@@ -926,7 +926,7 @@
                         $('.editEffectivenessInput[name="result"]').prop('disabled', true).prop('readonly', true)
                         $('.qaEMApprove').hide()
                         $('.qaEMReject').hide()
-                        if (FOX.employeeId == currentEM.supervisor.id) {
+                        if (FOX.employeeId == currentEM.supervisor?.id) {
                             $('.editEffectivenessInput[name="remarks"]').prop('disabled', false).prop('readonly', false)
 
                             $('.supervisorEMApprove').show()
@@ -956,7 +956,7 @@
                         $('.supervisorEMApprove').hide()
                         $('.supervisorEMReject').hide()
                         $('.qa').show()
-                        if (FOX.employeeId == currentEM.approvedBy.id) {
+                        if (FOX.employeeId == currentEM.approvedBy?.id) {
                             $('.editEffectivenessInput[name="dataCollectionSummary"]').prop('disabled', false).prop('readonly', false)
                             $('.editEffectivenessInput[name="result"]').prop('disabled', false).prop('readonly', false)
                             $('.editEffectivenessInput[name="remarks"]').prop('disabled', false).prop('readonly', false)
@@ -1000,14 +1000,12 @@
 
         $('.extensionDueDateBtn').on('click', function () {
 
-
-
             const nextMonthDate = new Date(currentDueDate);
             nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
             console.log('Extension button clicked', currentEMId, currentDueDate, nextMonthDate);
 
             $('#createExtensionRequestPanel').show();
-            $('#editECPanel').hide();
+            $('.editPanels').hide();
 
             $('.createExtensionRequestPanel[name="type"]')
                 .val('capaEffectiveness')
@@ -1017,8 +1015,9 @@
 
             $('.createExtensionRequest[name="currentDueDate"]')
                 .val(JSUTIL.getDate(currentDueDate));
-            $('.createExtensionRequest[name="requestDate"]')
-                .val(JSUTIL.getDate(nextMonthDate));
+            $('.createExtensionRequest[name="requestDate"]').val('');
+
+            JSUTIL.initDatePicker('.createExtensionRequest.datepicker');
 
             $('.createExtensionRequestPanel[name="type"]').attr('disabled', true);
         });
@@ -1029,7 +1028,7 @@
         $('.goToCapa').on('click', function () {
             const capaId = $(this).attr('data-id');
             console.log('Redirecting to CAPA:', capaId);
-            JSUTIL.openInNewTab('/app/qac/qmsCapa?id=' + capaId);
+            JSUTIL.openInNewTab('/capa?id=' + capaId);
         });
 
         $(document).on('click', '.recordEMEditBtn', function () {
@@ -1072,6 +1071,19 @@
             $('.recordEMApprovalBtn').hide()
             $('.editEffectivenessInput').prop('disabled', true).prop('readonly', true)
         })
+
+        $('.viewECHistory').on('click', function () {
+            console.log('view history clicked', currentEMId);
+            $('.editPanels').hide();
+            $('#historyECPanel').show();
+            loadHistory(currentEMId);
+            lucide.createIcons();
+        });
+
+        $(document).on('click', '.closeECHistory', function () {
+            $('#historyECPanel').hide();
+            $('.editPanels').show();
+        });
 
         $('.recordEMApprovalBtn').on('click', function () {
             console.log('approval')
@@ -1274,7 +1286,7 @@
 
     }
     function callbackAfterGetReportHistory(objList) {
-        console.log(objList);
+        console.log('history response:', objList);
         allHistory = objList
         window.historyData = allHistory
         $('#allHistoryTable').empty();
@@ -1283,18 +1295,15 @@
             innerHtml = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
         } else {
             $.each(objList, function (i, val) {
-
                 innerHtml += '<tr>' +
                     '<td>' + (val.name || '') + '</td>' +
                     '<td>' + (JSUTIL.getDateTime(val.startDate) || '') + '</td>' +
-                    '<td>' + (val.performedBy.firstName) + ' ' + (val.performedBy.lastName) + '</td>' +
-                    '<td>' + ((val.notes ? val.notes.replace(/"/g, '') : '') || '') + '</td>' +
+                    '<td>' + ((val.performedBy?.firstName || '') + ' ' + (val.performedBy?.lastName || '')).trim() + '</td>' +
+                    '<td>' + (val.notes || '') + '</td>' +
                     '</tr>';
-
             });
         }
         $('#allHistoryTable').html(innerHtml);
-        // applyStagePermissions(currentRecord.processStatus)   
     }
 
 
@@ -1324,7 +1333,7 @@
 
         } else {
             $.each(objList, function (i, val) {
-                if (((val.additionalInfo == 'Draft' || val.additionalInfo == 'Supervisor Returned') && (currentEMProcessStatus == 'Draft' || currentEMProcessStatus == 'Supervisor Returned')) && FOX.employeeId == currentEM.effectivenessOwner.id) {
+                if (((val.additionalInfo == 'Draft' || val.additionalInfo == 'Supervisor Returned') && (currentEMProcessStatus == 'Draft' || currentEMProcessStatus == 'Supervisor Returned')) && FOX.employeeId == currentEM.effectivenessOwner?.id) {
                     console.log('editable')
                     innerHtml += '<tr><td style="width: 20%;">';
                     innerHtml += '<button type="button" class="btn  btn-danger editDeleteDocBtn" data-id="' + val.id + '" data-path="' + val.path + '"><i data-lucide="trash"></i></button>';
@@ -1336,7 +1345,7 @@
                         '</tr>';
 
                 }
-                else if (((val.additionalInfo == 'Supervisor Review' || val.additionalInfo == 'QA Returned') && (currentEMProcessStatus == 'Supervisor Review' || currentEMProcessStatus == 'QA Returned')) && FOX.employeeId == currentEM.supervisor.id) {
+                else if (((val.additionalInfo == 'Supervisor Review' || val.additionalInfo == 'QA Returned') && (currentEMProcessStatus == 'Supervisor Review' || currentEMProcessStatus == 'QA Returned')) && FOX.employeeId == currentEM.supervisor?.id) {
                     console.log('editable')
                     innerHtml += '<tr><td style="width: 20%;">';
                     innerHtml += '<button type="button" class="btn  btn-danger editDeleteDocBtn" data-id="' + val.id + '" data-path="' + val.path + '"><i data-lucide="trash"></i></button>';
@@ -1459,25 +1468,29 @@
 
         $('.newExtensionRequestCancelBtn').on('click', function (res) {
             $('#createExtensionRequestPanel').hide()
-            if ($('.createExtensionRequestPanel[name="type"]').val() == 'Capa') {
+            var type = $('.createExtensionRequestPanel[name="type"]').val();
+            if (type == 'capaEffectiveness') {
+                $('.editPanels').show()
+            }
+            else if (type == 'Capa') {
                 $('#editCapaPanel').show()
             }
-            else if ($('.createExtensionRequestPanel[name="type"]').val() == 'ChangeRequest') {
+            else if (type == 'ChangeRequest') {
                 $('#editChangeRequestPanel').show()
             }
-            else if ($('.createExtensionRequestPanel[name="type"]').val() == 'Deviation') {
+            else if (type == 'Deviation') {
                 $('#editDeviationPanel').show()
             }
-            else if ($('.createExtensionRequestPanel[name="type"]').val() == 'Investigation') {
+            else if (type == 'Investigation') {
                 $('#editDeviationInvestigationPanel').show()
             }
-            else if ($('.createExtensionRequestPanel[name="type"]').val() == 'Incident') {
+            else if (type == 'Incident') {
                 $('#editIncidentsPanel').show()
             }
-            else if ($('.createExtensionRequestPanel[name="type"]').val() == 'QualityEvent') {
+            else if (type == 'QualityEvent') {
                 $('#editQualityEventPanel').show()
             }
-            else if ($('.createExtensionRequestPanel[name="type"]').val() == 'Complaint') {
+            else if (type == 'Complaint') {
                 $('#editComplaintPanel').show()
             }
             resetForm()
@@ -1601,6 +1614,24 @@
 
         // Update the save button to include documents
         $('.newExtensionRequestSaveBtn').off('click').on('click', function () {
+            var requestDate = $('.createExtensionRequest[name="requestDate"]').val();
+            var progressDetails = $('.createExtensionRequest[name="progressDetails"]').val();
+            var reason = $('.createExtensionRequest[name="reason"]').val();
+            var riskAssessment = $('.createExtensionRequest[name="riskAssessment"]').val();
+            var impactDetails = $('.createExtensionRequest[name="impactDetails"]').val();
+            var additionalInfo = $('.createExtensionRequest[name="additionalInfo"]').val();
+            var interimModeOfControl = $('.createExtensionRequest[name="interimModeOfControl"]').val();
+            var supervisor = $('.createExtensionRequest[name="supervisor.Id"]').val();
+
+            if (!requestDate) { JSUTIL.buildErrorModal('Requested Date is required'); return; }
+            if (!progressDetails || !progressDetails.trim()) { JSUTIL.buildErrorModal('Progress Details is required'); return; }
+            if (!reason || !reason.trim()) { JSUTIL.buildErrorModal('Justification is required'); return; }
+            if (!riskAssessment || !riskAssessment.trim()) { JSUTIL.buildErrorModal('Risk Assessment is required'); return; }
+            if (!impactDetails || !impactDetails.trim()) { JSUTIL.buildErrorModal('Impact Details is required'); return; }
+            if (!additionalInfo || !additionalInfo.trim()) { JSUTIL.buildErrorModal('Additional Information is required'); return; }
+            if (!interimModeOfControl || !interimModeOfControl.trim()) { JSUTIL.buildErrorModal('Interim Mode of Control is required'); return; }
+            if (!supervisor) { JSUTIL.buildErrorModal('Supervisor is required'); return; }
+
             var obj = {}
             obj["currentDueDate"] = toUtc($('.createExtensionRequest[name="currentDueDate"]').val());
             obj["requestDate"] = toUtc($('.createExtensionRequest[name="requestDate"]').val())
@@ -1646,21 +1677,20 @@
                 logic: ""
             };
 
-            JSUTIL.callAJAXPost('/data/ExtensionRequest/list', JSON.stringify(numberParameter), function (res) {
+            JSUTIL.callAJAXPost('/api/extensionrequest/list', JSON.stringify(numberParameter), function (res) {
                 var number
-                if (res[0].number == '') {
+                if (res.length == 0) {
                     number = 'ER-0001'
                 }
                 else {
-                    let currentNum = parseInt(res[0].number.replace('ER-', ''), 10);
-                    let nextNum = currentNum + 1;
-                    number = 'ER-' + nextNum.toString().padStart(4, '0');
+
+                    number = 'ER-' + (recordList.length + 1).toString().padStart(4, '0');
                 }
 
                 obj["number"] = number
                 obj["processStatus"] = "New"
 
-                JSUTIL.callAJAXPost('/data/ExtensionRequest/create', JSON.stringify(obj), function (res) {
+                JSUTIL.callAJAXPost('/api/extensionrequest', JSON.stringify(obj), function (res) {
                     console.log(res, 'Extension Request created')
                     var erid = res.id
 
@@ -1685,7 +1715,7 @@
         innerHtml2 += '<option value = "">--none---</option>';
         $.each(response, function (j, val2) {
             innerHtml2 +=
-                '<option value = "' + val2.id + '">' + val2.name + "</option>";
+                '<option value = "' + val2.id + '">' + val2.firstName + " " + val2.lastName + "</option>";
         });
         $("#editSupervisor").append(innerHtml2);
         // $(".createExtensionRequest[name='supervisor.Id']").val(currentRecord.department.id).trigger('change');

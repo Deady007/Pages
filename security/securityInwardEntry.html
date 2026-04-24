@@ -1387,7 +1387,7 @@
             $('#newGateEntryForm')[0].reset()
             $('#productSelect,#productSelect1').empty().append('<option value="">--none--</option>')
             $('.typeselect').val('');
-            triggerTypeChange('');
+            // triggerTypeChange('');
             $('#transportCompanySelect').val('');
         });
         // function loadPurchaseOrders() {
@@ -1411,11 +1411,14 @@
                 }).sort(function (a, b) { return b.id - a.id; });
                 console.log('orders', orders)
                 if (orders.length === 0) return;
-
+            
                 var pending = orders.length;
                 var eligible = [];
                 var $select = $('#purchaseOrderSelect');
-            $select.empty().append('<option value="">--none--</option>');
+                var innerHtml = ''
+                innerHtml = '<option value="">--none--</option>'
+                    $select.empty()
+            // $select.empty().append('<option value="">--none--</option>');
                 orders.forEach(function (po) {
                     JSUTIL.callAJAXGet('/api/purchase/orders/' + po.id, function (res) {
                         var orderItems = res.items || [];
@@ -1434,11 +1437,14 @@
                             // Sort again after async completion
                             eligible.sort(function (a, b) { return b.id - a.id; });
                             eligible.forEach(function (p) {
-                                $select.append('<option value="' + p.id + '">' + p.number + '</option>');
+                                innerHtml +='<option value="' + p.id + '">' + p.number + '</option>';
                             });
+                                            console.log('innerhtml',innerHtml)
+                $select.append(innerHtml)
                         }
                     });
                 });
+
             });
         }
 
@@ -1518,7 +1524,7 @@
                 <tr>
                     <td>
                         <button type="button" class="btn btn-sm btn-default removeRowBtn">
-                            <i class="fa fa-trash"></i>
+                            <i data-lucide="trash"></i>
                         </button>
                     </td>
                     <td>
@@ -1555,7 +1561,7 @@
             `);
 
             $("#receiptTable tbody").append($newRow);
-
+                lucide.createIcons()
             $newRow.find('.receivedQtyInput').on('input', function () {
                 validateProductQuantity($(this));
             });
@@ -1644,7 +1650,7 @@
                 <tr>
                     <td>
                         <button type="button" class="btn btn-sm btn-default removeRowBtn1">
-                            <i class="fa fa-trash"></i>
+                            <i data-lucide="trash"></i>
                         </button>
                     </td>
                     <td>
@@ -1675,7 +1681,7 @@
             `);
 
             $("#receiptTable1 tbody").append($newRow);
-
+                lucide.createIcons()
             var $searchInput = $newRow.find('.manufacturerSearchInput');
 
             var searchTimeout;
@@ -2015,11 +2021,55 @@
                     JSON.stringify(updatePayloads),
                     function (res) {
                         console.log('itemsRequest update res', res);
-                        location.reload();
+                        
+                        // Check if all line items have received their full ordered quantity
+                        checkAndUpdatePurchaseOrderStatus(purchaseOrderId);
                     }
                 );
             }
         );
+    }
+
+    function checkAndUpdatePurchaseOrderStatus(purchaseOrderId) {
+        // Fetch PO details and items to check if all quantities are received
+        JSUTIL.callAJAXGet('/api/purchase/orders/' + purchaseOrderId, function (res) {
+            var order = res && res.order ? res.order : res;
+            var orderItems = res.items || [];
+
+            console.log('Checking PO status for ID:', purchaseOrderId);
+            console.log('Order items for status check:', orderItems);
+
+            // Check if all items have received their full quantity
+            var allItemsCompleted = orderItems.length > 0 && orderItems.every(function (item) {
+                var ordered = parseFloat(item.quantity) || 0;
+                var received = parseFloat(item.quantityReceived) || 0;
+                var isCompleted = received >= ordered;
+                console.log('Item ID:', item.id, 'Ordered:', ordered, 'Received:', received, 'Completed:', isCompleted);
+                return isCompleted;
+            });
+
+            if (allItemsCompleted) {
+                console.log('All items received. Updating PO status to Completed');
+                
+                // Update purchase order status to Completed
+                var updatePayload = {
+                    id: purchaseOrderId,
+                    orderStatus: 'Completed'
+                };
+
+                JSUTIL.callAJAXPost(
+                    '/api/purchase/orders/' + purchaseOrderId,
+                    JSON.stringify(updatePayload),
+                    function (updateRes) {
+                        console.log('Purchase order status updated to Completed:', updateRes);
+                        location.reload();
+                    }
+                );
+            } else {
+                console.log('Not all items received. PO status remains unchanged');
+                location.reload();
+            }
+        });
     }
 
 

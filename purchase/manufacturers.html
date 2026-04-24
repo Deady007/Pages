@@ -134,10 +134,12 @@
                             <thead>
                                 <tr>
                                     <th>Name</th>
+                                    <th>Manufacturer Code</th>
                                     <th>Phone</th>
                                     <th>Email</th>
                                     <th>TAX ID</th>
                                     <th>Address</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="allVendorTable">
@@ -159,9 +161,9 @@
     <div class="row animated fadeInRight aasaanPanel" id="editContactPanel" style="display:none;">
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>Edit Contact</h5>
-                    <div class="ibox-tools">
+                <div class="ibox-title d-flex justify-content-end">
+                    <h5 class="mb-0">Edit Contact</h5>
+                    <div class="ibox-tools ms-auto">
                         <button type="button" class="btn btn-default btn-sm close-box newContactCloseBtn"><i
                                 data-lucide="x"></i> Close </button>
                         <button type="button" class="btn btn-default btn-sm recordEditBtn"><i data-lucide="pencil"></i>
@@ -264,9 +266,9 @@
     <div class="row animated fadeInRight aasaanPanel" id="newContactPanel" style="display:none;">
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>New Contact</h5>
-                    <div class="ibox-tools">
+                <div class="ibox-title d-flex justify-content-end">
+                    <h5 class="mb-0">New Contact</h5>
+                    <div class="ibox-tools ms-auto">
                         <button type="button" class="btn btn-default btn-sm close-box newContactCloseBtn"><i
                                 data-lucide="x"></i> Close </button>
                         <button type="button" class="btn btn-secondary btn-sm" id="saveContactBtn"><i
@@ -333,7 +335,7 @@
                             <div class="col-sm-6">
                                 <div class="form-group mb-3">
                                     <label class="required">Postal Code</label>
-                                    <input type="text" class="form-control" name="PostalCode" id="newContactPostalCode"
+                                    <input type="number" class="form-control" name="PostalCode" id="newContactPostalCode"
                                         required>
                                     <small id="newContactPostalCodeStatus"
                                         style="display:none; font-size:12px;"></small>
@@ -359,12 +361,13 @@
     <div class="row animated fadeInRight aasaanPanel" id="editRecordPanel" style="display: none;">
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5><span id="editRecordTitle"></span></h5>
-                    <span id="qualifyDisplay" class="label label-primary" style="margin-left: 10px;"></span>
-                    <div class="ibox-tools">
+                <div class="ibox-title d-flex justify-content-end">
+                    <h5 class="mb-0"><span id="editRecordTitle"></span>
+                    <span id="qualifyDisplay" class="label label-primary" style="margin-left: 10px;"></span></h5>
+                    <div class="ibox-tools ms-auto">
                         <button type="button" class="btn btn-default btn-sm close-box editRecordCancelBtn"><i
                                 data-lucide="x"></i> Close </button>
+                                <button type="button" class="btn btn-default btn-sm viewHistory"><i data-lucide="scroll"></i> View History</button>
                         <button type="button" class="btn btn-default btn-sm" id="newContactBtn"><i
                                 data-lucide="user-circle"></i> Add Contact </button>
                         <button type="button" class="btn btn-default btn-sm" id="deleteVendorBtn"><i
@@ -388,20 +391,12 @@
                             <div class="col-sm-6">
                                 <div class="form-group">
                                     <label class="required">Vendor Type</label>
-                                    <div class="dropdown">
-                                        <button
-                                            class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center"
-                                            type="button" id="editVendorTypeBtn" data-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                            <span>--none--</span>
-                                        </button>
-                                        <div class="dropdown-menu w-100" aria-labelledby="editVendorTypeBtn">
-                                            <a class="dropdown-item active" href="#" data-value="">--none--</a>
-                                            <a class="dropdown-item" href="#" data-value="RM">Raw Materials</a>
-                                            <a class="dropdown-item" href="#" data-value="PM">Packing Materials</a>
-                                            <a class="dropdown-item" href="#" data-value="Products">Products</a>
-                                        </div>
-                                    </div>
+                                    <select id="editVendorType" class="form-control w-100" disabled readonly>
+    <option value="">--none--</option>
+    <option value="RM">Raw Materials</option>
+    <option value="PM">Packing Materials</option>
+    <option value="Products">Products</option>
+</select>
                                     <input type="hidden" name="vendorType" id="editVendorTypeSelect"
                                         class="editRecordInput" value="" required>
                                 </div>
@@ -504,7 +499,7 @@
                                         <small class="text-muted" style="font-weight:400; font-size:11px;">— auto-fills
                                             Country, State &amp; City</small>
                                     </label>
-                                    <input type="text" name="billingPostalCode" id="editPostalCode"
+                                    <input type="number" name="billingPostalCode" id="editPostalCode"
                                         class="form-control editRecordInput" required readonly>
                                     <small id="editPostalCodeStatus" style="display:none; font-size:12px;"></small>
                                 </div>
@@ -605,9 +600,9 @@
     <div class="row animated fadeInRight aasaanPanel" id="newRecordPanel" style="display: none;">
         <div class="col-lg-12">
             <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>New <small>Manufacturer</small></h5>
-                    <div class="ibox-tools">
+                <div class="ibox-title d-flex justify-content-end">
+                    <h5 class="mb-0">New <small>Manufacturer</small></h5>
+                    <div class="ibox-tools ms-auto">
                         <button type="button" class="btn btn-default btn-sm close-box newRecordCancelBtn"><i
                                 data-lucide="x"></i> Cancel </button>
                         <button type="button" class="btn btn-secondary btn-sm newVendorSaveBtn"><i
@@ -682,7 +677,7 @@
                                         <small class="text-muted" style="font-weight:400; font-size:11px;">— auto-fills
                                             City</small>
                                     </label>
-                                    <input type="text" name="billingPostalCode" id="newPostalCode"
+                                    <input type="number" name="billingPostalCode" id="newPostalCode"
                                         class="form-control newRecordInput" required>
                                     <small id="newPostalCodeStatus" style="display:none; font-size:12px;"></small>
                                 </div>
@@ -1028,10 +1023,12 @@
             $.each(records || [], function (i, val) {
                 innerHtml += '<tr>' +
                     '<td class="itemNum"><a href = "javascript:void(0);" class="selectRecordBtn" id="' + (val.id || '') + '">' + (val.name || '') + '</a></td>' +
+                    `<td>${val.number?val.number: ' '}</td>`+
                     '<td>' + (val.phone || '') + '</td>' +
                     '<td>' + (val.email || '') + '</td>' +
                     '<td>' + (val.gst || '') + '</td>' +
                     '<td>' + (val.billingStreet || '') + ' ' + (val.billingStreet2 || '') + ' ' + (val.billingCity || '') + ' ' + (val.billingState || '') + '</td>' +
+                    `<td>${val.accountStatus?val.accountStatus:''}</td>`+
                     '</tr>';
             });
             // REPLACE WITH:
@@ -1109,6 +1106,9 @@
         // editContactVendorPanel.js    Start
 
         $(document).ready(function () {
+            $('.viewHistory').on('click',function(){
+                JSUTIL.showProcessActivityPanel(currentRecordId,'#editRecordPanel','History for '+currentRequestData.number)
+            })
             // Handle Edit button click in contact panel specifically
             $('#editContactPanel .recordEditBtn').on('click', function () {
                 $('#editContactPanel .editContactInput').prop('readonly', false);
@@ -1218,7 +1218,15 @@
             $('#newContactForm')[0].reset();
             $('#newContactPanel').hide();
             $('#editRecordPanel').show();
-            refreshVendorDetails();
+            // refreshVendorDetails();
+            JSUTIL.callAJAXPost('/api/process-activites',JSON.stringify({name:'Contact is added',
+                startDate:new Date(),
+                performedBy:{id:FOX.employeeId},
+                parentRecordId:currentRecordId,
+                
+            }),function(){
+                refreshVendorDetails()
+            })
         }
         //  newVendorContactPanel.js    End
 
@@ -1254,6 +1262,7 @@
             //     }
             // });
             $('#allRecordPanel tbody').on('click', '.selectRecordBtn', function () {
+                console.log('manu')
                 $('.vendorSaveAndUpdateBtn').hide();
                 $('.recordEditBtn').show();
                 var currentId = $(this).attr('id');
@@ -1265,7 +1274,12 @@
                 if (val2) {
                     console.log(val2);
                     currentRequestData = val2;
-
+                    if(val2.accountStatus == 'Pending Qualification'){
+                        $('.recordEditBtn').show()   
+                    }
+                    else{
+                        $('.recordEditBtn').hide()
+                    }
                     // CLEAR ALL new form dropdown values when switching to edit
                     console.log('Clearing all new form dropdown values when opening edit');
                     $('.newRecordInput[name="vendorType"]').val('');
@@ -1287,24 +1301,13 @@
 
                     // Vendor Type dropdown button label
                     var vendorTypeLabels = { 'RM': 'Raw Materials', 'PM': 'Packing Materials', 'Products': 'Products' };
-                    $('#editVendorTypeBtn span').first().text(vendorTypeLabels[val2.vendorType] || '--none--');
-                    $('#editVendorTypeSelect').val(val2.vendorType || '');
+                    // $('#editVendorTypeBtn span').first().text(vendorTypeLabels[val2.vendorType] || '--none--');
+                    $('#editVendorType').val(val2.vendorType || '').trigger('change');
                     // ↑↑↑ end of added lines ↑↑↑
 
-                    // Load layout if not already loaded
-                    if (typeof layoutFields === 'undefined' || !layoutFields) {
-                        console.log('Loading layout for edit panel...');
-                        JSUTIL.callAJAXGet('/purchase/vendors/layout', function (response) {
-                            layoutFields = response;
-                            console.log('Layout loaded, layoutFields:', layoutFields);
-                            buildEditFieldsFromLayout(layoutFields);
-                        });
-                    } else {
-                        console.log('Using cached layoutFields');
-                        buildEditFieldsFromLayout(layoutFields);
-                    }
+            
 
-                    $('#qualifyDisplay').text(val2.accountStatus);
+$('#qualifyDisplay').text(val2?.accountStatus  || '');
 
                     var savedCountry = val2.billingCountry;
                     var savedState = val2.billingState;
@@ -1433,7 +1436,7 @@
                 var billingCity = $('.editRecordInput[name="billingCity"]').val() || '';
                 var billingPostalCode = $('.editRecordInput[name="billingPostalCode"]').val() || '';
                 var gst = $('.editRecordInput[name="gst"]').val() || '';
-                var vendorType = $('#editVendorTypeSelect').val() || '';
+                var vendorType = $('#editVendorType').val() || '';
                 var country = $('#editVendorCountry').val() || '';
                 var state = $('#editVendorState').val() || '';
 
@@ -1481,15 +1484,22 @@
 
                 let updateVendor = buildFormDataJSON('editRecordInput');
                 console.log('Saving vendor:', updateVendor);
-                updateNewVendor(updateVendor);
+                JSUTIL.buildAuthenticationModal(function(){
+                    updateNewVendor(updateVendor);
+                })
             });
 
             $('#deleteVendorBtn').on('click', function () {
                 var modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
                 modal.show();
                 $('#confirmDeleteBtn').off('click').on('click', function () {
-                    deleteVendorCallback();
+                    // deleteVendorCallback();
+                    
                     modal.hide();
+
+                    JSUTIL.buildAuthenticationModal(function(){
+                        deleteVendorCallback()
+                    })
                 });
             });
         });
@@ -1696,7 +1706,16 @@
             $('#allRecordPanel').show();
 
             // Reload the manufacturers list
-            loadManufacturers();
+            // loadManufacturers();
+            var historyObj = {
+                name:'Manufacturer is updated',
+                startDate:new Date(),
+                parentRecordId:currentRecordId,
+                performedBy:{id:FOX.employeeId}
+            }
+            JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                loadManufacturers()
+            })
         }
         function callbackEditRequestError(error) {
             console.error('Error updating vendor:', error);
@@ -1734,219 +1753,27 @@
         }
 
         function callbackAfterDelete() {
-            loadManufacturers(function () {
+            // loadManufacturers(function () {
+            //     $('#editRecordPanel').hide();
+            //     $('#allRecordPanel').show();
+            // });
+            var historyObj = {
+                name:'Manufacturer is deleted',
+                startDate:new Date(),
+                parentRecordId:currentRecordId,
+                performedBy:{id:FOX.employeeId}
+            }
+            JSUTIL.callAJAXPost('/api/process-activities',JSON.stringify(historyObj),function(){
+                // loadManufacturers()
+                loadManufacturers(function () {
                 $('#editRecordPanel').hide();
                 $('#allRecordPanel').show();
-            });
+            })
+            })
         }
 
-        function buildEditFieldsFromLayout(layoutFields) {
-            console.log('=== buildEditFieldsFromLayout called ===');
-            console.log('layoutFields:', layoutFields);
-            console.log('layoutFields length:', layoutFields ? layoutFields.length : 'undefined');
-
-            if (layoutFields && layoutFields.length > 0) {
-                console.log('First field:', layoutFields[0]);
-                $.each(layoutFields, function (i, f) {
-                    console.log('Field ' + i + ':', f.name, '- Type:', f.type);
-                });
-            }
-
-            var innerHtml = editBuildLayout(layoutFields, 'form', 'editRecordInput', 'layoutRenderer_editForm');
-            $('#layoutRenderer_editForm').append(innerHtml);
-
-            // Populate Picklist dropdown options
-            console.log('=== Calling populatePicklistOptions ===');
-            populatePicklistOptions(layoutFields);
-
-            populateLayoutFields(layoutFields);
-            bindPicklistDropdownHandlers();
-            if ($.fn.datepicker && typeof JSUTIL !== 'undefined' && JSUTIL.reinitializeInputTypes) {
-                JSUTIL.reinitializeInputTypes();
-            }
-        }
-
-        function populatePicklistOptions(layoutFields) {
-            $.each(layoutFields, function (i, field) {
-                if (field.type && field.type.indexOf('Picklist') >= 0) {
-                    var fieldName = JSUTIL.lowerCaseFirstLetter(field.name);
-                    var buttonId = 'editPicklist_' + fieldName + '_Btn';
-                    var dropdownId = 'editPicklist_' + fieldName + '_Dropdown';
-                    var $dropdown = $('#' + dropdownId);
-
-                    if ($dropdown.length === 0) {
-                        console.warn('Dropdown not found for field:', field.name);
-                        return;
-                    }
-
-                    // Special case for SampleUnit
-                    if (field.name === 'SampleUnit' && typeof uomList !== 'undefined' && uomList && uomList.length > 0) {
-                        $.each(uomList, function (o, option) {
-                            $dropdown.append('<a class="dropdown-item" href="#" data-value="' + option.name + '">' + option.name + '</a>');
-                        });
-                        console.log('Picklist ' + fieldName + ' populated from uomList');
-                        return;
-                    }
-
-                    // Try to get options from LAYOUT function
-                    try {
-                        if (typeof LAYOUT !== 'undefined' && LAYOUT.populatePicklistValues && typeof LAYOUT.populatePicklistValues === 'function') {
-                            var optionsHtml = LAYOUT.populatePicklistValues(layoutFields, field, 'editRecordInput');
-                            console.log('LAYOUT.populatePicklistValues for ' + fieldName + ':', optionsHtml);
-
-                            // Parse the options HTML and convert to dropdown items
-                            var $temp = $('<div>' + optionsHtml + '</div>');
-                            var options = [];
-
-                            $temp.find('option').each(function () {
-                                var value = $(this).val();
-                                var text = $(this).text();
-                                if (value !== '') {
-                                    options.push({ value: value, text: text });
-                                }
-                            });
-
-                            // Add options to dropdown (keep --none-- as first item)
-                            $.each(options, function (idx, opt) {
-                                $dropdown.append('<a class="dropdown-item" href="#" data-value="' + opt.value + '">' + opt.text + '</a>');
-                            });
-
-                            console.log('Picklist ' + fieldName + ' populated with ' + options.length + ' options from LAYOUT');
-                        } else {
-                            console.warn('LAYOUT or populatePicklistValues not available for field:', field.name);
-                        }
-                    } catch (e) {
-                        console.error('Error populating picklist ' + fieldName + ':', e);
-                    }
-                }
-            });
-        }
-
-        function bindPicklistDropdownHandlers() {
-            // Handle Picklist dropdown item clicks (pattern: editPicklist_fieldName_Dropdown)
-            $(document).off('click.editPicklist');
-            $(document).on('click.editPicklist', '[id^="editPicklist_"][id$="_Dropdown"] .dropdown-item', function (e) {
-                e.preventDefault();
-                var value = $(this).data('value');
-                var $dropdown = $(this).closest('[id^="editPicklist_"][id$="_Dropdown"]');
-                var dropdownId = $dropdown.attr('id');
-                var buttonId = dropdownId.replace('_Dropdown', '_Btn');
-
-                // Update button text
-                var $button = $('#' + buttonId);
-                var displayText = $(this).text();
-                $button.find('span').first().text(displayText);
-
-                // Extract field name from ID (editPicklist_fieldName_Btn -> fieldName)
-                var fieldName = buttonId.replace('editPicklist_', '').replace('_Btn', '');
-
-                // Update hidden input value
-                $('.editRecordInput[name="' + fieldName + '"]').val(value);
-
-                // Update active state
-                $(this).addClass('active').siblings().removeClass('active');
-
-                // Close dropdown
-                $dropdown.removeClass('show');
-            });
-        }
-
-        function populateLayoutFields(layoutFields) {
-            $.each(layoutFields, function (i, field) {
-                var fieldName = JSUTIL.lowerCaseFirstLetter(field.name);
-                var currentFieldVal = currentRequestData[fieldName];
-
-                if (!field.type || (field.type.indexOf('Text') >= 0 || field.type.indexOf('Number') >= 0)) {
-                    $('.editRecordInput[name="' + fieldName + '"]').val(currentFieldVal || '');
-                }
-                else if (field.type && field.type.indexOf('Date') >= 0 && field.type.indexOf('DateTime') < 0) {
-                    $('.editRecordInput[name="' + fieldName + '"]').val(JSUTIL.getDate(currentFieldVal) || '');
-                }
-                else if (field.type && field.type.indexOf('DateTime') >= 0) {
-                    $('.editRecordInput[name="' + fieldName + '"]').val(JSUTIL.getDateTime(currentFieldVal) || '');
-                }
-                else if (field.type && field.type.indexOf('Picklist') >= 0) {
-                    // Set hidden input value
-                    var $hidden = $('.editRecordInput[name="' + fieldName + '"]');
-                    $hidden.val(currentFieldVal || '');
-
-                    // Set button display text
-                    var buttonId = 'editPicklist_' + fieldName + '_Btn';
-                    var dropdownId = 'editPicklist_' + fieldName + '_Dropdown';
-                    var $button = $('#' + buttonId);
-                    var $dropdown = $('#' + dropdownId);
-
-                    if ($button.length && currentFieldVal) {
-                        var displayText = currentFieldVal;
-                        $button.find('span').first().text(displayText);
-
-                        // Mark the matching dropdown item as active
-                        if ($dropdown.length) {
-                            $dropdown.find('.dropdown-item').each(function () {
-                                if ($(this).data('value') === currentFieldVal) {
-                                    $(this).addClass('active');
-                                } else {
-                                    $(this).removeClass('active');
-                                }
-                            });
-                        }
-                    }
-                }
-            });
-        }
-
-        function editBuildLayout(layoutFields, type, layoutClass, layoutFormId) {
-            var layoutMarkup = '';
-            try {
-                $.each(layoutFields, function (i, val) {
-                    if (!val.label) {
-                        val.label = '';
-                    }
-                    if (type === 'form') {
-                        $(`#${layoutFormId} .layoutRenderer_element`).remove();
-                        layoutMarkup += '<div class="col-sm-6 layoutRenderer_element"><div class="form-group"><label>' + val.label + '</label>';
-                    } else if (type === 'table') {
-                        layoutMarkup += '<td>';
-                    }
-                    var isRequired = val.required ? 'required' : '';
-
-                    if (!val.type || (val.type && val.type.indexOf('Text') >= 0)) {
-                        layoutMarkup += '<input class="form-control ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + ' readonly>';
-                    } else if (val.type && val.type.indexOf('Number') >= 0) {
-                        layoutMarkup += '<input type="number" class="form-control ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'readonly>';
-                    } else if (val.type && val.type.indexOf('Date') >= 0 && val.type.indexOf('DateTime') < 0 && val.type.indexOf('DateFromToday') < 0 && val.type.indexOf('DateTillToday') < 0) {
-                        layoutMarkup += '<input class="form-control datepicker ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
-                    } else if (val.type && val.type.indexOf('DateFromToday') >= 0) {
-                        layoutMarkup += '<input onkeydown="return false" class="form-control datepickerCompliance ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
-                    } else if (val.type && val.type.indexOf('DateTillToday') >= 0) {
-                        layoutMarkup += '<input onkeydown="return false" class="form-control datepickerCompliance2 ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
-                    } else if (val.type && val.type.indexOf('DateTime') >= 0) {
-                        layoutMarkup += '<input class="form-control datetimepicker ' + layoutClass + '" name="' + JSUTIL.lowerCaseFirstLetter(val.name) + '" ' + isRequired + 'disabled>';
-                    } else if (val.type && val.type.indexOf('Picklist') >= 0) {
-                        var fieldName = JSUTIL.lowerCaseFirstLetter(val.name);
-                        var buttonId = 'editPicklist_' + fieldName + '_Btn';
-                        var dropdownId = 'editPicklist_' + fieldName + '_Dropdown';
-
-                        layoutMarkup += '<div class="dropdown">';
-                        layoutMarkup += '<button class="btn btn-light dropdown-toggle w-100 d-flex justify-content-between align-items-center" type="button" id="' + buttonId + '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-picklist-field="' + val.name + '" disabled>';
-                        layoutMarkup += '<span>--none--</span><span class="caret"></span></button>';
-                        layoutMarkup += '<div class="dropdown-menu w-100" id="' + dropdownId + '" aria-labelledby="' + buttonId + '">';
-                        layoutMarkup += '<a class="dropdown-item active" href="#" data-value="">--none--</a>';
-                        layoutMarkup += '</div>';
-                        layoutMarkup += '</div>';
-                        layoutMarkup += '<input type="hidden" class="' + layoutClass + '" name="' + fieldName + '" value="">';
-                    }
-                    if (type === 'form') {
-                        layoutMarkup += '</div></div>'
-                    } else if (type === 'table') {
-                        layoutMarkup += '</td>';
-                    }
-                });
-            } catch (e) { console.info(e); }
-            return layoutMarkup;
-        }
-
-
+       
+      
         // editManufacturePanel.js     End
 
 
@@ -1958,11 +1785,10 @@
 
         // newManufacturePanel.js   Start
         var innerHtml = '';
-        var layoutFields;
+      
         populateCountryStateOptions();
         loadAllCountryStateOptions();
-        JSUTIL.callAJAXGet('/purchase/vendors/layout', buildFieldsFromLayout);
-
+      
         function callbackNewVendor(response) {
             console.log(response);
             // Instead of reload, hide panel and refresh list
@@ -2061,15 +1887,7 @@
                 $('#allRecordPanel').show();
             });
         });
-        function buildFieldsFromLayout(response) {
-            console.log(response);
-            layoutFields = response;
-            var innerHtml = LAYOUT.buildLayout(response, 'form', 'newRequestFieldInput', 'layoutRenderer_form');
-            $('#layoutRenderer_form').append(innerHtml);
-            if ($.fn.datepicker && typeof JSUTIL !== 'undefined' && JSUTIL.reinitializeInputTypes) {
-                JSUTIL.reinitializeInputTypes();
-            }
-        }
+       
 
         // newManufacturePanel.js   End
 
@@ -2273,15 +2091,6 @@
 
         // --- Edit Panel Dropdown Logic ---
 
-        // open/close Edit Vendor Type dropdown
-        $(document).on('click', '#editVendorTypeBtn', function (e) {
-            if (!isEditMode) return;
-            e.preventDefault();
-            e.stopPropagation();
-            var $menu = $('#editVendorTypeBtn').next('.dropdown-menu');
-            $('.dropdown-menu').not($menu).removeClass('show');
-            $menu.toggleClass('show');
-        });
 
         // open/close Edit Country dropdown
         $(document).on('click', '#editCountryBtn', function (e) {
